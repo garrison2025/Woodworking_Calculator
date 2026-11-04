@@ -82,3 +82,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: SVG panels are constructed directly from left/right edges in the typed cut schedule. Narrow panels are no longer artificially inflated to at least one graphical pixel; zero gaps and symmetric end margins can be independently checked.
 - PASS: small-scale (12.7 mm) wall with two equal zero-gap panel faces fills the entire schematic reference; former one-inch minimum world span no longer distorts the drawing.
 - PASS: [CI #132](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41934540663) includes 38 Chromium browser checks, CSV export and invalid-input cleanup. Printed scale and physical installation remain non-certified.
+
+## Deck/baluster/post face-width scale and complete span — CI #138
+- PASS: these three layout diagrams now render each stock face from the cut-list's actual left/right coordinates. The former deck SVG rendered only the first 180 rows and inflated very narrow faces to at least one pixel; the new diagram renders all modeled rows with true scale.
+- PASS: baluster faces and both end gaps preserve their proportional width, including changes to physical face width; post faces now occupy the diagram's complete OUTSIDE span (centers are a separate reference) rather than protruding outside the center-to-center diagram edges.
+- PASS: [CI #138](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41936114849) tested SVG face proportions, correct edge/space coordinates, CSV export and calculator error recovery in Chromium. Real construction materials, printer scale and Safari/Firefox are NOT VERIFIED.

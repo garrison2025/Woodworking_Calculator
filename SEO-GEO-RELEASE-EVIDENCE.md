@@ -68,3 +68,7 @@
 ## Wainscoting cut-list fidelity — CI #132
 - `/wainscoting-calculator/` explicitly displays all face edges, inter-panel gaps and wall closure rather than only a generic panel width. The description/formula/example now match the implemented calculator and CSV fields, including the 120-in example.
 - [CI #132](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41934540663) passed with no changes to the 26 P0/P1 tools, 36 rendered HTML pages, 152 KD≤29 research keywords or noindex Cloudflare preview policy. There are no unverified traffic-volume claims or new routes.
+
+## Transparent decking, baluster and post geometry — CI #138
+- `/deck-board-calculator/` now exposes face-edge and last-rip closure while explicitly noting that stock counts for a run longer than stock do NOT certify butt-joint support. `/baluster-spacing-calculator/` distinguishes actual bar face and clear gaps, with no unsupported code-compliance claim. `/fence-post-calculator/` distinguishes signed outside face coordinates and full outside length from end-center span, preventing false overall measurements.
+- [CI #138](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41936114849) passed 278 Node tests, 41 Chromium checks and the existing noindex static policies. **No new routes, thin pages, keyword volume claims, paid services, trackers or production-domain redirects were introduced.** Current 26 active tools, 36 HTML pages and the 152-row KD≤29 research map remain unchanged.

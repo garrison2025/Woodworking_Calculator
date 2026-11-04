@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 272 geometry tests, 38 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 278 geometry tests, 41 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -200,3 +200,7 @@ The wainscoting panel calculator now exports explicit **left edge, right edge, a
 ## 2026-11-05 — Deck rows, baluster faces, and fence post coordinate conservation
 
 The three spacing tools now return actual **left/right face coordinates** and clear gaps in their typed cut lists, checked against complete physical coverage. Deck Board reports the final rip's exact right edge and a transparent no-joist-reference stock section count; it must never be interpreted as an engineered butt-joint pattern. Baluster Spacing reports physical bar edges, the end gaps and the sum of faces plus all gaps across the opening. Fence Post distinguishes first/last **post center coordinates** from total **outside-to-outside length**, with signed outer-face coordinates and a sum of post faces plus clear bays. Their SVG profiles draw exactly these engine cut-list edges, without fake minimum/maximum pixel widths. The fence diagram spans the OUTSIDE faces, with the original center datum retained in the schedule. Physical installation, railing regulations and stock safety remain unverified.
+
+### 2026-11-05 verified physical-face release QA
+
+[CI #138](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41936114849) passed **278/278 Node** and **41/41 real Chromium** tests. Independent fixtures cover 120-in decking width with the 1.875-in final rip; a 96-in baluster opening with 17 real 1.5-in faces and 18 equal clear spaces; and a fence with 1200-in post-center run extending from −1.75 in to 1201.75 in outer faces at a 3.5-in post face, totaling **1203.5 in outside-to-outside**. SVG geometry uses matching physical cut-list face boundaries with no arbitrary pixel-width clips. Browser tests check ratios, final coordinates, CSV units, negative signed fence face coordinates and invalid-input recovery. The public Cloudflare preview already serves the three updated calculator explanations and engine; preview is **noindex**, not a public search launch. Physical fence/railing code compliance, engineered structural support, approved deck butt joints, real printing, Safari/Firefox and accessibility sign-off remain NOT VERIFIED.
