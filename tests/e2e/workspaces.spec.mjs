@@ -445,7 +445,7 @@ test("wainscoting panel faces match typed CSV edges and preserve actual visible 
   await page.locator("#download-csv").click();
   const csv=readFileSync(await (await download).path(),"utf8");
   expect(csv).toContain('"Left (mm)","Right (mm)","Width (mm)","Height (mm)","Gap After (mm)"');
-  await page.locator("#f-panels").fill("500");
+  await page.locator("#f-panels").fill("501"); // Whole-count guard: 500 is still a valid panel-count input.
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(panels).toHaveCount(0);
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
