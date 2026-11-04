@@ -254,3 +254,17 @@ test("Hip orientation input and overly dense sheet grid are validated",()=>{
   const a0=compute("hip-roof-calculator",{...a,orientation:0}),a1=compute("hip-roof-calculator",{...a,orientation:1});
   near(value(a0,"Whole sloped area"),value(a1,"Whole sloped area"));
 });
+
+test("Hip clipping area is conserved across 72 dimension, slope, orientation fixtures",()=>{
+  for(const width of [72,96,144])for(const length of [132,196,252])
+  for(const pitch of [0,2,6,11])for(const orientation of [0,1]){
+    const a={width,length,pitch,overhang:6,sheetWidth:48,sheetLength:96,orientation};
+    const r=compute("hip-roof-calculator",a);
+    const expected=(width+12)*(length+12)*Math.hypot(1,pitch/12);
+    const cutSum=r.roofPanels.reduce((sum,p)=>sum+p.cutAreaSqIn,0);
+    near(cutSum,expected,Math.max(1e-5,expected*1e-9));
+    near(value(r,"Whole sloped area")*144,expected,1e-6);
+    assert.equal(r.rows.length,r.roofPanels.length);
+    assert.ok(value(r,"Sheet positions (no offcut reuse)")>=value(r,"Sheet area lower bound"));
+  }
+});

@@ -139,7 +139,7 @@ test("capture actual desktop and mobile preview renders for design review",async
   mkdirSync("visual-evidence",{recursive:true});
   for(const [label,width,height] of [["desktop",1440,900],["mobile",390,844]]){
     await page.setViewportSize({width,height});
-    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"],["rafter","/rafter-calculator/"],["stringer","/stair-stringer-calculator/"]]){
+    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"],["rafter","/rafter-calculator/"],["stringer","/stair-stringer-calculator/"],["hip-roof","/hip-roof-calculator/"]]){
       await page.goto(url);
       if(name!=="home")await expect(page.locator("#result-cards .metric").first()).toBeVisible();
       await page.screenshot({path:"visual-evidence/"+name+"-"+label+".png",fullPage:true,animations:"disabled"});
@@ -203,4 +203,17 @@ test("hip roof clipped sheets are visible and orientation, export and error cont
   await page.locator("#f-sheetWidth").fill("0.0001");
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(polygons).toHaveCount(0);
+});
+
+test("hip roof small fixture uses six sheets unrotated and twelve rotated",async({page})=>{
+  await page.goto("/hip-roof-calculator/");
+  for(const [name,value] of [["width","96"],["length","192"],["pitch","0"],["overhang","0"]]){
+    await page.locator("#f-"+name).fill(value);
+  }
+  const sheetCount=page.locator("#result-cards .metric").filter({hasText:"Sheet positions (no offcut reuse)"});
+  await expect(sheetCount).toContainText("6");
+  await expect(page.locator("#dimension-svg svg .roof-panel-cut")).toHaveCount(6);
+  await page.locator("#f-orientation").selectOption("1");
+  await expect(sheetCount).toContainText("12");
+  await expect(page.locator("#dimension-svg svg .roof-panel-cut")).toHaveCount(12);
 });
