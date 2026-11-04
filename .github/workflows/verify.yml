@@ -37,6 +37,14 @@ jobs:
         run: npx playwright install --with-deps chromium --only-shell
       - name: Test real browser calculations, exports and responsive layouts
         run: npx playwright test
+      - name: Upload desktop and mobile design snapshots
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-ui-screenshots
+          path: visual-evidence/
+          if-no-files-found: error
+          retention-days: 4
       - name: Preserve browser failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
