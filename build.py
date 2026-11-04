@@ -3,6 +3,7 @@
 from __future__ import annotations
 import html
 import json
+import csv
 import os
 import re
 import shutil
@@ -13,6 +14,8 @@ DEST = ROOT / "dist"
 REGISTRY = json.loads((ROOT / "src" / "tools.json").read_text(encoding="utf-8"))
 TOOLS = [t for t in REGISTRY["tools"] if t["priority"] in {"P0", "P1"}]
 CATS = REGISTRY["categories"]
+with (ROOT / "research" / "woodworking-keyword-map-152.csv").open(encoding="utf-8", newline="") as keyword_file:
+    KEYWORDS = list(csv.DictReader(keyword_file))
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
@@ -96,6 +99,8 @@ def home():
     return page("Free Woodworking Calculators, Layout & Cutting Geometry","26 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
 
 def tool_page(t):
+    cluster = [k["keyword"] for k in KEYWORDS if k["target_route"] == '/' + t['slug'] + '/' and k['keyword'].lower() != t['keyword'].lower()]
+    related_search_terms = ', '.join(cluster[:4])
     fields = ''.join(f'<div class="field"><label for="f-{esc(f["key"])}">{esc(f["label"])}{(" <span data-length-unit>in</span>" if f["kind"]=="L" else "")}</label>'
          f'<input id="f-{esc(f["key"])}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
          f'<small id="field-note-{esc(f["key"])}">{"Length: enter inches or millimeters" if f["kind"] == "L" else "Enter a number using the described measurement"}</small></div>' for f in t["inputs"])
@@ -129,7 +134,7 @@ def tool_page(t):
            '<p>Items below are generated from the same numbers used for the drawing. Use CSV for a portable worksheet; inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div></div>'
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
-           f'<p>{esc(t["desc"])}</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
+           f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p><h3>Assumptions and limits</h3>'
            f'<p id="print-assumptions">{esc(t["limit"])}</p>'
            '<p class="caution">This tool describes dimensional geometry. It does not certify building-code compliance, structural capacity, fastening, material quality or safe cutting techniques.</p>'
