@@ -15,6 +15,15 @@ test("selected units and raw numeric coordinates are explicit and machine-readab
   assert.ok(!text.includes('"2,424.11 mm"'));
   assert.equal(text.split("\r\n").filter(Boolean).length,4);
 });
+test("metric CSV suppresses inch-quantization conversion tails without modifying engine numbers",()=>{
+  const rows=[{item:"Hole 1",center:0.19685039,holeLeftEdge:0.0984252,
+    holeRightEdge:0.29527559,diameter:0.19685039,clearToPrevious:null}];
+  const mm=buildScheduleCsv(rows,"mm","Physical dimensions remain schematic");
+  assert.ok(mm.includes('"Hole 1","5","2.5","7.5","5",""'),mm);
+  const cm=buildScheduleCsv(rows,"cm");
+  assert.ok(cm.includes('"Hole 1","0.5","0.25","0.75","0.5",""'),cm);
+  assert.equal(rows[0].center,0.19685039);
+});
 test("area, clipped polygon coordinates and nullable columns have their own units",()=>{
   const rows=[
     {item:"sheet 1",cutAreaFt2:1.5,cutVertices:[[0,0],[1,2]],joistCenter:null},

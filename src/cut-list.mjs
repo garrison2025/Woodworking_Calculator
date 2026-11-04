@@ -7,6 +7,15 @@ import {convertFromInches} from "./calcs.mjs";
 
 const UNITS=new Set(["in","ft","mm","cm","m"]);
 const numeric=(n)=>Number(n.toPrecision(12)).toString();
+// The geometry engine stores coordinates quantized to 1e-8 inch. Translating
+// that to mm can expose harmless 1e-7 mm conversion tails (e.g. 4.999999906).
+// Normalize only exported metric lengths well below woodworking resolution;
+// never round actual engine geometry or change machine-readable unit headers.
+const outputLength=(inches,unit)=>{
+  const v=convertFromInches(inches,unit);
+  const digits={mm:6,cm:7,m:10}[unit];
+  return numeric(digits===undefined?v:Number(v.toFixed(digits)));
+};
 const csvEscape=(value,isNumeric=false)=>{
   let text=String(value??"");
   // Spreadsheet programs can evaluate formulas in untrusted labels.
@@ -42,11 +51,11 @@ export const scheduleColumns=(records,unit)=>{
 const converted=(key,value,kind,unit)=>{
   if(value===null||value===undefined)return "";
   if(kind==="vertices"&&Array.isArray(value))
-    return JSON.stringify(value.map(pair=>pair.map(v=>Number(numeric(convertFromInches(v,unit))))));
+    return JSON.stringify(value.map(pair=>pair.map(v=>Number(outputLength(v,unit)))));
   if(kind==="area"&&typeof value==="number")
     return numeric(["in","ft"].includes(unit)?value:value*.09290304);
   if(kind==="length"&&typeof value==="number")
-    return numeric(convertFromInches(value,unit));
+    return outputLength(value,unit);
   if(typeof value==="number")return numeric(value);
   return String(value);
 };
