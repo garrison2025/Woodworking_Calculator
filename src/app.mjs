@@ -56,6 +56,10 @@ if(slug){
       // fit the fixed vertical diagram viewport.
       const holeScale=data.shape==="holes"?Math.min(W/span,100/data.holeDiameter):null;
       const holeStart=holeScale===null?left:(900-span*holeScale)/2;
+      // Shared scale on both axes: kerf mouth and retained-web thickness
+      // remain proportionate to the entered flat stock dimensions.
+      const kerfScale=data.shape==="kerfs"?Math.min(W/span,128/data.stockThickness):null;
+      const kerfStart=kerfScale===null?left:(900-data.kerfArcLength*kerfScale)/2;
       if(data.shape==="boards"){
         const w=data.boardWidth||2;
         for(let i=0;i<Math.min(marks.length,180);i++){
@@ -93,6 +97,17 @@ if(slug){
         content+=svgText(holeStart,70,"HOLE Ø "+fmt(data.holeDiameter),"dim-label");
         content+=svgText(holeStart,90,"EDGE CLEAR "+fmt(data.endMaterialMargin),"tick-label");
         content+=svgText(holeStart,330,"CLEAR BETWEEN "+fmt(data.holeClearance),"dim-label");
+      }else if(data.shape==="kerfs"){
+        const y0=98,woodWidth=data.kerfArcLength*kerfScale;
+        const stockH=data.stockThickness*kerfScale,depthH=data.cutDepth*kerfScale,webH=data.retainedWeb*kerfScale;
+        content+='<rect class="kerf-stock" x="'+kerfStart+'" y="'+y0+'" width="'+woodWidth+'" height="'+stockH+'" fill="#e4c49b" stroke="#926d45" stroke-width="1.8"><title>'+esc("Flat stock thickness "+fmt(data.stockThickness))+'</title></rect>';
+        content+='<rect class="kerf-retained-web" x="'+kerfStart+'" y="'+(y0+depthH)+'" width="'+woodWidth+'" height="'+webH+'" fill="#a4c3a2"><title>'+esc("Continuous retained web "+fmt(data.retainedWeb))+'</title></rect>';
+        for(const [i,p] of marks.entries()){
+          const sx=kerfStart+(p.x-data.kerfWidth/2)*kerfScale;
+          content+='<rect class="kerf-slot" x="'+sx+'" y="'+y0+'" width="'+(data.kerfWidth*kerfScale)+'" height="'+depthH+'" fill="#fcfbf8" stroke="#9e764c" stroke-width=".35"><title>'+esc("Kerf "+(i+1)+" · center "+fmt(p.x)+" · width "+fmt(data.kerfWidth)+" · depth "+fmt(data.cutDepth))+'</title></rect>';
+        }
+        content+=svgText(kerfStart,71,"FLAT STOCK · KERF "+fmt(data.kerfWidth),"dim-label");
+        content+=svgText(kerfStart,87,"GREEN WEB "+fmt(data.retainedWeb)+" · TRIAL ONLY","tick-label");
       }else if(data.shape==="shelves"){
         // Both faces come from the same bottom/thickness values as the schedule.
         const shelfHeight=(data.shelfThickness||1)/span*195;
@@ -112,13 +127,15 @@ if(slug){
         }
       }
       for(let i=0;i<marks.length;i+=tick){
-        const p=marks[i],px=data.shape==="holes"?holeStart+p.x*holeScale:x(p.x);
+        const p=marks[i],px=data.shape==="holes"?holeStart+p.x*holeScale:data.shape==="kerfs"?kerfStart+p.x*kerfScale:x(p.x);
         content+='<line x1="'+px+'" y1="'+base+'" x2="'+px+'" y2="'+(base+9)+'" stroke="#1e6454"/>';
         if(marks.length<=24||i%Math.max(tick,2)===0)content+=svgText(px-10,base+27,p.label?String(p.label).slice(0,9):trim(convertFromInches(p.x,unit),1),"tick-label");
       }
-      if(data.shape==="holes"){
-        content+=svgText(holeStart,302,"0 "+unit,"dim-label");
-        content+=svgText(holeStart+span*holeScale-100,302,fmt(span),"dim-label");
+      if(data.shape==="holes"||data.shape==="kerfs"){
+        const scale=data.shape==="holes"?holeScale:kerfScale;
+        const start=data.shape==="holes"?holeStart:kerfStart;
+        content+=svgText(start,302,"0 "+unit,"dim-label");
+        content+=svgText(start+data.span*scale-100,302,fmt(data.span),"dim-label");
       }else content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
     }else if(data.shape==="rafter"){
       // Side-elevation reference, deliberately not a paper-scale cutting template.
