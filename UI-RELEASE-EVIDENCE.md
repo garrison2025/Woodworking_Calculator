@@ -42,3 +42,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 ## Fence and segmented bowl regression (CI #88)
 - 26 passing Playwright checks include fence overlapping-post rejection and recoverable centerline CSV, plus interactive all-ring segment schedule and angle/length unit headers.
 - No new UI layout style or mobile screenshots for these two routes were manually reviewed; functional UI checks are not a universal aesthetic signoff.
+
+## Unified data-table semantics and shelf cross-section — 2026-11-04
+- PASS: [CI #91](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41805332970) includes 28 real Chromium tests. The new shelf test checks three rectangular shelves in the SVG, numeric bottom/top faces, actual end clearances and invalid metric-input recovery.
+- PASS: [CI #90](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41804993159) checked that baluster/post SVG widths grow proportionally as actual entered material face width grows; bowl tables show dimensionless ring/segment indexes and angle units while CSV headings match.
+- NOT RUN: manual detailed visual acceptance of every route on real mobile and paper physical scale.

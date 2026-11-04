@@ -33,3 +33,7 @@
 - Fence tool's public content now defines center-to-center run and rejects impossible negative clear gaps.
 - Segmented bowl tool's public content accurately describes a per-piece schedule and explicitly excludes rough stock, kerf, grain and lathe safety engineering.
 - [CI #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) passed. All 152 original KD≤29 mapped research keyword rows remain unchanged; these changes do not create unsupported new landing pages or traffic claims.
+
+## Shelf spacing intent clarification — 2026-11-04
+- `/shelf-spacing-calculator/` now states the actual applied reserve scheme rather than suggesting entered end clearances are exactly the final gap. Public content includes explicit base-gap and final-gap equations plus the complete face-coordinate schedule.
+- No new keyword estimates or fictitious landing pages were introduced. [CI #91](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41805332970) continues to validate the 152 mapped research keywords, 26 live calculators and intentionally held P2 intents.

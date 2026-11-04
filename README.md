@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 247 geometry tests, 26 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 249 geometry tests, 28 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -142,3 +142,5 @@ All on-screen cut-list headers and CSV headers now come from the same typed sche
 ## 2026-11-04 — Corrected shelf clearance meaning and face-level schedule
 
 `/shelf-spacing-calculator/` now explicitly distinguishes extra reserved top/bottom clearance from the actual final end clearances after equalizing free space. Its cut list includes shelf bottom and upper surfaces plus the clear space on both sides of each shelf. The SVG renders scaled plank thickness instead of infinitely thin lines. Unit, geometry conservation and insufficient-clearance regression fixtures cover the new calculation. These are geometry aids, not load-bearing or hardware recommendations.
+
+Latest verified release check: [CI #91](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41805332970) passed **249/249** Node tests, **28/28** Playwright Chromium tests and all noindex/static checks. A separate [CI #90](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41804993159) verified shared unit headers and proportional post/baluster face geometry. These checks are not physical material or accessibility certification.
