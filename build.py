@@ -105,6 +105,7 @@ def tool_page(t):
     fields = ''.join(f'<div class="field"><label for="f-{esc(f["key"])}">{esc(f["label"])}{(" <span data-length-unit>in</span>" if f["kind"]=="L" else "")}</label>'
          f'<input id="f-{esc(f["key"])}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
          f'<small id="field-note-{esc(f["key"])}">{"Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"}</small></div>' for f in t["inputs"])
+    guidance = ''.join(f'<h3>{esc(g["heading"])}</h3><p>{esc(g["text"])}</p>' for g in t.get("guidance",[]))
     related = [p for p in TOOLS if p["category"]==t["category"] and p["slug"]!=t["slug"]][:4]
     others = [p for p in TOOLS if p["category"]!=t["category"]][:2]
     relevant=(related+others)[:6]
@@ -136,7 +137,9 @@ def tool_page(t):
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div></div>'
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
-           f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p><h3>Assumptions and limits</h3>'
+           f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
+            +guidance+
+            '<h3>Assumptions and limits</h3>'
            f'<p id="print-assumptions">{esc(t["limit"])}</p>'
            '<p class="caution">This tool describes dimensional geometry. It does not certify building-code compliance, structural capacity, fastening, material quality or safe cutting techniques.</p>'
            '<h3>Printing and precision</h3><p>Use Print / PDF to save the worksheet as a PDF. The SVG is a proportional diagram, not a one-to-one cutting template. Before transferring marks to wood, verify units, stock dimensions, kerf, reference faces and printer scaling.</p>'
