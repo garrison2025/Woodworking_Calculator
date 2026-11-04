@@ -147,8 +147,8 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #e4eee7;
 .export-stack .btn{width:100%}
 .action-status{padding:8px 16px 20px;color:#718674;font-size:11px}
 .detail-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:27px;align-items:start;padding-bottom:95px}
-.detail-main{display:grid;gap:21px}
-.content-block{padding:30px;background:#fffefd;border:1px solid var(--line);border-radius:13px}
+.detail-main{display:grid;gap:21px;min-width:0}
+.content-block{padding:30px;background:#fffefd;border:1px solid var(--line);border-radius:13px;min-width:0}
 .content-block h2{font-size:24px;margin:10px 0 12px}.content-block h3{margin-top:22px;margin-bottom:9px}
 .content-block>p{line-height:1.8;margin-top:10px;font-size:14px}
 .table-scroll{overflow:auto;max-height:470px;margin-top:18px;border:1px solid #e5e9e3;border-radius:9px}
@@ -183,7 +183,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .topbar-inner{height:71px}.topbar nav{display:none}.nav-cta{margin-left:auto}
   .hero{grid-template-columns:1fr;gap:28px;padding-top:55px;padding-bottom:60px}
   .hero-graphic{max-width:640px}.trust-strip{grid-template-columns:1fr 1fr}
-  .detail-layout{grid-template-columns:1fr}.details-side{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .detail-layout{grid-template-columns:minmax(0,1fr)}.details-side{display:grid;grid-template-columns:1fr 1fr;gap:13px}
   .workspace{grid-template-columns:1fr 1fr;grid-template-areas:"input result" "drawing drawing"}
 }
 @media(max-width:680px){
