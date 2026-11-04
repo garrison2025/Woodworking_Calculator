@@ -148,7 +148,7 @@ test("print calibration stays hidden on screen and renders in Letter and A4 PDFs
       margin:{top:"15mm",bottom:"15mm",left:"15mm",right:"15mm"}});
     expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(5000);
-    const mediaBox=pdf.toString("latin1").match(/\\/MediaBox\\s*\\[\\s*0\\s+0\\s+([0-9.]+)\\s+([0-9.]+)\\s*\\]/);
+    const mediaBox=pdf.toString("latin1").match(/\/MediaBox\s*\[\s*0\s+0\s+([0-9.]+)\s+([0-9.]+)\s*\]/);
     expect(mediaBox, paper+" missing PDF MediaBox").not.toBeNull();
     expect(Number(mediaBox[1])).toBeCloseTo(w,0);
     expect(Number(mediaBox[2])).toBeCloseTo(h,0);
