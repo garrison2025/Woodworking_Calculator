@@ -7,10 +7,10 @@ import {convertFromInches} from "./calcs.mjs";
 
 const UNITS=new Set(["in","ft","mm","cm","m"]);
 const numeric=(n)=>Number(n.toPrecision(12)).toString();
-const csvEscape=(value)=>{
+const csvEscape=(value,isNumeric=false)=>{
   let text=String(value??"");
   // Spreadsheet programs can evaluate formulas in untrusted labels.
-  if(/^[\s\u0000-\u001f]*[=+@\-]/u.test(text))text="'"+text;
+  if(!isNumeric && /^[\s\u0000-\u001f]*[=+@\-]/u.test(text))text="'"+text;
   return '"'+text.replace(/"/g,'""')+'"';
 };
 const titleCase=(key)=>key.replace(/([A-Z])/g," $1").replace(/^./,ch=>ch.toUpperCase());
@@ -56,7 +56,7 @@ export function buildScheduleCsv(records,unit,sourceNote=""){
   });
   const lines=[head.map(csvEscape).join(",")];
   for(const row of records)
-    lines.push(keys.map((key,i)=>csvEscape(converted(key,row[key],kinds[i],unit))).join(","));
+    lines.push(keys.map((key,i)=>csvEscape(converted(key,row[key],kinds[i],unit),typeof row[key]==="number")).join(","));
   // Keep metadata on one final row for CSV column-count consistency.
   const note=keys.map((key,i)=>csvEscape(i===0?"Source note":i===1?sourceNote:"")).join(",");
   lines.push(note);
