@@ -126,3 +126,9 @@ Latest verified print calibration build: [CI run #81](https://github.com/garriso
 ## 2026-11-04 — Precision CSV schedule exports
 
 CSV cut schedules now use the selected unit **in their column headers** (such as `Position (mm)`, `Cut Area (m²)` and `Cut Vertices (mm)`) and retain **plain machine-readable numerical coordinates** instead of rounded, locale-formatted values with mixed unit suffixes. Clipped roof polygon vertices are converted to the same selected unit as numeric cut rows. Sheet quantities and percentages remain dimensionless. The source-note row stays explicitly labeled, all columns stay consistent across nullable records, and strings which begin with spreadsheet formulas are escaped. Screen tables and SVG labels still use human-readable formatted dimensions; both use the same engine values. No paid API or data upload is involved.
+
+## 2026-11-04 — Measurable edge-case fixes
+
+- `/fence-post-calculator/`: the run is clearly defined **between end-post centers**. An actual clear bay must remain positive after subtracting post face width; wide posts that would overlap/touch are now rejected instead of yielding a negative opening. Every post's center and its following clear bay are exported (last post has a blank next-bay value). This is not a structural fence design.
+- `/segmented-bowl-calculator/`: all ring/segment combinations now have an explicit cut schedule: ring and segment identifiers, start/end angles in degrees, miter angle in degrees, finished outer/inner chord lengths and radial depth. Repeating rings is a geometric model; no kerf, grain, glue, rough blank or optimized layout is asserted.
+- CSV typing now keeps ring/segment indexes as **unitless numbers**, angles as **degrees**, and physical chord lengths in the selected unit. Browser E2E and deterministic property fixtures guard these distinctions.

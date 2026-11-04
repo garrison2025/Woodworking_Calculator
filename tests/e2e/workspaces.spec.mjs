@@ -265,6 +265,44 @@ test("single-plane sheathing SVG reflects sheet orientation and exports a cut li
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(page.locator("#dimension-svg svg .sheathing-cut")).toHaveCount(0);
 });
+test("fence-post rejects overlapping faces and exports center-to-center clear bays",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/fence-post-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Posts"})).toContainText("14");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(14);
+  await page.locator("#f-length").fill("120");
+  await page.locator("#f-bay").fill("24");
+  await page.locator("#f-post").fill("25");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+  await page.locator("#f-post").fill("23.5");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Approximate clear bay"})).toContainText("0.5 in");
+  await page.locator("#unit-select").selectOption("mm");
+  const dl=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await dl).path(),"utf8");
+  expect(csv).toContain('"Center (mm)","Clear Bay To Next (mm)"');
+  expect(csv).toContain('"Post 1","0","12.7"');
+});
+test("segmented bowl emits every ring/segment and exports typed angles",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/segmented-bowl-calculator/");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(36);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Segment half-miter"})).toContainText("15°");
+  await page.locator("#f-rings").fill("4");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(48);
+  await page.locator("#unit-select").selectOption("mm");
+  const dl=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await dl).path(),"utf8");
+  expect(csv).toContain('"Ring","Segment","Start Angle (°)","End Angle (°)","Miter Angle (°)"');
+  expect(csv).toContain('"Outer Chord (mm)","Inner Chord (mm)","Radial Depth (mm)"');
+  expect(csv).toContain('"Ring 4 / segment 12","4","12"');
+  await page.locator("#f-inner").fill("20");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+});
 test("deck estimator plan, stock segmentation, joist grid and CSV update together",async({page})=>{
   await page.goto("/deck-material-calculator/");
   await expect(page.locator("#calc-error")).toBeHidden();

@@ -34,6 +34,15 @@ test("textual values beginning with spreadsheet formulas cannot execute",()=>{
   assert.ok(csv.includes('"-0.0833333333333"'));
   assert.ok(csv.includes('"\'-danger"'));
 });
+test("bowl segment index and ring are unitless while angles and lengths retain types",()=>{
+  const r=[{item:"Ring 1 / segment 2",ring:1,segment:2,startAngle:30,endAngle:60,
+    miterAngle:15,outerChord:3,innerChord:2,radialDepth:1}];
+  const csv=buildScheduleCsv(r,"mm","Finished sizes only");
+  assert.ok(csv.includes('"Ring","Segment","Start Angle (°)","End Angle (°)","Miter Angle (°)"'));
+  assert.ok(csv.includes('"Outer Chord (mm)","Inner Chord (mm)","Radial Depth (mm)"'));
+  assert.ok(csv.includes('"Ring 1 / segment 2","1","2","30","60","15","76.2","50.8","25.4"'));
+  assert.ok(!csv.includes('"Ring (mm)"'));
+});
 test("plain metric fallback and units validation remain supported",()=>{
   const csv=buildScheduleCsv([{measurement:"Roof angle",value:"26.565°"}],"in","Read limits");
   assert.ok(csv.includes('"Measurement","Value"'));

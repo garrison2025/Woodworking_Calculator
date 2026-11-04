@@ -120,6 +120,68 @@ test("P2 routes are blocked by the geometry engine",()=>{
   for(const t of held)assert.equal(safeCompute(t.slug,{}).ok,false);
 });
 
+test("Fence-post centerline data stays inside the user-defined run",()=>{
+  const a={length:1200,bay:96,post:3.5};
+  const r=compute("fence-post-calculator",a);
+  near(value(r,"Bays"),13);
+  near(value(r,"Posts"),14);
+  near(value(r,"True OC interval"),1200/13);
+  near(value(r,"Approximate clear bay"),1200/13-3.5);
+  assert.equal(r.rows.length,14);
+  near(r.rows[0].center,0);
+  near(r.rows.at(-1).center,1200);
+  assert.equal(r.rows.at(-1).clearBayToNext,null);
+  for(let i=0;i<r.rows.length-1;i++){
+    near(r.rows[i+1].center-r.rows[i].center,1200/13,1e-7);
+    near(r.rows[i].clearBayToNext,1200/13-3.5,1e-7);
+  }
+});
+test("Fence-post rejects posts wider than computed bay even when they fit overall run",()=>{
+  const a={length:120,bay:24,post:25};
+  assert.equal(safeCompute("fence-post-calculator",a).ok,false);
+  assert.match(safeCompute("fence-post-calculator",a).error,/overlap|touch/i);
+  assert.equal(safeCompute("fence-post-calculator",{...a,post:24}).ok,false);
+  const close=compute("fence-post-calculator",{...a,post:23.5});
+  near(value(close,"Approximate clear bay"),.5);
+  assert.equal(safeCompute("fence-post-calculator",{...a,bay:.01}).ok,false);
+});
+test("Fence-post property grid conserves centers, widths and maximum OC",()=>{
+  for(const length of [72,97,120,1000])for(const maxBay of [12,16,24,36,96]){
+    const n=Math.ceil(length/maxBay);
+    if(n>500)continue;
+    const usable=length/n;
+    const r=compute("fence-post-calculator",{length,bay:maxBay,post:usable/2});
+    assert.equal(r.rows.length,n+1);
+    near(r.rows.at(-1).center,length);
+    near(value(r,"True OC interval"),usable,1e-9);
+    near(value(r,"Approximate clear bay"),usable/2,1e-9);
+    assert.ok(usable<=maxBay+1e-9);
+  }
+});
+test("Segmented-bowl per-piece schedule conserves ring sweeps and chord lengths",()=>{
+  for(const n of [3,6,12,24,48,180])for(const rings of [1,2,4]){
+    const a={outer:12,inner:8,segments:n,rings};
+    const r=compute("segmented-bowl-calculator",a);
+    assert.equal(r.shape,"ring");
+    assert.equal(r.rows.length,n*rings);
+    near(value(r,"Segment half-miter"),180/n);
+    near(value(r,"Segment sweep"),360/n);
+    near(value(r,"Outer chord"),12*Math.sin(Math.PI/n));
+    near(value(r,"Inner chord"),8*Math.sin(Math.PI/n));
+    for(let ring=1;ring<=rings;ring++){
+      const pieces=r.rows.filter(x=>x.ring===ring);
+      assert.equal(pieces.length,n);
+      near(pieces[0].startAngle,0);
+      near(pieces.at(-1).endAngle,360,1e-7);
+      for(const p of pieces){
+        near(p.outerChord,12*Math.sin(Math.PI/n),1e-7);
+        near(p.innerChord,8*Math.sin(Math.PI/n),1e-7);
+        near(p.radialDepth,2);
+      }
+    }
+  }
+  assert.equal(safeCompute("segmented-bowl-calculator",{outer:8,inner:12,segments:12,rings:1}).ok,false);
+});
 test("Multiple framing openings remove interior regular studs",()=>{
   const a={length:160,spacing:16,width:1.5,openingStart:24,openingWidth:24,openingHeight:80,opening2Start:88,opening2Width:24,opening3Start:0,opening3Width:0};
   const r=compute("framing-calculator",a);

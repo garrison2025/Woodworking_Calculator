@@ -17,12 +17,15 @@ const titleCase=(key)=>key.replace(/([A-Z])/g," $1").replace(/^./,ch=>ch.toUpper
 const fieldType=(key,records)=>{
   if(key==="cutAreaFt2")return "area";
   if(key==="cutVertices")return "vertices";
-  if(records.some(r=>typeof r[key]==="number") &&
-     key!=="count" && !/(angle|quantity|percentage|pieces|segments|risers)$/i.test(key))return "length";
-  return "plain";
+  if(!records.some(r=>typeof r[key]==="number"))return "plain";
+  // Ring/segment indexes are counts, never lengths. Angular sweeps are degrees.
+  if(/(?:angle|degrees|deg)$/i.test(key))return "angle";
+  if(/^(?:count|ring|rings|segment|segments|index|row|column|quantity|pieces|risers|treads|planeIndex)$/i.test(key))return "plain";
+  return "length";
 };
 const unitLabel=(kind,unit)=>{
   if(kind==="area")return ["in","ft"].includes(unit)?"ft²":"m²";
+  if(kind==="angle")return "°";
   if(kind==="vertices"||kind==="length")return unit;
   return null;
 };
