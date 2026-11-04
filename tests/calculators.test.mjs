@@ -272,6 +272,48 @@ test("maximum supported segmented bowl yields 18,000 ordered entries without mis
     near(r.rows[k].radialDepth,4);
   }
 });
+test("Wainscoting left/right face edges, gaps and symmetric margin close exactly",()=>{
+  const a={wall:120,panels:5,margin:3,gap:2,height:36};
+  const r=compute("wainscoting-calculator",a);
+  const nearW=(x,y)=>assert.ok(Math.abs(x-y)<1e-7,`expected ${y}, got ${x}`);
+  assert.equal(r.rows.length,5);
+  for(const [i,p] of r.rows.entries()){
+    const left=3+i*23.2,right=left+21.2;
+    nearW(p.left,left);nearW(p.right,right);nearW(p.width,21.2);
+    if(i<4){nearW(r.rows[i+1].left-p.right,2);nearW(p.gapAfter,2);}
+    else assert.equal(p.gapAfter,null);
+    assert.ok(p.right>p.left);
+  }
+  nearW(r.rows[0].left,3);
+  nearW(120-r.rows.at(-1).right,3);
+  nearW(r.rows.reduce((s,p)=>s+p.width+(p.gapAfter||0),6),120);
+  nearW(value(r,"Total layout width"),120);
+  nearW(value(r,"Total inter-panel gaps"),8);
+  assert.deepEqual(r.panelRows,r.rows);
+});
+test("Wainscoting one panel, zero gaps, and extreme narrow faces keep honest coordinates",()=>{
+  const nearW=(x,y)=>assert.ok(Math.abs(x-y)<1e-7,`expected ${y}, got ${x}`);
+  const single=compute("wainscoting-calculator",{wall:100,panels:1,margin:5,gap:20,height:22});
+  assert.equal(single.rows.length,1);
+  assert.equal(single.rows[0].left,5);
+  assert.equal(single.rows[0].right,95);
+  assert.equal(single.rows[0].gapAfter,null);
+  nearW(value(single,"Total inter-panel gaps"),0);
+  const zero=compute("wainscoting-calculator",{wall:12,panels:4,margin:0,gap:0,height:18});
+  for(let i=0;i<3;i++)nearW(zero.rows[i].right,zero.rows[i+1].left);
+  const thin=compute("wainscoting-calculator",{wall:120,panels:400,margin:0,gap:0,height:18});
+  assert.equal(thin.rows.length,400);
+  nearW(thin.rows.at(-1).right,120);
+  assert.ok(thin.rows.every(p=>p.width>0&&p.right>p.left));
+  for(const input of [
+    {wall:1,panels:1,margin:.5,gap:0,height:12},
+    {wall:1,panels:1,margin:0.4999999995,gap:0,height:12},
+    {wall:12,panels:4,margin:1,gap:4,height:12}
+  ]){
+    const out=safeCompute("wainscoting-calculator",input);
+    assert.equal(out.ok,false);
+  }
+});
 test("Segmented-bowl per-piece schedule conserves ring sweeps and chord lengths",()=>{
   for(const n of [3,6,12,24,48,180])for(const rings of [1,2,4]){
     const a={outer:12,inner:8,segments:n,rings};

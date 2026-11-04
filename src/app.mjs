@@ -75,8 +75,16 @@ if(slug){
           content+='<rect x="'+px+'" y="125" width="'+Math.max(1,nx-px)+'" height="104" rx="1" fill="'+(i%2?"#d2b18b":"#e0c6a5")+'" stroke="#9e764c"/>';
         }
       }else if(data.shape==="panels"){
-        const w=data.panelWidth||1;
-        for(const [i,p] of marks.entries())content+='<rect x="'+x(p.x-w/2)+'" y="87" width="'+Math.max(1,x(p.x+w/2)-x(p.x-w/2))+'" height="162" fill="'+(i%2?"#e1c29d":"#f0d9bc")+'" stroke="#97734e" stroke-width="1.5"/>';
+        // Draw exactly the stored cut-list edges, with no fabricated
+        // minimum visual width that would distort thin panels or zero gaps.
+        content+='<rect class="wainscot-wall" x="'+left+'" y="82" width="'+W+'" height="172" fill="#f4f1ea" stroke="#b7b3a8" stroke-width="1.2"><title>'+esc("Target wall width "+fmt(span))+'</title></rect>';
+        for(const [i,row] of data.panelRows.entries()){
+          const x1=x(row.left),x2=x(row.right);
+          content+='<rect class="wainscot-panel" data-panel="'+(i+1)+'" x="'+x1+'" y="87" width="'+(x2-x1)+'" height="162" fill="'+(i%2?"#e1c29d":"#f0d9bc")+'" stroke="#97734e" stroke-width=".65"><title>'+esc(row.item+" left "+fmt(row.left)+", right "+fmt(row.right)+", actual width "+fmt(row.width))+'</title></rect>';
+        }
+        content+=svgText(left,69,"LEFT MARGIN "+fmt(data.leftMargin),"tick-label");
+        content+=svgText(right-227,69,"RIGHT MARGIN "+fmt(data.rightMargin),"tick-label");
+        content+=svgText(left,335,"PANEL GAP "+fmt(data.gap)+" · ACTUAL END COORDINATES","tick-label");
       }else if(data.shape==="slope"){
         const min=Math.max(1,Math.max(data.start||1,data.boardHeight||1));
         const y0=base-(data.start/min)*175,y1=base-(data.boardHeight/min)*175;

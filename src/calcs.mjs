@@ -266,10 +266,32 @@ export function compute(slug,a){
   }
   case "wainscoting-calculator":{
     positive("wall","height");nonnegative("margin","gap");whole("panels");
-    const available=a.wall-2*a.margin-(a.panels-1)*a.gap,width=available/a.panels;
-    need(width>0,"Margins and gaps leave no usable panel width.");
-    rows=Array.from({length:a.panels},(_,i)=>({item:"Panel "+(i+1),left:q(a.margin+i*(width+a.gap)),width:q(width),height:q(a.height)}));
-    return result([M("Panel width",width),M("Panel count",a.panels,"N"),M("Total panel face width",width*a.panels),M("Panel height",a.height)],rows.map(r=>P(r.left+r.width/2,r.item)),a.wall,rows,"panels",{panelWidth:width,panelHeight:a.height});
+    const totalMargins=2*a.margin,totalGaps=(a.panels-1)*a.gap;
+    const available=a.wall-totalMargins-totalGaps,width=available/a.panels;
+    // Cut coordinates are stored at 1e-8 inch resolution. Reject panels
+    // that would appear as zero-width or yield indistinguishable edges.
+    need(width>=1e-7,"Margins, gaps or panel count leave no representable positive panel width.");
+    const lastRight=a.margin+(a.panels-1)*(width+a.gap)+width;
+    need(Math.abs(lastRight-(a.wall-a.margin))<=Math.max(1e-7,a.wall*1e-10),
+      "Panel layout does not close at the intended right margin.");
+    rows=Array.from({length:a.panels},(_,i)=>{
+      const left=a.margin+i*(width+a.gap),right=left+width;
+      return {item:"Panel "+(i+1),
+        left:q(left),right:q(right),width:q(width),height:q(a.height),
+        gapAfter:i<a.panels-1?q(a.gap):null};
+    });
+    need(rows.every(r=>r.right>r.left&&r.width>0),
+      "Panel edges collapse at the coordinate precision; choose a wider panel.");
+    return result([
+      M("Panel width",width),M("Panel count",a.panels,"N"),
+      M("Total panel face width",available),
+      M("Total inter-panel gaps",totalGaps),
+      M("Left end margin",a.margin),M("Right end margin",a.margin),
+      M("Total layout width",available+totalGaps+totalMargins),
+      M("Panel height",a.height)
+    ],rows.map(r=>P(r.left+r.width/2,r.item)),a.wall,rows,"panels",
+    {panelWidth:width,panelHeight:a.height,panelRows:rows,
+      leftMargin:a.margin,rightMargin:a.margin,gap:a.gap});
   }
   case "stair-calculator":{
     positive("rise","desired","tread");const risers=ceilStable(a.rise/a.desired);need(risers>=2&&risers<=200,"Stair count outside supported range.");

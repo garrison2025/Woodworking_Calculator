@@ -565,7 +565,7 @@
       "keyword": "wainscoting calculator",
       "volume": 1300,
       "kd": 18,
-      "desc": "Equally sized panels between margins and gaps",
+      "desc": "Equal-width wainscot panel cuts with exact left/right edges, visible gaps, symmetric end margins and dimensional closure",
       "inputs": [
         {
           "key": "wall",
@@ -598,10 +598,28 @@
           "kind": "L"
         }
       ],
-      "formula": "panel width = (wall−2×margin−(panels−1)×gap)/panels",
-      "example": "120 in wall, 5 panels, 3 in margins, 2 in gaps: 21.2 in panels",
-      "limit": "Doors, skirting and stile dimensions excluded",
-      "status": "BETA_NO_INDEX"
+      "formula": "Panel width = (wall width−2×end margin−(panel count−1)×inter-panel gap)/panel count; panel i left = margin+i×(panel width+gap); right = left+panel width. The last panel right must equal wall width−margin; across-wall total = panel faces+all gaps+two end margins.",
+      "example": "120 in wall, 5 panels, 3 in end margins and 2 in between-panel gaps: each panel is 21.2 in wide, with positions 3–24.2, 26.2–47.4, 49.4–70.6, 72.6–93.8, and 95.8–117 in. Five faces total 106 in + four gaps total 8 in + two margins total 6 in = 120 in.",
+      "limit": "Flat straight-wall reference only; does not subtract door/window openings, outlets, skirting, rails, stile thickness, scribe/expansion gaps or trim overhang. Inputs are panel face widths and open between-panel gaps; zero gap means adjoining panels. The drawing and CSV show the same rounded reference edges (1e-8 in coordinate resolution), but are not certified 1:1 paper cutting templates. Verify wall irregularity and finished stock at site.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Measure clear wall width and symmetric side margins",
+          "text": "Enter the length along the wall to cover with equal-width panel faces. The margin is the reserved face clearance at EACH end; the gap appears only between adjacent panels, so one panel has no inter-panel gap."
+        },
+        {
+          "heading": "Check every right edge before cutting",
+          "text": "The schedule lists left and right edges, actual width, panel height and gap after each panel. Each panel ends before the next begins by exactly the entered gap (within coordinate display rounding). End margins, total panel width and combined gaps must add back to the measured wall width."
+        },
+        {
+          "heading": "Diagram follows schedule edges, not a styled minimum width",
+          "text": "The SVG now plots the same left/right numeric endpoints as the schedule, including narrow panels and zero gaps, instead of drawing all narrow panels as if at least one pixel wide. The wall outline is schematic in vertical height only."
+        },
+        {
+          "heading": "Use actual finished stock sizes",
+          "text": "This is a face-layout and cut-reference calculator, not a door/window takeoff or a construction fastening guide. Actual trims, stile overlaps, wall deviations, adhesive/fastener placement and fabrication tolerances require separate checks."
+        }
+      ]
     },
     {
       "slug": "stair-calculator",
