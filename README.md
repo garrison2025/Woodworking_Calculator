@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 257 geometry tests, 30 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 259 geometry tests, 31 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -166,3 +166,7 @@ The hole-spacing tool now reports **center pitch, clear solid material between d
 ## 2026-11-04 — Kerf continuity and flat-board slit checks
 
 The P0 kerf-bending trial plan enforces strictly positive retained continuous wood and rejects touching/overlapping saw mouths on the flat arc reference. Schedule rows now include kerf center, left/right mouth limits, nominal depth, remaining web and idealized maximum closure; calculated average planned turn is reported separately. The selected radius is only a reference arc, not a guaranteed finished bend or neutral axis. Stock failure, springback, wood grain, physical cuts and paper-scale printing remain unverified.
+
+### 2026-11-04 — Kerf plan release QA
+
+[GitHub Actions #103](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41812557680) passed **259/259** Node geometry/CSV tests, **31/31** real Chromium browser tests and all 36-page/26-tool/152-keyword static checks. Tests include physical cut-mouth overlap rejection, strictly positive continuous wood web, idealized turn estimate and coordinate conservation, proportional stock/web/slot SVG, unit-aware CSV and invalid-input recovery. The site is still a **noindex engineering beta**, not a construction-grade springback estimator or a 1:1 cutting template. Independent woodworking trials, printer checks, Safari/Firefox, screen reader and real mobile device testing are not complete.
