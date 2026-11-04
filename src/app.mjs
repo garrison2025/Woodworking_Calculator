@@ -260,9 +260,21 @@ if(slug){
         content+='<path d="M'+x1+','+y1+' A'+R+','+R+' 0 0,1 '+x2+','+y2+' L'+x3+','+y3+' A'+r+','+r+' 0 0,0 '+x4+','+y4+' Z" fill="'+(i%2?"#dfb989":"#c9945f")+'" stroke="#704f2d"/>';
       }
     }else if(data.shape==="angles"){
-      const cx=460,cy=200;
-      content+='<path d="M300 240 L650 240 M460 240 L630 85" stroke="#1e6454" stroke-width="5" fill="none"/><path d="M515 240 A55 55 0 0 0 500 199" stroke="#c58c54" stroke-width="3" fill="none"/>';
-      content+=svgText(510,177,trim(data.miter,2)+"° miter","dim-label")+svgText(360,285,trim(data.bevel,2)+"° bevel","dim-label");
+      // Two independent angle illustrations. The inside/left choices affect
+      // the PLAN reference orientation only, NEVER a real saw hand setting.
+      const m=data.miter*Math.PI/180,b=data.bevel*Math.PI/180;
+      const ox=255,oy=190,ray=140,sgn=data.planSign;
+      const mx=ox+ray*Math.cos(m),my=oy-sgn*ray*Math.sin(m);
+      content+='<line class="crown-miter-base" x1="'+ox+'" y1="'+oy+'" x2="'+(ox+ray)+'" y2="'+oy+'" stroke="#386b57" stroke-width="3"/>';
+      content+='<line class="crown-miter-ray" data-sign="'+sgn+'" x1="'+ox+'" y1="'+oy+'" x2="'+mx+'" y2="'+my+'" stroke="#bd8651" stroke-width="3.2"><title>'+esc("Illustrative plan turn "+trim(sgn*data.miter,3)+" degrees; NOT a saw rotation setting")+'</title></line>';
+      const bx=610,by=240,br=145;
+      content+='<line x1="'+bx+'" y1="'+by+'" x2="'+(bx+br)+'" y2="'+by+'" stroke="#386b57" stroke-width="3"/>';
+      content+='<line class="crown-bevel-ray" x1="'+bx+'" y1="'+by+'" x2="'+(bx+br*Math.cos(b))+'" y2="'+(by-br*Math.sin(b))+'" stroke="#bd8651" stroke-width="3.2"><title>'+esc("Bevel magnitude "+trim(data.bevel,3)+" degrees")+'</title></line>';
+      content+=svgText(93,69,"MITER · ILLUSTRATIVE PLAN","dim-label");
+      content+=svgText(93,89,(data.inside?"INSIDE":"OUTSIDE")+" / "+(data.left?"LEFT":"RIGHT")+" REFERENCE","tick-label");
+      content+=svgText(93,317,trim(sgn*data.miter,2)+"° (NOT SAW SETTING)","dim-label");
+      content+=svgText(573,69,"BEVEL · MAGNITUDE","dim-label");
+      content+=svgText(594,315,trim(data.bevel,2)+"°","dim-label");
     }
     const title=esc(tool.title),label=esc("All diagram dimensions in "+({in:"inches",ft:"feet",mm:"millimeters",cm:"centimeters",m:"meters"}[unit]||"inches"));
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 344" role="img" aria-label="'+title+' scaled schematic based on calculated values"><title>'+title+'</title><desc>'+label+'; illustrative geometry, not a one-to-one cutting template</desc><style>.gridline{stroke:#dbe1d9;stroke-width:1}.axis{stroke:#385f4d;stroke-width:2}.tick-label{font:12px ui-monospace,monospace;fill:#36574e}.dim-label{font:15px ui-monospace,monospace;fill:#203b33}</style><rect width="900" height="344" fill="#fcfbf8"/>'+grid+content+'</svg>';
