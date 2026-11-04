@@ -91,8 +91,23 @@ export function compute(slug,a){
     positive("run","depth");nonnegative("pitch","ridge","overhang","seat");
     need(a.ridge<2*a.run,"Ridge thickness must be less than the full span.");
     need(a.seat<a.run&&a.seat*a.pitch/12<a.depth,"Birdsmouth reference exceeds the stated rafter section.");
-    const run=a.run-a.ridge/2,rise=run*a.pitch/12,line=Math.hypot(run,rise),over=Math.hypot(a.overhang,a.overhang*a.pitch/12),heel=a.seat*a.pitch/12;
-    return result([M("Adjusted run",run),M("Rise",rise),M("Rafter reference length",line),M("Overhang slope length",over),M("Plumb cut angle",deg(Math.atan(a.pitch/12)),"A"),M("Seat reference drop",heel)],[],run,[],"triangle",{rise,run,seat:a.seat,stockDepth:a.depth});
+    const run=a.run-a.ridge/2,slope=a.pitch/12,angle=Math.atan(slope);
+    const rise=run*slope,line=Math.hypot(run,rise),over=Math.hypot(a.overhang,a.overhang*slope);
+    const heel=a.seat*slope,notchNormal=a.seat*Math.sin(angle),remaining=a.depth-notchNormal;
+    need(remaining>0,"The nominal seat-notch depth consumes the full rafter depth; reduce the seat or slope.");
+    const schedule=[
+      {item:"Ridge reference",horizontalRun:0,slopeDistance:0,verticalDrop:0},
+      {item:"Bearing reference",horizontalRun:q(run),slopeDistance:q(line),verticalDrop:q(rise)},
+      {item:"Overhang end",horizontalRun:q(run+a.overhang),slopeDistance:q(line+over),verticalDrop:q(rise+a.overhang*slope)}
+    ];
+    return result([
+      M("Adjusted run",run),M("Rise",rise),M("Rafter reference length",line),
+      M("Overhang slope length",over),M("Total slope to tail",line+over),
+      M("Plumb cut angle",deg(angle),"A"),M("Seat reference drop",heel),
+      M("Seat notch (normal depth)",notchNormal),M("Remaining stock (normal)",remaining),
+      M("Notch / stock depth",100*notchNormal/a.depth,"D")
+    ],schedule.map(r=>P(r.horizontalRun,r.item)),run+a.overhang,schedule,"rafter",
+    {rise,run,seat:a.seat,overhang:a.overhang,stockDepth:a.depth,notchNormal,pitch:a.pitch});
   }
   case "crown-molding-calculator":{
     positive("spring","corner");need(a.spring<90&&a.corner<180&&a.corner>0,"Angles must be between 0 and their geometric limits.");whole("inside",0,1);whole("left",0,1);
@@ -203,10 +218,28 @@ export function compute(slug,a){
   }
   case "stair-stringer-calculator":{
     positive("rise","tread","depth");whole("risers",2,200);
+    nonnegative("treadThickness","lowerFinish");
     const h=a.rise/a.risers,run=(a.risers-1)*a.tread;
-    need(h>0&&a.depth>h/2,"Available stringer depth should be reviewed relative to its cut shape.");
-    rows=Array.from({length:a.risers},(_,i)=>({item:"Step corner "+(i+1),run:q(Math.min(i,a.risers-1)*a.tread),rise:q((i+1)*h)}));
-    return result([M("Uniform riser height",h),M("Treads",a.risers-1,"N"),M("Total horizontal run",run),M("Stringer diagonal",Math.hypot(run,a.rise))],rows.map(r=>P(r.run)),Math.max(run,1),rows,"stairs",{stepRise:h,tread:a.tread,risers:a.risers});
+    const normalNotch=h*a.tread/Math.hypot(h,a.tread);
+    const throat=a.depth-normalNotch;
+    const bottomLayoutRise=h-a.treadThickness+a.lowerFinish;
+    need(throat>0,"The geometric step notch consumes the full stock depth; increase board depth or revise the stairs.");
+    need(bottomLayoutRise>0,"The bottom riser cut reference is not positive; review tread and finished floor thickness.");
+    rows=Array.from({length:a.risers},(_,i)=>({
+      item:i===a.risers-1?"Top landing vertical":"Riser "+(i+1),
+      horizontalRun:q(i*a.tread),
+      riserTopHeight:q((i+1)*h),
+      treadStart:q(i*a.tread),
+      treadEnd:i<a.risers-1?q((i+1)*a.tread):null
+    }));
+    return result([
+      M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
+      M("Total horizontal run",run),M("Stringer diagonal",Math.hypot(run,a.rise)),
+      M("Bottom riser layout cut",bottomLayoutRise),
+      M("Notch penetration (normal)",normalNotch),
+      M("Uncut throat (nominal)",throat)
+    ],rows.map(r=>P(r.horizontalRun,r.item)),Math.max(run,1),rows,"stringer",
+    {stepRise:h,tread:a.tread,risers:a.risers,throat,bottomLayoutRise,notchNormal:normalNotch});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");need(a.waste<=200,"Waste must be 0–200%.");
