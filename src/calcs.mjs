@@ -90,7 +90,7 @@ export function compute(slug,a){
   case "rafter-calculator":{
     positive("run","depth");nonnegative("pitch","ridge","overhang","seat");
     need(a.ridge<2*a.run,"Ridge thickness must be less than the full span.");
-    need(a.seat<a.run&&a.seat*a.pitch/12<a.depth,"Birdsmouth reference exceeds the stated rafter section.");
+    need(a.seat<a.run-a.ridge/2,"Seat reference must fit inside the ridge-adjusted horizontal run.");
     const run=a.run-a.ridge/2,slope=a.pitch/12,angle=Math.atan(slope);
     const rise=run*slope,line=Math.hypot(run,rise),over=Math.hypot(a.overhang,a.overhang*slope);
     const heel=a.seat*slope,notchNormal=a.seat*Math.sin(angle),remaining=a.depth-notchNormal;
