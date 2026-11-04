@@ -1,15 +1,15 @@
-# UI release evidence (2026-11-04)
-## Implemented in code
-- Workbench layout: left input, central original SVG diagram, right calculation outputs, mobile re-order.
-- UI tokens and component rules: `DESIGN.md`, `src/style.css`.
-- Interaction code: `src/app.mjs`; all 26 routes use local geometry results, in/mm toggle, 1/16 and 1/32 fraction approximation, client-generated CSV/SVG and print-to-PDF.
-- Recent tools displayed from browser-local history, error state, live region, skip-to-main, focus-visible, keyboard buttons and reduced-motion CSS are present in source.
-## Evidence states
-- Code inspection / static references: **IMPLEMENTED**, not a visual test.
-- Desktop screenshot: **NOT RUN**.
-- Mobile screenshot / overflow audit: **NOT RUN**.
-- Contrast measurement and touch validation: **NOT RUN**.
-- Browser PDF / 100% print scale: **NOT RUN**.
-- External browser source availability: **NOT RUN** (no deployed preview address supplied).
+# UI release evidence — 2026-11-04
+## Verified
+- Practical three-panel desktop calculator: measurement controls, original geometry SVG, live numeric takeoff; mobile order: input → results → diagram → schedule and method.
+- Actual Playwright Chromium navigation and input→result updates passed on **all 26 routes**. Unit dropdown supports inches, feet, millimeters, centimeters and meters.
+- CSV and SVG export download events, result clipboard and print-button invocation confirmed. Print/PDF output and physical scale are **not** certified.
+- No document-level horizontal scrolling at **360/390/768/1024/1440 px** for homepage and stud tool. Narrow workbench layout was corrected after first real browser failure.
+- Desktop and mobile (1440/390px) **6 real screenshots** of homepage/stud/deck were captured and reviewed from GitHub Actions `verified-ui-screenshots` artifact on [run #41788173380](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41788173380).
+- Desktop uses a measured workshop look with original CAD-style SVG, neutral/green/wood palette, no external fonts. Mobile was compacted into two-column measurement/result cards and diagram blank-height removal, then browser tested again.
 
-Remain `noindex` until these are completed. No screenshots or performance metrics are fabricated.
+## NOT RUN / LIMITATIONS
+- Real device touch/soft keyboard, screen reader testing, automated accessibility contrast metrics, Safari/Firefox, measured CWV.
+- Paper/PDF printer dialog verification, 1:1 physical ruler verification, engineer-reviewed saw orientation and cutting diagram precision.
+- Aesthetic review of **all** 26 tools on every breakpoint (screenshots sampled homepage/stud/deck only).
+
+All implementation is browser-local and keeps the preview noindex. No claim of full V3 visual or engineering acceptance.
