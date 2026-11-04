@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 254 geometry tests, 29 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 257 geometry tests, 30 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -160,3 +160,5 @@ Latest verified build: [CI #95](https://github.com/garrison2025/Woodworking_Calc
 ## 2026-11-04 — True-radius longitudinal drill layout
 
 The hole-spacing tool now reports **center pitch, clear solid material between drilled holes and leftover solid wood at each end**. Each downloadable schedule row includes the hole center, left/right hole edge and clearance to the previous hole; all use the selected physical unit. The SVG displays true circular hole footprints using a *single isotropic scale* shared with each center tick, shrinking the diagram width if a large diameter would otherwise clip the fixed viewport. The end-center setback is NOT equal to the end material margin (`margin=setback−diameter/2`). Tests cover independent 100 mm geometry, varied hole counts and diameters, exact tangent holes and negative clearances. This is longitudinal-only geometry: board width, across-grain edge clearance, material strength, clamps, drill runout, physical paper-scale correctness and safe machining are excluded.
+
+**Drilling guide validation:** [CI #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) passed **257/257** Node geometry/CSV checks and **30/30** real Chromium browser tests. New 100 mm/5 mm fixtures independently verify four hole centers, outer edge coordinates, 25 mm clear material and 2.5 mm end margin. The CSV output normalizes metric length conversion tails under one millionth of a millimeter without modifying the geometry engine. The publicly served Hole Spacing page has updated method text and keeps `noindex,nofollow,noarchive`. Cross-width edge spacing and real physical drilling remain NOT VERIFIED.

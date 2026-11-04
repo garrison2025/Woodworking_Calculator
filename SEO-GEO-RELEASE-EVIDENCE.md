@@ -45,3 +45,7 @@
 ## Deck material search-intent fidelity — CI #95
 - The deck estimator now describes *joist-center-constrained* piece division instead of arbitrary stock-length cut positions; the method includes an illustrative 100-in purchased-board / 96-in joist-centered seam example and explicitly excludes bearing, fasteners, blocking and stagger patterns.
 - Preview live metadata has the revised tool description and still uses `noindex,nofollow,noarchive`. [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) passed while all 152 mapped keyword rows and 26 P0/P1 calculators were retained. No traffic claims or extra indexed keyword pages were added.
+
+## Drill-hole spacing intent and evidence — CI #98
+- `/hole-spacing-calculator/` now distinguishes *end-center offset* from *clear solid material at the end*, center pitch from *clear material between two holes*, and exposes each hole's two longitudinal boundaries. The new text explicitly rules out across-grain margin and unverified structural/material conclusions.
+- [CI #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) passed. The static 152-row KD≤29 keyword map and 26 active routes remain unchanged; live Cloudflare markup is still noindex with no premature SEO launch.

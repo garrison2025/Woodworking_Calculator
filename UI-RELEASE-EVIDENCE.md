@@ -57,3 +57,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: the deck SVG adds distinct colored butt-joint ticks inside each board row and continues to show dashed joist center reference lines. Changing stock from 144 to 100 in reveals 22 joints, while a non-reachable joist center clears the drawing and reports a specific error; valid input restores the visual schedule.
 - PASS: [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) validated matching PDF/CSV-aware responsive browser behavior. 29/29 Playwright tests passed.
 - LIMIT: the diagram illustrates **unstaggered** aligned seams and must not be treated as a structural design or physical paper-scale cut template.
+
+## Hole spacing SVG and CSV precision — CI #98
+- PASS: [CI #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) includes 30 Chromium tests, including four SVG drill-hole circles, isotropic center-pitch/radius ratios, unit-dependent table/CSV edges and hole overlap error clearing.
+- SVG board face width is an arbitrary visual slab, since the user does not input board width; drawn circles preserve equal horizontal and vertical scale and are NOT paper-size drilling templates.
+- PASS: metric CSV export tested without floating precision tails; the geometry engine itself remains unchanged by export formatting.
