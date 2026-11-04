@@ -54,3 +54,8 @@
 - The crown tool now explicitly separates mathematical angle magnitudes from illustrative left/right plan sign, and tells users this is not a branded miter-saw settings chart. The stair stringer page now distinguishes the actual notch pitch reference from the floor-to-floor diagonal, which must not be construed as a timber cutting length.
 - Form selections, reproducible 38°/90° and 105-in/14-riser examples, schema-labelled CSV angles and exact stair profile coordinates improve answer accuracy without new unverified keyword claims.
 - [CI #118](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41929865892) passed. No change to 26 published tool URLs, 152 Semrush research keyword entries, or the noindex Pages preview policy.
+
+## Measurement schedule usability without SEO expansion — CI #120
+- All 26 existing calculator routes support browsing long computed cut schedules via client-side pagination; the canonical landing-page structure and 152 KD≤29 research keywords are unchanged.
+- Full CSV output remains the durable machine-readable result, with explicit text stating that printed paginated schedules show only the selected page; no new thin generated indexable pages, routing variants, external API or paid dependencies were introduced.
+- [CI #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) passed. The live Cloudflare preview exposes the new page controls while remaining `noindex,nofollow,noarchive` pending ownership of a production domain.

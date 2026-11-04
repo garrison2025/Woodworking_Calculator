@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 264 geometry tests, 33 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 265 geometry tests, 34 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -182,3 +182,5 @@ The additional coordinate-resolution guard is covered by [CI #106](https://githu
 ## 2026-11-05 — Paginated cutting schedules without losing full CSV exports
 
 The on-page measurement schedule now shows up to **160 rows at a time** with Previous, Next and a numbered Go-to-page control, plus a precise count range. This is important for the supported maximum segmented-bowl geometry of **180 segments × 100 rings = 18,000 per-piece cut records**. Switching length units preserves the current page; editing geometry resets to page one, while invalid inputs hide the navigation. Printed worksheets show only the currently selected page (explicitly stated); the CSV still exports every source row with unit-labelled columns. Page controls add no network requests or tracking, and other tools with shorter schedules continue to display all rows without pagination. No new SEO keyword claims or P2 tool routes are introduced.
+
+[CI #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) passed **265/265** Node and **34/34** real Chromium tests. The public Cloudflare bowl page includes the new semantic schedule navigation, with page input and previous/next buttons, and retains `noindex,nofollow,noarchive`. Verified the deployed JS paginator and stylesheet are reachable. This does NOT imply search indexing, real-world cut certification, or complete print-device validation.

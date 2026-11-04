@@ -67,3 +67,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: SVG stair step polyline consumes the engine's 28 nominal vertices for 14 risers and distinguishes dashed first-tread pitch line, floor datum chord and separate bottom trim reference. Live Chrome test validates equal-scale geometry and edit response.
 - PASS: crown reference sketch changes the plan-view sign for selected corner side/hand while keeping miter/bevel magnitudes fixed; labels explicitly deny saw direction claims. Browser test verifies selects, dynamic ray sign, angle-labelled CSV, metric-unit invariance and invalid input clearing.
 - PASS: [CI #118](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41929865892) includes 33 Chromium E2E checks and the existing multi-breakpoint layout gate. Manual physical saw, print and cross-browser signoff not performed.
+
+## Cut-list paging and navigation — CI #120
+- New accessible schedule navigation appears for more than 160 entries with standard Previous, Next, page-number jump and visible page status, while small schedules remain uncluttered.
+- [CI #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) confirms on-screen 160-row DOM cap, 540-row traversal, unit preservation, error recovery, full CSV export and browser accessibility labels on the controls (not a complete screen-reader audit).
+- Published Cloudflare HTML selectors and assets for `/segmented-bowl-calculator/` were independently checked, including explicit preview noindex. Printer-only-current-page disclosure is visible for paginated tables; full source rows remain in CSV.
