@@ -2,13 +2,13 @@
 
 **Woodworking Calculator V3 implementation · US English · Cloudflare Pages static site**
 
-A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, millimeter conversion, result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
+A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** Core formulas and static routes are under automated test, but actual cross-browser operation, physical cut-template scale and complex construction details require verification. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 219 math tests, 15 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
-- 26 distinct static calculator URLs built from `src/tools.json`. Both unit systems use the same route; no duplicate metric URL.
+- 26 distinct static calculator URLs built from `src/tools.json`. All five length units use the same route; no duplicate unit URLs.
 - Five active categories (Framing & walls, Decks & railings, Roofs & stairs, Interior finish, Woodworking). Materials category remains a P2-only planning category and has **no empty public page**.
 - Search-ready prerendered HTML explaining inputs, formulas, examples, caveats and related tools.
 - 152 keyword rows, with Semrush estimates and mapped URLs, saved in `research/woodworking-keyword-map-152.csv`. The owner-approved complete V3 specification is saved in `research/WOODWORKING_BUILD_SPEC_V3_20261104.md`.
@@ -25,10 +25,13 @@ cd Woodworking_Calculator
 python build.py
 node --test tests/*.test.mjs
 python tests/validate_static.py
+npm install --no-audit --no-fund
+npx playwright install chromium
+npx playwright test
 python -m http.server 8787 --directory dist
 ```
 
-Open `http://localhost:8787`.
+Open `http://localhost:8787`. The Playwright suite starts its own local test server and includes 26-route smoke, clipboard/export, breakpoints and UI screenshots.
 
 ## Deploy to Cloudflare Pages (preview, free plan)
 
@@ -38,7 +41,7 @@ Open `http://localhost:8787`.
 4. **Build command:** `python3 build.py`.
 5. **Build output directory:** `dist`.
 6. **Environment variables:** none for the preview build. Do **not** enable indexing.
-7. Open the generated `*.pages.dev` preview URL. Confirm calculator functions, SVG and CSV, mobile viewport and Chrome printing.
+7. Current verified preview: [woodworking-calculator.pages.dev](https://woodworking-calculator.pages.dev/). Keep it `noindex` until a real domain and separate production approval. Browser and static QA evidence is in `QA-EVIDENCE.md`.
 
 For most Cloudflare Pages Python build environments Python is already available. If a platform build image does not provide Python, configure its version or a supported build image before deploying. Do not claim deployment succeeded until the Pages build log and preview response are checked.
 
@@ -65,6 +68,8 @@ research/WOODWORKING_BUILD_SPEC_V3_20261104.md
 research/woodworking-keyword-map-152.csv
 tests/calculators.test.mjs       Independent default fixtures, input errors and invariants
 tests/validate_static.py        Static page and crawler-policy checks
+tests/e2e/workspaces.spec.mjs    Actual browser/UI regression checks
+playwright.config.mjs           Local Chromium test harness
 .github/workflows/verify.yml    GitHub Actions: build and tests
 DESIGN.md, QA-EVIDENCE.md, UI-RELEASE-EVIDENCE.md, SEO-GEO-RELEASE-EVIDENCE.md
 ```
