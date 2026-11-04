@@ -128,7 +128,7 @@ if(slug){
       cut.innerHTML=latest.rows.length?
         '<thead><tr>'+Object.keys(latest.rows[0]).map(k=>'<th scope="col">'+esc(k.replace(/([A-Z])/g," $1"))+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+Object.entries(row).map(([k,v])=>'<td>'+esc(v===null?"—":typeof v==="number"&&!["count"].includes(k)&&!k.toLowerCase().includes("angle")?fmt(v):v)+'</td>').join("")+'</tr>').join("")+'</tbody>':
         '<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
-      diagram.innerHTML=drawing(latest);diagram.style.width=zoom*100+"%";
+      diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
     }catch(e){latest=null;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";status.textContent="Calculation requires correction.";}
@@ -149,8 +149,8 @@ if(slug){
   });
   form.addEventListener("input",render);fraction.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;render();});
-  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.style.width=zoom*100+"%";});
-  zoomReset.addEventListener("click",()=>{zoom=1;diagram.style.width="100%";});
+  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");});
+  zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");});
   copy.addEventListener("click",async()=>{
     if(!latest)return;
     const text=tool.title+"\n"+latest.metrics.map(m=>m.label+": "+fmt(m.value,m.kind)).join("\n")+"\n"+tool.limit;
