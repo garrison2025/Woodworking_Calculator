@@ -359,37 +359,75 @@
       "keyword": "crown molding calculator",
       "volume": 390,
       "kd": 9,
-      "desc": "Compound miter and bevel angles with hand and corner options",
+      "desc": "Compound angle magnitudes and explicit inside/outside, left/right illustrative references with a typed CSV angle schedule",
       "inputs": [
         {
           "key": "spring",
-          "label": "Spring angle (°)",
+          "label": "Spring angle (degrees, wall reference)",
           "value": 38,
           "kind": "A"
         },
         {
           "key": "corner",
-          "label": "Wall corner angle (°)",
+          "label": "Included wall corner angle (degrees)",
           "value": 90,
           "kind": "A"
         },
         {
           "key": "inside",
-          "label": "Inside corner (1 yes)",
+          "label": "Corner type",
           "value": 1,
-          "kind": "N"
+          "kind": "E",
+          "options": [
+            {
+              "value": 1,
+              "label": "Inside corner"
+            },
+            {
+              "value": 0,
+              "label": "Outside corner"
+            }
+          ]
         },
         {
           "key": "left",
-          "label": "Left-hand piece (1 yes)",
+          "label": "Piece reference hand",
           "value": 1,
-          "kind": "N"
+          "kind": "E",
+          "options": [
+            {
+              "value": 1,
+              "label": "Left piece"
+            },
+            {
+              "value": 0,
+              "label": "Right piece"
+            }
+          ]
         }
       ],
-      "formula": "miter = atan(sin(spring)/tan(corner/2)); bevel = asin(cos(spring)×cos(corner/2))",
-      "example": "38° spring and 90° corner: miter ≈31.62°, bevel ≈33.86°",
-      "limit": "Saw conventions vary; cut a scrap sample",
-      "status": "BETA_NO_INDEX"
+      "formula": "Geometric flat-saw angle magnitudes only: miter = atan(sin(spring)/tan(included wall corner/2)); bevel = asin(cos(spring)×cos(included wall corner/2)). An illustrative plan-view sign changes with inside/outside and left/right selection; this sign is NOT a calibrated saw-control setting.",
+      "example": "38° spring angle with a 90° included wall corner gives a 31.62° miter magnitude and a 33.86° bevel magnitude. Inside/outside and left/right change only the illustrative plan sign, not these geometric magnitudes.",
+      "limit": "Angles are idealized geometric magnitudes under the stated spring/included-corner convention. The signed plan view is illustrative ONLY and must not be used as a prescribed miter-saw left/right, flip, face-up/down or fence placement. Saw brand scales, crown orientation, inside/outside cut direction, relief/back bevel, joint tolerance and physical jig settings require independent hands-on scrap verification.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Use the included wall angle and the stated spring convention",
+          "text": "The entered corner angle is measured between adjacent walls on the selected side. The spring angle is treated as the nominal crown-to-wall spring convention used in the displayed formulas. Check the actual profile and installation orientation before using the computed magnitudes."
+        },
+        {
+          "heading": "Separate angle magnitudes from saw direction",
+          "text": "Miter magnitude and bevel magnitude remain the same when you choose left/right or inside/outside. The optional signed miter only changes an illustrative plan-view sketch and CSV reference. It is NOT a saw rotation command; real hand, crown orientation and tool setup vary."
+        },
+        {
+          "heading": "Export angles with unambiguous units",
+          "text": "The angle schedule includes the selected corner type and piece hand, spring and wall angle, both magnitudes and the signed illustration angle, all in degrees. Switching in/mm does not change any angles."
+        },
+        {
+          "heading": "Cut a verified sample before processing stock",
+          "text": "Confirm the actual saw, crown bedding, surface face, fence orientation and corner geometry with scrap pieces. This tool does not certify safe saw operation, fit, hold-down methods or cutting accuracy."
+        }
+      ]
     },
     {
       "slug": "soffit-calculator",
@@ -1213,7 +1251,7 @@
       "keyword": "stair stringer calculator",
       "volume": 8100,
       "kd": 20,
-      "desc": "Straight stair stringer stepped cut coordinates, bottom rise correction and nominal remaining throat",
+      "desc": "Straight stringer nominal tread/riser profile with exact SVG vertices, distinct notch pitch-line and floor datum diagonal, bottom cut correction and nominal throat",
       "inputs": [
         {
           "key": "rise",
@@ -1252,26 +1290,26 @@
           "kind": "L"
         }
       ],
-      "formula": "risePerStep=totalRise/risers; treads=risers−1; notchNormal=stepRise×treadRun/√(stepRise²+treadRun²); bottomCutRise=stepRise−treadThickness+lowerFloorFinish",
-      "example": "105 in / 14 risers => 7.5 in rise and 13 treads of 10 in; with 1.5 in tread material, bottom cut rise is 6 in if lower finished floor is already installed",
-      "limit": "Reference for conventional straight stair stringer layout only. Total rise MUST be finished-floor to finished-floor. Lower finish is additional floor thickness laid after the stringer is installed (set 0 if existing). Top connection, nosing, minimum throat, fasteners and structural capacity require field verification. Do not overcut corners; SVG is not a 1:1 cutting template.",
+      "formula": "Riser height = total finished-floor rise/risers; treads=risers−1; horizontal run=treads×tread run. The notch pitch line from first tread at (0,riser height) to upper landing at (run,total rise) measures hypot(run,treads×riser height). The different floor datum diagonal measures hypot(run,total rise) and is NOT a stringer cut length. Notch penetration=step rise×tread run/hypot(step rise,tread run); nominal throat=board normal depth−notch penetration; bottom trim=step rise−tread thickness+additional lower finish.",
+      "example": "105 in between finished floors, 14 risers and 10 in tread run yield 7.5 in risers, 13 treads, 130 in horizontal run, 162.5 in first-tread-to-landing notch pitch reference and about 167.1 in floor-to-floor diagonal (not a board cut length). With 1.5 in tread stock and no later lower finish, bottom trim reference is 6 in.",
+      "limit": "Nominal straight-stair *reference* only. The floor-to-floor diagonal is NOT a stringer cut length or stock length. The first riser nominal profile is distinct from the bottom trim that compensates for the tread/floor finish. SVG uses nominal step vertices and is NOT a 1:1 saw template or actual stock outline. Actual top/bottom bearing, nosing, throat code limits, fasteners, total stock, fit and structural safety require site verification.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Use finished-floor to finished-floor total rise",
-          "text": "Measure the total rise between the final finished elevations of the lower and upper floors. Under this conventional layout, the upper floor functions as the last walking surface, so a staircase with 14 risers has 13 separate wooden treads. Alternative flush-top and hanger arrangements are not modeled."
+          "heading": "Separate the two diagonals",
+          "text": "The nominal notch pitch line runs from the top of the first riser to the top landing, with rise equal to the 13 inter-riser steps. The floor-to-floor chord starts at the lower datum and has a different angle and length. Neither should automatically be ordered or cut as a raw timber board length."
         },
         {
-          "heading": "Lay out a repeatable tread/riser step",
-          "text": "Each vertical riser is total rise ÷ number of risers. The first riser has horizontal position zero; each next riser is one tread run farther along. The table lists the horizontal reference and upper elevation of every riser, including the top-landing vertical."
+          "heading": "Review the exact nominal step-coordinate diagram",
+          "text": "The SVG now draws from the same (x,height) vertices generated by the engine: 14 riser segments, with 13 horizontal tread segments. The diagram's dashed pitch reference and floor chord are distinct. It is a scaled schematic, not a physical full-size pattern."
         },
         {
-          "heading": "Correct the bottom cut for installed finishes",
-          "text": "For the conventional bottom cut, subtract the finished tread thickness from one nominal riser height. Add only the lower finished-floor layer that will be installed AFTER the stringer is set. If you measured to an already completed lower finished floor, enter zero for this additional layer."
+          "heading": "Keep the bottom trim separate from nominal riser geometry",
+          "text": "For conventional tread installation, bottom layout cut height = one nominal riser − finished tread thickness + any lower finish installed after the stringer. This is an end-trim reference only; it does not shift all nominal riser elevations. The diagram marks that bottom reference independently."
         },
         {
-          "heading": "Understand the throat estimate",
-          "text": "Normal penetration of a step notch into the board is (riser × tread run) ÷ √(riser² + tread run²). The nominal remaining throat is board depth minus that perpendicular notch penetration. This is not an engineering rating; minimum stock size, bearing, attachments, nosing and code compliance must be checked on the actual installation."
+          "heading": "Nominal throat is not an engineering rating",
+          "text": "Stock normal depth less step notch penetration gives a nominal remaining throat. Capacity depends on wood grade, defects, fasteners, local code and actual support details; do not treat the geometric clearance or illustrated diagonal as engineered approval."
         }
       ]
     },
