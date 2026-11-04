@@ -62,7 +62,7 @@ test("baluster physical SVG faces conserve equal end gaps and printable CSV edge
   await page.locator("#download-csv").click();
   const csv=readFileSync(await (await dl).path(),"utf8");
   expect(csv).toContain('"Face Left (mm)","Face Right (mm)","Clear Gap (mm)","Clear Gap To Next (mm)"');
-  await page.locator("#f-width").fill("500");
+  await page.locator("#f-width").fill("5000"); // mm; larger than the 96-inch clear opening.
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(faces).toHaveCount(0);
 });
