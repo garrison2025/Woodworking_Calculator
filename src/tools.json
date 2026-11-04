@@ -949,7 +949,7 @@
       "keyword": "shelf spacing calculator",
       "volume": 140,
       "kd": 5,
-      "desc": "Even clear shelves inside a case opening",
+      "desc": "Equalize shelf clearances between reserved top/bottom minimums and output each shelf's bottom/top face coordinates",
       "inputs": [
         {
           "key": "height",
@@ -971,21 +971,35 @@
         },
         {
           "key": "top",
-          "label": "Top clearance",
+          "label": "Additional minimum top clearance",
           "value": 0,
           "kind": "L"
         },
         {
           "key": "bottom",
-          "label": "Bottom clearance",
+          "label": "Additional minimum bottom clearance",
           "value": 0,
           "kind": "L"
         }
       ],
-      "formula": "gap=(height−n×thickness−top−bottom)/(n+1)",
-      "example": "1000 mm interior, three 20 mm shelves ⇒ 235 mm clear gaps",
-      "limit": "Shelf strength not assessed",
-      "status": "BETA_NO_INDEX"
+      "formula": "Free height = interior height − shelves×thickness − top reserve − bottom reserve. Shared base gap = free height/(shelves+1). Actual bottom opening = bottom reserve+base gap; actual top opening = top reserve+base gap; all between-shelf gaps = base gap.",
+      "example": "A 40 in interior with three 1 in shelves and 2 in extra bottom and 1 in extra top reserves leaves a shared 8.5 in base gap; actual bottom clear opening is 10.5 in, actual top clear opening 9.5 in.",
+      "limit": "Top and bottom inputs are extra minimum-reserve clearances, not the final visible openings. Finished shelf faces and clear gaps follow the supplied interior height and actual material thickness. No shelf-load, fixing, sag or material tolerance assessment.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Reserved versus actual end clearances",
+          "text": "The top and bottom inputs reserve minimum space. Remaining free height is spread across all spaces. Actual bottom clearance = bottom reserve + shared gap; actual top clearance = top reserve + shared gap. If you need the end openings to be exact values, verify the calculated final openings before construction."
+        },
+        {
+          "heading": "Measure bottom and top faces from the case floor",
+          "text": "Every schedule row gives the shelf's bottom and upper surfaces, clear opening below, and clear opening above. All positions reference the inside bottom of the case; board thickness and spacing share the same model."
+        },
+        {
+          "heading": "Loads and mounting are not sized",
+          "text": "This is a geometry-only shelf spacing calculator. It does not recommend material spans, deflection limits, screw spacing, load ratings, wall anchors or fastening methods."
+        }
+      ]
     },
     {
       "slug": "gable-roof-calculator",

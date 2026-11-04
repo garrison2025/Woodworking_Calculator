@@ -120,6 +120,28 @@ test("P2 routes are blocked by the geometry engine",()=>{
   for(const t of held)assert.equal(safeCompute(t.slug,{}).ok,false);
 });
 
+test("Shelves conserve full case height with reserved ends and exact face positions",()=>{
+  for(const n of [1,2,3,5,10])for(const [top,bottom] of [[0,0],[1,2],[8,3]]){
+    const a={height:60,shelves:n,thickness:1.25,top,bottom};
+    const r=compute("shelf-spacing-calculator",a);
+    const shared=(a.height-n*a.thickness-top-bottom)/(n+1);
+    near(value(r,"Shared base clear gap"),shared,1e-8);
+    near(value(r,"Actual top clearance"),shared+top,1e-8);
+    near(value(r,"Actual bottom clearance"),shared+bottom,1e-8);
+    assert.equal(r.rows.length,n);
+    near(r.rows[0].shelfBottom,shared+bottom,1e-7);
+    near(r.rows.at(-1).shelfTop+shared+top,a.height,1e-7);
+    for(let i=0;i<r.rows.length;i++){
+      const row=r.rows[i];
+      near(row.shelfTop-row.shelfBottom,a.thickness,1e-7);
+      near(row.clearBelow,i===0?shared+bottom:shared,1e-7);
+      near(row.clearAbove,i===n-1?shared+top:shared,1e-7);
+      if(i>0)near(row.shelfBottom-r.rows[i-1].shelfTop,shared,1e-7);
+    }
+  }
+  const invalid={height:10,shelves:4,thickness:2,top:2,bottom:2};
+  assert.equal(safeCompute("shelf-spacing-calculator",invalid).ok,false);
+});
 test("Fence-post centerline data stays inside the user-defined run",()=>{
   const a={length:1200,bay:96,post:3.5};
   const r=compute("fence-post-calculator",a);

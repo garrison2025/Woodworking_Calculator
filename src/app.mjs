@@ -78,7 +78,12 @@ if(slug){
         for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+yLevel(p.topHeight??wallHeight)+'" x2="'+x(p.x)+'" y2="255" stroke="'+(p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b")+'" stroke-width="'+(p.role==="mark"?"3":"5")+'"/>';
         content+=svgText(left+5,64,"WALL "+fmt(wallHeight),"dim-label");
       }else if(data.shape==="shelves"){
-        for(const p of marks)content+='<line x1="235" y1="'+(base-p.x/span*195)+'" x2="680" y2="'+(base-p.x/span*195)+'" stroke="#b88750" stroke-width="8" stroke-linecap="round"/>';
+        // Both faces come from the same bottom/thickness values as the schedule.
+        const shelfHeight=(data.shelfThickness||1)/span*195;
+        for(const p of marks){
+          const yy=base-(p.x+data.shelfThickness)/span*195;
+          content+='<rect class="shelf-face" x="235" y="'+yy+'" width="445" height="'+Math.max(1,shelfHeight)+'" fill="#dbb890" stroke="#8c663e" stroke-width="1.4"><title>'+esc("Shelf at "+fmt(p.x)+" · thickness "+fmt(data.shelfThickness))+'</title></rect>';
+        }
         content+='<rect x="220" y="73" width="475" height="205" fill="none" stroke="#345f50" stroke-width="8"/>';
       }else{
         for(const [i,p] of marks.entries()){

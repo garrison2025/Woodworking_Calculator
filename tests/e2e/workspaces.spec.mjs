@@ -285,6 +285,26 @@ test("fence-post rejects overlapping faces and exports center-to-center clear ba
   expect(csv).toContain('"Center (mm)","Clear Bay To Next (mm)"');
   expect(csv).toContain('"Post 1","0","12.7"');
 });
+test("shelf reserved end gaps and actual face coordinates agree across table and drawing",async({page})=>{
+  await page.goto("/shelf-spacing-calculator/");
+  await expect(page.locator("#dimension-svg svg .shelf-face")).toHaveCount(3);
+  await expect(page.locator("#cut-table thead")).toContainText("Shelf Bottom (in)");
+  await expect(page.locator("#cut-table thead")).toContainText("Shelf Top (in)");
+  await page.locator("#f-height").fill("40");
+  await page.locator("#f-thickness").fill("1");
+  await page.locator("#f-top").fill("1");
+  await page.locator("#f-bottom").fill("2");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Shared base clear gap"})).toContainText("8.5 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Actual bottom clearance"})).toContainText("10.5 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Actual top clearance"})).toContainText("9.5 in");
+  await expect(page.locator("#cut-table tbody tr").first().locator("td").nth(1)).toContainText("10.5 in");
+  await expect(page.locator("#cut-table tbody tr").last().locator("td").nth(2)).toContainText("30.5 in");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Shelf Bottom (mm)");
+  await page.locator("#f-top").fill("1500");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#dimension-svg svg .shelf-face")).toHaveCount(0);
+});
 test("baluster and fence face widths are proportional to input dimensions",async({page})=>{
   await page.goto("/baluster-spacing-calculator/");
   const face=page.locator("#dimension-svg svg .baluster-face").first();

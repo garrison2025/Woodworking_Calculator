@@ -325,10 +325,24 @@ export function compute(slug,a){
   }
   case "shelf-spacing-calculator":{
     positive("height","thickness");nonnegative("top","bottom");whole("shelves");
-    const gap=(a.height-a.shelves*a.thickness-a.top-a.bottom)/(a.shelves+1);
-    need(gap>=0,"Shelf thickness and clearances exceed the case.");
-    rows=Array.from({length:a.shelves},(_,i)=>({item:"Shelf "+(i+1),bottom:q(a.bottom+gap*(i+1)+a.thickness*i)}));
-    return result([M("Equal clear gap",gap),M("Shelf count",a.shelves,"N"),M("Shelf stack thickness",a.shelves*a.thickness)],rows.map(r=>P(r.bottom,r.item)),a.height,rows,"shelves");
+    // Top/bottom are reserved minimum clearance, not the final equalized gaps.
+    // Distribute the remaining free height equally among all n+1 spaces.
+    const free=a.height-a.shelves*a.thickness-a.top-a.bottom;
+    need(free>=-1e-8,"Shelf thickness and reserved clearances exceed the case height.");
+    const shared=Math.max(0,free)/(a.shelves+1);
+    const lower=shared+a.bottom,upper=shared+a.top;
+    rows=Array.from({length:a.shelves},(_,i)=>{
+      const bottom=a.bottom+shared*(i+1)+a.thickness*i;
+      return {item:"Shelf "+(i+1),shelfBottom:q(bottom),shelfTop:q(bottom+a.thickness),
+        clearBelow:q(i===0?lower:shared),
+        clearAbove:q(i===a.shelves-1?upper:shared)};
+    });
+    need(rows.at(-1).shelfTop<=a.height+1e-7,"Last shelf exceeds the interior height.");
+    return result([
+      M("Shared base clear gap",shared),M("Actual bottom clearance",lower),
+      M("Actual top clearance",upper),M("Shelf count",a.shelves,"N"),
+      M("Shelf stack thickness",a.shelves*a.thickness)
+    ],rows.map(r=>P(r.shelfBottom,r.item)),a.height,rows,"shelves",{shelfThickness:a.thickness});
   }
   case "gable-roof-calculator":{
     positive("width","length");nonnegative("pitch","overhang");

@@ -138,3 +138,7 @@ Current validation: [CI #88](https://github.com/garrison2025/Woodworking_Calcula
 ## 2026-11-04 — Shared schedule units and proportional item faces
 
 All on-screen cut-list headers and CSV headers now come from the same typed schedule schema. Ring and segment indexes stay unitless on screen, while miter/start/end angles display degrees and coordinate/chord lengths follow the user-selected unit; heterogeneous schedule rows align by column key rather than first-row-only objects. Both baluster and fence-post schematic face widths now scale in proportion to the actual entered material width (visible strokes remain illustrative, not a 1:1 print template). Browser and Node regressions cover these distinctions.
+
+## 2026-11-04 — Corrected shelf clearance meaning and face-level schedule
+
+`/shelf-spacing-calculator/` now explicitly distinguishes extra reserved top/bottom clearance from the actual final end clearances after equalizing free space. Its cut list includes shelf bottom and upper surfaces plus the clear space on both sides of each shelf. The SVG renders scaled plank thickness instead of infinitely thin lines. Unit, geometry conservation and insufficient-clearance regression fixtures cover the new calculation. These are geometry aids, not load-bearing or hardware recommendations.
