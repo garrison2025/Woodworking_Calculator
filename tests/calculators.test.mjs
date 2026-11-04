@@ -137,3 +137,54 @@ test("Deck stock count does not assume offcut reuse",()=>{
   const r=compute("deck-board-calculator",{width:120,length:144,board:5.5,gap:.125,stock:120,waste:0});
   near(value(r,"Stock pieces: no offcut reuse"),44);
 });
+
+test("Rafter: independent notch geometry and ridge allowance",()=>{
+  const a={run:120,pitch:6,ridge:1.5,overhang:12,depth:5.5,seat:3};
+  const r=compute("rafter-calculator",a);
+  const horizontal=120-1.5/2;
+  const theta=Math.atan2(6,12);
+  const expectedNotch=3*Math.sin(theta);
+  near(value(r,"Adjusted run"),119.25,1e-8);
+  near(value(r,"Rise"),119.25*.5,1e-8);
+  near(value(r,"Rafter reference length"),Math.hypot(horizontal,horizontal*.5),1e-8);
+  near(value(r,"Overhang slope length"),Math.hypot(12,6),1e-8);
+  near(value(r,"Seat reference drop"),1.5,1e-8);
+  near(value(r,"Seat notch (normal depth)"),expectedNotch,1e-8);
+  near(value(r,"Remaining stock (normal)"),5.5-expectedNotch,1e-8);
+  near(value(r,"Notch / stock depth"),100*expectedNotch/5.5,1e-8);
+  assert.equal(r.rows.length,3);
+  assert.deepEqual(r.rows.map(p=>p.item),["Ridge reference","Bearing reference","Overhang end"]);
+  near(r.rows[1].horizontalRun,119.25,1e-8);
+  near(r.rows[2].horizontalRun,131.25,1e-8);
+  assert.equal(r.shape,"rafter");
+});
+test("Rafter: deep cut geometrically consumes the nominal section and is rejected",()=>{
+  const a={run:120,pitch:12,ridge:0,overhang:12,depth:2,seat:5};
+  assert.equal(safeCompute("rafter-calculator",a).ok,false);
+});
+test("Rafter: zero slope has no rise or notch depth",()=>{
+  const r=compute("rafter-calculator",{run:120,pitch:0,ridge:0,overhang:12,depth:5.5,seat:3});
+  near(value(r,"Rise"),0,1e-9);
+  near(value(r,"Seat notch (normal depth)"),0,1e-9);
+  near(value(r,"Overhang slope length"),12,1e-9);
+});
+test("Stringer: cut corners, full riser height and 6-inch bottom reference",()=>{
+  const a={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,lowerFinish:0};
+  const r=compute("stair-stringer-calculator",a);
+  near(value(r,"Uniform riser height"),7.5);
+  near(value(r,"Total horizontal run"),130);
+  near(value(r,"Bottom riser layout cut"),6);
+  near(value(r,"Notch penetration (normal)"),6);
+  near(value(r,"Uncut throat (nominal)"),5.25);
+  assert.equal(r.rows.length,14);
+  assert.deepEqual(r.rows[0],{item:"Riser 1",horizontalRun:0,riserTopHeight:7.5,treadStart:0,treadEnd:10});
+  assert.deepEqual(r.rows.at(-1),{item:"Top landing vertical",horizontalRun:130,riserTopHeight:105,treadStart:130,treadEnd:null});
+  assert.equal(r.shape,"stringer");
+});
+test("Stringer: finish-to-install later adds its thickness to bottom layout cut",()=>{
+  const base={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,lowerFinish:.5};
+  const r=compute("stair-stringer-calculator",base);
+  near(value(r,"Bottom riser layout cut"),6.5);
+  assert.equal(safeCompute("stair-stringer-calculator",{...base,treadThickness:9,lowerFinish:0}).ok,false);
+  assert.equal(safeCompute("stair-stringer-calculator",{...base,depth:5}).ok,false);
+});
