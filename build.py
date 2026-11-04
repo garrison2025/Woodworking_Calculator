@@ -94,7 +94,7 @@ def home():
              '<div class="directory-list">'+''.join(f'<a href="/{esc(t["slug"])}/"><span>{esc(t["title"])}</span><small>{esc(CATS[t["category"]][0])}</small><b>↗</b></a>' for t in TOOLS)+'</div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
-            '<div><b>01 / Input</b><p>US customary inches first, millimeters one click away.</p></div>'
+            '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
             '<div><b>02 / Check</b><p>Visible formulas, explicit assumptions, precise dimensions.</p></div>'
             '<div><b>03 / Export</b><p>Save a locally generated CSV or SVG; print to PDF from your browser.</p></div></section>')
     return page("Free Woodworking Calculators, Layout & Cutting Geometry","26 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
@@ -104,7 +104,7 @@ def tool_page(t):
     related_search_terms = ', '.join(cluster[:4])
     fields = ''.join(f'<div class="field"><label for="f-{esc(f["key"])}">{esc(f["label"])}{(" <span data-length-unit>in</span>" if f["kind"]=="L" else "")}</label>'
          f'<input id="f-{esc(f["key"])}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
-         f'<small id="field-note-{esc(f["key"])}">{"Length: enter inches or millimeters" if f["kind"] == "L" else "Enter a number using the described measurement"}</small></div>' for f in t["inputs"])
+         f'<small id="field-note-{esc(f["key"])}">{"Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"}</small></div>' for f in t["inputs"])
     related = [p for p in TOOLS if p["category"]==t["category"] and p["slug"]!=t["slug"]][:4]
     others = [p for p in TOOLS if p["category"]!=t["category"]][:2]
     relevant=(related+others)[:6]
@@ -115,7 +115,7 @@ def tool_page(t):
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
     body+=(f'<section class="workspace wrap" data-workspace><div class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
-           '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="mm">Millimeters (mm)</option></select>'
+           '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
            '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
            f'<form id="calculator-form" novalidate>{fields}</form>'
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button></div>'
