@@ -1,0 +1,35 @@
+import {test,expect} from "@playwright/test";
+import {readFileSync} from "node:fs";
+
+test("kerf trial profile preserves wood and rejects overlapping saw mouths",async({page})=>{
+  await page.goto("/kerf-bending-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Proposed cuts"})).toContainText("8");
+  const slots=page.locator("#dimension-svg svg .kerf-slot");
+  await expect(slots).toHaveCount(8);
+  await expect(page.locator("#dimension-svg svg .kerf-retained-web")).toHaveCount(1);
+  await expect(page.locator("#cut-table thead")).toContainText("Slot Left (in)");
+  await expect(page.locator("#cut-table thead")).toContainText("Slot Right (in)");
+  await expect(page.locator("#cut-table thead")).toContainText("Max Closure Deg (°)");
+  const stock=page.locator("#dimension-svg svg .kerf-stock");
+  const sh=Number(await stock.getAttribute("height"));
+  const first=slots.first();
+  const dh=Number(await first.getAttribute("height"));
+  expect(dh/sh).toBeCloseTo((.75-.125)/.75,5);
+  expect(Number(await first.getAttribute("x"))).toBeGreaterThan(Number(await stock.getAttribute("x")));
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Slot Left (mm)");
+  await expect(page.locator("#cut-table thead")).toContainText("Retained Web (mm)");
+  const pending=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await pending).path(),"utf8");
+  expect(csv).toContain('"Slot Left (mm)","Slot Right (mm)","Cut Depth (mm)","Retained Web (mm)","Max Closure Deg (°)"');
+  await page.locator("#f-radius").fill("2.54");
+  await expect(page.locator("#calc-error")).toContainText("overlap or touch");
+  await expect(slots).toHaveCount(0);
+  await page.locator("#f-radius").fill("100");
+  await expect(slots).toHaveCount(8);
+  await page.locator("#f-web").fill("0");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(slots).toHaveCount(0);
+});
