@@ -111,3 +111,25 @@ for(const width of [360,390,768,1024,1440]){
     }
   });
 }
+
+test("copy results and print controls are wired to the live worksheet",async({page,context})=>{
+  await context.grantPermissions(["clipboard-read","clipboard-write"]);
+  await page.goto("/roof-pitch-calculator/");
+  await page.locator("#copy-result").click();
+  await expect(page.locator("#action-status")).toContainText("Copied results.");
+  const clipboard=await page.evaluate(()=>navigator.clipboard.readText());
+  expect(clipboard).toContain("Roof angle:");
+  await page.evaluate(()=>{window.__printInvoked=false;window.print=()=>{window.__printInvoked=true}});
+  await page.locator("#print-sheet").click();
+  expect(await page.evaluate(()=>window.__printInvoked)).toBe(true);
+});
+
+test("workspaces load without third-party API or font requests",async({page})=>{
+  const external=[];
+  page.on("request",r=>{
+    if(!r.url().startsWith("http://127.0.0.1:8787/"))external.push(r.url());
+  });
+  await page.goto("/kerf-bending-calculator/");
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+  expect(external).toEqual([]);
+});
