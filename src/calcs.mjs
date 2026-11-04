@@ -181,9 +181,27 @@ export function compute(slug,a){
   }
   case "crown-molding-calculator":{
     positive("spring","corner");need(a.spring<90&&a.corner<180&&a.corner>0,"Angles must be between 0 and their geometric limits.");whole("inside",0,1);whole("left",0,1);
-    const spring=rad(a.spring),half=rad(a.corner/2),miter=deg(Math.atan(Math.sin(spring)/Math.tan(half))),bevel=deg(Math.asin(Math.cos(spring)*Math.cos(half)));
+    // Flat-on-saw geometric angle MAGNITUDES use the supplied spring angle
+    // convention and corner included angle. The illustrative sign below is
+    // merely a chosen plan-view convention, NOT a saw rotation instruction.
+    const spring=rad(a.spring),half=rad(a.corner/2);
+    const miter=deg(Math.atan(Math.sin(spring)/Math.tan(half)));
+    const bevel=deg(Math.asin(Math.cos(spring)*Math.cos(half)));
     const sign=((a.inside===1)===(a.left===1))?1:-1;
-    return result([M("Miter magnitude",miter,"A"),M("Bevel magnitude",bevel,"A"),M("Diagram miter sign",sign*miter,"A"),M("Wall corner",a.corner,"A")],[],100,[],"angles",{miter,bevel,inside:!!a.inside,left:!!a.left});
+    rows=[{
+      item:"Geometric angle reference",cornerType:a.inside===1?"Inside":"Outside",
+      pieceHand:a.left===1?"Left":"Right",
+      springAngle:q(a.spring),wallCornerAngle:q(a.corner),
+      miterMagnitudeAngle:q(miter),bevelMagnitudeAngle:q(bevel),
+      illustrativeMiterAngle:q(sign*miter)
+    }];
+    return result([
+      M("Miter magnitude",miter,"A"),M("Bevel magnitude",bevel,"A"),
+      M("Illustrative plan miter (not saw setting)",sign*miter,"A"),
+      M("Wall corner",a.corner,"A")
+    ],[],100,rows,"angles",{
+      miter,bevel,planSign:sign,inside:!!a.inside,left:!!a.left
+    });
   }
   case "soffit-calculator":{
     positive("projection");nonnegative("pitch","lining","depth");
