@@ -12,9 +12,9 @@ if(slug){
     if(kind==="D")return trim(x,3)+"%";
     if(kind==="A")return trim(x,3)+"°";
     if(kind==="P")return trim(x,3)+":12";
-    if(kind==="FT")return unit==="mm"?trim(x*.3048,3)+" m":trim(x,3)+" ft";
-    if(kind==="FT2")return unit==="mm"?trim(x*.09290304,3)+" m²":trim(x,3)+" ft²";
-    if(kind==="L")return trim(convertFromInches(x,unit),unit==="mm"?2:3)+(unit==="mm"?" mm":" in");
+    if(kind==="FT")return ["mm","cm","m"].includes(unit)?trim(x*.3048,3)+" m":trim(x,3)+" ft";
+    if(kind==="FT2")return ["mm","cm","m"].includes(unit)?trim(x*.09290304,3)+" m²":trim(x,3)+" ft²";
+    if(kind==="L")return trim(convertFromInches(x,unit),{in:4,ft:5,mm:2,cm:3,m:6}[unit]??4)+" "+unit;
     return trim(x,3);
   };
   const trim=(n,d=3)=>Number(n.toFixed(d)).toLocaleString("en-US",{maximumFractionDigits:d});
@@ -113,7 +113,7 @@ if(slug){
       content+='<path d="M300 240 L650 240 M460 240 L630 85" stroke="#1e6454" stroke-width="5" fill="none"/><path d="M515 240 A55 55 0 0 0 500 199" stroke="#c58c54" stroke-width="3" fill="none"/>';
       content+=svgText(510,177,trim(data.miter,2)+"° miter","dim-label")+svgText(360,285,trim(data.bevel,2)+"° bevel","dim-label");
     }
-    const title=esc(tool.title),label=esc(unit==="mm"?"All diagram dimensions in millimeters":"All diagram dimensions in inches");
+    const title=esc(tool.title),label=esc("All diagram dimensions in "+({in:"inches",ft:"feet",mm:"millimeters",cm:"centimeters",m:"meters"}[unit]||"inches"));
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 344" role="img" aria-label="'+title+' scaled schematic based on calculated values"><title>'+title+'</title><desc>'+label+'; illustrative geometry, not a one-to-one cutting template</desc><style>.gridline{stroke:#dbe1d9;stroke-width:1}.axis{stroke:#385f4d;stroke-width:2}.tick-label{font:12px ui-monospace,monospace;fill:#36574e}.dim-label{font:15px ui-monospace,monospace;fill:#203b33}</style><rect width="900" height="344" fill="#fcfbf8"/>'+grid+content+'</svg>';
   }
   const save=(name,content,type)=>{
@@ -136,14 +136,14 @@ if(slug){
   const restoreValues=()=>{
     for(const f of tool.inputs){
       const el=form.elements.namedItem(f.key);
-      el.value=f.kind==="L"?Number(convertFromInches(f.value,unit).toFixed(unit==="mm"?4:6)):f.value;
+      el.value=f.kind==="L"?Number(convertFromInches(f.value,unit).toFixed(unit==="m"?7:6)):f.value;
     }
   };
   units.addEventListener("change",()=>{
     const before=unit,after=units.value;if(before===after)return;
     for(const f of tool.inputs)if(f.kind==="L"){
       const el=form.elements.namedItem(f.key),v=Number(el.value);
-      if(Number.isFinite(v))el.value=Number(convertFromInches(convertToInches(v,before),after).toFixed(after==="mm"?4:6));
+      if(Number.isFinite(v))el.value=Number(convertFromInches(convertToInches(v,before),after).toFixed(after==="m"?7:6));
     }
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
