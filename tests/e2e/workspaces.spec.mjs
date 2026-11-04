@@ -150,8 +150,10 @@ test("print calibration stays hidden on screen and renders in Letter and A4 PDFs
     expect(pdf.length).toBeGreaterThan(5000);
     const mediaBox=pdf.toString("latin1").match(/\/MediaBox\s*\[\s*0\s+0\s+([0-9.]+)\s+([0-9.]+)\s*\]/);
     expect(mediaBox, paper+" missing PDF MediaBox").not.toBeNull();
-    expect(Number(mediaBox[1])).toBeCloseTo(w,0);
-    expect(Number(mediaBox[2])).toBeCloseTo(h,0);
+    // Chromium's PDF A4 media box can round the nominal paper size to a few PDF points.
+    // This verifies paper selection, not physical printer dimensional accuracy.
+    expect(Math.abs(Number(mediaBox[1])-w)).toBeLessThanOrEqual(w*0.002);
+    expect(Math.abs(Number(mediaBox[2])-h)).toBeLessThanOrEqual(h*0.002);
     writeFileSync("print-evidence/stud-"+paper.toLowerCase()+".pdf",pdf);
   }
   await page.emulateMedia({media:"screen"});
