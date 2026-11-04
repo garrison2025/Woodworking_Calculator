@@ -9,7 +9,7 @@ const result=(metrics,marks=[],span=1,rows=[],shape="ruler",extra={})=>{
 };
 const positions=(length,spacing)=>{
   need(length>0&&spacing>0,"Length and spacing must be positive.");
-  const count=Math.ceil(length/spacing);
+  const count=ceilStable(length/spacing);
   need(count<=1200,"Too many layout marks; increase spacing.");
   const xs=Array.from({length:count},(_,i)=>i*spacing).filter(x=>x<length-1e-7);
   if(!xs.length||xs[0]!==0)xs.unshift(0);
@@ -17,6 +17,8 @@ const positions=(length,spacing)=>{
   return xs;
 };
 const q=(x)=>Math.round(x*1e8)/1e8;
+// Eliminate floating-point false extra rows at exact dimension ratios (e.g. 105/7.5 after unit conversion).
+const ceilStable=(x)=>Math.abs(x-Math.round(x))<=1e-10?Math.round(x):Math.ceil(x);
 const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
@@ -68,17 +70,17 @@ export function compute(slug,a){
   case "deck-board-calculator":{
     positive("width","length","board","stock");nonnegative("gap","waste");
     need(a.waste<=200,"Waste allowance is unreasonably large.");
-    n=Math.ceil((a.width+a.gap)/(a.board+a.gap));
+    n=ceilStable((a.width+a.gap)/(a.board+a.gap));
     need(n<=1200,"Too many rows to display.");const last=a.width-(n-1)*(a.board+a.gap);
     need(last>0&&last<=a.board+1e-7,"Board width/gap combination is invalid.");
     const linear=n*a.length;
-    const conservativeOrder=Math.ceil(n*Math.ceil(a.length/a.stock)*(1+a.waste/100));
+    const conservativeOrder=ceilStable(n*ceilStable(a.length/a.stock)*(1+a.waste/100));
     rows=Array.from({length:n},(_,i)=>({item:"Row "+(i+1),position:q(i*(a.board+a.gap)),length:q(a.length),ripWidth:q(i===n-1?last:a.board)}));
     return result([M("Board rows",n,"N"),M("Last rip width",last),M("Installed linear footage",linear/12,"FT"),M("Stock pieces: no offcut reuse",conservativeOrder,"N")],rows.map(r=>P(r.position,r.item)),a.width,rows,"boards",{boardWidth:a.board,lastWidth:last});
   }
   case "baluster-spacing-calculator":{
     positive("length","width","gap");
-    n=Math.max(1,Math.ceil((a.length-a.gap)/(a.width+a.gap)));
+    n=Math.max(1,ceilStable((a.length-a.gap)/(a.width+a.gap)));
     need(n<=500&&n*a.width<=a.length,"Balusters cannot fit in the opening.");
     g=(a.length-n*a.width)/(n+1);need(g>=-1e-8&&g<=a.gap+1e-7,"No feasible spacing.");
     xs=Array.from({length:n},(_,i)=>g+(i*(a.width+g))+a.width/2);
@@ -106,7 +108,7 @@ export function compute(slug,a){
   }
   case "kerf-bending-calculator":{
     positive("radius","angle","thickness","kerf");nonnegative("web");need(a.angle<=360,"Bend angle must not exceed 360°.");need(a.web<a.thickness,"Retained web must be thinner than stock.");
-    const depth=a.thickness-a.web,turn=2*Math.atan(a.kerf/(2*depth)),arc=a.radius*rad(a.angle),count=Math.ceil(rad(a.angle)/turn);
+    const depth=a.thickness-a.web,turn=2*Math.atan(a.kerf/(2*depth)),arc=a.radius*rad(a.angle),count=ceilStable(rad(a.angle)/turn);
     need(count<=500&&count>=1,"Required cut count is outside supported trial layout.");
     const spacing=arc/count;xs=Array.from({length:count},(_,i)=>(i+.5)*spacing);
     rows=xs.map((x,i)=>({item:"Kerf "+(i+1),position:q(x),cutDepth:q(depth)}));
@@ -120,7 +122,7 @@ export function compute(slug,a){
     return result([M("Panel width",width),M("Panel count",a.panels,"N"),M("Total panel face width",width*a.panels),M("Panel height",a.height)],rows.map(r=>P(r.left+r.width/2,r.item)),a.wall,rows,"panels",{panelWidth:width,panelHeight:a.height});
   }
   case "stair-calculator":{
-    positive("rise","desired","tread");const risers=Math.ceil(a.rise/a.desired);need(risers>=2&&risers<=200,"Stair count outside supported range.");
+    positive("rise","desired","tread");const risers=ceilStable(a.rise/a.desired);need(risers>=2&&risers<=200,"Stair count outside supported range.");
     const treads=risers-1,h=a.rise/risers;
     rows=Array.from({length:risers},(_,i)=>({item:"Riser "+(i+1),rise:q((i+1)*h),run:q(Math.min(i,treads)*a.tread)}));
     return result([M("Risers",risers,"N"),M("Treads",treads,"N"),M("Actual riser height",h),M("Horizontal run",treads*a.tread),M("Incline",deg(Math.atan(h/a.tread)),"A")],rows.map(r=>P(r.run,r.item)),Math.max(treads*a.tread,1),rows,"stairs",{stepRise:h,tread:a.tread,risers});
@@ -132,7 +134,7 @@ export function compute(slug,a){
   }
   case "deck-material-calculator":{
     positive("width","length","board","joists");nonnegative("gap","waste");need(a.waste<=200,"Waste must be 0–200%.");
-    const boards=Math.ceil((a.width+a.gap)/(a.board+a.gap)),joists=Math.ceil(a.length/a.joists)+1,area=a.width*a.length;
+    const boards=ceilStable((a.width+a.gap)/(a.board+a.gap)),joists=ceilStable(a.length/a.joists)+1,area=a.width*a.length;
     return result([M("Deck area",area/144,"FT2"),M("Deck rows",boards,"N"),M("Estimated joist lines",joists,"N"),M("Linear decking",boards*a.length/12,"FT"),M("Decking with waste",boards*a.length*(1+a.waste/100)/12,"FT")],positions(a.width,a.board+a.gap).map(x=>P(x)),a.width,[],"boards",{boardWidth:a.board});
   }
   case "segmented-bowl-calculator":{
@@ -161,7 +163,7 @@ export function compute(slug,a){
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","overhang");
     const W=a.width+2*a.overhang,L=a.length+2*a.overhang,small=Math.min(W,L),large=Math.max(W,L),factor=Math.hypot(1,a.pitch/12),area=W*L*factor,ridge=large-small;
     const endArea=(small*small/4)*factor,sideArea=((large*small/2)-(small*small/4))*factor;
-    const sheets=Math.ceil(area/(a.sheetWidth*a.sheetLength));
+    const sheets=ceilStable(area/(a.sheetWidth*a.sheetLength));
     return result([M("Ridge length",ridge),M("Whole sloped area",area/144,"FT2"),M("Each hip-end plane",endArea/144,"FT2"),M("Each long-side plane",sideArea/144,"FT2"),M("Sheet area lower bound",sheets,"N")],[],large,[],"roof",{roofWidth:W,roofLength:L});
   }
   case "wall-stud-calculator":{
@@ -208,12 +210,12 @@ export function compute(slug,a){
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");need(a.waste<=200,"Waste must be 0–200%.");
-    const area=a.width*a.length*Math.hypot(1,a.pitch/12),per=a.sheetWidth*a.sheetLength,minimum=Math.ceil(area/per),ordered=Math.ceil(area*(1+a.waste/100)/per);
+    const area=a.width*a.length*Math.hypot(1,a.pitch/12),per=a.sheetWidth*a.sheetLength,minimum=ceilStable(area/per),ordered=ceilStable(area*(1+a.waste/100)/per);
     return result([M("Sloped roof surface",area/144,"FT2"),M("Sheet geometric lower bound",minimum,"N"),M("With percent allowance",ordered,"N"),M("Sheet face area",per/144,"FT2")],[],a.length,[],"rectangle",{rectWidth:a.width,rectHeight:a.length});
   }
   case "fence-post-calculator":{
     positive("length","bay","post");need(a.post<a.length,"Post wider than run.");
-    const bays=Math.ceil(a.length/a.bay);need(bays<=500,"Too many bays.");
+    const bays=ceilStable(a.length/a.bay);need(bays<=500,"Too many bays.");
     const interval=a.length/bays;xs=Array.from({length:bays+1},(_,i)=>i*interval);
     rows=xs.map((x,i)=>({item:"Post "+(i+1),center:q(x)}));
     return result([M("Bays",bays,"N"),M("Posts",bays+1,"N"),M("True OC interval",interval),M("Approximate clear bay",interval-a.post)],xs.map(x=>P(x)),a.length,rows,"posts",{itemWidth:a.post});
