@@ -1,17 +1,16 @@
-# SEO / GEO release evidence (2026-11-04)
-## Verified in repository CI
-- 26 P0/P1 dedicated routes; five P2 are HOLD and absent from output.
-- 36 prerendered HTML files with individual title/description/H1, formula and worked example, limitations and cross-links.
-- Source of truth: `src/tools.json`; complete **152 keyword rows** with source metrics and canonical mapping: `research/woodworking-keyword-map-152.csv`.
-- U.S. English first; same canonical route for imperial/metric views, no query-driven indexable pages.
-- Index permission gated by `RELEASE_APPROVED=1` + real HTTPS `SITE_URL`; preview: noindex, robots Disallow, no sitemap, no fake canonical.
-- Actual CI result: [41782065704](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41782065704) PASS.
+# SEO / GEO release evidence — 2026-11-04
+## Confirmed source and live preview
+- **9 P0 + 17 P1** unique tool routes; **5 P2** planning intentions are intentionally absent from public pages.
+- **36 prerendered HTML pages** with page-specific H1, title/description, explicit geometry rule, reproducible example, assumptions, real tool controls, related cross-links and legal/navigation pages.
+- All **152 distinct nonbrand/relevant Semrush research entries** have KD≤29, metrics and one target route in `research/woodworking-keyword-map-152.csv`. The export is competitor/model research, not a new-site traffic forecast.
+- All supported in, ft, mm, cm, m conversions happen at the same route; no duplicate-language/units canonical pages.
+- [GitHub Actions run #41788173380](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41788173380) passed **219 unit, 15 actual browser and static site tests**.
+- Observed Cloudflare preview: https://woodworking-calculator.pages.dev/ and `/stud-calculator/` load; raw Python template expression bug fixed. Live meta robots: `noindex,nofollow,noarchive`. Live `/robots.txt` disallows all crawlers. Production sitemap/canonical are gated on actual `SITE_URL` + `RELEASE_APPROVED=1`.
 
-## NOT RUN / BLOCKED
-- Live crawl / GSC / Cloudflare preview response: NOT RUN.
-- Canonical and sitemap on owned custom domain: N/A until domain connected.
-- Production mobile Core Web Vitals and Google rich-result validation: NOT RUN.
-- Source-referenced expertise, real authorship and trust assertions: no claims added.
-- Six special-result entries (three image-result and three AI Overview entries) in the Semrush export: research evidence only; not an SEO ranking promise.
+## Not completed
+- Real owned custom domain / DNS / canonical host and redirect enforcement: **NOT APPLICABLE UNTIL PURCHASE**.
+- Production sitemap, GSC submission, live indexing, crawl coverage, Core Web Vitals, structured data eligibility and AdSense: **NOT RUN**.
+- Professional construction/physical cutting diagrams need independent acceptance before advising actual saw settings or certified 1:1 templates.
+- Page content depth is not certified by Google: formula/examples are substantive but rankings, traffic and AdSense approval are **not guaranteed**.
 
-Do not index P0/P1 simply because a page exists; full feature and dimensional QA are still release gates.
+**Noindex remains intentional.** Do not turn on search crawling until production domain plus review are approved.
