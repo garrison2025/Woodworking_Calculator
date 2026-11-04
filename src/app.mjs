@@ -256,10 +256,22 @@ if(slug){
       content+='<path d="M'+x0+' '+y0+' L'+ridge0+' '+mid+' L'+x0+' '+(y0+hh)+' M'+(x0+ww)+' '+y0+' L'+ridge1+' '+mid+' L'+(x0+ww)+' '+(y0+hh)+' M'+ridge0+' '+mid+' L'+ridge1+' '+mid+'" fill="none" stroke="#875f39" stroke-width="2"/>';
       content+=svgText(x0,Math.max(22,y0-12),"EAVE "+fmt(data.roofMajor),"dim-label");
       content+=svgText(x0,Math.min(337,y0+hh+22),"WIDTH "+fmt(data.roofMinor)+" | "+data.roofPanels.length+" SHEET CUTS","dim-label");
-    }else if(data.shape==="rectangle"||data.shape==="roof"){
+    }else if(data.shape==="rectangle"){
+      // Render ONLY the intended Pythagorean rectangle at true aspect ratio.
+      // Two measured diagonals do not determine actual corner locations.
+      const sc=Math.min(470/data.rectWidth,193/data.rectHeight);
+      const w=data.rectWidth*sc,h=data.rectHeight*sc;
+      const x0=(900-w)/2,y0=(334-h)/2;
+      content+='<rect class="square-target-outline" x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'" fill="#e4ebe2" stroke="#1e6454" stroke-width="3"><title>'+esc("Ideal target rectangle: "+fmt(data.rectWidth)+" by "+fmt(data.rectHeight))+'</title></rect>';
+      content+='<line class="square-target-a" x1="'+x0+'" y1="'+y0+'" x2="'+(x0+w)+'" y2="'+(y0+h)+'" stroke="#b27f49" stroke-width="2.7"><title>'+esc("Ideal diagonal A "+fmt(data.idealDiagonal)+"; measured "+fmt(data.measuredA))+'</title></line>';
+      content+='<line class="square-target-b" x1="'+(x0+w)+'" y1="'+y0+'" x2="'+x0+'" y2="'+(y0+h)+'" stroke="#356d81" stroke-dasharray="7 5" stroke-width="2.7"><title>'+esc("Ideal diagonal B "+fmt(data.idealDiagonal)+"; measured "+fmt(data.measuredB))+'</title></line>';
+      content+=svgText(74,34,"IDEAL RECTANGLE ONLY · ACTUAL CORNERS NOT INFERRED","dim-label");
+      content+=svgText(74,306,"A MEASURED "+fmt(data.measuredA)+" · IDEAL "+fmt(data.idealDiagonal),"tick-label");
+      content+=svgText(500,306,"B MEASURED "+fmt(data.measuredB),"tick-label");
+      content+=svgText(74,329,"USER TOLERANCE "+fmt(data.diagonalTolerance)+" · "+data.withinCount+"/3 NUMERIC CHECKS","tick-label");
+    }else if(data.shape==="roof"){
       content+='<rect x="235" y="73" width="465" height="195" fill="#e4ebe2" stroke="#1e6454" stroke-width="3"/>';
-      if(data.shape==="roof")content+='<path d="M235 170 L333 73 M235 170 L333 268 M700 170 L602 73 M700 170 L602 268 M333 170 L602 170" stroke="#b27f49" stroke-width="2.5" fill="none"/>';
-      else content+='<line x1="235" y1="73" x2="700" y2="268" stroke="#b27f49" stroke-width="2.5"/>';
+      content+='<path d="M235 170 L333 73 M235 170 L333 268 M700 170 L602 73 M700 170 L602 268 M333 170 L602 170" stroke="#b27f49" stroke-width="2.5" fill="none"/>';
     }else if(data.shape==="ring"){
       const seg=data.segments||12,R=104,cx=467,cy=166,r=R*(data.inner||1)/(data.outer||2);
       for(let i=0;i<seg;i++){const a1=i*2*Math.PI/seg-Math.PI/2,a2=(i+1)*2*Math.PI/seg-Math.PI/2;
