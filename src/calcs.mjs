@@ -32,15 +32,33 @@ export function compute(slug,a){
     return result([M("Stud positions",rows.length,"N"),M("First cut length",rows[0].length),M("Last cut length",rows.at(-1).length),M("Top cut angle",deg(Math.atan(a.pitch/12)),"A")],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"slope",{rise:a.length*a.pitch/12,start:a.start,boardHeight:a.start+a.length*a.pitch/12});
   }
   case "framing-calculator":{
-    positive("length","spacing","width","openingWidth","openingHeight");nonnegative("openingStart");
-    const e=a.openingStart+a.openingWidth;
-    need(a.openingStart>0&&e<a.length,"Opening must be fully inside wall with solid end margins.");
-    xs=positions(a.length,a.spacing).filter(x=>x<=a.openingStart||x>=e);
+    positive("length","spacing","width","openingWidth","openingHeight");
+    nonnegative("openingStart","opening2Start","opening2Width","opening3Start","opening3Width");
+    const openings=[
+      {start:a.openingStart,width:a.openingWidth,label:"Opening 1"},
+      {start:a.opening2Start,width:a.opening2Width,label:"Opening 2"},
+      {start:a.opening3Start,width:a.opening3Width,label:"Opening 3"}
+    ].filter(o=>o.width>0).map(o=>({...o,end:o.start+o.width})).sort((u,v)=>u.start-v.start);
+    for(let i=0;i<openings.length;i++){
+      const o=openings[i];
+      need(o.start>0&&o.end<a.length,"Every opening must fit inside solid wall end margins.");
+      if(i>0)need(o.start>openings[i-1].end,"Openings must not overlap or share a boundary.");
+    }
+    xs=positions(a.length,a.spacing).filter(x=>!openings.some(o=>x>o.start&&x<o.end));
     const studRows=xs.map((x,i)=>({item:"Regular "+(i+1),position:q(x),length:null}));
-    for(const [name,x] of [["King left",Math.max(0,a.openingStart-a.width)],["Jack left",a.openingStart],["Jack right",e],["King right",Math.min(a.length,e+a.width)]])
-      studRows.push({item:name,position:q(x),length:null});
+    for(const o of openings){
+      for(const [name,x] of [
+        ["King left",Math.max(0,o.start-a.width)],["Jack left",o.start],
+        ["Jack right",o.end],["King right",Math.min(a.length,o.end+a.width)]
+      ])studRows.push({item:o.label+" "+name,position:q(x),length:null});
+    }
     studRows.sort((u,v)=>u.position-v.position);
-    return result([M("Regular studs",xs.length,"N"),M("Opening-side members",4,"N"),M("Opening width",a.openingWidth),M("Total listed pieces",studRows.length,"N")],studRows.map(r=>P(r.position,r.item,r.item.includes("King")||r.item.includes("Jack")?"accent":"mark")),a.length,studRows,"opening",{openingStart:a.openingStart,openingEnd:e,openingHeight:a.openingHeight});
+    return result([
+      M("Regular studs",xs.length,"N"),M("Opening intervals",openings.length,"N"),
+      M("Opening-side reference members",openings.length*4,"N"),
+      M("Total listed pieces",studRows.length,"N")
+    ],studRows.map(r=>P(r.position,r.item,r.item.includes("King")||r.item.includes("Jack")?"accent":"mark")),
+    a.length,studRows,"opening",{openings});
   }
   case "deck-board-calculator":{
     positive("width","length","board","stock");nonnegative("gap","waste");
