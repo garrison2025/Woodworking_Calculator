@@ -3,7 +3,10 @@ const PI=Math.PI, rad=d=>d*PI/180,deg=r=>r*180/PI;
 const need=(condition,message)=>{if(!condition)throw new RangeError(message)};
 const metric=(label,value,kind="L")=>({label,value,kind});
 const point=(x,label="",role="mark")=>({x,label,role});
-const result=(metrics,marks=[],span=1,rows=[],shape="ruler",extra={})=>({metrics,marks,span,rows,shape,...extra});
+const result=(metrics,marks=[],span=1,rows=[],shape="ruler",extra={})=>{
+  if(!Array.isArray(rows)||!Array.isArray(marks)||typeof shape!=="string")throw new TypeError("Invalid calculator layout contract");
+  return {metrics,marks,span,rows,shape,...extra};
+};
 const positions=(length,spacing)=>{
   need(length>0&&spacing>0,"Length and spacing must be positive.");
   const count=Math.ceil(length/spacing);
@@ -86,7 +89,7 @@ export function compute(slug,a){
     need(a.ridge<2*a.run,"Ridge thickness must be less than the full span.");
     need(a.seat<a.run&&a.seat*a.pitch/12<a.depth,"Birdsmouth reference exceeds the stated rafter section.");
     const run=a.run-a.ridge/2,rise=run*a.pitch/12,line=Math.hypot(run,rise),over=Math.hypot(a.overhang,a.overhang*a.pitch/12),heel=a.seat*a.pitch/12;
-    return result([M("Adjusted run",run),M("Rise",rise),M("Rafter reference length",line),M("Overhang slope length",over),M("Plumb cut angle",deg(Math.atan(a.pitch/12)),"A"),M("Seat reference drop",heel)],[],run,"triangle",{rise,run,seat:a.seat,stockDepth:a.depth});
+    return result([M("Adjusted run",run),M("Rise",rise),M("Rafter reference length",line),M("Overhang slope length",over),M("Plumb cut angle",deg(Math.atan(a.pitch/12)),"A"),M("Seat reference drop",heel)],[],run,[],"triangle",{rise,run,seat:a.seat,stockDepth:a.depth});
   }
   case "crown-molding-calculator":{
     positive("spring","corner");need(a.spring<90&&a.corner<180&&a.corner>0,"Angles must be between 0 and their geometric limits.");whole("inside",0,1);whole("left",0,1);
@@ -98,7 +101,7 @@ export function compute(slug,a){
     positive("projection");nonnegative("pitch","lining","depth");need(Math.abs(a.fasciaOffset)<1000,"Reference offset out of range.");
     const drop=a.projection*a.pitch/12, adjusted=drop+a.fasciaOffset+a.lining;
     need(adjusted>=0,"Offsets produce a negative final drop; review the reference plane.");
-    return result([M("Nominal roof-line drop",drop),M("Specified reference drop",adjusted),M("Roof-line length",Math.hypot(a.projection,drop)),M("Pitch angle",deg(Math.atan(a.pitch/12)),"A")],[],a.projection,"triangle",{rise:drop,run:a.projection});
+    return result([M("Nominal roof-line drop",drop),M("Specified reference drop",adjusted),M("Roof-line length",Math.hypot(a.projection,drop)),M("Pitch angle",deg(Math.atan(a.pitch/12)),"A")],[],a.projection,[],"triangle",{rise:drop,run:a.projection});
   }
   case "kerf-bending-calculator":{
     positive("radius","angle","thickness","kerf");nonnegative("web");need(a.angle<=360,"Bend angle must not exceed 360°.");need(a.web<a.thickness,"Retained web must be thinner than stock.");
@@ -124,7 +127,7 @@ export function compute(slug,a){
   case "rise-run-calculator":{
     positive("run");nonnegative("rise");
     const angle=deg(Math.atan2(a.rise,a.run)),hyp=Math.hypot(a.rise,a.run);
-    return result([M("Slope length",hyp),M("Slope angle",angle,"A"),M("Pitch / 12",12*a.rise/a.run,"P"),M("Grade",100*a.rise/a.run,"D")],[],a.run,"triangle",{rise:a.rise,run:a.run});
+    return result([M("Slope length",hyp),M("Slope angle",angle,"A"),M("Pitch / 12",12*a.rise/a.run,"P"),M("Grade",100*a.rise/a.run,"D")],[],a.run,[],"triangle",{rise:a.rise,run:a.run});
   }
   case "deck-material-calculator":{
     positive("width","length","board","joists");nonnegative("gap","waste");need(a.waste<=200,"Waste must be 0–200%.");
@@ -138,7 +141,7 @@ export function compute(slug,a){
   }
   case "roof-pitch-calculator":{
     nonnegative("pitch");positive("run");const rise=a.run*a.pitch/12,angle=deg(Math.atan(a.pitch/12));
-    return result([M("Roof angle",angle,"A"),M("Percentage grade",a.pitch/12*100,"D"),M("Rise over reference run",rise),M("Slope line",Math.hypot(a.run,rise))],[],a.run,"triangle",{rise,run:a.run});
+    return result([M("Roof angle",angle,"A"),M("Percentage grade",a.pitch/12*100,"D"),M("Rise over reference run",rise),M("Slope line",Math.hypot(a.run,rise))],[],a.run,[],"triangle",{rise,run:a.run});
   }
   case "equal-spacing-calculator":{
     positive("length");nonnegative("left","right");whole("count");
@@ -151,14 +154,14 @@ export function compute(slug,a){
   case "hip-rafter-calculator":{
     positive("runX","runY");nonnegative("pitch");
     const plan=Math.hypot(a.runX,a.runY),rise=a.runY*a.pitch/12;
-    return result([M("Plan diagonal",plan),M("Vertical rise",rise),M("Hip line length",Math.hypot(plan,rise)),M("Plan hip angle",deg(Math.atan2(a.runY,a.runX)),"A")],[],plan,"triangle",{rise,run:plan});
+    return result([M("Plan diagonal",plan),M("Vertical rise",rise),M("Hip line length",Math.hypot(plan,rise)),M("Plan hip angle",deg(Math.atan2(a.runY,a.runX)),"A")],[],plan,[],"triangle",{rise,run:plan});
   }
   case "hip-roof-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","overhang");
     const W=a.width+2*a.overhang,L=a.length+2*a.overhang,small=Math.min(W,L),large=Math.max(W,L),factor=Math.hypot(1,a.pitch/12),area=W*L*factor,ridge=large-small;
     const endArea=(small*small/4)*factor,sideArea=((large*small/2)-(small*small/4))*factor;
     const sheets=Math.ceil(area/(a.sheetWidth*a.sheetLength));
-    return result([M("Ridge length",ridge),M("Whole sloped area",area/144,"FT2"),M("Each hip-end plane",endArea/144,"FT2"),M("Each long-side plane",sideArea/144,"FT2"),M("Sheet area lower bound",sheets,"N")],[],large,"roof",{roofWidth:W,roofLength:L});
+    return result([M("Ridge length",ridge),M("Whole sloped area",area/144,"FT2"),M("Each hip-end plane",endArea/144,"FT2"),M("Each long-side plane",sideArea/144,"FT2"),M("Sheet area lower bound",sheets,"N")],[],large,[],"roof",{roofWidth:W,roofLength:L});
   }
   case "wall-stud-calculator":{
     positive("length","spacing","height");nonnegative("plates");need(a.height>a.plates,"Plate deduction leaves no cut length.");
@@ -175,17 +178,17 @@ export function compute(slug,a){
   case "gable-roof-calculator":{
     positive("width","length");nonnegative("pitch","overhang");
     const run=a.width/2+a.overhang,rise=run*a.pitch/12,line=Math.hypot(run,rise),roofLen=a.length+2*a.overhang;
-    return result([M("Half-span run",run),M("Roof rise",rise),M("Each slope length",line),M("Total roof surface",2*line*roofLen/144,"FT2")],[],run,"triangle",{run,rise});
+    return result([M("Half-span run",run),M("Roof rise",rise),M("Each slope length",line),M("Total roof surface",2*line*roofLen/144,"FT2")],[],run,[],"triangle",{run,rise});
   }
   case "square-layout-calculator":{
     positive("width","length","measuredA","measuredB");
     const d=Math.hypot(a.width,a.length);
-    return result([M("Ideal right-angle diagonal",d),M("Diagonal A error",a.measuredA-d),M("Diagonal B error",a.measuredB-d),M("Difference between measured diagonals",Math.abs(a.measuredA-a.measuredB))],[],a.length,"rectangle",{rectWidth:a.width,rectHeight:a.length});
+    return result([M("Ideal right-angle diagonal",d),M("Diagonal A error",a.measuredA-d),M("Diagonal B error",a.measuredB-d),M("Difference between measured diagonals",Math.abs(a.measuredA-a.measuredB))],[],a.length,[],"rectangle",{rectWidth:a.width,rectHeight:a.length});
   }
   case "diagonal-brace-calculator":{
     positive("width","height");nonnegative("setback");
     const d=Math.hypot(a.width,a.height);need(2*a.setback<d,"Total cut setbacks exceed brace length.");
-    return result([M("Full centerline",d),M("After end setbacks",d-2*a.setback),M("Brace angle",deg(Math.atan2(a.height,a.width)),"A")],[],a.width,"triangle",{rise:a.height,run:a.width});
+    return result([M("Full centerline",d),M("After end setbacks",d-2*a.setback),M("Brace angle",deg(Math.atan2(a.height,a.width)),"A")],[],a.width,[],"triangle",{rise:a.height,run:a.width});
   }
   case "hole-spacing-calculator":{
     positive("length","diameter");nonnegative("edge");whole("holes",2,500);
@@ -205,7 +208,7 @@ export function compute(slug,a){
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");need(a.waste<=200,"Waste must be 0–200%.");
     const area=a.width*a.length*Math.hypot(1,a.pitch/12),per=a.sheetWidth*a.sheetLength,minimum=Math.ceil(area/per),ordered=Math.ceil(area*(1+a.waste/100)/per);
-    return result([M("Sloped roof surface",area/144,"FT2"),M("Sheet geometric lower bound",minimum,"N"),M("With percent allowance",ordered,"N"),M("Sheet face area",per/144,"FT2")],[],a.length,"rectangle",{rectWidth:a.width,rectHeight:a.length});
+    return result([M("Sloped roof surface",area/144,"FT2"),M("Sheet geometric lower bound",minimum,"N"),M("With percent allowance",ordered,"N"),M("Sheet face area",per/144,"FT2")],[],a.length,[],"rectangle",{rectWidth:a.width,rectHeight:a.length});
   }
   case "fence-post-calculator":{
     positive("length","bay","post");need(a.post<a.length,"Post wider than run.");
