@@ -169,3 +169,24 @@ if(slug){
   restoreValues();render();
   try{const recent=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");localStorage.setItem("woodwork-recent",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,6)))}catch{}
 }
+
+/* Homepage history is browser-only and optional; no tracking endpoint exists. */
+if(!slug){
+  const panel=document.querySelector("#recent-tools"),links=document.querySelector("#recent-links");
+  if(panel&&links){
+    try{
+      const saved=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");
+      const manifest=await fetch("/assets/tools.json").then(r=>r.json());
+      const available=manifest.tools.filter(t=>t.priority!=="P2");
+      for(const item of saved.slice(0,6)){
+        const found=available.find(t=>t.slug===item);
+        if(!found)continue;
+        const a=document.createElement("a");
+        a.href="/"+found.slug+"/";
+        a.textContent=found.title+" ↗";
+        links.appendChild(a);
+      }
+      if(links.children.length)panel.hidden=false;
+    }catch{/* Recent tool history is optional. */}
+  }
+}
