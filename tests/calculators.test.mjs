@@ -51,6 +51,9 @@ for(const t of published){
   test(slug+" · output geometry and cut list contain only finite numbers",()=>{
     const r=compute(slug,original);
     assert.ok(r.metrics.length>0&&r.span>0);
+    assert.ok(Array.isArray(r.rows),slug+" must return an array of schedule rows");
+    assert.ok(Array.isArray(r.marks),slug+" must return an array of diagram marks");
+    assert.equal(typeof r.shape,"string",slug+" must return a valid diagram type");
     for(const metric of r.metrics)assert.ok(Number.isFinite(metric.value),metric.label);
     for(const mark of r.marks)assert.ok(Number.isFinite(mark.x)&&mark.x>=0&&mark.x<=r.span+1e-6);
     for(const row of r.rows)for(const val of Object.values(row))if(typeof val==="number")assert.ok(Number.isFinite(val));
