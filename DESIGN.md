@@ -1,0 +1,12 @@
+# Workshop Geometry Tools — Design System
+- **Audience:** US DIY woodworkers, carpenters and small contractors.
+- **Modes:** Operate on each calculator page, Read on method/safety sections, Navigate on directories. Tool inputs are always more important than marketing copy.
+- **Visual direction:** technical workbench / measured drafting surface, original CAD-style SVGs, warm neutrals and quiet deep green. No copied Blocklayer UI/assets. No remote fonts, videos, gradients or decorative ongoing motion.
+- **Canvas:** #F8F7F4; **surface:** #FFFEFD; **ink:** #1F2925; **action:** #1E6454; **wood accent:** #C58C54; **muted:** #64736C; **danger:** #A83A33.
+- **Typography:** system-ui for prose, ui-monospace/Consolas for dimensions, tabular numerals. 15–17px body, compact operation labels, headings 2rem+ by context.
+- **Workbench layout:** input left / SVG center / takeoff right at wide screens. Two columns at laptop widths; on small mobile: **input → results → drawing → formula/cut list**.
+- **Interaction:** form-input recalculates results, no network; unit toggle switches in↔mm without changing actual measurements; print, SVG, CSV and Copy buttons have distinct actions; invalid inputs display accessible inline error.
+- **Motion:** transforms and width transition around 180–200ms, entirely disabled for reduced-motion. No mandatory animation for a calculator.
+- **A11y:** semantically labeled inputs, live error/result region, focus-visible rings, keyboard-accessible buttons and skip link. WCAG contrast must be checked visually on an actual rendered site.
+- **Print:** simplified paper view removes navigation, buttons, ad slots and inputs; leaves title, results, SVG and schedule. Scale is explicitly **not** certified 1:1 without physical calibration.
+- **Screenshot / responsive / touch testing:** NOT RUN at commit stage. CSS responsiveness is code, not evidence of device verification.
