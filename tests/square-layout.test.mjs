@@ -73,5 +73,5 @@ test("square-check CSV keeps numeric lengths and text check results separate",()
   assert.ok(csv.includes('"Target Diagonal (mm)","Measured Diagonal (mm)","Signed Error (mm)","Absolute Error (mm)","Allowed Deviation (mm)","Check Result"'));
   assert.ok(csv.includes('"Outside stated tolerance"'));
   assert.ok(csv.includes('"Within stated tolerance"'));
-  assert.equal(csv.split("\r\n").length,5);
+  assert.equal(csv.split("\r\n").length,6); // header + three data rows + source note + trailing blank
 });
