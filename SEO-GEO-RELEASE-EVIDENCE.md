@@ -27,4 +27,4 @@
 ## Descriptions and release propagation — CI #76
 - PASS in generated HTML: all 26 tool metadata descriptions are punctuation-terminated and pass readability-length checks; the former `... plan Formula, dimension ...` concatenation is rejected by automated static tests.
 - Preview noindex/no sitemap/no fake canonical remains intact, with all 152 approved KD<=29 research rows still mapped to the existing 31 intentions.
-- NOT VERIFIED LIVE: at the latest public Pages fetch, Cloudflare still served the **prior meta descriptions**. Source/CI evidence is not equivalent to a verified Pages deployment. A later public fetch of the updated description or a checked Pages build is required before marking live propagation PASS.
+- VERIFIED LIVE (post-deployment repeat fetch): public `/deck-material-calculator/` and `/roof-sheathing-calculator/` now serve cleaned, punctuated meta descriptions without the old concatenation. Both retain `noindex,nofollow,noarchive`. This specifically validates those two public routes, not a production custom domain, not all 26 page descriptions and not Google indexing.
