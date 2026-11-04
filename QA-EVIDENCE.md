@@ -1,7 +1,7 @@
 # QA evidence — 2026-11-04 (deployed preview)
 ## Executed / PASS
-- **GitHub Actions:** [run #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873) passed on `main` (commit `d9ea9013`).
-- **Geometry:** **251 / 251** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
+- **GitHub Actions:** [run #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) passed on `main` (commit `baff57c9`).
+- **Geometry:** **254 / 254** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
 - **Real Chromium browser:** **29 / 29** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
@@ -80,3 +80,11 @@
 - PASS (browser): the default 24-in, 6:12 fixture gives 12-in roof fall and 18.6492-in finished reference drop using 5.5-in normal stock, 0.5-in vertical lining and zero fascia offset. Doubling stock depth to 11 in changes the result to 24.7984 in. SVG includes identifiable rafter and finish datum elements; metric CSV includes matched coordinates; invalid offsets clear the diagram.
 - PASS (public Cloudflare page/JS propagation): `/soffit-calculator/` served the new explanatory geometry text, while `assets/calcs.mjs` and `assets/app.mjs` exposed the new `soffit-section` branch. Public meta robots remained `noindex,nofollow,noarchive`.
 - NOT RUN: independent site-specific fascia/lining assembly inspection, physical ruler/print validation, structural support/fastening checks, real-device touch, WebKit/Firefox compatibility, engineering signoff. These dimensions describe a **named reference-datum convention**, not a universal soffit construction method.
+
+## Deck board butt seam centerline alignment — CI #95
+- PASS: [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) — **254/254** Node tests, **29/29** Chromium Playwright tests and 36-page/152-keyword noindex static validation.
+- PASS: With 144-in rows, 16-in joist centers and 100-in stock, every deck row is split into **96 + 48 in** segments at a **96-in** joist-center reference instead of unsupported 100 + 44-in ends. The CSV `buttJointAtEnd` field and SVG `.deck-plan-seam` marks identify the reference cut.
+- PASS: Board counts are based on actual supported segments; no offcut reuse. Invalid stock shorter than the first reachable joist center is rejected, including altered joist-spacing cases; valid/invalid input changes clear and restore all seam drawing marks.
+- PASS: deterministic property fixtures across multiple deck lengths, joist center intervals and stock lengths independently check whole-run conservation, positive segments, maximum stock lengths, and actual joist-center membership for every intermediate joint.
+- PASS (public Cloudflare preview content): `/deck-material-calculator/` serves the revised seam-support description, warnings about unstaggered joins and `noindex,nofollow,noarchive`.
+- NOT RUN: physical decking seam bearing, joist section width, double-joist/blocking, end gaps, material deflection, fastener schedule, code-compliant joist spans, full-size printing and Safari/Firefox/real-device tests. A shared seam location across every row is a computation/reference fixture, **not a recommended field seam pattern**.

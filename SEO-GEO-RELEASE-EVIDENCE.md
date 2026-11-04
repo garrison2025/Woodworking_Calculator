@@ -41,3 +41,7 @@
 ## Soffit functional-intent correction — CI #93
 - The P0 `/soffit-calculator/` now uses all five input fields. Its method explains the **wall top-of-rafter datum**, the perpendicular-versus-vertical stock-depth distinction, and the directional sign of the fascia adjustment. This avoids misleading users about an inert construction parameter.
 - [CI #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873) passed. All 26 active URLs and 152 approved nonbrand Semrush research entries are unchanged. No invented new traffic metrics, indexed preview or unsupported structural claims.
+
+## Deck material search-intent fidelity — CI #95
+- The deck estimator now describes *joist-center-constrained* piece division instead of arbitrary stock-length cut positions; the method includes an illustrative 100-in purchased-board / 96-in joist-centered seam example and explicitly excludes bearing, fasteners, blocking and stagger patterns.
+- Preview live metadata has the revised tool description and still uses `noindex,nofollow,noarchive`. [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) passed while all 152 mapped keyword rows and 26 P0/P1 calculators were retained. No traffic claims or extra indexed keyword pages were added.

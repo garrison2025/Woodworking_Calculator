@@ -52,3 +52,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: roof-top and rafter-underside are now visible as two parallel rafter faces in a proportional section. The dashed finish datum is derived from the same numeric engine values as the on-screen metrics and downloaded two-row cut schedule.
 - PASS: 29 Chromium checks, including changing stock depth, asserting the matching numeric result, checking SVG datum elements, exporting metric CSV and clearing invalid geometry. [Run #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873).
 - NOT RUN: reviewed real-size construction details, printed full-size templates, hand verification of physical fascia assemblies, or cross-browser/device acceptance.
+
+## Deck joint reference visibility — CI #95
+- PASS: the deck SVG adds distinct colored butt-joint ticks inside each board row and continues to show dashed joist center reference lines. Changing stock from 144 to 100 in reveals 22 joints, while a non-reachable joist center clears the drawing and reports a specific error; valid input restores the visual schedule.
+- PASS: [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) validated matching PDF/CSV-aware responsive browser behavior. 29/29 Playwright tests passed.
+- LIMIT: the diagram illustrates **unstaggered** aligned seams and must not be treated as a structural design or physical paper-scale cut template.

@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 251 geometry tests, 29 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 254 geometry tests, 29 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -154,3 +154,5 @@ The [CI #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs
 ## 2026-11-04 — Supported deck butt seam reference geometry
 
 The deck estimator now refuses to create **unsupported mid-bay butt joints** from arbitrary purchased stock lengths. Its deterministic per-row segment plan takes the furthest *entered joist center reference* not exceeding the board stock length, repeats as necessary, and places an end only at the last deck edge. For a 144-in deck at 16-in joist centers with 100-in stock, the reference seam is at 96 in, creating 96+48-in segments rather than 100+44-in unsupported board ends. The complete CSV includes `buttJointAtEnd`, and the SVG differentiates orange seam marks from dashed green joist centers. Stock lengths too short to reach a center are rejected; counts use actual supported segments plus optional allowance and never reuse offcuts. **This is NOT a real-world structural/seam-fastening design:** seams are identical across all rows (not staggered), and joist widths, double-joist blocking, fasteners, end gaps and structural span limits require separate inspection.
+
+Latest verified build: [CI #95](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41809838176) passed **254/254** geometry/CSV unit tests and **29/29** Playwright Chromium checks with **36 HTML pages**, **26 enabled tools** and **152 research keyword rows**. The live Cloudflare deck estimator page serves the updated joist-seam guidance and retains `noindex,nofollow,noarchive`. Physical build and joint-bearing suitability remain excluded from CI.
