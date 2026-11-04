@@ -403,11 +403,25 @@ export function compute(slug,a){
   }
   case "hole-spacing-calculator":{
     positive("length","diameter");nonnegative("edge");whole("holes",2,500);
+    // 'edge' is the distance to the first/last CENTER, not the drilled edge.
+    // The drawing describes longitudinal fit only; board face width and
+    // perpendicular grain/edge margins are intentionally not inferred.
     need(a.edge>=a.diameter/2&&2*a.edge<a.length,"Hole edges extend outside stock.");
-    g=(a.length-2*a.edge)/(a.holes-1);need(g>=a.diameter,"Holes overlap at the requested count.");
+    g=(a.length-2*a.edge)/(a.holes-1);
+    need(g>=a.diameter,"Holes overlap at the requested count.");
+    const gap=g-a.diameter,margin=a.edge-a.diameter/2;
     xs=Array.from({length:a.holes},(_,i)=>a.edge+i*g);
-    rows=xs.map((x,i)=>({item:"Hole "+(i+1),center:q(x),diameter:q(a.diameter)}));
-    return result([M("Hole center pitch",g),M("Hole count",a.holes,"N"),M("Edge offset",a.edge)],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"holes",{holeDiameter:a.diameter});
+    rows=xs.map((x,i)=>({
+      item:"Hole "+(i+1),center:q(x),
+      holeLeftEdge:q(x-a.diameter/2),holeRightEdge:q(x+a.diameter/2),
+      diameter:q(a.diameter),clearToPrevious:i===0?null:q(gap)
+    }));
+    return result([
+      M("Hole center pitch",g),M("Clear material between holes",gap),
+      M("End material margin",margin),M("Hole count",a.holes,"N"),
+      M("Edge offset",a.edge)
+    ],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"holes",
+    {holeDiameter:a.diameter,holeClearance:gap,endMaterialMargin:margin});
   }
   case "stair-stringer-calculator":{
     positive("rise","tread","depth");whole("risers",2,200);

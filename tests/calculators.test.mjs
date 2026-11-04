@@ -113,6 +113,48 @@ test("Gable geometry: wall end height 168in before plate deductions",()=>{
 test("Unsafe opening extending beyond frame is rejected",()=>{
   assert.equal(safeCompute("framing-calculator",{length:120,spacing:16,width:1.5,openingStart:90,openingWidth:40,openingHeight:80}).ok,false);
 });
+test("Drilled hole centers, circular extents and longitudinal clearances agree in millimeters",()=>{
+  const a={length:100/25.4,holes:4,edge:5/25.4,diameter:5/25.4};
+  const r=compute("hole-spacing-calculator",a);
+  near(value(r,"Hole center pitch")*25.4,30,1e-7);
+  near(value(r,"Clear material between holes")*25.4,25,1e-7);
+  near(value(r,"End material margin")*25.4,2.5,1e-7);
+  assert.equal(r.rows.length,4);
+  for(const [i,row] of r.rows.entries()){
+    near(row.center*25.4,5+i*30,2e-7);
+    near(row.holeLeftEdge*25.4,2.5+i*30,2e-7);
+    near(row.holeRightEdge*25.4,7.5+i*30,2e-7);
+    near((row.holeRightEdge-row.holeLeftEdge)*25.4,5,3e-7);
+    if(i===0)assert.equal(row.clearToPrevious,null);
+    else near(row.clearToPrevious*25.4,25,2e-7);
+  }
+  near(r.rows[0].holeLeftEdge*25.4,2.5,2e-7);
+  near((a.length-r.rows.at(-1).holeRightEdge)*25.4,2.5,2e-7);
+  assert.equal(r.shape,"holes");
+});
+test("Drill interval properties conserve stock margin and forbid negative hole gaps",()=>{
+  for(const n of [2,3,4,8,20])for(const d of [1,2.5,5])for(const e of [d/2,d,2*d]){
+    const a={length:120,holes:n,edge:e,diameter:d};
+    const pitch=(a.length-2*e)/(n-1);
+    const r=safeCompute("hole-spacing-calculator",a);
+    if(pitch<d){
+      assert.equal(r.ok,false);
+      continue;
+    }
+    assert.equal(r.ok,true);
+    const data=r.data;
+    near(data.rows[0].holeLeftEdge,e-d/2,1e-7);
+    near(data.rows.at(-1).holeRightEdge,120-e+d/2,1e-7);
+    for(let i=1;i<data.rows.length;i++){
+      near(data.rows[i].center-data.rows[i-1].center,pitch,1e-7);
+      near(data.rows[i].holeLeftEdge-data.rows[i-1].holeRightEdge,pitch-d,1e-7);
+    }
+  }
+  const touching=compute("hole-spacing-calculator",{length:30,holes:3,edge:5,diameter:10});
+  near(value(touching,"Clear material between holes"),0,1e-9);
+  assert.equal(safeCompute("hole-spacing-calculator",{length:20,holes:2,edge:4,diameter:10}).ok,false);
+  assert.equal(safeCompute("hole-spacing-calculator",{length:25,holes:4,edge:5,diameter:7}).ok,false);
+});
 test("Hole overlap is rejected",()=>{
   assert.equal(safeCompute("hole-spacing-calculator",{length:4,holes:8,edge:.5,diameter:1}).ok,false);
 });

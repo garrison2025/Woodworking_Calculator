@@ -51,6 +51,11 @@ if(slug){
     let marks=data.marks||[];
     const tick=marks.length>60?Math.ceil(marks.length/60):1;
     if(["ruler","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening"].includes(data.shape)){
+      // A single isotropic scale prevents wide drilled holes from becoming
+      // distorted: shrink the board horizontally if the diameter would not
+      // fit the fixed vertical diagram viewport.
+      const holeScale=data.shape==="holes"?Math.min(W/span,100/data.holeDiameter):null;
+      const holeStart=holeScale===null?left:(900-span*holeScale)/2;
       if(data.shape==="boards"){
         const w=data.boardWidth||2;
         for(let i=0;i<Math.min(marks.length,180);i++){
@@ -77,6 +82,17 @@ if(slug){
         }
         for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+yLevel(p.topHeight??wallHeight)+'" x2="'+x(p.x)+'" y2="255" stroke="'+(p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b")+'" stroke-width="'+(p.role==="mark"?"3":"5")+'"/>';
         content+=svgText(left+5,64,"WALL "+fmt(wallHeight),"dim-label");
+      }else if(data.shape==="holes"){
+        const boardWidth=span*holeScale;
+        content+='<rect class="drilling-stock" x="'+holeStart+'" y="110" width="'+boardWidth+'" height="128" fill="#ead4b2" stroke="#8e6b43" stroke-width="2"><title>Length reference only; stock face width and cross-grain clearance not supplied</title></rect>';
+        content+='<line x1="'+holeStart+'" y1="174" x2="'+(holeStart+boardWidth)+'" y2="174" stroke="#866845" stroke-width="1.2" stroke-dasharray="5 4"/>';
+        for(const [i,p] of marks.entries()){
+          const cx=holeStart+p.x*holeScale,r=Math.max(.15,data.holeDiameter*holeScale/2);
+          content+='<circle class="drill-hole" cx="'+cx+'" cy="174" r="'+r+'" fill="#fcfbf8" stroke="#1e6454" stroke-width="1.4"><title>'+esc("Hole "+(i+1)+": center "+fmt(p.x)+", diameter "+fmt(data.holeDiameter))+'</title></circle>';
+        }
+        content+=svgText(holeStart,70,"HOLE Ø "+fmt(data.holeDiameter),"dim-label");
+        content+=svgText(holeStart,90,"EDGE CLEAR "+fmt(data.endMaterialMargin),"tick-label");
+        content+=svgText(holeStart,330,"CLEAR BETWEEN "+fmt(data.holeClearance),"dim-label");
       }else if(data.shape==="shelves"){
         // Both faces come from the same bottom/thickness values as the schedule.
         const shelfHeight=(data.shelfThickness||1)/span*195;
@@ -96,11 +112,14 @@ if(slug){
         }
       }
       for(let i=0;i<marks.length;i+=tick){
-        const p=marks[i],px=x(p.x);
+        const p=marks[i],px=data.shape==="holes"?holeStart+p.x*holeScale:x(p.x);
         content+='<line x1="'+px+'" y1="'+base+'" x2="'+px+'" y2="'+(base+9)+'" stroke="#1e6454"/>';
         if(marks.length<=24||i%Math.max(tick,2)===0)content+=svgText(px-10,base+27,p.label?String(p.label).slice(0,9):trim(convertFromInches(p.x,unit),1),"tick-label");
       }
-      content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
+      if(data.shape==="holes"){
+        content+=svgText(holeStart,302,"0 "+unit,"dim-label");
+        content+=svgText(holeStart+span*holeScale-100,302,fmt(span),"dim-label");
+      }else content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
     }else if(data.shape==="rafter"){
       // Side-elevation reference, deliberately not a paper-scale cutting template.
       // Long edge and cutout are schematic; the numeric schedule comes from the geometry engine.

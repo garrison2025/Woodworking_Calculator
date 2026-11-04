@@ -35,6 +35,40 @@ test("all 26 calculator pages execute JS, render metrics and SVG",async({page})=
   expect(pageErrors).toEqual([]);
 });
 
+test("drilling layout draws proportional hole circles and exports edge-clear coordinates",async({page})=>{
+  await page.goto("/hole-spacing-calculator/");
+  await page.locator("#unit-select").selectOption("mm");
+  await page.locator("#f-length").fill("100");
+  await page.locator("#f-holes").fill("4");
+  await page.locator("#f-edge").fill("5");
+  await page.locator("#f-diameter").fill("5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Clear material between holes"})).toContainText("25 mm");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"End material margin"})).toContainText("2.5 mm");
+  const holes=page.locator("#dimension-svg svg .drill-hole");
+  await expect(holes).toHaveCount(4);
+  const first=holes.first();
+  const r1=Number(await first.getAttribute("r")),cx1=Number(await first.getAttribute("cx"));
+  const cx2=Number(await holes.nth(1).getAttribute("cx"));
+  expect((cx2-cx1)/(2*r1)).toBeCloseTo(30/5,3);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(4);
+  await expect(page.locator("#cut-table thead")).toContainText("Hole Left Edge (mm)");
+  await expect(page.locator("#cut-table thead")).toContainText("Hole Right Edge (mm)");
+  await expect(page.locator("#cut-table tbody tr").first()).toContainText("2.5 mm");
+  const {readFileSync}=await import("node:fs");
+  const event=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const data=readFileSync(await (await event).path(),"utf8");
+  expect(data).toContain('"Hole Left Edge (mm)","Hole Right Edge (mm)"');
+  expect(data).toContain('"Hole 1","5","2.5","7.5","5"');
+  await page.locator("#f-diameter").fill("10");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const r2=Number(await holes.first().getAttribute("r"));
+  expect(r2).toBeGreaterThan(r1*1.9);
+  await page.locator("#f-diameter").fill("40");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(holes).toHaveCount(0);
+});
 test("deck row calculation uses the verified 1.875-inch final rip",async({page})=>{
   await page.goto("/deck-board-calculator/");
   const rip=page.locator("#result-cards .metric").filter({hasText:"Last rip width"});

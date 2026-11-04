@@ -1141,7 +1141,7 @@
       "keyword": "hole spacing calculator",
       "volume": 110,
       "kd": 4,
-      "desc": "Drilling centers, pitch and hole fit checks",
+      "desc": "Drilling centers and hole-edge coordinates, measured end margins, inter-hole clear material and proportional circle layout",
       "inputs": [
         {
           "key": "length",
@@ -1168,10 +1168,24 @@
           "kind": "L"
         }
       ],
-      "formula": "pitch=(length−2×edge)/(holes−1)",
-      "example": "100 mm board, 4 holes, 5 mm center offsets: 30 mm pitch",
-      "limit": "Holes must fit and not overlap",
-      "status": "BETA_NO_INDEX"
+      "formula": "Center pitch = (stock length−2×end center setback)/(hole count−1); drilled hole edges = center±hole diameter/2; inter-hole clear material = center pitch−diameter; end material margin = end center setback−diameter/2.",
+      "example": "On a 100 mm board with four 5 mm holes, centered 5 mm in from either end, pitch is 30 mm, hole-to-hole clear material is 25 mm, and the solid end margin is 2.5 mm. Hole edges from the left are 2.5–7.5, 32.5–37.5, 62.5–67.5 and 92.5–97.5 mm.",
+      "limit": "Hole center setback is NOT edge-to-edge material clearance. Hole circles and interval spacing depict longitudinal geometry only; actual board face width, transverse edge clearance, drill-bit runout, grain tear-out, tolerances, clamping, workholding, fastener loads and material strength are not checked. Touching holes may produce 0 clear material. SVG is illustrative, never a 1:1 drilling template.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Center setback versus remaining end material",
+          "text": "Enter the distance from each stock end to the first or last hole center. The actual wood remaining between the hole edge and stock end is setback minus half the drill diameter. Both are explicitly computed, so a 5 mm center setback on a 5 mm diameter hole leaves 2.5 mm of end wood."
+        },
+        {
+          "heading": "Check spacing between drilled edges",
+          "text": "The center pitch is not the wood thickness between holes. Clear material between neighboring holes is the center pitch minus the full hole diameter; the calculator rejects negative clear material where round holes would overlap along the board."
+        },
+        {
+          "heading": "Review exact hole edges and local CSV",
+          "text": "The schedule lists each center coordinate and the hole's left and right extents, its diameter and the material clearance to the previous hole. SVG circles have a consistent horizontal and vertical geometric scale within the diagram. The drawing does not verify perpendicular edge clearance, material tear-out or drill accuracy."
+        }
+      ]
     },
     {
       "slug": "stair-stringer-calculator",
