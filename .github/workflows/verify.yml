@@ -12,7 +12,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -31,3 +31,20 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Validate prerendered routes and noindex policy
         run: python3 tests/validate_static.py
+      - name: Install browser test dependency
+        run: npm install --no-audit --no-fund
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium --only-shell
+      - name: Test real browser calculations, exports and responsive layouts
+        run: npx playwright test
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 5
+
