@@ -599,7 +599,7 @@
       "keyword": "deck estimator",
       "volume": 3600,
       "kd": 15,
-      "desc": "Decking board and simple joist layout quantities",
+      "desc": "Deck surface, actual board rip widths, stock-piece takeoff and user-selected joist reference centerlines with a printable plan",
       "inputs": [
         {
           "key": "width",
@@ -626,6 +626,12 @@
           "kind": "L"
         },
         {
+          "key": "stock",
+          "label": "Purchased board stock length",
+          "value": 144,
+          "kind": "L"
+        },
+        {
           "key": "joists",
           "label": "Joist OC spacing",
           "value": 16,
@@ -638,10 +644,24 @@
           "kind": "D"
         }
       ],
-      "formula": "area=width×length; board rows from board width and gaps; layout joists at chosen OC",
-      "example": "10 × 12 ft footprint = 120 ft² before waste",
-      "limit": "Framing positions are not safe joist spans",
-      "status": "BETA_NO_INDEX"
+      "formula": "Rows = ceil((coverage+gap)/(board width+gap)); final rip = coverage−(rows−1)×(board width+gap); board stock pieces = rows×ceil(row length/stock length); joist centers = 0, OC, …, final endpoint.",
+      "example": "A 120 × 144 in deck with 5.5 in boards and 1/8 in gaps needs 22 rows, a 1.875 in final rip, 10 joist reference lines at 16 in OC, and 22 stock boards at 144 in length (25 with 10% allowance).",
+      "limit": "Rectangular straight-deck geometry only. Joist marks are user-selected centers, NOT validated safe spans or structurally rated placements. Stock cuts are conservative without offcut reuse; no joint staggering, blocking, fastening, board defects, end gaps, ledger design or footing calculations.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Board direction and actual finished width",
+          "text": "Deck width is measured across rows; length runs along the boards. Enter the actual face width, not nominal lumber dimensions. The final row may be ripped down; verify the last strip on site."
+        },
+        {
+          "heading": "Stock boards versus installed linear feet",
+          "text": "Stock pieces are calculated per row without reusing offcuts. When the deck is longer than a purchased board, each row is split into multiple segments; the displayed join locations are only numeric cut positions, not a structurally approved seam pattern."
+        },
+        {
+          "heading": "Joist marks are geometry, not structural design",
+          "text": "Specify the joist center spacing yourself. The layout starts at zero and ends at the final deck endpoint, possibly with a shortened last bay. No span, support, bearing or fastener suitability is assessed."
+        }
+      ]
     },
     {
       "slug": "segmented-bowl-calculator",

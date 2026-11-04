@@ -218,9 +218,44 @@ export function compute(slug,a){
     return result([M("Slope length",hyp),M("Slope angle",angle,"A"),M("Pitch / 12",12*a.rise/a.run,"P"),M("Grade",100*a.rise/a.run,"D")],[],a.run,[],"triangle",{rise:a.rise,run:a.run});
   }
   case "deck-material-calculator":{
-    positive("width","length","board","joists");nonnegative("gap","waste");need(a.waste<=200,"Waste must be 0–200%.");
-    const boards=ceilStable((a.width+a.gap)/(a.board+a.gap)),joists=ceilStable(a.length/a.joists)+1,area=a.width*a.length;
-    return result([M("Deck area",area/144,"FT2"),M("Deck rows",boards,"N"),M("Estimated joist lines",joists,"N"),M("Linear decking",boards*a.length/12,"FT"),M("Decking with waste",boards*a.length*(1+a.waste/100)/12,"FT")],positions(a.width,a.board+a.gap).map(x=>P(x)),a.width,[],"boards",{boardWidth:a.board});
+    positive("width","length","board","joists","stock");nonnegative("gap","waste");
+    need(a.waste<=200,"Waste must be 0–200%.");
+    // Surface board rows run along deck length; joist reference lines run across the width.
+    // Ends include a final shortened bay. This is geometry, not a structural span design.
+    const boards=ceilStable((a.width+a.gap)/(a.board+a.gap));
+    const finalRip=a.width-(boards-1)*(a.board+a.gap);
+    need(boards>=1&&boards<=900&&finalRip>0&&finalRip<=a.board+1e-7,"Board width or gap cannot cover this deck safely within the layout limit.");
+    const piecesPerRow=ceilStable(a.length/a.stock);
+    need(piecesPerRow>=1&&boards*piecesPerRow<=900,"Over 900 stock pieces are required; choose longer stock or a smaller footprint.");
+    const joistGrid=positions(a.length,a.joists);
+    need(joistGrid.length<=900,"Too many joist layout lines.");
+    const deckRows=Array.from({length:boards},(_,i)=>({
+      item:"Row "+(i+1),acrossStart:q(i*(a.board+a.gap)),
+      ripWidth:q(i===boards-1?finalRip:a.board)
+    }));
+    const schedule=[];
+    for(const row of deckRows)for(let j=0;j<piecesPerRow;j++){
+      const start=j*a.stock,segment=Math.min(a.stock,a.length-start);
+      need(segment>1e-8,"Stock subdivision produced an invalid zero-length piece.");
+      schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
+        acrossStart:row.acrossStart,alongStart:q(start),
+        cutLength:q(segment),ripWidth:row.ripWidth,joistCenter:null});
+    }
+    for(const [i,x] of joistGrid.entries())schedule.push({
+      item:"Joist reference "+(i+1),type:"Joist center",acrossStart:null,alongStart:null,
+      cutLength:null,ripWidth:null,joistCenter:q(x)
+    });
+    const baseStock=boards*piecesPerRow;
+    return result([
+      M("Deck area",a.width*a.length/144,"FT2"),M("Deck rows",boards,"N"),
+      M("Last rip width",finalRip),M("Joist reference lines",joistGrid.length,"N"),
+      M("Final joist bay",joistGrid.at(-1)-joistGrid.at(-2)),
+      M("Installed linear decking",boards*a.length/12,"FT"),
+      M("Stock boards (no offcut reuse)",baseStock,"N"),
+      M("Stock boards with allowance",ceilStable(baseStock*(1+a.waste/100)),"N"),
+      M("Board-joist intersections",boards*joistGrid.length,"N")
+    ],deckRows.map(row=>P(row.acrossStart,row.item)),a.width,schedule,"deck-plan",
+    {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,stockLength:a.stock});
   }
   case "segmented-bowl-calculator":{
     positive("outer","inner");whole("segments",3,180);whole("rings",1,100);need(a.inner<a.outer,"Inner diameter must be less than outer diameter.");

@@ -202,6 +202,24 @@ test("single-plane sheathing SVG reflects sheet orientation and exports a cut li
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(page.locator("#dimension-svg svg .sheathing-cut")).toHaveCount(0);
 });
+test("deck estimator plan, stock segmentation, joist grid and CSV update together",async({page})=>{
+  await page.goto("/deck-material-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Last rip width"})).toContainText("1.875 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Stock boards (no offcut reuse)"})).toContainText("22");
+  await expect(page.locator("#dimension-svg svg .deck-plan-board")).toHaveCount(22);
+  await expect(page.locator("#dimension-svg svg .deck-plan-joist")).toHaveCount(10);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(32);
+  await page.locator("#f-stock").fill("96");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Stock boards (no offcut reuse)"})).toContainText("44");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(54);
+  const down=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  expect((await down).suggestedFilename()).toContain("deck-material-calculator-in-cut-list.csv");
+  await page.locator("#f-joists").fill("-1");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#dimension-svg svg .deck-plan-board")).toHaveCount(0);
+});
 test("hip roof clipped sheets are visible and orientation, export and error controls work",async({page})=>{
   await page.goto("/hip-roof-calculator/");
   await expect(page.locator("#calc-error")).toBeHidden();

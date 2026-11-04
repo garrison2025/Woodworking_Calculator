@@ -138,7 +138,24 @@ if(slug){
       d+=" V"+(base-n*stepH);
       content+='<path d="'+d+'" fill="none" stroke="#1e6454" stroke-width="4" stroke-linecap="round"/>';
       content+=svgText(left+12,55,n+" risers · "+(n-1)+" treads","dim-label");
-     }else if(data.shape==="sheathing-panels"){
+     }else if(data.shape==="deck-plan"){
+      const scale=Math.min(716/data.deckLength,210/data.deckWidth);
+      const ww=data.deckLength*scale,hh=data.deckWidth*scale;
+      const x0=(900-ww)/2,y0=(344-hh)/2;
+      content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="#e7eae3" stroke="#1e6454" stroke-width="2"/>';
+      for(const [i,row] of data.deckRows.entries()){
+        const yy=y0+row.acrossStart*scale,sh=row.ripWidth*scale;
+        content+='<rect class="deck-plan-board" x="'+x0+'" y="'+yy+'" width="'+ww+'" height="'+Math.max(.1,sh)+'" fill="'+(i%2?"#d2b18b":"#e2c8a5")+'" stroke="#957452" stroke-width=".45"><title>'+esc(row.item+" · "+fmt(row.ripWidth)+" rip")+'</title></rect>';
+      }
+      // Dashed centerlines are user-selected layout references, not certified spans.
+      for(const [i,xj] of data.joistGrid.entries()){
+        const xx=x0+xj*scale;
+        content+='<line class="deck-plan-joist" x1="'+xx+'" y1="'+y0+'" x2="'+xx+'" y2="'+(y0+hh)+'" stroke="#1e6454" stroke-width="1.7" stroke-dasharray="4 3"><title>'+esc("Joist reference "+(i+1)+" at "+fmt(xj))+'</title></line>';
+      }
+      content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="none" stroke="#1e6454" stroke-width="2.5"/>';
+      content+=svgText(x0,Math.max(23,y0-13),"LENGTH "+fmt(data.deckLength),"dim-label");
+      content+=svgText(x0,Math.min(337,y0+hh+23),"COVERAGE "+fmt(data.deckWidth)+" | "+data.deckRows.length+" ROWS","dim-label");
+    }else if(data.shape==="sheathing-panels"){
       const scale=Math.min(715/data.roofEave,207/data.roofSlope);
       const ww=data.roofEave*scale,hh=data.roofSlope*scale,x0=(900-ww)/2,y0=(344-hh)/2;
       for(const [i,sheet] of data.roofSheets.entries()){

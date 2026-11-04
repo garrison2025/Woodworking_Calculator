@@ -106,3 +106,7 @@ Project design and QA follow the repository [Website-Starter-Standard](https://g
 ## 2026-11-04 — Single-plane roof sheathing cut layouts
 
 A single rectangular roof face now uses actual sloped width to clip each stock sheet to the eave-origin grid. Rotation, whole/edge counts, order allowance and cut coordinates update the same SVG, table and local CSV. This is not a structural fastening/staggered-seam plan; no offcut reuse or physical 1:1 print claim is made. Verified in [GitHub Actions run #73](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41794301192).
+
+## 2026-11-04 — Deck estimator takeoff upgrade
+
+The separate `/deck-material-calculator/` now calculates actual parallel board row widths (including the final rip), conservative purchased stock pieces at a user-specified board length, joist *reference centerlines* and a shared dimensional 2-D SVG/CSV schedule. This is not a structural joist-span calculator, approved fastening plan or staggered joint schedule; no offcut reuse is claimed. The P0 deck-board calculator remains a simpler, separate spacing/count task.

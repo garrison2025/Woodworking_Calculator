@@ -133,6 +133,45 @@ test("Overlapping framing openings are rejected",()=>{
   const a={length:160,spacing:16,width:1.5,openingStart:24,openingWidth:60,openingHeight:80,opening2Start:64,opening2Width:24};
   assert.equal(safeCompute("framing-calculator",a).ok,false);
 });
+test("Deck estimator returns board rows, last rip, stock pieces and joist center coordinates",()=>{
+  const a={width:120,length:144,board:5.5,gap:0.125,stock:144,joists:16,waste:10};
+  const r=compute("deck-material-calculator",a);
+  assert.equal(r.shape,"deck-plan");
+  near(value(r,"Deck area"),120);
+  near(value(r,"Deck rows"),22);
+  near(value(r,"Last rip width"),1.875);
+  near(value(r,"Joist reference lines"),10);
+  near(value(r,"Final joist bay"),16);
+  near(value(r,"Installed linear decking"),264);
+  near(value(r,"Stock boards (no offcut reuse)"),22);
+  near(value(r,"Stock boards with allowance"),25);
+  near(value(r,"Board-joist intersections"),220);
+  near(r.deckRows.at(-1).ripWidth,1.875);
+  assert.deepEqual(r.joistGrid,[0,16,32,48,64,80,96,112,128,144]);
+  assert.equal(r.rows.length,32);
+  assert.equal(r.rows.filter(x=>x.type==="Decking").length,22);
+  assert.equal(r.rows.filter(x=>x.type==="Joist center").length,10);
+});
+test("Deck estimator handles partial stock pieces and final joist bay",()=>{
+  const a={width:120,length:140,board:5.5,gap:.125,stock:96,joists:16,waste:0};
+  const r=compute("deck-material-calculator",a);
+  near(value(r,"Stock boards (no offcut reuse)"),44);
+  near(value(r,"Final joist bay"),12);
+  const first=r.rows.filter(x=>x.type==="Decking").slice(0,2);
+  near(first[0].cutLength,96);
+  near(first[1].cutLength,44);
+  near(first[1].alongStart,96);
+  const cutLengthTotal=r.rows.filter(x=>x.type==="Decking").reduce((s,x)=>s+x.cutLength,0);
+  near(cutLengthTotal,22*140);
+});
+test("Deck estimator rejects unbounded stock subdivision and zero lengths",()=>{
+  const a={width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,waste:10};
+  assert.equal(safeCompute("deck-material-calculator",{...a,stock:0}).ok,false);
+  assert.equal(safeCompute("deck-material-calculator",{...a,stock:.001}).ok,false);
+  assert.equal(safeCompute("deck-material-calculator",{...a,joists:0}).ok,false);
+  assert.equal(safeCompute("deck-material-calculator",{...a,gap:-1}).ok,false);
+  assert.equal(safeCompute("deck-material-calculator",{...a,board:0}).ok,false);
+});
 test("Deck stock count does not assume offcut reuse",()=>{
   const r=compute("deck-board-calculator",{width:120,length:144,board:5.5,gap:.125,stock:120,waste:0});
   near(value(r,"Stock pieces: no offcut reuse"),44);
