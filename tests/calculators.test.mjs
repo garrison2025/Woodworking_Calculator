@@ -113,3 +113,21 @@ test("Hole overlap is rejected",()=>{
 test("P2 routes are blocked by the geometry engine",()=>{
   for(const t of held)assert.equal(safeCompute(t.slug,{}).ok,false);
 });
+
+test("Multiple framing openings remove interior regular studs",()=>{
+  const a={length:160,spacing:16,width:1.5,openingStart:24,openingWidth:24,openingHeight:80,opening2Start:88,opening2Width:24,opening3Start:0,opening3Width:0};
+  const r=compute("framing-calculator",a);
+  near(value(r,"Opening intervals"),2);
+  near(value(r,"Opening-side reference members"),8);
+  assert.equal(r.rows.some(p=>p.item.startsWith("Regular")&&p.position===32),false);
+  assert.equal(r.rows.some(p=>p.item.startsWith("Regular")&&p.position===96),false);
+  assert.equal(r.openings.length,2);
+});
+test("Overlapping framing openings are rejected",()=>{
+  const a={length:160,spacing:16,width:1.5,openingStart:24,openingWidth:60,openingHeight:80,opening2Start:64,opening2Width:24};
+  assert.equal(safeCompute("framing-calculator",a).ok,false);
+});
+test("Deck stock count does not assume offcut reuse",()=>{
+  const r=compute("deck-board-calculator",{width:120,length:144,board:5.5,gap:.125,stock:120,waste:0});
+  near(value(r,"Stock pieces: no offcut reuse"),44);
+});
