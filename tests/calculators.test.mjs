@@ -162,6 +162,13 @@ test("Rafter: deep cut geometrically consumes the nominal section and is rejecte
   const a={run:120,pitch:12,ridge:0,overhang:12,depth:2,seat:5};
   assert.equal(safeCompute("rafter-calculator",a).ok,false);
 });
+test("Rafter notch uses perpendicular depth rather than overly strict vertical distance",()=>{
+  const a={run:120,pitch:12,ridge:0,overhang:0,depth:2.5,seat:3};
+  const r=compute("rafter-calculator",a);
+  near(value(r,"Seat reference drop"),3,1e-9);
+  near(value(r,"Seat notch (normal depth)"),3/Math.sqrt(2),1e-9);
+  near(value(r,"Remaining stock (normal)"),2.5-3/Math.sqrt(2),1e-9);
+});
 test("Rafter: zero slope has no rise or notch depth",()=>{
   const r=compute("rafter-calculator",{run:120,pitch:0,ridge:0,overhang:12,depth:5.5,seat:3});
   near(value(r,"Rise"),0,1e-9);
