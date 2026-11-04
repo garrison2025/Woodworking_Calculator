@@ -189,6 +189,7 @@ def build():
     shutil.copyfile(ROOT/"src"/"tools.json",assets/"tools.json")
     shutil.copyfile(ROOT/"src"/"app.mjs",assets/"app.mjs")
     shutil.copyfile(ROOT/"src"/"calcs.mjs",assets/"calcs.mjs")
+    shutil.copyfile(ROOT/"src"/"cut-list.mjs",assets/"cut-list.mjs")
     shutil.copyfile(ROOT/"src"/"style.css",assets/"style.css")
     write("/",home())
     for t in TOOLS: write("/"+t["slug"]+"/",tool_page(t))

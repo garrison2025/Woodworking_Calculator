@@ -1,4 +1,5 @@
 import {safeCompute,convertToInches,convertFromInches} from "./calcs.mjs";
+import {buildScheduleCsv} from "./cut-list.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -249,10 +250,8 @@ if(slug){
   csv.addEventListener("click",()=>{
     if(!latest)return;
     const rows=latest.rows.length?latest.rows:latest.metrics.map(m=>({measurement:m.label,value:fmt(m.value,m.kind)}));
-    const keys=Object.keys(rows[0]);const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
-    const text=[keys.map(quote).join(","),...rows.map(r=>keys.map(k=>quote(scheduleValue(k,r[k]))).join(","))].join("\r\n");
-    const noteRow=keys.map((k,i)=>quote(i===0?"Source note":i===1?tool.limit:"")).join(",");
-    save(slug+"-"+unit+"-cut-list.csv","\uFEFF"+text+"\r\n"+noteRow+"\r\n","text/csv;charset=utf-8");
+    const text=buildScheduleCsv(rows,unit,tool.limit);
+    save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");
     status.textContent="CSV saved locally.";
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});

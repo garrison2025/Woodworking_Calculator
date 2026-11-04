@@ -76,6 +76,33 @@ test("inch to millimeter toggle preserves physical lengths",async({page})=>{
   expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(144,4);
 });
 
+test("CSV cut sheets preserve numeric millimeters, typed area and polygon vertices",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/stud-calculator/");
+  await page.locator("#unit-select").selectOption("mm");
+  const ready=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const file=await ready;
+  expect(file.suggestedFilename()).toBe("stud-calculator-mm-cut-list.csv");
+  const csv=readFileSync(await file.path(),"utf8");
+  expect(csv).toContain('"Position (mm)","Length (mm)"');
+  expect(csv).toContain('"Stud 2","406.4"');
+  expect(csv).not.toContain('"406.4 mm"');
+  await page.goto("/hip-roof-calculator/");
+  await page.locator("#unit-select").selectOption("mm");
+  const hipReady=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const hipCsv=readFileSync(await (await hipReady).path(),"utf8");
+  expect(hipCsv).toContain('"Cut Area (m²)","Cut Vertices (mm)"');
+  expect(hipCsv).toContain('"Source note"');
+  await page.goto("/roof-pitch-calculator/");
+  const fallback=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const noRows=readFileSync(await (await fallback).path(),"utf8");
+  expect(noRows).toContain('"Measurement","Value"');
+  expect(noRows).toContain('"Roof angle"');
+});
+
 test("zoom adjusts SVG only, preserving the drawing container size",async({page})=>{
   await page.goto("/stud-calculator/");
   const container=page.locator("#dimension-svg"),svg=container.locator("svg");

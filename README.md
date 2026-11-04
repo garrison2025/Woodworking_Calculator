@@ -122,3 +122,7 @@ The **Print / PDF** worksheet now contains two physically sized CSS reference ba
 GitHub Actions exports two print evidence PDFs (Letter and A4) from headless Chromium and checks their page dimensions and browser CSS physical-unit widths. These tests do **not** verify real paper output or printer settings; actual ruler measurements remain an explicit production acceptance blocker.
 
 Latest verified print calibration build: [CI run #81](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41799606385) — **238/238** unit tests, **23/23** Playwright checks and static validation passed; `print-calibration-pdfs` artifact contains both generated paper formats. Preview routes still use `noindex`.
+
+## 2026-11-04 — Precision CSV schedule exports
+
+CSV cut schedules now use the selected unit **in their column headers** (such as `Position (mm)`, `Cut Area (m²)` and `Cut Vertices (mm)`) and retain **plain machine-readable numerical coordinates** instead of rounded, locale-formatted values with mixed unit suffixes. Clipped roof polygon vertices are converted to the same selected unit as numeric cut rows. Sheet quantities and percentages remain dimensionless. The source-note row stays explicitly labeled, all columns stay consistent across nullable records, and strings which begin with spreadsheet formulas are escaped. Screen tables and SVG labels still use human-readable formatted dimensions; both use the same engine values. No paid API or data upload is involved.

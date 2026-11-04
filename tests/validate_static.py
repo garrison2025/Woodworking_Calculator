@@ -72,7 +72,7 @@ for t in hold:
     if (dist/t["slug"]).exists():errors.append(f"P2 unexpectedly published: {t['slug']}")
 if (dist/"sitemap.xml").exists():errors.append("Preview must not expose an XML sitemap")
 if "Disallow: /" not in (dist/"robots.txt").read_text():errors.append("Preview robots.txt must disallow crawling")
-for asset in ("assets/app.mjs","assets/calcs.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
+for asset in ("assets/app.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
 titles=[]
 for p in pages:
