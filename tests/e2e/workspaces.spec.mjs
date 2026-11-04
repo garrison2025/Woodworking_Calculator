@@ -139,10 +139,35 @@ test("capture actual desktop and mobile preview renders for design review",async
   mkdirSync("visual-evidence",{recursive:true});
   for(const [label,width,height] of [["desktop",1440,900],["mobile",390,844]]){
     await page.setViewportSize({width,height});
-    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"]]){
+    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"],["rafter","/rafter-calculator/"],["stringer","/stair-stringer-calculator/"]]){
       await page.goto(url);
       if(name!=="home")await expect(page.locator("#result-cards .metric").first()).toBeVisible();
       await page.screenshot({path:"visual-evidence/"+name+"-"+label+".png",fullPage:true,animations:"disabled"});
     }
   }
+});
+
+test("rafter: notch depth is visible and changes when seat is revised",async({page})=>{
+  await page.goto("/rafter-calculator/");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("1.342 in");
+  await expect(page.locator("#dimension-svg svg")).toHaveCount(1);
+  expect(await page.locator("#dimension-svg svg path").count()).toBeGreaterThan(2);
+  await expect(page.getByRole("heading",{name:"Differentiate seat length and notch depth"})).toBeVisible();
+  await page.locator("#f-seat").fill("4");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("1.789 in");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.locator("#f-depth").fill("1");
+  await expect(page.locator("#calc-error")).toBeVisible();
+});
+
+test("stringer: calculate finished floor bottom-cut correction with editable field",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Bottom riser layout cut"})).toContainText("6 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Uncut throat (nominal)"})).toContainText("5.25 in");
+  await expect(page.getByRole("heading",{name:"Correct the bottom cut for installed finishes"})).toBeVisible();
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(14);
+  await page.locator("#f-lowerFinish").fill("0.5");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Bottom riser layout cut"})).toContainText("6.5 in");
+  await page.locator("#f-treadThickness").fill("9");
+  await expect(page.locator("#calc-error")).toBeVisible();
 });
