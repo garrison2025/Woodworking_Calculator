@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 219 math tests, 15 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 228 geometry tests, 18 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -86,3 +86,10 @@ Source: user's Blocklayer.com Semrush US top-400 sample as of 2026-11-04. **152 
 ## Reference standard
 
 Project design and QA follow the repository [Website-Starter-Standard](https://github.com/chenmu2024/Website-Starter-Standard), adapted to a high-density industrial calculator instead of a generic SaaS landing page.
+
+## 2026-11-04 — Multi-opening wall framing improvement
+
+- Doors and windows now have independent sill elevations and heights, with an editable wall-top reference.
+- The geometry engine distinguishes clear rough-opening edges from adjacent king/jack center marks, omitting regular studs that collide with the side-member packs.
+- The SVG scales each opening vertically from the same result data used for the metrics and position schedule. Reference elevations are not precut member lengths.
+- CI: [run #68](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41792234356) — 228 unit tests + 18 real Chromium checks passed. Preview stays noindex; physical cutting and structural suitability have not been verified.

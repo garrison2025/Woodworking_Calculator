@@ -9,4 +9,4 @@
 - **Motion:** transforms and width transition around 180–200ms, entirely disabled for reduced-motion. No mandatory animation for a calculator.
 - **A11y:** semantically labeled inputs, live error/result region, focus-visible rings, keyboard-accessible buttons and skip link. WCAG contrast must be checked visually on an actual rendered site.
 - **Print:** simplified paper view removes navigation, buttons, ad slots and inputs; leaves title, results, SVG and schedule. Scale is explicitly **not** certified 1:1 without physical calibration.
-- **Screenshot / responsive / touch testing:** NOT RUN at commit stage. CSS responsiveness is code, not evidence of device verification.
+- **Screenshot / responsive / touch testing:** Chromium desktop/mobile screenshots, viewport checks and live interactions PASS in GitHub Actions run #68. Real-device touch and screen-reader testing NOT RUN.
