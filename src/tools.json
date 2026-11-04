@@ -1,0 +1,1195 @@
+{
+  "brand": "Workshop Geometry Tools",
+  "categories": {
+    "framing": [
+      "Framing & walls",
+      "framing"
+    ],
+    "decks": [
+      "Decks & railings",
+      "decks-and-railings"
+    ],
+    "roof": [
+      "Roofs & stairs",
+      "roof-and-stairs"
+    ],
+    "interior": [
+      "Interior finish",
+      "interior-finish"
+    ],
+    "wood": [
+      "Woodworking",
+      "woodworking"
+    ],
+    "materials": [
+      "Materials",
+      "materials"
+    ]
+  },
+  "tools": [
+    {
+      "slug": "stud-calculator",
+      "title": "Gable & Rake Wall Stud Calculator",
+      "category": "framing",
+      "priority": "P0",
+      "keyword": "stud calculator",
+      "volume": 3600,
+      "kd": 1,
+      "desc": "Length of every stud beneath a sloping top plate",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Wall run",
+          "value": 144,
+          "kind": "L"
+        },
+        {
+          "key": "start",
+          "label": "Height at left",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Slope rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "spacing",
+          "label": "Stud centers",
+          "value": 16,
+          "kind": "L"
+        },
+        {
+          "key": "plates",
+          "label": "Total plate deduction",
+          "value": 4.5,
+          "kind": "L"
+        }
+      ],
+      "formula": "height(x) = start + x × pitch/12; cut = height − plate deduction",
+      "example": "144 in wall, 96 in start height, 6:12 gives end height 168 in before plates",
+      "limit": "Geometry only; no structural approval",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "framing-calculator",
+      "title": "Wall Framing with Doors & Windows",
+      "category": "framing",
+      "priority": "P0",
+      "keyword": "framing calculator",
+      "volume": 2400,
+      "kd": 3,
+      "desc": "Stud positions with a defined opening and edge studs",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Wall length",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "spacing",
+          "label": "OC spacing",
+          "value": 16,
+          "kind": "L"
+        },
+        {
+          "key": "width",
+          "label": "Stud face width",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "openingStart",
+          "label": "Opening start",
+          "value": 32,
+          "kind": "L"
+        },
+        {
+          "key": "openingWidth",
+          "label": "Opening width",
+          "value": 36,
+          "kind": "L"
+        },
+        {
+          "key": "openingHeight",
+          "label": "Opening height",
+          "value": 80,
+          "kind": "L"
+        }
+      ],
+      "formula": "Regular studs inside an opening are removed; boundaries and labeled opening studs are added",
+      "example": "120 in wall with opening 32–68 in excludes ordinary studs within that interval",
+      "limit": "King/jack marks are schematic; header sizing is excluded",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "deck-board-calculator",
+      "title": "Deck Board & Gap Calculator",
+      "category": "decks",
+      "priority": "P0",
+      "keyword": "deck board calculator",
+      "volume": 6600,
+      "kd": 12,
+      "desc": "Number of straight decking rows and last rip width",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Coverage across boards",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Row length",
+          "value": 144,
+          "kind": "L"
+        },
+        {
+          "key": "board",
+          "label": "Actual board width",
+          "value": 5.5,
+          "kind": "L"
+        },
+        {
+          "key": "gap",
+          "label": "Gap between boards",
+          "value": 0.125,
+          "kind": "L"
+        },
+        {
+          "key": "stock",
+          "label": "Stock board length",
+          "value": 144,
+          "kind": "L"
+        },
+        {
+          "key": "waste",
+          "label": "Waste percentage",
+          "value": 10,
+          "kind": "D"
+        }
+      ],
+      "formula": "rows = ceil((width+gap)/(board+gap)); last width = width−(rows−1)(board+gap)",
+      "example": "120 in at 5.5 in board + 0.125 in gap gives 22 rows and 1.875 in final rip",
+      "limit": "No joist load design or joint optimization",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "baluster-spacing-calculator",
+      "title": "Baluster & Spindle Spacing",
+      "category": "decks",
+      "priority": "P0",
+      "keyword": "baluster spacing calculator",
+      "volume": 1000,
+      "kd": 16,
+      "desc": "Equal clear gaps and individual baluster coordinates",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Clear opening",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "width",
+          "label": "Baluster width",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "gap",
+          "label": "Maximum desired gap",
+          "value": 4,
+          "kind": "L"
+        }
+      ],
+      "formula": "n = ceil((opening−maxGap)/(width+maxGap)); equal gap = (opening−n×width)/(n+1)",
+      "example": "96 in clear, 1.5 in faces, 4 in maximum: 17 balusters, 3.9167 in gaps",
+      "limit": "Not a safety-code compliance certificate",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "rafter-calculator",
+      "title": "Common Rafter & Birdsmouth Reference",
+      "category": "roof",
+      "priority": "P0",
+      "keyword": "rafter calculator",
+      "volume": 4400,
+      "kd": 7,
+      "desc": "Rafter pitch, slope length and birdsmouth seat reference",
+      "inputs": [
+        {
+          "key": "run",
+          "label": "Horizontal run",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "ridge",
+          "label": "Ridge thickness",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "overhang",
+          "label": "Overhang",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "depth",
+          "label": "Rafter stock depth",
+          "value": 5.5,
+          "kind": "L"
+        },
+        {
+          "key": "seat",
+          "label": "Seat cut length",
+          "value": 3,
+          "kind": "L"
+        }
+      ],
+      "formula": "adjusted run = run−ridge/2; rise=adjusted run×pitch/12; line=hypot(run,rise); seat drop=seat×pitch/12",
+      "example": "120 in run at 6:12 yields rise 60 in and reference line 134.164 in",
+      "limit": "Birdsmouth and structure need physical verification",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "crown-molding-calculator",
+      "title": "Crown Molding Compound Cuts",
+      "category": "interior",
+      "priority": "P0",
+      "keyword": "crown molding calculator",
+      "volume": 390,
+      "kd": 9,
+      "desc": "Compound miter and bevel angles with hand and corner options",
+      "inputs": [
+        {
+          "key": "spring",
+          "label": "Spring angle (°)",
+          "value": 38,
+          "kind": "A"
+        },
+        {
+          "key": "corner",
+          "label": "Wall corner angle (°)",
+          "value": 90,
+          "kind": "A"
+        },
+        {
+          "key": "inside",
+          "label": "Inside corner (1 yes)",
+          "value": 1,
+          "kind": "N"
+        },
+        {
+          "key": "left",
+          "label": "Left-hand piece (1 yes)",
+          "value": 1,
+          "kind": "N"
+        }
+      ],
+      "formula": "miter = atan(sin(spring)/tan(corner/2)); bevel = asin(cos(spring)×cos(corner/2))",
+      "example": "38° spring and 90° corner: miter ≈31.62°, bevel ≈33.86°",
+      "limit": "Saw conventions vary; cut a scrap sample",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "soffit-calculator",
+      "title": "Soffit Drop & Eave Section",
+      "category": "roof",
+      "priority": "P0",
+      "keyword": "soffit calculator",
+      "volume": 1600,
+      "kd": 1,
+      "desc": "Roof-line drop over a stated horizontal eave projection",
+      "inputs": [
+        {
+          "key": "projection",
+          "label": "Eave projection",
+          "value": 24,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "fasciaOffset",
+          "label": "Reference offset",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "lining",
+          "label": "Soffit lining thickness",
+          "value": 0.5,
+          "kind": "L"
+        },
+        {
+          "key": "depth",
+          "label": "Rafter depth",
+          "value": 5.5,
+          "kind": "L"
+        }
+      ],
+      "formula": "reference drop = projection×pitch/12; adjusted datum = drop+named offsets",
+      "example": "24 in horizontal eave at 6:12: nominal drop 12 in",
+      "limit": "Datum and offset signs require on-site confirmation",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "kerf-bending-calculator",
+      "title": "Kerf Bending Layout",
+      "category": "wood",
+      "priority": "P0",
+      "keyword": "kerf calculator",
+      "volume": 210,
+      "kd": 4,
+      "desc": "Trial kerf spacing for a requested curve",
+      "inputs": [
+        {
+          "key": "radius",
+          "label": "Target radius",
+          "value": 3.937,
+          "kind": "L"
+        },
+        {
+          "key": "angle",
+          "label": "Total bend angle (°)",
+          "value": 90,
+          "kind": "A"
+        },
+        {
+          "key": "thickness",
+          "label": "Material thickness",
+          "value": 0.75,
+          "kind": "L"
+        },
+        {
+          "key": "web",
+          "label": "Retained web",
+          "value": 0.125,
+          "kind": "L"
+        },
+        {
+          "key": "kerf",
+          "label": "Saw kerf width",
+          "value": 0.125,
+          "kind": "L"
+        }
+      ],
+      "formula": "arc = radius×angle(rad); closure angle ≈2atan(kerf/(2×cutDepth))",
+      "example": "100 mm radius and 90° arc: 157.08 mm arc length",
+      "limit": "Empirical springback and wood grain are not predicted",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "wainscoting-calculator",
+      "title": "Wainscoting Panel Layout",
+      "category": "interior",
+      "priority": "P0",
+      "keyword": "wainscoting calculator",
+      "volume": 1300,
+      "kd": 18,
+      "desc": "Equally sized panels between margins and gaps",
+      "inputs": [
+        {
+          "key": "wall",
+          "label": "Wall width",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "panels",
+          "label": "Panel count",
+          "value": 5,
+          "kind": "N"
+        },
+        {
+          "key": "margin",
+          "label": "Side margin",
+          "value": 3,
+          "kind": "L"
+        },
+        {
+          "key": "gap",
+          "label": "Inter-panel gap",
+          "value": 2,
+          "kind": "L"
+        },
+        {
+          "key": "height",
+          "label": "Panel height",
+          "value": 36,
+          "kind": "L"
+        }
+      ],
+      "formula": "panel width = (wall−2×margin−(panels−1)×gap)/panels",
+      "example": "120 in wall, 5 panels, 3 in margins, 2 in gaps: 21.2 in panels",
+      "limit": "Doors, skirting and stile dimensions excluded",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "stair-calculator",
+      "title": "Straight Stair Calculator",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "stair treads calculator",
+      "volume": 1600,
+      "kd": 18,
+      "desc": "Riser count, rise, tread count and run",
+      "inputs": [
+        {
+          "key": "rise",
+          "label": "Total rise",
+          "value": 105,
+          "kind": "L"
+        },
+        {
+          "key": "desired",
+          "label": "Desired maximum riser",
+          "value": 7.5,
+          "kind": "L"
+        },
+        {
+          "key": "tread",
+          "label": "Tread run",
+          "value": 10,
+          "kind": "L"
+        }
+      ],
+      "formula": "risers=ceil(rise/desired); actual rise=rise/risers; treads=risers−1",
+      "example": "105 in / 7.5 in ⇒ 14 risers and 13 treads",
+      "limit": "Geometry, not a stair-code certificate",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "rise-run-calculator",
+      "title": "Rise & Run Slope Converter",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "rise and run",
+      "volume": 1300,
+      "kd": 20,
+      "desc": "Rise/run, slope angle and hypotenuse",
+      "inputs": [
+        {
+          "key": "rise",
+          "label": "Vertical rise",
+          "value": 36,
+          "kind": "L"
+        },
+        {
+          "key": "run",
+          "label": "Horizontal run",
+          "value": 72,
+          "kind": "L"
+        }
+      ],
+      "formula": "slope=rise/run; angle=atan(slope); length=hypot(rise,run)",
+      "example": "36 in rise / 72 in run = 6:12, 26.565°",
+      "limit": "Run must be nonzero",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "deck-material-calculator",
+      "title": "Deck Material Estimator",
+      "category": "decks",
+      "priority": "P1",
+      "keyword": "deck estimator",
+      "volume": 3600,
+      "kd": 15,
+      "desc": "Decking board and simple joist layout quantities",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Deck width",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Deck length",
+          "value": 144,
+          "kind": "L"
+        },
+        {
+          "key": "board",
+          "label": "Board face width",
+          "value": 5.5,
+          "kind": "L"
+        },
+        {
+          "key": "gap",
+          "label": "Board gap",
+          "value": 0.125,
+          "kind": "L"
+        },
+        {
+          "key": "joists",
+          "label": "Joist OC spacing",
+          "value": 16,
+          "kind": "L"
+        },
+        {
+          "key": "waste",
+          "label": "Waste percentage",
+          "value": 10,
+          "kind": "D"
+        }
+      ],
+      "formula": "area=width×length; board rows from board width and gaps; layout joists at chosen OC",
+      "example": "10 × 12 ft footprint = 120 ft² before waste",
+      "limit": "Framing positions are not safe joist spans",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "segmented-bowl-calculator",
+      "title": "Segmented Bowl Ring Calculator",
+      "category": "wood",
+      "priority": "P1",
+      "keyword": "segmented bowl calculator",
+      "volume": 260,
+      "kd": 17,
+      "desc": "Ring segment chords and wedge cutting angles",
+      "inputs": [
+        {
+          "key": "outer",
+          "label": "Outer ring diameter",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "inner",
+          "label": "Inner ring diameter",
+          "value": 8,
+          "kind": "L"
+        },
+        {
+          "key": "segments",
+          "label": "Segments per ring",
+          "value": 12,
+          "kind": "N"
+        },
+        {
+          "key": "rings",
+          "label": "Ring count",
+          "value": 3,
+          "kind": "N"
+        }
+      ],
+      "formula": "half miter=180/n; outer chord=Douter×sin(π/n); inner chord=Dinner×sin(π/n)",
+      "example": "Twelve segments require 15° end miter",
+      "limit": "Finished sizes exclude cutting stock and kerf",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "roof-pitch-calculator",
+      "title": "Roof Pitch in Degrees & Percent",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "pitch calculator",
+      "volume": 1300,
+      "kd": 15,
+      "desc": "Convert 12-inch roof pitch to angles and rise",
+      "inputs": [
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "run",
+          "label": "Reference run",
+          "value": 120,
+          "kind": "L"
+        }
+      ],
+      "formula": "angle=atan(pitch/12); grade=100×pitch/12; rise=run×pitch/12",
+      "example": "6:12 = 26.565° and 50% grade",
+      "limit": "Roof geometry only",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "equal-spacing-calculator",
+      "title": "Equal Center Spacing",
+      "category": "wood",
+      "priority": "P1",
+      "keyword": "equal spacing calculator",
+      "volume": 480,
+      "kd": 7,
+      "desc": "Place points exactly between two end offsets",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Total length",
+          "value": 39.37008,
+          "kind": "L"
+        },
+        {
+          "key": "count",
+          "label": "Center count",
+          "value": 6,
+          "kind": "N"
+        },
+        {
+          "key": "left",
+          "label": "Left center offset",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "right",
+          "label": "Right center offset",
+          "value": 0,
+          "kind": "L"
+        }
+      ],
+      "formula": "pitch=(length−left−right)/(n−1); n=1 is centered",
+      "example": "1000 mm and 6 endpoint centers ⇒ 200 mm intervals",
+      "limit": "Offsets are to centers, not item edges",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "hip-rafter-calculator",
+      "title": "Hip Rafter Line Geometry",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "hip rafter calculator",
+      "volume": 170,
+      "kd": 8,
+      "desc": "Plan diagonal, roof rise and three-dimensional hip line",
+      "inputs": [
+        {
+          "key": "runX",
+          "label": "Along-roof plan run",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "runY",
+          "label": "Across-roof plan run",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        }
+      ],
+      "formula": "plan=hypot(x,y); rise=y×pitch/12; line=hypot(plan,rise)",
+      "example": "120 by 120 in plan and 6:12 rise gives plan 169.706 in",
+      "limit": "No load or compound-cut structural sizing",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "hip-roof-calculator",
+      "title": "Hip Roof Plan & Sheet Lower Bound",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "hip roof calculator",
+      "volume": 390,
+      "kd": 2,
+      "desc": "Equal-pitch hip roof planes and sheathing lower bound",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Building width",
+          "value": 240,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Building length",
+          "value": 360,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "overhang",
+          "label": "Eave overhang",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "sheetWidth",
+          "label": "Sheet face width",
+          "value": 48,
+          "kind": "L"
+        },
+        {
+          "key": "sheetLength",
+          "label": "Sheet length",
+          "value": 96,
+          "kind": "L"
+        }
+      ],
+      "formula": "area=effective footprint×sqrt(1+(pitch/12)^2); ridge=max(0,L−W)",
+      "example": "Equal-pitch rectangle yields two hip ends and two trapezoid planes",
+      "limit": "Not a detailed valley sheet-cut nesting plan",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "wall-stud-calculator",
+      "title": "Wall Stud Count & Layout",
+      "category": "framing",
+      "priority": "P1",
+      "keyword": "wall stud calculator",
+      "volume": 2400,
+      "kd": 11,
+      "desc": "Regular vertical stud centers and last-end placement",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Wall length",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "spacing",
+          "label": "Stud OC interval",
+          "value": 16,
+          "kind": "L"
+        },
+        {
+          "key": "height",
+          "label": "Wall height",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "plates",
+          "label": "Plate deduction",
+          "value": 4.5,
+          "kind": "L"
+        }
+      ],
+      "formula": "positions=0, OC multiples below L, and exactly one far end",
+      "example": "120 in at 16 in spacing gives 9 locations",
+      "limit": "Opening studs require dedicated framing tool",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "shelf-spacing-calculator",
+      "title": "Shelf Spacing & Drill Marks",
+      "category": "interior",
+      "priority": "P1",
+      "keyword": "shelf spacing calculator",
+      "volume": 140,
+      "kd": 5,
+      "desc": "Even clear shelves inside a case opening",
+      "inputs": [
+        {
+          "key": "height",
+          "label": "Interior height",
+          "value": 39.37008,
+          "kind": "L"
+        },
+        {
+          "key": "shelves",
+          "label": "Shelf count",
+          "value": 3,
+          "kind": "N"
+        },
+        {
+          "key": "thickness",
+          "label": "Shelf thickness",
+          "value": 0.7874,
+          "kind": "L"
+        },
+        {
+          "key": "top",
+          "label": "Top clearance",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "bottom",
+          "label": "Bottom clearance",
+          "value": 0,
+          "kind": "L"
+        }
+      ],
+      "formula": "gap=(height−n×thickness−top−bottom)/(n+1)",
+      "example": "1000 mm interior, three 20 mm shelves ⇒ 235 mm clear gaps",
+      "limit": "Shelf strength not assessed",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "gable-roof-calculator",
+      "title": "Gable Roof Area Calculator",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "gable roof calculator",
+      "volume": 170,
+      "kd": 4,
+      "desc": "Two planar roof areas using width, pitch and overhangs",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Building width",
+          "value": 240,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Building length",
+          "value": 360,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "overhang",
+          "label": "Overhang",
+          "value": 12,
+          "kind": "L"
+        }
+      ],
+      "formula": "line=hypot(halfspan,halfspan×pitch/12); area=2×line×effective length",
+      "example": "A symmetric gable has two matching roof planes",
+      "limit": "Dormers, valleys and waste excluded",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "square-layout-calculator",
+      "title": "Square Layout Diagonal Checker",
+      "category": "framing",
+      "priority": "P1",
+      "keyword": "foundation square calculator",
+      "volume": 590,
+      "kd": 17,
+      "desc": "Ideal diagonal and deviations from measured diagonals",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Rectangle width",
+          "value": 36,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Rectangle length",
+          "value": 48,
+          "kind": "L"
+        },
+        {
+          "key": "measuredA",
+          "label": "Measured diagonal A",
+          "value": 60,
+          "kind": "L"
+        },
+        {
+          "key": "measuredB",
+          "label": "Measured diagonal B",
+          "value": 60,
+          "kind": "L"
+        }
+      ],
+      "formula": "ideal=hypot(width,length); compare diagonals with ideal",
+      "example": "3×4 ft rectangle has 5 ft ideal diagonal",
+      "limit": "Equal diagonals alone do not prove squareness",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "diagonal-brace-calculator",
+      "title": "Diagonal Brace Calculator",
+      "category": "framing",
+      "priority": "P1",
+      "keyword": "cross brace angle calculator",
+      "volume": 90,
+      "kd": 11,
+      "desc": "Brace diagonal centerline and angle",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Horizontal offset",
+          "value": 36,
+          "kind": "L"
+        },
+        {
+          "key": "height",
+          "label": "Vertical offset",
+          "value": 48,
+          "kind": "L"
+        },
+        {
+          "key": "setback",
+          "label": "Trim from each end",
+          "value": 0,
+          "kind": "L"
+        }
+      ],
+      "formula": "length=hypot(width,height)−2×setback; angle=atan2(height,width)",
+      "example": "3 ft × 4 ft ⇒ 5 ft brace reference",
+      "limit": "No end joinery or load calculation",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "hole-spacing-calculator",
+      "title": "Hole Spacing Drilling Guide",
+      "category": "wood",
+      "priority": "P1",
+      "keyword": "hole spacing calculator",
+      "volume": 110,
+      "kd": 4,
+      "desc": "Drilling centers, pitch and hole fit checks",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Board length",
+          "value": 3.937,
+          "kind": "L"
+        },
+        {
+          "key": "holes",
+          "label": "Hole count",
+          "value": 4,
+          "kind": "N"
+        },
+        {
+          "key": "edge",
+          "label": "End setback to center",
+          "value": 0.19685,
+          "kind": "L"
+        },
+        {
+          "key": "diameter",
+          "label": "Hole diameter",
+          "value": 0.19685,
+          "kind": "L"
+        }
+      ],
+      "formula": "pitch=(length−2×edge)/(holes−1)",
+      "example": "100 mm board, 4 holes, 5 mm center offsets: 30 mm pitch",
+      "limit": "Holes must fit and not overlap",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "stair-stringer-calculator",
+      "title": "Straight Stair Stringer Cut Reference",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "stair stringer calculator",
+      "volume": 8100,
+      "kd": 20,
+      "desc": "Repeated riser/tread corner coordinates for straight stringer",
+      "inputs": [
+        {
+          "key": "rise",
+          "label": "Total rise",
+          "value": 105,
+          "kind": "L"
+        },
+        {
+          "key": "risers",
+          "label": "Riser count",
+          "value": 14,
+          "kind": "N"
+        },
+        {
+          "key": "tread",
+          "label": "Tread run",
+          "value": 10,
+          "kind": "L"
+        },
+        {
+          "key": "depth",
+          "label": "Stringer board depth",
+          "value": 11.25,
+          "kind": "L"
+        }
+      ],
+      "formula": "riser height=rise/risers; horizontal run=(risers−1)×tread",
+      "example": "105 in over 14 risers: 7.5 in; 13×10 in treads =>130 in run",
+      "limit": "Cut reference is not verified stock-strength geometry",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "roof-sheathing-calculator",
+      "title": "Roof Sheathing Calculator",
+      "category": "roof",
+      "priority": "P1",
+      "keyword": "roof sheathing calculator",
+      "volume": 590,
+      "kd": 3,
+      "desc": "Sloped surface area and area-based sheet count",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Roof plan width",
+          "value": 144,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Roof plan length",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "pitch",
+          "label": "Rise per 12",
+          "value": 6,
+          "kind": "P"
+        },
+        {
+          "key": "sheetWidth",
+          "label": "Sheet width",
+          "value": 48,
+          "kind": "L"
+        },
+        {
+          "key": "sheetLength",
+          "label": "Sheet length",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "waste",
+          "label": "Waste percentage",
+          "value": 10,
+          "kind": "D"
+        }
+      ],
+      "formula": "sloped area=plan area×sqrt(1+(pitch/12)^2); sheets lower bound=ceil(area/sheet area)",
+      "example": "120 ft² / 32 ft² = 4 sheets minimum before geometry waste",
+      "limit": "Not a cut nesting or staggered installation plan",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "fence-post-calculator",
+      "title": "Fence Post Layout Calculator",
+      "category": "decks",
+      "priority": "P1",
+      "keyword": "fence post calculator",
+      "volume": 880,
+      "kd": 16,
+      "desc": "Count end posts and center-to-center bay spacing",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Fence run length",
+          "value": 1200,
+          "kind": "L"
+        },
+        {
+          "key": "bay",
+          "label": "Maximum bay OC span",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "post",
+          "label": "Post face width",
+          "value": 3.5,
+          "kind": "L"
+        }
+      ],
+      "formula": "bays=ceil(length/maxBay); posts=bays+1",
+      "example": "100 ft at ≤8 ft OC requires 13 bays and 14 posts",
+      "limit": "Straight fence only; wind and footing sizing excluded",
+      "status": "BETA_NO_INDEX"
+    },
+    {
+      "slug": "spiral-staircase-calculator",
+      "title": "Spiral Staircase Calculator",
+      "category": "roof",
+      "priority": "P2",
+      "keyword": "spiral staircase calculator",
+      "volume": 260,
+      "kd": 11,
+      "status": "HOLD",
+      "desc": "Not implemented or published; math and physical layout verification pending.",
+      "inputs": [],
+      "formula": "",
+      "example": "",
+      "limit": "Not approved for release"
+    },
+    {
+      "slug": "gambrel-roof-calculator",
+      "title": "Gambrel Roof Calculator",
+      "category": "roof",
+      "priority": "P2",
+      "keyword": "gambrel roof calculator",
+      "volume": 480,
+      "kd": 5,
+      "status": "HOLD",
+      "desc": "Not implemented or published; math and physical layout verification pending.",
+      "inputs": [],
+      "formula": "",
+      "example": "",
+      "limit": "Not approved for release"
+    },
+    {
+      "slug": "lumber-price-calculator",
+      "title": "Lumber Price Calculator",
+      "category": "materials",
+      "priority": "P2",
+      "keyword": "price per thousand calculator",
+      "volume": 110,
+      "kd": 9,
+      "status": "HOLD",
+      "desc": "Not implemented or published; math and physical layout verification pending.",
+      "inputs": [],
+      "formula": "",
+      "example": "",
+      "limit": "Not approved for release"
+    },
+    {
+      "slug": "fence-picket-calculator",
+      "title": "Fence Picket Calculator",
+      "category": "decks",
+      "priority": "P2",
+      "keyword": "picket spacing calculator",
+      "volume": 210,
+      "kd": 2,
+      "status": "HOLD",
+      "desc": "Not implemented or published; math and physical layout verification pending.",
+      "inputs": [],
+      "formula": "",
+      "example": "",
+      "limit": "Not approved for release"
+    },
+    {
+      "slug": "stave-calculator",
+      "title": "Tapered Stave Calculator",
+      "category": "wood",
+      "priority": "P2",
+      "keyword": "stave calculator",
+      "volume": 90,
+      "kd": 10,
+      "status": "HOLD",
+      "desc": "Not implemented or published; math and physical layout verification pending.",
+      "inputs": [],
+      "formula": "",
+      "example": "",
+      "limit": "Not approved for release"
+    }
+  ],
+  "source": "Owner supplied V3.0 / Blocklayer top-400 Semrush sample (2026-11-04). Metrics estimated, not promises."
+}
