@@ -671,7 +671,7 @@
       "keyword": "segmented bowl calculator",
       "volume": 260,
       "kd": 17,
-      "desc": "Ring segment chords and wedge cutting angles",
+      "desc": "Finished ring chord and half-miter dimensions with a per-piece segment schedule for all rings",
       "inputs": [
         {
           "key": "outer",
@@ -698,10 +698,24 @@
           "kind": "N"
         }
       ],
-      "formula": "half miter=180/n; outer chord=Douter×sin(π/n); inner chord=Dinner×sin(π/n)",
-      "example": "Twelve segments require 15° end miter",
-      "limit": "Finished sizes exclude cutting stock and kerf",
-      "status": "BETA_NO_INDEX"
+      "formula": "Half-miter = 180°/segments; chordOuter = outsideDiameter×sin(π/segments); chordInner = insideDiameter×sin(π/segments); radialDepth = (outsideDiameter−insideDiameter)/2. Every segment of every ring is listed.",
+      "example": "A 12 in outside diameter, 8 in inside diameter, 12-piece ring needs 15° miters, 3.10583 in outer chords, 2.07055 in inner chords, and 2 in radial depth. Three identical rings yield 36 listed pieces.",
+      "limit": "All rings are treated as identical, with finished diameters and trapezoid wedges. Chords do not include blade kerf, joint allowance, stock-blank oversize, grain orientation, ring staggering or glue/lathing waste. Validate real stock and saw setup with a scrap test.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Chord length versus segment stock",
+          "text": "Outer and inner chords are straight edge-to-edge distances on the finished ring circumference. A full segment has two radial end faces. These finished dimensions are not the minimum raw stock length once kerf and saw setup are considered."
+        },
+        {
+          "heading": "Review the full segment schedule",
+          "text": "Every ring and segment has an individual row containing its angular interval, miter angle, outer chord, inner chord and radial depth. CSV angles are exported as degrees; lengths follow the selected measurement unit."
+        },
+        {
+          "heading": "Important lathe and assembly exclusions",
+          "text": "This calculator does not optimize waste or design glue joints. Repeating identical rings is a geometric convention, not a verified bowl profile or recommended build plan; confirm blank dimensions, material grain, glue and safe lathe methods independently."
+        }
+      ]
     },
     {
       "slug": "roof-pitch-calculator",
@@ -1287,11 +1301,11 @@
       "keyword": "fence post calculator",
       "volume": 880,
       "kd": 16,
-      "desc": "Count end posts and center-to-center bay spacing",
+      "desc": "Fit non-overlapping straight-fence posts across an explicit end-center-to-end-center run and list each usable clear bay",
       "inputs": [
         {
           "key": "length",
-          "label": "Fence run length",
+          "label": "Run between end-post centers",
           "value": 1200,
           "kind": "L"
         },
@@ -1308,10 +1322,24 @@
           "kind": "L"
         }
       ],
-      "formula": "bays=ceil(length/maxBay); posts=bays+1",
-      "example": "100 ft at ≤8 ft OC requires 13 bays and 14 posts",
-      "limit": "Straight fence only; wind and footing sizing excluded",
-      "status": "BETA_NO_INDEX"
+      "formula": "Bays = ceil(end-post center distance / maximum OC spacing); actual OC = center distance/bays; clear gap = actual OC−actual post face width. Impossible overlapping or touching posts are rejected.",
+      "example": "100 ft between end-post centers at a maximum 8 ft OC uses 13 bays and 14 posts, 92.3077 in actual OC. With 3.5 in post faces, each clear bay is 88.8077 in.",
+      "limit": "Length means distance between first and last post centers, NOT outside-to-outside fence length. Ends extend half a post width beyond those centers. Layout is a straight-line reference; footing, grade, wind, code, panels and gate loads are not assessed.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Set the correct end-to-end datum",
+          "text": "Measure from the center of the first post to the center of the last post. The outside faces of these two end posts extend by half a post width at either end; do not confuse the centerline run with the overall finished outside length."
+        },
+        {
+          "heading": "No negative clear bays",
+          "text": "The calculator shortens the specified maximum on-center spacing to fit equal bays. If the resulting spacing is no greater than the actual post face width, the calculation is rejected instead of reporting negative usable opening."
+        },
+        {
+          "heading": "This is layout geometry, not a fence specification",
+          "text": "The listed center coordinates and clear bay widths do not establish safe posts, foundations, panel support, gate spacing or local-code compliance. Check local requirements and actual material faces."
+        }
+      ]
     },
     {
       "slug": "spiral-staircase-calculator",

@@ -258,9 +258,28 @@ export function compute(slug,a){
     {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,stockLength:a.stock});
   }
   case "segmented-bowl-calculator":{
-    positive("outer","inner");whole("segments",3,180);whole("rings",1,100);need(a.inner<a.outer,"Inner diameter must be less than outer diameter.");
+    positive("outer","inner");whole("segments",3,180);whole("rings",1,100);
+    need(a.inner<a.outer,"Inner diameter must be less than outer diameter.");
+    // These are finished ring diameters, not raw board dimensions: chord
+    // lengths do NOT include saw kerf, oversize blanks, or glue-line allowance.
     const theta=PI/a.segments,outerChord=a.outer*Math.sin(theta),innerChord=a.inner*Math.sin(theta);
-    return result([M("Segment half-miter",180/a.segments,"A"),M("Outer chord",outerChord),M("Inner chord",innerChord),M("Segment radial depth",(a.outer-a.inner)/2),M("Total segments",a.segments*a.rings,"N")],[],a.outer,[],"ring",{segments:a.segments,inner:a.inner,outer:a.outer});
+    const radial=(a.outer-a.inner)/2,miter=180/a.segments,sector=360/a.segments;
+    rows=[];
+    for(let ring=1;ring<=a.rings;ring++)for(let segment=1;segment<=a.segments;segment++){
+      rows.push({
+        item:"Ring "+ring+" / segment "+segment,
+        ring,segment,
+        startAngle:q((segment-1)*sector),endAngle:q(segment*sector),
+        miterAngle:q(miter),
+        outerChord:q(outerChord),innerChord:q(innerChord),radialDepth:q(radial)
+      });
+    }
+    return result([
+      M("Segment half-miter",miter,"A"),M("Outer chord",outerChord),
+      M("Inner chord",innerChord),M("Segment radial depth",radial),
+      M("Total segments",a.segments*a.rings,"N"),
+      M("Segment sweep",sector,"A")
+    ],[],a.outer,rows,"ring",{segments:a.segments,inner:a.inner,outer:a.outer});
   }
   case "roof-pitch-calculator":{
     nonnegative("pitch");positive("run");const rise=a.run*a.pitch/12,angle=deg(Math.atan(a.pitch/12));
@@ -396,11 +415,19 @@ export function compute(slug,a){
     {roofEave:eaveLength,roofSlope:uphillLength,roofSheets:sheets,sheetAlong:along,sheetUphill:uphill});
   }
   case "fence-post-calculator":{
-    positive("length","bay","post");need(a.post<a.length,"Post wider than run.");
-    const bays=ceilStable(a.length/a.bay);need(bays<=500,"Too many bays.");
-    const interval=a.length/bays;xs=Array.from({length:bays+1},(_,i)=>i*interval);
-    rows=xs.map((x,i)=>({item:"Post "+(i+1),center:q(x)}));
-    return result([M("Bays",bays,"N"),M("Posts",bays+1,"N"),M("True OC interval",interval),M("Approximate clear bay",interval-a.post)],xs.map(x=>P(x)),a.length,rows,"posts",{itemWidth:a.post});
+    positive("length","bay","post");
+    // 'length' is explicitly the center-to-center distance between end posts,
+    // rather than the overall outside-to-outside width of the two end posts.
+    const bays=ceilStable(a.length/a.bay);
+    need(bays>=1&&bays<=500,"Number of bays exceeds the supported layout.");
+    const interval=a.length/bays,clear=interval-a.post;
+    need(clear>1e-8,"Post faces overlap or touch at this maximum bay spacing. Reduce post width or increase the allowed center-to-center span.");
+    xs=Array.from({length:bays+1},(_,i)=>i*interval);
+    rows=xs.map((x,i)=>({item:"Post "+(i+1),center:q(x),clearBayToNext:i<bays?q(clear):null}));
+    return result([
+      M("Bays",bays,"N"),M("Posts",bays+1,"N"),
+      M("True OC interval",interval),M("Approximate clear bay",clear)
+    ],xs.map(x=>P(x)),a.length,rows,"posts",{itemWidth:a.post});
   }
   default:throw new Error("Calculator not implemented: "+slug);
   }
