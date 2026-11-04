@@ -299,7 +299,8 @@ test("segmented bowl emits every ring/segment and exports typed angles",async({p
   expect(csv).toContain('"Ring","Segment","Start Angle (°)","End Angle (°)","Miter Angle (°)"');
   expect(csv).toContain('"Outer Chord (mm)","Inner Chord (mm)","Radial Depth (mm)"');
   expect(csv).toContain('"Ring 4 / segment 12","4","12"');
-  await page.locator("#f-inner").fill("20");
+  // Inputs are now in millimeters: 320 mm exceeds the 304.8 mm outer diameter.
+  await page.locator("#f-inner").fill("320");
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
 });
