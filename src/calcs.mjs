@@ -214,12 +214,33 @@ export function compute(slug,a){
       soffitDatum:finished,stockDepth:a.depth,lining:a.lining,fasciaOffset:a.fasciaOffset});
   }
   case "kerf-bending-calculator":{
-    positive("radius","angle","thickness","kerf");nonnegative("web");need(a.angle<=360,"Bend angle must not exceed 360°.");need(a.web<a.thickness,"Retained web must be thinner than stock.");
-    const depth=a.thickness-a.web,turn=2*Math.atan(a.kerf/(2*depth)),arc=a.radius*rad(a.angle),count=ceilStable(rad(a.angle)/turn);
-    need(count<=500&&count>=1,"Required cut count is outside supported trial layout.");
-    const spacing=arc/count;xs=Array.from({length:count},(_,i)=>(i+.5)*spacing);
-    rows=xs.map((x,i)=>({item:"Kerf "+(i+1),position:q(x),cutDepth:q(depth)}));
-    return result([M("Arc length",arc),M("Proposed cuts",count,"N"),M("Proposed spacing",spacing),M("Saw depth",depth),M("Estimated closure / cut",deg(turn),"A")],xs.map(x=>P(x)),arc,rows,"kerfs",{angle:a.angle});
+    positive("radius","angle","thickness","web","kerf");
+    need(a.angle<=360,"Bend angle must not exceed 360°.");
+    need(a.web<a.thickness,"Retained web must be thinner than stock.");
+    // Trial-only symmetric closure model; wood springback and physical neutral axis are NOT predicted.
+    const depth=a.thickness-a.web,maxClosure=2*Math.atan(a.kerf/(2*depth));
+    const arc=a.radius*rad(a.angle),count=ceilStable(rad(a.angle)/maxClosure);
+    need(count>=1&&count<=500,"Required cut count is outside the supported trial layout.");
+    const spacing=arc/count,remaining=spacing-a.kerf;
+    need(remaining>1e-8,"Kerf mouths overlap or touch along the flat reference layout. Increase radius, reduce saw kerf, or revise the stock/web geometry.");
+    const planned=rad(a.angle)/count;
+    xs=Array.from({length:count},(_,i)=>(i+.5)*spacing);
+    rows=xs.map((x,i)=>({
+      item:"Kerf "+(i+1),position:q(x),
+      slotLeft:q(x-a.kerf/2),slotRight:q(x+a.kerf/2),
+      cutDepth:q(depth),retainedWeb:q(a.web),maxClosureDeg:q(deg(maxClosure))
+    }));
+    return result([
+      M("Arc length",arc),M("Proposed cuts",count,"N"),
+      M("Proposed spacing",spacing),M("Uncut land between kerfs",remaining),
+      M("End land before first kerf",remaining/2),
+      M("Saw depth",depth),M("Retained continuous web",a.web),
+      M("Estimated closure / cut",deg(maxClosure),"A"),
+      M("Planned turn / cut",deg(planned),"A")
+    ],xs.map(x=>P(x)),arc,rows,"kerfs",{
+      angle:a.angle,kerfArcLength:arc,kerfWidth:a.kerf,
+      stockThickness:a.thickness,cutDepth:depth,retainedWeb:a.web,kerfCount:count
+    });
   }
   case "wainscoting-calculator":{
     positive("wall","height");nonnegative("margin","gap");whole("panels");

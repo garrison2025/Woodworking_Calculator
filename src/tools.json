@@ -463,11 +463,11 @@
       "keyword": "kerf calculator",
       "volume": 210,
       "kd": 4,
-      "desc": "Trial kerf spacing for a requested curve",
+      "desc": "Kerf-bending flat-stock trial plan with continuous-web and nonoverlap checks, saw-mouth extents and a depth-profile drawing",
       "inputs": [
         {
           "key": "radius",
-          "label": "Target radius",
+          "label": "Target reference arc radius",
           "value": 3.937,
           "kind": "L"
         },
@@ -485,21 +485,39 @@
         },
         {
           "key": "web",
-          "label": "Retained web",
+          "label": "Retained continuous web thickness",
           "value": 0.125,
           "kind": "L"
         },
         {
           "key": "kerf",
-          "label": "Saw kerf width",
+          "label": "Flat saw kerf width",
           "value": 0.125,
           "kind": "L"
         }
       ],
-      "formula": "arc = radius×angle(rad); closure angle ≈2atan(kerf/(2×cutDepth))",
-      "example": "100 mm radius and 90° arc: 157.08 mm arc length",
-      "limit": "Empirical springback and wood grain are not predicted",
-      "status": "BETA_NO_INDEX"
+      "formula": "Developed reference arc length = radius×angle (radians). Idealized closure per cut = 2×atan(kerf width/(2×cut depth)); cut depth = stock thickness−retained web. Proposed cuts = ceil(target angle/estimated closure); center spacing = reference arc length/count; clear land = spacing−kerf width. Continuous web and clear land must both be positive.",
+      "example": "100 mm reference radius and 90° target gives 157.08 mm developed arc. For a 0.75 in stock with 0.125 in continuous web and 0.125 in saw kerf, 8 proposed cuts give about 19.63 mm pitch; the idealized model does not guarantee final wood curvature.",
+      "limit": "Geometry-only idealized slit closure, NOT a verified wood-bending, neutral-axis or springback model. Radius is a user-selected reference arc, not a guaranteed finished inside/outer radius. Retained web must be positive; flat kerf mouths must remain separate. Wood species, grain, fatigue, tear-out, saw accuracy and actual bending require scrap trials. SVG/print are scaled schematics, NOT certified 1:1 saw templates.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Reference arc does not guarantee finished bend radius",
+          "text": "The flat layout length is reference radius × bend angle in radians. Real curvature depends on material and the retained continuous web; the neutral axis and finished inside/outer radius are not calculated."
+        },
+        {
+          "heading": "Preserve a connected web and separate kerf mouths",
+          "text": "Each cut stops at the continuous remaining web. Zero web would sever the board and is rejected. If adjacent kerf mouth openings touch or overlap on the flat stock, the suggested layout is rejected instead of generating unusable cut coordinates."
+        },
+        {
+          "heading": "Distinguish closure estimate from intended turn",
+          "text": "Idealized maximum closure per cut is 2×atan(kerf width/(2×cut depth)). The number of cuts rounds up to meet the requested angle; planned average turn per cut = target angle/count, which can be smaller than the estimated maximum closure. Neither predicts springback."
+        },
+        {
+          "heading": "Inspect the slot profile and trial on scrap",
+          "text": "The schedule exports each cut center, two slot mouth edges, depth, retained wood and maximum closure estimate. The flat-stock SVG shows cut mouths above the continuous web and is not a real-scale cutting template. Verify all dimensions and bending behavior on sacrificial stock first."
+        }
+      ]
     },
     {
       "slug": "wainscoting-calculator",
