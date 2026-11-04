@@ -4,7 +4,7 @@
 - Actual Playwright Chromium navigation and input→result updates passed on **all 26 routes**. Unit dropdown supports inches, feet, millimeters, centimeters and meters.
 - CSV and SVG export download events, result clipboard and print-button invocation confirmed. Print/PDF output and physical scale are **not** certified.
 - No document-level horizontal scrolling at **360/390/768/1024/1440 px** for homepage and stud tool. Narrow workbench layout was corrected after first real browser failure.
-- Desktop and mobile (1440/390px) **10 real screenshots** of homepage/stud/deck/rafter/stringer were captured and reviewed from GitHub Actions `verified-ui-screenshots` artifact on [run #41790303379](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41792234356).
+- Desktop and mobile (1440/390px) **12 real screenshots** of homepage/stud/deck/rafter/stringer/hip roof were captured and reviewed from GitHub Actions `verified-ui-screenshots` artifact on [run #41790303379](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41792234356).
 - Desktop uses a measured workshop look with original CAD-style SVG, neutral/green/wood palette, no external fonts. Mobile was compacted into two-column measurement/result cards and diagram blank-height removal, then browser tested again.
 
 ## NOT RUN / LIMITATIONS
@@ -18,3 +18,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: interactive wall elevation with 1–3 independently positioned openings, corresponding sill/height values and color-distinct center marks.
 - PASS: chromium regression for second opening and invalid elevation.
 - NOT RUN: physical stud layout and dedicated visual review of the new framing drawing on real devices.
+
+## Hip sheet layout — CI run #41793989952
+- **PASS:** four-plane clipped polygons now use the same values as the measurement schedule; the user can change sheet direction without leaving the page.
+- **PASS:** automated screenshot capture at desktop 1440px and mobile 390px includes the hip roof page; 20/20 Chromium tests passed including orientation-dependent polygon and count updates.
+- **NOT RUN:** manual inspection of the new images; paper print layout, Safari/Firefox and real-device touch interaction.

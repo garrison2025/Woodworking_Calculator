@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 228 geometry tests, 18 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 233 geometry tests, 20 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -77,7 +77,7 @@ DESIGN.md, QA-EVIDENCE.md, UI-RELEASE-EVIDENCE.md, SEO-GEO-RELEASE-EVIDENCE.md
 
 ## Engineering caveats
 
-Rafter normal-notch depth and stair-stringer flooring correction now have independently derived regression tests; both still require physical construction approval. Some professional tasks are intentionally **not claimed production complete**: framing king/jack illustrations are schematic (no headers/cripples); rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof sheets are an area lower-bound, not true sheet nesting; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
+Rafter normal-notch depth and stair-stringer flooring correction now have independently derived regression tests; both still require physical construction approval. Some professional tasks are intentionally **not claimed production complete**: framing king/jack illustrations are schematic (no headers/cripples); rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof includes four-plane clipped sheet coordinates but does not reuse offcuts, stagger sheets or certify an installation plan; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
 
 ## SEO research discipline
 
@@ -93,3 +93,11 @@ Project design and QA follow the repository [Website-Starter-Standard](https://g
 - The geometry engine distinguishes clear rough-opening edges from adjacent king/jack center marks, omitting regular studs that collide with the side-member packs.
 - The SVG scales each opening vertically from the same result data used for the metrics and position schedule. Reference elevations are not precut member lengths.
 - CI: [run #68](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41792234356) — 228 unit tests + 18 real Chromium checks passed. Preview stays noindex; physical cutting and structural suitability have not been verified.
+
+## 2026-11-04 — Hip roof sheet-cut layout (preview only)
+
+- The old sheet-area lower bound is retained alongside a new **per-plane grid sheet count without offcut reuse**. For a symmetric rectangular roof, four independent slope faces are represented by two end triangles and two side trapezoids.
+- The sheet grid is clipped against each face using a deterministic 2D polygon algorithm in the plane's real sloped dimensions. The same polygon points drive the SVG plan drawing and CSV coordinates. The orientation dropdown rotates sheets by 90° relative to each plane's eave.
+- The table and exported CSV include **per-sheet cut vertices relative to that sheet's own local origin**. The browser preview explicitly shows only the first 160 table rows if a result is larger; the local CSV contains the full schedule and aligned columns.
+- In the independent flat 192 × 96 in illustration, a 96 × 48 in sheet has a theoretical area minimum of 4 sheets; laying out each hip plane without reuse requires 6 sheets in the default direction or 12 when rotated. These are *geometric examples*, not stock optimization or structural installation advice.
+- CI: [233 Node tests and 20 Chromium checks](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41793989952), including 72 dimension/pitch/orientation conservation fixtures and desktop/mobile image capture of the new hip roof page. **No physical cutting, real-world sheathing seams, full-size printing or structural certification.**
