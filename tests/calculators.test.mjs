@@ -155,6 +155,40 @@ test("Drill interval properties conserve stock margin and forbid negative hole g
   assert.equal(safeCompute("hole-spacing-calculator",{length:20,holes:2,edge:4,diameter:10}).ok,false);
   assert.equal(safeCompute("hole-spacing-calculator",{length:25,holes:4,edge:5,diameter:7}).ok,false);
 });
+test("Kerf reference plan conserves developed length, slit mouths and remaining wood",()=>{
+  const a={radius:3.937,angle:90,thickness:.75,web:.125,kerf:.125};
+  const r=compute("kerf-bending-calculator",a);
+  assert.equal(r.shape,"kerfs");
+  assert.equal(r.rows.length,8);
+  const arc=a.radius*Math.PI/2,depth=a.thickness-a.web;
+  const closure=2*Math.atan(a.kerf/(2*depth));
+  near(value(r,"Arc length"),arc,1e-9);
+  near(value(r,"Saw depth"),depth,1e-9);
+  near(value(r,"Retained continuous web"),a.web,1e-9);
+  near(value(r,"Proposed spacing"),arc/8,1e-9);
+  near(value(r,"Uncut land between kerfs"),arc/8-a.kerf,1e-9);
+  near(value(r,"Planned turn / cut"),90/8,1e-9);
+  near(value(r,"Estimated closure / cut"),closure*180/Math.PI,1e-9);
+  for(const [i,row] of r.rows.entries()){
+    const center=(i+.5)*arc/8;
+    near(row.position,center,1e-8);
+    near(row.slotLeft,center-a.kerf/2,1e-8);
+    near(row.slotRight,center+a.kerf/2,1e-8);
+    near(row.slotRight-row.slotLeft,a.kerf,1e-8);
+    near(row.cutDepth+row.retainedWeb,a.thickness,1e-8);
+    if(i>0)near(row.slotLeft-r.rows[i-1].slotRight,arc/8-a.kerf,1e-8);
+  }
+});
+test("Kerf model rejects severed continuous web and touching/overlapping flat slots",()=>{
+  const a={radius:3.937,angle:90,thickness:.75,web:.125,kerf:.125};
+  assert.equal(safeCompute("kerf-bending-calculator",{...a,web:0}).ok,false);
+  assert.match(safeCompute("kerf-bending-calculator",{...a,radius:.1}).error,/overlap|touch/i);
+  assert.equal(safeCompute("kerf-bending-calculator",{...a,web:.75}).ok,false);
+  assert.equal(safeCompute("kerf-bending-calculator",{...a,angle:361}).ok,false);
+  const steep=compute("kerf-bending-calculator",{...a,angle:180,radius:20});
+  assert.ok(value(steep,"Uncut land between kerfs")>0);
+  assert.equal(steep.rows.length,value(steep,"Proposed cuts"));
+});
 test("Hole overlap is rejected",()=>{
   assert.equal(safeCompute("hole-spacing-calculator",{length:4,holes:8,edge:.5,diameter:1}).ok,false);
 });
