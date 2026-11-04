@@ -215,6 +215,10 @@ export function compute(slug,a){
   }
   case "kerf-bending-calculator":{
     positive("radius","angle","thickness","web","kerf");
+    // Each exported kerf coordinate is quantized to 1e-8 inch. Reject
+    // sub-resolution thicknesses that could appear as 0 in the cut list.
+    need(a.web>=1e-7&&a.kerf>=1e-7&&a.thickness-a.web>=1e-7,
+      "Kerf mouth, cut depth and continuous web must exceed the cut-coordinate resolution.");
     need(a.angle<=360,"Bend angle must not exceed 360°.");
     need(a.web<a.thickness,"Retained web must be thinner than stock.");
     // Trial-only symmetric closure model; wood springback and physical neutral axis are NOT predicted.
