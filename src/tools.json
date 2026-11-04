@@ -285,7 +285,25 @@
       "formula": "adjustedRun=run−ridge/2; slope=pitch/12; slopeLength=run×√(1+slope²); notchNormalDepth=seat×sin(atan(slope)); remainingDepth=stockDepth−notchNormalDepth",
       "example": "120 in run at 6:12 yields rise 60 in and reference line 134.164 in",
       "limit": "Seat length is a horizontal cut-reference, not a certified birdsmouth or heel. Notch thickness is measured normal to the rafter's long edges; stock grade, bearing width, local code and roof loads must be checked independently. Diagram is a schematic, never a 1:1 saw template.",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Measure the run and ridge reference",
+          "text": "Measure the horizontal run to the ridge centerline, then enter the actual ridge board thickness. The tool subtracts half that thickness before computing the bearing-to-ridge line length. Roof pitch is the vertical rise over 12 inches of horizontal run, not the angle of the saw blade."
+        },
+        {
+          "heading": "Differentiate seat length and notch depth",
+          "text": "The seat input is a horizontal projection along the bearing line. The vertical rise across that span is seat × pitch/12. The depth of that wedge measured perpendicular to the long rafter edges is seat × sin(arctan(pitch/12)). It is NOT the same as the full rafter stock depth or a bearing-capacity verification."
+        },
+        {
+          "heading": "Check the support and eave separately",
+          "text": "The wall bearing point and overhang tail are listed separately in the measurement schedule. The line from ridge to bearing excludes the eave extension; the total slope distance includes it. Ridge-to-bearing and ridge-to-eave dimensions use the same pitch but must not be confused."
+        },
+        {
+          "heading": "Do not cut from this SVG at paper scale",
+          "text": "Confirm the actual plumb/seat layout using a framing square and reference faces on scrap lumber. Ridge connection, roof loads, seat bearing, notch limits and local requirements are outside this geometry model. The diagram is deliberately not a certified full-size template."
+        }
+      ]
     },
     {
       "slug": "crown-molding-calculator",
@@ -1063,7 +1081,25 @@
       "formula": "risePerStep=totalRise/risers; treads=risers−1; notchNormal=stepRise×treadRun/√(stepRise²+treadRun²); bottomCutRise=stepRise−treadThickness+lowerFloorFinish",
       "example": "105 in / 14 risers => 7.5 in rise and 13 treads of 10 in; with 1.5 in tread material, bottom cut rise is 6 in if lower finished floor is already installed",
       "limit": "Reference for conventional straight stair stringer layout only. Total rise MUST be finished-floor to finished-floor. Lower finish is additional floor thickness laid after the stringer is installed (set 0 if existing). Top connection, nosing, minimum throat, fasteners and structural capacity require field verification. Do not overcut corners; SVG is not a 1:1 cutting template.",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Use finished-floor to finished-floor total rise",
+          "text": "Measure the total rise between the final finished elevations of the lower and upper floors. Under this conventional layout, the upper floor functions as the last walking surface, so a staircase with 14 risers has 13 separate wooden treads. Alternative flush-top and hanger arrangements are not modeled."
+        },
+        {
+          "heading": "Lay out a repeatable tread/riser step",
+          "text": "Each vertical riser is total rise ÷ number of risers. The first riser has horizontal position zero; each next riser is one tread run farther along. The table lists the horizontal reference and upper elevation of every riser, including the top-landing vertical."
+        },
+        {
+          "heading": "Correct the bottom cut for installed finishes",
+          "text": "For the conventional bottom cut, subtract the finished tread thickness from one nominal riser height. Add only the lower finished-floor layer that will be installed AFTER the stringer is set. If you measured to an already completed lower finished floor, enter zero for this additional layer."
+        },
+        {
+          "heading": "Understand the throat estimate",
+          "text": "Normal penetration of a step notch into the board is (riser × tread run) ÷ √(riser² + tread run²). The nominal remaining throat is board depth minus that perpendicular notch penetration. This is not an engineering rating; minimum stock size, bearing, attachments, nosing and code compliance must be checked on the actual installation."
+        }
+      ]
     },
     {
       "slug": "roof-sheathing-calculator",
