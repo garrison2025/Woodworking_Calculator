@@ -1123,7 +1123,7 @@
       "keyword": "foundation square calculator",
       "volume": 590,
       "kd": 17,
-      "desc": "Ideal diagonal and deviations from measured diagonals",
+      "desc": "Compare both measured diagonals with the Pythagorean target and each other using your own stated measurement tolerance",
       "inputs": [
         {
           "key": "width",
@@ -1148,12 +1148,36 @@
           "label": "Measured diagonal B",
           "value": 60,
           "kind": "L"
+        },
+        {
+          "key": "tolerance",
+          "label": "Allowed diagonal deviation",
+          "value": 0.125,
+          "kind": "L"
         }
       ],
-      "formula": "ideal=hypot(width,length); compare diagonals with ideal",
-      "example": "3×4 ft rectangle has 5 ft ideal diagonal",
-      "limit": "Equal diagonals alone do not prove squareness",
-      "status": "BETA_NO_INDEX"
+      "formula": "Ideal right-angle diagonal = √(width²+length²). Signed A/B errors = measured A/B−ideal. Measured diagonal spread = |A−B|. Compare each absolute error and the measured spread separately with your entered tolerance; all three must be within tolerance for the check to pass. Equal diagonals alone cannot prove four right angles without independently checking sides and geometry.",
+      "example": "For a target 36 × 48 in rectangle, the ideal diagonal is 60 in. If diagonal A is 59.875 in and B is 60 in with a 0.125 in tolerance, each diagonal and their 0.125 in spread meet the stated measurement checks. This does NOT prove all four corners are square.",
+      "limit": "Geometry-based measurement comparison only, not an actual corner-angle reconstruction, structural survey, calibrated uncertainty estimate or proof of perpendicularity. The SVG shows the IDEAL target rectangle and its two target diagonals, not the measured shape. Even perfectly equal measured diagonals do not establish squareness unless all four edges, opposite-side relationships, planarity and corners are separately validated. User tolerance is not a building-code requirement or automatic construction approval.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Measure the intended width and length independently",
+          "text": "The target diagonal is the Pythagorean length of an ideal right-angle rectangle using your entered width and length. Measure actual edge lengths at the relevant endpoints; a diagonal test by itself cannot establish the side lengths or prove that the corners are square."
+        },
+        {
+          "heading": "Compare both diagonals, not only their difference",
+          "text": "Each measured diagonal is checked against the ideal. The tool also checks the absolute difference between the two measured diagonals. Two equally wrong diagonals can match each other but still differ substantially from the target; they must not be reported as an acceptable square layout."
+        },
+        {
+          "heading": "Choose a realistic tolerance for your measurement method",
+          "text": "The tolerance is an absolute length entered by you, not an inferred code standard. The screen gives a separate Within/Outside result for A, B and their spread. An exact boundary equal to tolerance counts as within. If any check is outside, remeasure the sides, endpoints and diagonals before further layout."
+        },
+        {
+          "heading": "Treat the picture as the ideal layout, not a measured deformation",
+          "text": "The proportional SVG shows a theoretical rectangle with both reference diagonals. It intentionally cannot infer the real corner angles or distorted quadrilateral from these four dimensions. Verify edge lengths and squareness using independent physical techniques on site."
+        }
+      ]
     },
     {
       "slug": "diagonal-brace-calculator",
