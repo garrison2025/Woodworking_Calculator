@@ -155,7 +155,12 @@ def tool_page(t):
            '</div></div><aside class="details-side"><div class="related-box"><span class="eyebrow">NEXT AT THE WORKBENCH</span><h2>Related tools</h2>'
            +''.join(f'<a href="/{esc(r["slug"])}/">{esc(r["title"])} <span>↗</span></a>' for r in relevant)
            +'</div><div class="related-box muted-box"><span class="eyebrow">SITE POLICY</span><h3>Local by default</h3><p>No account, no project upload, no paid API. A small local setting may remember recent tools.</p></div></aside></section>')
-    return page(t["title"],t["desc"]+" Formula, dimension diagram, metric units and CSV takeoff.",body,"/"+t["slug"]+"/","tool")
+    description=t["desc"].strip().rstrip(".")
+    if len(description)<=120:
+        description+=". Free local calculation with SVG and CSV export."
+    else:
+        description+="."
+    return page(t["title"],description,body,"/"+t["slug"]+"/","tool")
 
 def cat_page(key, name, slug):
     subset=[t for t in TOOLS if t["category"]==key]

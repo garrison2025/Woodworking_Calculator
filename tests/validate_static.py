@@ -47,6 +47,11 @@ for p in pages:
     if c.h1!=1:errors.append(f"{u}: expected one H1, got {c.h1}")
     if not c.title_text:errors.append(f"{u}: missing title")
     if len(c.descriptions)!=1 or len(c.descriptions[0])<35:errors.append(f"{u}: missing unique description")
+    if any(t["slug"]==u.strip("/") for t in active) and len(c.descriptions)==1:
+        d=c.descriptions[0]
+        if len(d)>170:errors.append(f"{u}: description exceeds readability limit ({len(d)} chars)")
+        if not d.endswith("."):errors.append(f"{u}: description must end with punctuation")
+        if " Formula, dimension diagram" in d:errors.append(f"{u}: old broken SEO phrase remains")
     if len(c.robots)!=1 or "noindex" not in c.robots[0]:errors.append(f"{u}: preview must be noindex")
     body=p.read_text(encoding="utf8")
     if '{esc(t[' in body or '{esc(' in body or '{related_search_terms' in body:

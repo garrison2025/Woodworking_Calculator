@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 235 geometry tests, 21 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 238 geometry tests, 22 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -110,3 +110,7 @@ A single rectangular roof face now uses actual sloped width to clip each stock s
 ## 2026-11-04 — Deck estimator takeoff upgrade
 
 The separate `/deck-material-calculator/` now calculates actual parallel board row widths (including the final rip), conservative purchased stock pieces at a user-specified board length, joist *reference centerlines* and a shared dimensional 2-D SVG/CSV schedule. This is not a structural joist-span calculator, approved fastening plan or staggered joint schedule; no offcut reuse is claimed. The P0 deck-board calculator remains a simpler, separate spacing/count task.
+
+## 2026-11-04 — Static SEO and responsive verification
+
+Tool meta descriptions are now punctuated and length-bounded; the static release checker prevents regression of the malformed `... plan Formula, dimension diagram...` pattern. Responsive overflow checks now visit framing, deck-material and roof-sheathing workspaces at five widths, and the screenshot artifact samples all three at both desktop and mobile sizes. These are Chromium automation checks, not real-device touch or independent structural validation.

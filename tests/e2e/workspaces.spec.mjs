@@ -103,7 +103,7 @@ test("CSV and SVG controls produce local downloadable files",async({page})=>{
 for(const width of [360,390,768,1024,1440]){
   test("no page-level horizontal overflow at "+width+" px",async({page})=>{
     await page.setViewportSize({width,height:850});
-    for(const url of ["/","/stud-calculator/"]){
+    for(const url of ["/","/stud-calculator/","/deck-material-calculator/","/roof-sheathing-calculator/","/framing-calculator/"]){
       await page.goto(url);
       await expect(page.locator("main")).toBeVisible();
       const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,offenders:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,id:el.id,cls:typeof el.className==="string"?el.className.slice(0,70):"",right:Math.round(el.getBoundingClientRect().right),width:Math.round(el.getBoundingClientRect().width)})).filter(el=>el.right>innerWidth+3).slice(0,8)}));
@@ -139,7 +139,7 @@ test("capture actual desktop and mobile preview renders for design review",async
   mkdirSync("visual-evidence",{recursive:true});
   for(const [label,width,height] of [["desktop",1440,900],["mobile",390,844]]){
     await page.setViewportSize({width,height});
-    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"],["rafter","/rafter-calculator/"],["stringer","/stair-stringer-calculator/"],["hip-roof","/hip-roof-calculator/"]]){
+    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"],["rafter","/rafter-calculator/"],["stringer","/stair-stringer-calculator/"],["hip-roof","/hip-roof-calculator/"],["deck-material","/deck-material-calculator/"],["roof-sheathing","/roof-sheathing-calculator/"],["framing","/framing-calculator/"]]){
       await page.goto(url);
       if(name!=="home")await expect(page.locator("#result-cards .metric").first()).toBeVisible();
       await page.screenshot({path:"visual-evidence/"+name+"-"+label+".png",fullPage:true,animations:"disabled"});
