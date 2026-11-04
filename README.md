@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 238 geometry tests, 22 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 238 geometry tests, 23 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -120,3 +120,5 @@ Tool meta descriptions are now punctuated and length-bounded; the static release
 The **Print / PDF** worksheet now contains two physically sized CSS reference bars: 100 mm and 1 inch. Use Chrome's *Actual size / 100%* setting and turn off fit-to-page. Compare the printed paper bars to a reliable ruler; reject the printout if either differs by more than 0.5%. **Only these bars are physical-size references:** the SVG calculation drawing remains a scaled schematic and must NEVER be used as a 1:1 saw/cut template.
 
 GitHub Actions exports two print evidence PDFs (Letter and A4) from headless Chromium and checks their page dimensions and browser CSS physical-unit widths. These tests do **not** verify real paper output or printer settings; actual ruler measurements remain an explicit production acceptance blocker.
+
+Latest verified print calibration build: [CI run #81](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41799606385) — **238/238** unit tests, **23/23** Playwright checks and static validation passed; `print-calibration-pdfs` artifact contains both generated paper formats. Preview routes still use `noindex`.

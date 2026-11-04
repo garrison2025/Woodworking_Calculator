@@ -23,6 +23,7 @@
 
 ## State
 
-- CSS/browser & PDF file generation: tests added; mark PASS only after the associated CI run succeeds.
+- **PASS (Chromium + generated PDF):** [CI run #81](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41799606385) includes 238 passing Node tests, 23 passing browser checks, and a `print-calibration-pdfs` artifact with Letter and A4 PDFs. Nominal media boxes are checked within ±0.2%, separate from the ±0.5% physical ruler acceptance criterion.
+- **PASS (public preview HTML):** `/stud-calculator/` and `/roof-sheathing-calculator/` expose both print ruler elements and remain noindex.
 - Real printed 100 mm / 1 in ruler measurement: **NOT RUN**.
 - One-to-one cutting template certification: **NOT SUPPORTED**.

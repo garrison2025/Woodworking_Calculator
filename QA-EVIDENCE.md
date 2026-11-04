@@ -2,7 +2,7 @@
 ## Executed / PASS
 - **GitHub Actions:** [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) passed on `main` (commit `6c373d9a`).
 - **Geometry:** **238 / 238** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
-- **Real Chromium browser:** **22 / 22** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
+- **Real Chromium browser:** **23 / 23** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
 - **Observed live preview:** https://woodworking-calculator.pages.dev/ and `/stud-calculator/` were publicly accessible. The current preview displays evaluated formulas and five unit options. Public meta robots is `noindex,nofollow,noarchive`; `robots.txt` says `User-agent: *\nDisallow: /`.
@@ -46,3 +46,9 @@
 - PASS (captured by CI): 18 desktop/mobile page screenshots across nine routes; not a substitute for manual full-visual audit or real touch testing.
 - LIVE OBSERVATION (rechecked after deployment): the public Cloudflare Pages paths `/deck-material-calculator/` and `/roof-sheathing-calculator/` both served their repaired, punctuated meta descriptions with no old `Formula, dimension` concatenation. Both continue to declare `noindex,nofollow,noarchive`. This confirms these two pages' metadata propagation, but does not certify all 26 pages or production indexing.
 - NOT RUN: physical board layout, seam/fastener support inspection, actual printable scale proof, real-device/mobile browser matrix, production domain indexing.
+
+## Printed scale verification — CI #81 / commit a2bcd48
+- PASS: Browser print mode exposes both CSS physical ruler widths (100 mm and 1 in) and hides navigation. Chromium generated Letter and A4 PDF bytes with MediaBox checks within ±0.2% of nominal dimensions.
+- PASS: [CI #81](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41799606385): 238/238 Node unit tests, 23/23 browser tests and static page validation. The short-lived `print-calibration-pdfs` artifact is uploaded in the same run.
+- PASS (public preview): `/stud-calculator/` and `/roof-sheathing-calculator/` were fetched independently with the calibration elements present; both retain `noindex,nofollow,noarchive`.
+- NOT RUN: Actual physical printer ruler measurements on A4/Letter; no drawing is a certified 1:1 cutting template.
