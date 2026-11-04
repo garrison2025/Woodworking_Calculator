@@ -88,6 +88,7 @@ def home():
     body += ('<section id="tools" class="wrap home-section"><div class="section-heading"><div><span class="eyebrow">FIND YOUR TOOL</span>'
              '<h2>Built around the work, not the jargon.</h2><p>Browse the most common workshop measurements and quickly jump to the right calculator.</p></div></div>'
              '<nav class="categories" aria-label="Tool categories">'+categories_nav()+'</nav>'
+             '<section id="recent-tools" class="recent-panel" hidden><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h3>Recently used tools</h3><div id="recent-links" class="recent-links"></div></section>'
              '<div class="section-heading compact"><h3>Start with a proven task</h3><span>FEATURED TOOLS</span></div><div class="tool-grid">'+''.join(tool_card(t) for t in featured)+'</div>'
              '<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>26 TOOL WORKSPACES</span></div>'
              '<div class="directory-list">'+''.join(f'<a href="/{esc(t["slug"])}/"><span>{esc(t["title"])}</span><small>{esc(CATS[t["category"]][0])}</small><b>↗</b></a>' for t in TOOLS)+'</div>'
