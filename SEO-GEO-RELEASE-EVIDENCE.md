@@ -28,3 +28,8 @@
 - PASS in generated HTML: all 26 tool metadata descriptions are punctuation-terminated and pass readability-length checks; the former `... plan Formula, dimension ...` concatenation is rejected by automated static tests.
 - Preview noindex/no sitemap/no fake canonical remains intact, with all 152 approved KD<=29 research rows still mapped to the existing 31 intentions.
 - VERIFIED LIVE (post-deployment repeat fetch): public `/deck-material-calculator/` and `/roof-sheathing-calculator/` now serve cleaned, punctuated meta descriptions without the old concatenation. Both retain `noindex,nofollow,noarchive`. This specifically validates those two public routes, not a production custom domain, not all 26 page descriptions and not Google indexing.
+
+## Accurate intent copy on two tools — 2026-11-04
+- Fence tool's public content now defines center-to-center run and rejects impossible negative clear gaps.
+- Segmented bowl tool's public content accurately describes a per-piece schedule and explicitly excludes rough stock, kerf, grain and lathe safety engineering.
+- [CI #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) passed. All 152 original KD≤29 mapped research keyword rows remain unchanged; these changes do not create unsupported new landing pages or traffic claims.

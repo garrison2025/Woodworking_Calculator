@@ -1,8 +1,8 @@
 # QA evidence — 2026-11-04 (deployed preview)
 ## Executed / PASS
-- **GitHub Actions:** [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) passed on `main` (commit `6c373d9a`).
-- **Geometry:** **238 / 238** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
-- **Real Chromium browser:** **23 / 23** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
+- **GitHub Actions:** [run #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) passed on `main` (commit `ad71645`).
+- **Geometry:** **247 / 247** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
+- **Real Chromium browser:** **26 / 26** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
 - **Observed live preview:** https://woodworking-calculator.pages.dev/ and `/stud-calculator/` were publicly accessible. The current preview displays evaluated formulas and five unit options. Public meta robots is `noindex,nofollow,noarchive`; `robots.txt` says `User-agent: *\nDisallow: /`.
@@ -59,3 +59,11 @@
 - PASS: browser downloads for stud millimeters, hip-roof polygon millimeters and a no-schedule roof-pitch metric fallback; full CSV streams were inspected in the browser tests.
 - PASS (public Cloudflare preview): `/assets/cut-list.mjs` and `/assets/app.mjs` were independently fetched and contain the new export-module integration. This verifies asset deployment, not file downloads on every real browser/device.
 - NOT RUN: Excel desktop / LibreOffice desktop import compatibility, non-Chromium downloads, professional field certification. The source engine may already round coordinates to its own documented precision; export avoids additional locale rounding.
+
+## Fence-post and segmented-bowl boundary verification — CI #88
+- PASS: [CI #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) — **247/247** deterministic Node unit tests and **26/26** live-browser Chromium tests; static HTML validation still passes with 26 calculators, 36 pages and 152 keyword rows. Preview robots remains noindex.
+- PASS: fence-post now rejects post faces that overlap or touch at the actual fitted OC interval. New regression exercises 20 length/spacing combinations, first/last center coordinates, final null bay and CSV clear-bay outputs.
+- PASS: segmented-bowl produces per-piece schedule rows covering repeated rings; regression checks n=3/6/12/24/48/180, 1/2/4 rings, chord formula, radial depth and full 0–360° segment sweeps. CSV ring and segment indexes stay dimensionless; the three angle fields carry degrees; chord lengths use the selected unit.
+- PASS (browser): fence invalid-to-valid recovery, unit switch and CSV; bowl ring count changes, metric angles and dimensions, and invalid inside diameter handling.
+- PASS (public preview static content): revised published descriptions of `/fence-post-calculator/` and `/segmented-bowl-calculator/` and `noindex,nofollow,noarchive` observed. This does not independently exercise every deployed browser interaction, which is exercised in Chromium CI.
+- NOT RUN: physical on-site fence clear-space measurement, turning stock layout, grain/kerf/glue allowance, actual saw cut reference measurements, Safari/Firefox and real devices.

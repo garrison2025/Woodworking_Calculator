@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 238 geometry tests, 23 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 247 geometry tests, 26 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -132,3 +132,5 @@ CSV cut schedules now use the selected unit **in their column headers** (such as
 - `/fence-post-calculator/`: the run is clearly defined **between end-post centers**. An actual clear bay must remain positive after subtracting post face width; wide posts that would overlap/touch are now rejected instead of yielding a negative opening. Every post's center and its following clear bay are exported (last post has a blank next-bay value). This is not a structural fence design.
 - `/segmented-bowl-calculator/`: all ring/segment combinations now have an explicit cut schedule: ring and segment identifiers, start/end angles in degrees, miter angle in degrees, finished outer/inner chord lengths and radial depth. Repeating rings is a geometric model; no kerf, grain, glue, rough blank or optimized layout is asserted.
 - CSV typing now keeps ring/segment indexes as **unitless numbers**, angles as **degrees**, and physical chord lengths in the selected unit. Browser E2E and deterministic property fixtures guard these distinctions.
+
+Current validation: [CI #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) passed **247/247** Node geometry/CSV tests and **26/26** Playwright Chromium tests. The independent public preview displays the revised fence-post centerline assumptions and segmented-bowl per-piece guidance. Physical workbench testing and certified cut layouts are still excluded.

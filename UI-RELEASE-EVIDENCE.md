@@ -38,3 +38,7 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: browser-verified download files retain selected units in headers and machine-readable numeric coordinates. Local read-back verified on stud and hip-roof sample pages; standard metric fallback also passed.
 - PASS: existing UI table remains human-readable with unit suffixes, while the CSV is optimized for spreadsheet calculations and SVG drawing labels reflect the same engine units.
 - NOT RUN: Excel spreadsheet import GUI and real device touch downloads.
+
+## Fence and segmented bowl regression (CI #88)
+- 26 passing Playwright checks include fence overlapping-post rejection and recoverable centerline CSV, plus interactive all-ring segment schedule and angle/length unit headers.
+- No new UI layout style or mobile screenshots for these two routes were manually reviewed; functional UI checks are not a universal aesthetic signoff.
