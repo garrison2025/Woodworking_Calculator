@@ -138,6 +138,18 @@ if(slug){
       d+=" V"+(base-n*stepH);
       content+='<path d="'+d+'" fill="none" stroke="#1e6454" stroke-width="4" stroke-linecap="round"/>';
       content+=svgText(left+12,55,n+" risers · "+(n-1)+" treads","dim-label");
+     }else if(data.shape==="roof-panels"){
+      const scale=Math.min(710/data.roofMajor,213/data.roofMinor),ww=data.roofMajor*scale,hh=data.roofMinor*scale;
+      const x0=(900-ww)/2,y0=(344-hh)/2,colors=["#c7ddcc","#d9bc95","#bdd7c9","#ead1b0"];
+      for(const sheet of data.roofPanels){
+        const p=sheet.planPoints.map(x=>(x0+x[0]*scale).toFixed(2)+","+(y0+x[1]*scale).toFixed(2)).join(" ");
+        content+='<polygon class="roof-panel-cut" points="'+p+'" fill="'+colors[sheet.planeIndex]+'" stroke="#fffefd" stroke-width="1"><title>'+esc(sheet.plane+" "+sheet.id)+'</title></polygon>';
+      }
+      const ridge0=x0+data.roofMinor*scale/2,ridge1=x0+(data.roofMajor-data.roofMinor/2)*scale,mid=y0+hh/2;
+      content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="none" stroke="#1e6454" stroke-width="2.5"/>';
+      content+='<path d="M'+x0+' '+y0+' L'+ridge0+' '+mid+' L'+x0+' '+(y0+hh)+' M'+(x0+ww)+' '+y0+' L'+ridge1+' '+mid+' L'+(x0+ww)+' '+(y0+hh)+' M'+ridge0+' '+mid+' L'+ridge1+' '+mid+'" fill="none" stroke="#875f39" stroke-width="2"/>';
+      content+=svgText(x0,Math.max(22,y0-12),"EAVE "+fmt(data.roofMajor),"dim-label");
+      content+=svgText(x0,Math.min(337,y0+hh+22),"WIDTH "+fmt(data.roofMinor)+" | "+data.roofPanels.length+" SHEET CUTS","dim-label");
     }else if(data.shape==="rectangle"||data.shape==="roof"){
       content+='<rect x="235" y="73" width="465" height="195" fill="#e4ebe2" stroke="#1e6454" stroke-width="3"/>';
       if(data.shape==="roof")content+='<path d="M235 170 L333 73 M235 170 L333 268 M700 170 L602 73 M700 170 L602 268 M333 170 L602 170" stroke="#b27f49" stroke-width="2.5" fill="none"/>';
@@ -160,6 +172,13 @@ if(slug){
   const save=(name,content,type)=>{
     const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
   };
+  const scheduleValue=(key,v)=>{
+    if(v===null||v===undefined)return "—";
+    if(key==="cutVertices"&&Array.isArray(v))return v.map(point=>"("+point.map(n=>fmt(n)).join(", ")+")").join("; ");
+    if(key==="cutAreaFt2")return ["mm","cm","m"].includes(unit)?trim(v*.09290304,4)+" m²":trim(v,4)+" ft²";
+    if(typeof v==="number"&&key!=="count"&&!key.toLowerCase().includes("angle"))return fmt(v);
+    return String(v);
+  };
   function render(){
     try{
       const data=safeCompute(slug,values());
@@ -167,12 +186,13 @@ if(slug){
       latest=data.data;error.hidden=true;
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       cut.innerHTML=latest.rows.length?
-        '<thead><tr>'+Object.keys(latest.rows[0]).map(k=>'<th scope="col">'+esc(k.replace(/([A-Z])/g," $1"))+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+Object.entries(row).map(([k,v])=>'<td>'+esc(v===null?"—":typeof v==="number"&&!["count"].includes(k)&&!k.toLowerCase().includes("angle")?fmt(v):v)+'</td>').join("")+'</tr>').join("")+'</tbody>':
+        '<thead><tr>'+Object.keys(latest.rows[0]).map(k=>'<th scope="col">'+esc(k.replace(/([A-Z])/g," $1"))+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+Object.entries(row).map(([k,v])=>'<td>'+esc(scheduleValue(k,v))+'</td>').join("")+'</tr>').join("")+'</tbody>':
         '<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
+      const countEl=document.querySelector("#schedule-count");if(countEl)countEl.textContent=latest.rows.length>160?"Showing first 160 of "+latest.rows.length+" cuts. Export the CSV for all coordinates.":latest.rows.length?"Showing "+latest.rows.length+" computed rows.":"";
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
-    }catch(e){latest=null;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";status.textContent="Calculation requires correction.";}
+    }catch(e){latest=null;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";const note=document.querySelector("#schedule-count");if(note)note.textContent="";status.textContent="Calculation requires correction."}
   }
   const restoreValues=()=>{
     for(const f of tool.inputs){
@@ -201,7 +221,7 @@ if(slug){
     if(!latest)return;
     const rows=latest.rows.length?latest.rows:latest.metrics.map(m=>({measurement:m.label,value:fmt(m.value,m.kind)}));
     const keys=Object.keys(rows[0]);const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
-    const text=[keys.map(quote).join(","),...rows.map(r=>keys.map(k=>quote(typeof r[k]==="number"&&k!=="count"?fmt(r[k]):r[k])).join(","))].join("\r\n");
+    const text=[keys.map(quote).join(","),...rows.map(r=>keys.map(k=>quote(scheduleValue(k,r[k]))).join(","))].join("\r\n");
     save(slug+"-"+unit+"-cut-list.csv","\uFEFF"+text+"\r\n"+'"Source note","'+tool.limit.replace(/"/g,'""')+'"',"text/csv;charset=utf-8");
     status.textContent="CSV saved locally.";
   });

@@ -787,13 +787,13 @@
     },
     {
       "slug": "hip-roof-calculator",
-      "title": "Hip Roof Plan & Sheet Lower Bound",
+      "title": "Hip Roof Sheet Layout Calculator",
       "category": "roof",
       "priority": "P1",
       "keyword": "hip roof calculator",
       "volume": 390,
       "kd": 2,
-      "desc": "Equal-pitch hip roof planes and sheathing lower bound",
+      "desc": "Divide an equal-pitch rectangular hip roof into four actual slope-face panels, inspect clipped sheet layouts and export cut coordinates.",
       "inputs": [
         {
           "key": "width",
@@ -830,12 +830,42 @@
           "label": "Sheet length",
           "value": 96,
           "kind": "L"
+        },
+        {
+          "key": "orientation",
+          "label": "Sheet direction",
+          "value": 0,
+          "kind": "E",
+          "options": [
+            {
+              "value": 0,
+              "label": "Long edge along eave"
+            },
+            {
+              "value": 1,
+              "label": "Short edge along eave"
+            }
+          ]
         }
       ],
-      "formula": "area=effective footprint×sqrt(1+(pitch/12)^2); ridge=max(0,L−W)",
-      "example": "Equal-pitch rectangle yields two hip ends and two trapezoid planes",
-      "limit": "Not a detailed valley sheet-cut nesting plan",
-      "status": "BETA_NO_INDEX"
+      "formula": "Slope factor = sqrt(1+(pitch/12)^2). Each hip plane becomes a local triangle or trapezoid. Clip its outline to every sheet rectangle and sum the resulting polygon areas.",
+      "example": "For a flat 192 × 96 in hip-roof footprint and 96 × 48 in sheets, area requires at least four sheets, but a separate-sheet-per-cut layout uses six positions.",
+      "limit": "Geometry of an equal-pitch rectangular four-plane roof only. Sheets are placed in straight eave-origin rows, without seam gaps, staggering, offcut reuse, fastening or building-code checks. Plans are scaled schematics and NOT certified full-size cutting templates.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Sheet orientation and the four local axes",
+          "text": "The default places the long sheet edge parallel to each roof eave and the short edge up the slope. Rotate by 90 degrees with the sheet direction control. The (eave, uphill) coordinates in the table restart at each of the four roof planes."
+        },
+        {
+          "heading": "Cut polygon coordinates",
+          "text": "For each listed sheet, cut vertices are measured from that sheet's lower-left local corner. The colored rooftop plan view projects exactly those clipped polygons into a bird's-eye diagram. The CSV preserves all row coordinates for bench-side checking."
+        },
+        {
+          "heading": "No offcut reuse or engineered joint layout",
+          "text": "A cut sheet may contain a small triangular remnant that this conservative count discards. This is not optimized stock nesting, a structural sheathing schedule, or a substitute for checking fastening, edge setbacks and actual cut tolerances."
+        }
+      ]
     },
     {
       "slug": "wall-stud-calculator",

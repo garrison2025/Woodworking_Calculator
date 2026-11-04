@@ -25,7 +25,7 @@ test("all 26 calculator pages execute JS, render metrics and SVG",async({page})=
     await expect(page.locator("#result-cards .metric").first(),t.slug).toBeVisible();
     await expect(page.locator("#dimension-svg svg"),t.slug).toHaveCount(1);
     await expect(page.locator("#calc-error"),t.slug).toBeHidden();
-    await expect(page.locator("#calculator-form input"),t.slug).toHaveCount(t.inputs.length);
+    await expect(page.locator("#calculator-form input, #calculator-form select"),t.slug).toHaveCount(t.inputs.length);
     await expect(page.locator("meta[name='robots']"),t.slug).toHaveAttribute("content",/noindex/);
     const html=await page.locator("main").innerText();
     expect(html,t.slug).not.toContain('{esc(t[');
@@ -184,4 +184,23 @@ test("framing elevations render distinct door and window cutouts and reject over
   await expect(page.locator("#dimension-svg svg .opening-cutout")).toHaveCount(2);
   await page.locator("#f-opening2Sill").fill("70");
   await expect(page.locator("#calc-error")).toBeVisible();
+});
+
+test("hip roof clipped sheets are visible and orientation, export and error controls work",async({page})=>{
+  await page.goto("/hip-roof-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const polygons=page.locator("#dimension-svg svg .roof-panel-cut");
+  expect(await polygons.count()).toBeGreaterThan(8);
+  await expect(page.locator("#cut-table tbody tr").first()).toContainText("North slope");
+  await expect(page.locator("#schedule-count")).toContainText("computed rows");
+  await page.locator("#f-orientation").selectOption("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  expect(await polygons.count()).toBeGreaterThan(8);
+  await page.locator("#unit-select").selectOption("mm");
+  const promise=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  expect((await promise).suggestedFilename()).toContain("-mm-cut-list.csv");
+  await page.locator("#f-sheetWidth").fill("0.0001");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(polygons).toHaveCount(0);
 });

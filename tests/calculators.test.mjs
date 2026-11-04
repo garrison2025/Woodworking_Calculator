@@ -217,3 +217,40 @@ test("Framing rejects impossible window elevation and side-member interference",
   assert.equal(safeCompute("framing-calculator",{...base,openingStart:2}).ok,false);
   assert.equal(safeCompute("framing-calculator",{...base,opening2Start:72,opening2Width:20}).ok,false);
 });
+
+test("Hip four-plane clipped sheet area conserves exact sloped area",()=>{
+  const a={width:240,length:360,pitch:6,overhang:12,sheetWidth:48,sheetLength:96,orientation:0};
+  const r=compute("hip-roof-calculator",a);
+  assert.equal(r.shape,"roof-panels");
+  assert.equal(new Set(r.roofPanels.map(p=>p.plane)).size,4);
+  near(r.roofPanels.reduce((s,p)=>s+p.cutAreaSqIn,0),value(r,"Whole sloped area")*144,1e-5);
+  near(value(r,"Sheet positions (no offcut reuse)"),r.rows.length);
+  for(const panel of r.roofPanels){
+    assert.ok(panel.cutAreaSqIn>0&&panel.cutAreaSqIn<=48*96+1e-6);
+    for(const [u,v] of panel.localVertices){assert.ok(u>=-1e-6&&u<=96+1e-6);assert.ok(v>=-1e-6&&v<=48+1e-6)}
+    for(const [x,y] of panel.planPoints){assert.ok(x>=-1e-6&&x<=r.roofMajor+1e-6);assert.ok(y>=-1e-6&&y<=r.roofMinor+1e-6)}
+  }
+});
+test("Hip 192 by 96 flat sheet grid requires six sheets, area lower bound four",()=>{
+  const a={width:96,length:192,pitch:0,overhang:0,sheetWidth:48,sheetLength:96,orientation:0};
+  const r=compute("hip-roof-calculator",a);
+  near(value(r,"Sheet area lower bound"),4);
+  near(value(r,"Sheet positions (no offcut reuse)"),6);
+  near(value(r,"Whole sloped area"),128);
+});
+test("Square hip roof and transposed inputs retain exact tiled area",()=>{
+  const a={width:144,length:144,pitch:6,overhang:0,sheetWidth:48,sheetLength:96,orientation:1};
+  const r=compute("hip-roof-calculator",a);near(value(r,"Ridge length"),0);
+  near(r.roofPanels.reduce((s,p)=>s+p.cutAreaSqIn,0),value(r,"Whole sloped area")*144,1e-5);
+  for(const p of r.roofPanels)for(const [u,v] of p.localVertices){assert.ok(u>=-1e-6&&u<=48+1e-6);assert.ok(v>=-1e-6&&v<=96+1e-6)}
+  const left=compute("hip-roof-calculator",{...a,width:144,length:192});
+  const right=compute("hip-roof-calculator",{...a,width:192,length:144});
+  assert.deepEqual(left,right);
+});
+test("Hip orientation input and overly dense sheet grid are validated",()=>{
+  const a={width:240,length:360,pitch:6,overhang:12,sheetWidth:48,sheetLength:96};
+  assert.equal(safeCompute("hip-roof-calculator",{...a,orientation:2}).ok,false);
+  assert.equal(safeCompute("hip-roof-calculator",{...a,sheetWidth:.01,sheetLength:.01}).ok,false);
+  const a0=compute("hip-roof-calculator",{...a,orientation:0}),a1=compute("hip-roof-calculator",{...a,orientation:1});
+  near(value(a0,"Whole sloped area"),value(a1,"Whole sloped area"));
+});
