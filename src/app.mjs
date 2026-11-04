@@ -1,5 +1,5 @@
 import {safeCompute,convertToInches,convertFromInches} from "./calcs.mjs";
-import {buildScheduleCsv} from "./cut-list.mjs";
+import {buildScheduleCsv,scheduleColumns} from "./cut-list.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -83,7 +83,10 @@ if(slug){
       }else{
         for(const [i,p] of marks.entries()){
           const px=x(p.x);
-          if(data.shape==="balusters"||data.shape==="posts")content+='<rect x="'+(px-3.5)+'" y="113" width="7" height="141" rx="2" fill="#b78d5b"/>';
+          if(data.shape==="balusters"||data.shape==="posts"){
+            const pieceWidth=Math.min(105,Math.max(.15,(data.itemWidth||1)*W/span));
+            content+='<rect class="'+(data.shape==="posts"?"post-face":"baluster-face")+'" x="'+(px-pieceWidth/2)+'" y="113" width="'+pieceWidth+'" height="141" rx=".6" fill="#b78d5b"><title>'+esc(fmt(data.itemWidth||1)+" actual face width")+'</title></rect>';
+          }
           else content+='<line x1="'+px+'" y1="101" x2="'+px+'" y2="253" stroke="#ba8f60" stroke-width="'+(data.shape==="kerfs"?"2":"1.5")+'"/>';
         }
       }
@@ -202,11 +205,13 @@ if(slug){
   const save=(name,content,type)=>{
     const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
   };
-  const scheduleValue=(key,v)=>{
+  const scheduleValue=(kind,v)=>{
     if(v===null||v===undefined)return "—";
-    if(key==="cutVertices"&&Array.isArray(v))return v.map(point=>"("+point.map(n=>fmt(n)).join(", ")+")").join("; ");
-    if(key==="cutAreaFt2")return ["mm","cm","m"].includes(unit)?trim(v*.09290304,4)+" m²":trim(v,4)+" ft²";
-    if(typeof v==="number"&&key!=="count"&&!key.toLowerCase().includes("angle"))return fmt(v);
+    if(kind==="vertices"&&Array.isArray(v))
+      return v.map(point=>"("+point.map(n=>fmt(n)).join(", ")+")").join("; ");
+    if(kind==="area")return fmt(v,"FT2");
+    if(kind==="angle")return fmt(v,"A");
+    if(kind==="length"&&typeof v==="number")return fmt(v,"L");
     return String(v);
   };
   function render(){
@@ -215,8 +220,9 @@ if(slug){
       if(!data.ok)throw new Error(data.error);
       latest=data.data;error.hidden=true;
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
-      cut.innerHTML=latest.rows.length?
-        '<thead><tr>'+Object.keys(latest.rows[0]).map(k=>'<th scope="col">'+esc(k.replace(/([A-Z])/g," $1"))+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+Object.entries(row).map(([k,v])=>'<td>'+esc(scheduleValue(k,v))+'</td>').join("")+'</tr>').join("")+'</tbody>':
+      const columns=latest.rows.length?scheduleColumns(latest.rows,unit):[];
+      cut.innerHTML=columns.length?
+        '<thead><tr>'+columns.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+columns.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key]))+'</td>').join("")+'</tr>').join("")+'</tbody>':
         '<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
       const countEl=document.querySelector("#schedule-count");if(countEl)countEl.textContent=latest.rows.length>160?"Showing first 160 of "+latest.rows.length+" cuts. Export the CSV for all coordinates.":latest.rows.length?"Showing "+latest.rows.length+" computed rows.":"";
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");

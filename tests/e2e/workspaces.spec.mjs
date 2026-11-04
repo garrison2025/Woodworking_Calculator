@@ -285,6 +285,22 @@ test("fence-post rejects overlapping faces and exports center-to-center clear ba
   expect(csv).toContain('"Center (mm)","Clear Bay To Next (mm)"');
   expect(csv).toContain('"Post 1","0","12.7"');
 });
+test("baluster and fence face widths are proportional to input dimensions",async({page})=>{
+  await page.goto("/baluster-spacing-calculator/");
+  const face=page.locator("#dimension-svg svg .baluster-face").first();
+  await expect(face).toHaveCount(1);
+  const before=Number(await face.getAttribute("width"));
+  await page.locator("#f-width").fill("2");
+  const after=Number(await face.getAttribute("width"));
+  expect(after).toBeGreaterThan(before*1.25);
+  await page.goto("/fence-post-calculator/");
+  const post=page.locator("#dimension-svg svg .post-face").first();
+  await expect(post).toHaveCount(1);
+  const narrow=Number(await post.getAttribute("width"));
+  await page.locator("#f-post").fill("7");
+  const wide=Number(await post.getAttribute("width"));
+  expect(wide).toBeGreaterThan(narrow*1.9);
+});
 test("segmented bowl emits every ring/segment and exports typed angles",async({page})=>{
   const {readFileSync}=await import("node:fs");
   await page.goto("/segmented-bowl-calculator/");
@@ -292,7 +308,16 @@ test("segmented bowl emits every ring/segment and exports typed angles",async({p
   await expect(page.locator("#result-cards .metric").filter({hasText:"Segment half-miter"})).toContainText("15°");
   await page.locator("#f-rings").fill("4");
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(48);
+  await expect(page.locator("#cut-table thead")).toContainText("Ring");
+  await expect(page.locator("#cut-table thead")).toContainText("Miter Angle (°)");
+  const firstRing=page.locator("#cut-table tbody tr").first();
+  await expect(firstRing.locator("td").nth(1)).toHaveText("1");
+  await expect(firstRing.locator("td").nth(2)).toHaveText("1");
+  await expect(firstRing.locator("td").nth(5)).toHaveText("15°");
   await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Outer Chord (mm)");
+  await expect(firstRing.locator("td").nth(1)).toHaveText("1");
+  await expect(firstRing.locator("td").nth(5)).toHaveText("15°");
   const dl=page.waitForEvent("download");
   await page.locator("#download-csv").click();
   const csv=readFileSync(await (await dl).path(),"utf8");

@@ -29,6 +29,16 @@ const unitLabel=(kind,unit)=>{
   if(kind==="vertices"||kind==="length")return unit;
   return null;
 };
+export const scheduleColumns=(records,unit)=>{
+  if(!UNITS.has(unit))throw Error("Unsupported unit.");
+  if(!Array.isArray(records))throw Error("Invalid schedule.");
+  return [...new Set(records.flatMap(row=>Object.keys(row)))].map(key=>{
+    const kind=fieldType(key,records);
+    const label=key==="cutAreaFt2"?"Cut Area":key==="cutVertices"?"Cut Vertices":titleCase(key);
+    const suffix=unitLabel(kind,unit);
+    return {key,kind,label:label+(suffix?" ("+suffix+")":"")};
+  });
+};
 const converted=(key,value,kind,unit)=>{
   if(value===null||value===undefined)return "";
   if(kind==="vertices"&&Array.isArray(value))
@@ -50,18 +60,12 @@ const converted=(key,value,kind,unit)=>{
 export function buildScheduleCsv(records,unit,sourceNote=""){
   if(!UNITS.has(unit))throw Error("Unsupported unit.");
   if(!Array.isArray(records)||!records.length)throw Error("No schedule available.");
-  const keys=[...new Set(records.flatMap(row=>Object.keys(row)))];
-  const kinds=keys.map(k=>fieldType(k,records));
-  const head=keys.map((k,i)=>{
-    const label= k==="cutAreaFt2"?"Cut Area":k==="cutVertices"?"Cut Vertices":titleCase(k);
-    const selected=unitLabel(kinds[i],unit);
-    return label+(selected?" ("+selected+")":"");
-  });
-  const lines=[head.map(csvEscape).join(",")];
+  const columns=scheduleColumns(records,unit);
+  const lines=[columns.map(col=>csvEscape(col.label)).join(",")];
   for(const row of records)
-    lines.push(keys.map((key,i)=>csvEscape(converted(key,row[key],kinds[i],unit),typeof row[key]==="number")).join(","));
+    lines.push(columns.map(col=>csvEscape(converted(col.key,row[col.key],col.kind,unit),typeof row[col.key]==="number")).join(","));
   // Keep metadata on one final row for CSV column-count consistency.
-  const note=keys.map((key,i)=>csvEscape(i===0?"Source note":i===1?sourceNote:"")).join(",");
+  const note=columns.map((col,i)=>csvEscape(i===0?"Source note":i===1?sourceNote:"")).join(",");
   lines.push(note);
   return "\uFEFF"+lines.join("\r\n")+"\r\n";
 }

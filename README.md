@@ -134,3 +134,7 @@ CSV cut schedules now use the selected unit **in their column headers** (such as
 - CSV typing now keeps ring/segment indexes as **unitless numbers**, angles as **degrees**, and physical chord lengths in the selected unit. Browser E2E and deterministic property fixtures guard these distinctions.
 
 Current validation: [CI #88](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41803898150) passed **247/247** Node geometry/CSV tests and **26/26** Playwright Chromium tests. The independent public preview displays the revised fence-post centerline assumptions and segmented-bowl per-piece guidance. Physical workbench testing and certified cut layouts are still excluded.
+
+## 2026-11-04 — Shared schedule units and proportional item faces
+
+All on-screen cut-list headers and CSV headers now come from the same typed schedule schema. Ring and segment indexes stay unitless on screen, while miter/start/end angles display degrees and coordinate/chord lengths follow the user-selected unit; heterogeneous schedule rows align by column key rather than first-row-only objects. Both baluster and fence-post schematic face widths now scale in proportion to the actual entered material width (visible strokes remain illustrative, not a 1:1 print template). Browser and Node regressions cover these distinctions.
