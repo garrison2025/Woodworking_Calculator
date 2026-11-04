@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check real generated HTML, internal links and preview indexing conditions."""
 import html.parser
+import csv
 import json
 import re
 from pathlib import Path
@@ -9,6 +10,15 @@ root=Path(__file__).resolve().parents[1]
 dist=root/"dist"
 manifest=json.loads((root/"src"/"tools.json").read_text())
 active=[t for t in manifest["tools"] if t["priority"] in ("P0","P1")]
+with (root/"research"/"woodworking-keyword-map-152.csv").open(newline="",encoding="utf-8") as source:
+    research_rows=list(csv.DictReader(source))
+assert len(research_rows)==152, "Expected 152 distinct approved research terms"
+assert len({r["keyword"] for r in research_rows})==152, "Keyword duplicate in export"
+known_routes={"/"+t["slug"]+"/" for t in manifest["tools"]}
+for term in research_rows:
+    assert term["target_route"] in known_routes, ("Keyword targets missing route",term)
+    assert 0<=int(term["kd"])<=29, ("Keyword exceeds approved KD gate",term)
+    assert int(term["monthly_volume_us"])>=0, ("Invalid search volume",term)
 hold=[t for t in manifest["tools"] if t["priority"]=="P2"]
 class Checker(html.parser.HTMLParser):
     def __init__(self):
@@ -54,7 +64,7 @@ titles=[]
 for p in pages:
     c=Checker();c.feed(p.read_text(encoding="utf8"));titles.append(c.title_text)
 if len(titles)!=len(set(titles)):errors.append("Duplicate page titles")
-print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;",len(hold),"P2 held")
+print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;",len(hold),"P2 held;",len(research_rows),"keyword rows validated")
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
