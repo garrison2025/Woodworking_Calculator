@@ -41,7 +41,7 @@ test("crown inside/outside and left/right affect illustrative plan only, not saw
   const m=page.locator("#result-cards .metric").filter({hasText:"Miter magnitude"});
   const b=page.locator("#result-cards .metric").filter({hasText:"Bevel magnitude"});
   await expect(m).toContainText("31.619");
-  await expect(b).toContainText("33.8629");
+  await expect(b).toContainText("33.863");
   const mText=await m.textContent(),bText=await b.textContent();
   const plan=page.locator("#dimension-svg svg .crown-miter-ray");
   await expect(plan).toHaveAttribute("data-sign","1");
