@@ -52,7 +52,10 @@ if(slug){
   const svgText=(x,y,text,cl="")=>'<text x="'+x+'" y="'+y+'" class="'+cl+'">'+esc(text)+'</text>';
   function drawing(data){
     const left=74,right=850,top=50,base=278,W=right-left,H=base-top;
-    const span=Math.max(1,data.span||1);
+    // Preserve real scale for valid spans under one inch (e.g. 12.7 mm).
+    // The earlier 1-inch floor made miniature layouts appear to occupy
+    // only part of their full-width wall reference and distorted tick ratios.
+    const span=Math.max(1e-8,data.span||1);
     const x=v=>left+Math.min(1,Math.max(0,v/span))*W;
     const grid=Array.from({length:11},(_,i)=>'<line class="gridline" x1="'+(left+i*W/10)+'" y1="36" x2="'+(left+i*W/10)+'" y2="293"/>').join("");
     let content='<line class="axis" x1="'+left+'" y1="'+base+'" x2="'+right+'" y2="'+base+'"/>';
