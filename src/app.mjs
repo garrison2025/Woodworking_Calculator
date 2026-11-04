@@ -9,11 +9,11 @@ if(slug){
   const fmt=(x,kind="L")=>{
     if(!Number.isFinite(x))return "—";
     if(kind==="N")return String(Math.round(x));
-    if(kind==="D")return trim(x,3)+(tool.slug==="roof-pitch-calculator"?"":"");
+    if(kind==="D")return trim(x,3)+"%";
     if(kind==="A")return trim(x,3)+"°";
     if(kind==="P")return trim(x,3)+":12";
-    if(kind==="FT")return trim(x,3)+" ft";
-    if(kind==="FT2")return trim(x,3)+" ft²";
+    if(kind==="FT")return unit==="mm"?trim(x*.3048,3)+" m":trim(x,3)+" ft";
+    if(kind==="FT2")return unit==="mm"?trim(x*.09290304,3)+" m²":trim(x,3)+" ft²";
     if(kind==="L")return trim(convertFromInches(x,unit),unit==="mm"?2:3)+(unit==="mm"?" mm":" in");
     return trim(x,3);
   };
