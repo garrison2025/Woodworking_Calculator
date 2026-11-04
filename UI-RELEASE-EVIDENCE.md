@@ -23,3 +23,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - **PASS:** four-plane clipped polygons now use the same values as the measurement schedule; the user can change sheet direction without leaving the page.
 - **PASS:** automated screenshot capture at desktop 1440px and mobile 390px includes the hip roof page; 20/20 Chromium tests passed including orientation-dependent polygon and count updates.
 - **NOT RUN:** manual inspection of the new images; paper print layout, Safari/Firefox and real-device touch interaction.
+
+## Single-plane sheet grid — 2026-11-04
+- PASS: browser test verifies each sheet cut has a visible SVG rectangle, and change of stock orientation updates positions from 8 to 6.
+- PASS: [CI #73](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41794301192) confirms 21 Chromium checks and 12 representative desktop/mobile snapshots.
+- NOT RUN: physical placement/1:1 printing, actual roof fastening or on-device screen reader testing.

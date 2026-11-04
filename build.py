@@ -108,7 +108,7 @@ def tool_page(t):
         if f.get("options"):
             opts = ''.join(f'<option value="{esc(o["value"])}"{" selected" if o["value"] == f["value"] else ""}>{esc(o["label"])}</option>' for o in f["options"])
             control = f'<select id="{field_id}" name="{esc(f["key"])}" aria-describedby="field-note-{esc(f["key"])}">{opts}</select>'
-            note = 'Choose sheet orientation relative to each plane eave'
+            note = 'Choose which stock-sheet edge runs along the eave'
         else:
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = "Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"
