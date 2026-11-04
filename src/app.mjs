@@ -65,9 +65,10 @@ if(slug){
         content+='<path d="M'+left+' '+y0+' L'+right+' '+y1+'" stroke="#1e6454" stroke-width="5" fill="none"/>';
         for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+base+'" x2="'+x(p.x)+'" y2="'+(y0+(y1-y0)*p.x/span)+'" stroke="#b98c56" stroke-width="5"/>';
       }else if(data.shape==="opening"){
-        const os=x(data.openingStart),oe=x(data.openingEnd);
-        content+='<rect x="'+left+'" y="85" width="'+(right-left)+'" height="170" fill="#e6e9de" opacity=".45"/><rect x="'+os+'" y="110" width="'+(oe-os)+'" height="145" fill="#f8f7f4" stroke="#ad744e" stroke-width="2" stroke-dasharray="6 4"/>';
-        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="76" x2="'+x(p.x)+'" y2="'+(p.x>data.openingStart&&p.x<data.openingEnd?"109":"255")+'" stroke="'+(p.role==="accent"?"#c58c54":"#426b5b")+'" stroke-width="4"/>';
+        const openings=data.openings||[];
+        content+='<rect x="'+left+'" y="85" width="'+(right-left)+'" height="170" fill="#e6e9de" opacity=".45"/>';
+        for(const o of openings)content+='<rect x="'+x(o.start)+'" y="110" width="'+(x(o.end)-x(o.start))+'" height="145" fill="#f8f7f4" stroke="#ad744e" stroke-width="2" stroke-dasharray="6 4"/>';
+        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="76" x2="'+x(p.x)+'" y2="'+(openings.some(o=>p.x>o.start&&p.x<o.end)?"109":"255")+'" stroke="'+(p.role==="accent"?"#c58c54":"#426b5b")+'" stroke-width="4"/>';
       }else if(data.shape==="shelves"){
         for(const p of marks)content+='<line x1="235" y1="'+(base-p.x/span*195)+'" x2="680" y2="'+(base-p.x/span*195)+'" stroke="#b88750" stroke-width="8" stroke-linecap="round"/>';
         content+='<rect x="220" y="73" width="475" height="205" fill="none" stroke="#345f50" stroke-width="8"/>';
