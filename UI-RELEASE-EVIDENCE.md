@@ -77,3 +77,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - The static rectangle drawing now uses the **actual target width/length ratio**, has distinct diagonal A/B reference lines, numerical measured-vs-target labels, and the explicit wording `IDEAL RECTANGLE ONLY · ACTUAL CORNERS NOT INFERRED`.
 - Live browser checks cover equal but wrong diagonals, dynamic comparison statuses, preserved target aspect, unit-aware CSV downloads, invalid-input clearing and exact-zero tolerance.
 - [CI #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) confirms 36/36 Chromium tests and static build. Field measurements and real survey graphics are deliberately not simulated.
+
+## Wainscoting panel geometry and miniature scale — CI #132
+- PASS: SVG panels are constructed directly from left/right edges in the typed cut schedule. Narrow panels are no longer artificially inflated to at least one graphical pixel; zero gaps and symmetric end margins can be independently checked.
+- PASS: small-scale (12.7 mm) wall with two equal zero-gap panel faces fills the entire schematic reference; former one-inch minimum world span no longer distorts the drawing.
+- PASS: [CI #132](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41934540663) includes 38 Chromium browser checks, CSV export and invalid-input cleanup. Printed scale and physical installation remain non-certified.

@@ -64,3 +64,7 @@
 - `/square-layout-calculator/` now answers **both target deviations and diagonal spread** against explicit user tolerance, instead of implying equal measured diagonals certify a rectangle. The ideal-only schematic and detailed limitations explicitly distinguish theoretical geometry from field proof.
 - Complete three-row CSV enables local calculation workflows with no external API or tracking. Page-specific content and schema remain grounded in source geometry, with no fabricated keyword volumes or new near-duplicate indexable pages.
 - [CI #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) passed. All 26 active tools and 152 Semrush KD≤29 research mappings remain, and Cloudflare Pages preview is still noindex pending a custom production domain.
+
+## Wainscoting cut-list fidelity — CI #132
+- `/wainscoting-calculator/` explicitly displays all face edges, inter-panel gaps and wall closure rather than only a generic panel width. The description/formula/example now match the implemented calculator and CSV fields, including the 120-in example.
+- [CI #132](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41934540663) passed with no changes to the 26 P0/P1 tools, 36 rendered HTML pages, 152 KD≤29 research keywords or noindex Cloudflare preview policy. There are no unverified traffic-volume claims or new routes.

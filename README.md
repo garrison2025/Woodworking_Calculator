@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 270 geometry tests, 36 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 272 geometry tests, 38 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -194,3 +194,5 @@ The P1 `/square-layout-calculator/` now compares **both measured diagonals indiv
 ## 2026-11-05 — Wainscoting panel edge and dimensional closure audit
 
 The wainscoting panel calculator now exports explicit **left edge, right edge, actual face width, face height and following clear gap** for each panel. The engine checks full wall-width conservation (sum of all panel faces, gaps and two equal side margins), rejects positive-looking widths smaller than its coordinate resolution, and never publishes a zero-width cut from rounding. The SVG draws **the identical stored left/right coordinates** as the CSV schedule rather than giving narrow faces a fabricated minimum 1px width. A one-panel case has no meaningless inter-panel gap, and a zero-gap case correctly represents touching panel faces. This remains straight-wall reference geometry, not a finished installation with trims, outlets or irregular walls.
+
+**Wainscoting QA:** [GitHub CI #132](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41934540663) passed **272/272** Node geometry/CSV tests and **38/38** Chromium checks. Both ordinary panel gaps and the sub-inch 12.7 mm miniature wall scenario are covered. The Cloudflare preview serves updated panel edge explanations, the cut-coordinate engine and sub-inch SVG scaling while retaining `noindex,nofollow,noarchive`. Real-world irregular walls, stiles, overlap, fasteners, printer scale, Safari/Firefox and accessibility manual signoff remain excluded.
