@@ -73,7 +73,7 @@ test("deck row calculation uses the verified 1.875-inch final rip",async({page})
   await page.goto("/deck-board-calculator/");
   const rip=page.locator("#result-cards .metric").filter({hasText:"Last rip width"});
   await expect(rip).toContainText("1.875 in");
-  const count=page.locator("#result-cards .metric").filter({hasText:"Board rows"});
+  const count=page.locator("#result-cards .metric").filter({hasText:"Board rows"}).first();
   await expect(count).toContainText("22");
 });
 
@@ -337,8 +337,8 @@ test("fence-post rejects overlapping faces and exports center-to-center clear ba
   const dl=page.waitForEvent("download");
   await page.locator("#download-csv").click();
   const csv=readFileSync(await (await dl).path(),"utf8");
-  expect(csv).toContain('"Center (mm)","Clear Bay To Next (mm)"');
-  expect(csv).toContain('"Post 1","0","12.7"');
+  expect(csv).toContain('"Center (mm)","Face Left (mm)","Face Right (mm)","Clear Bay To Next (mm)"');
+  expect(csv).toContain('"Post 1","0","-298.45","298.45","12.7"');
 });
 test("shelf reserved end gaps and actual face coordinates agree across table and drawing",async({page})=>{
   await page.goto("/shelf-spacing-calculator/");
