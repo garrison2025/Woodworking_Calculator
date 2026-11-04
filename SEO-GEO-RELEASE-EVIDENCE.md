@@ -37,3 +37,7 @@
 ## Shelf spacing intent clarification — 2026-11-04
 - `/shelf-spacing-calculator/` now states the actual applied reserve scheme rather than suggesting entered end clearances are exactly the final gap. Public content includes explicit base-gap and final-gap equations plus the complete face-coordinate schedule.
 - No new keyword estimates or fictitious landing pages were introduced. [CI #91](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41805332970) continues to validate the 152 mapped research keywords, 26 live calculators and intentionally held P2 intents.
+
+## Soffit functional-intent correction — CI #93
+- The P0 `/soffit-calculator/` now uses all five input fields. Its method explains the **wall top-of-rafter datum**, the perpendicular-versus-vertical stock-depth distinction, and the directional sign of the fascia adjustment. This avoids misleading users about an inert construction parameter.
+- [CI #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873) passed. All 26 active URLs and 152 approved nonbrand Semrush research entries are unchanged. No invented new traffic metrics, indexed preview or unsupported structural claims.

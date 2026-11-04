@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 249 geometry tests, 28 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 251 geometry tests, 29 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -148,3 +148,5 @@ Latest verified release check: [CI #91](https://github.com/garrison2025/Woodwork
 ## 2026-11-04 — Soffit rafter depth is no longer inert
 
 The P0 `/soffit-calculator/` now uses **every user-visible input**. The datum is wall rafter-top (0 vertical drop, positive down). Projection×pitch/12 gives the top-face fall. A rafter's depth measured **normal to its roof face** becomes vertical separation between parallel surfaces using `depth×hypot(1,pitch/12)`. Vertical lining thickness and a downward-positive signed fascia adjustment are then added to the finished reference datum. The two-row worksheet and proportional roof/underside/soffit cross-section share this geometry. The model is a reference convention, not a certification of real fascia assembly, load capacity or 1:1 templates. Independent 0/2/6/9/12/24:12 slope fixtures and a browser check cover depth sensitivity and signed offset errors.
+
+The [CI #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873) release gate confirmed **251/251** Node geometry/CSV tests, **29/29** real Chromium browser tests and static validation. The public Cloudflare preview served the repaired soffit instructions plus the updated `assets/calcs.mjs` and `assets/app.mjs`. Every preview page retains `noindex` pending an owned production domain and separate physical review.

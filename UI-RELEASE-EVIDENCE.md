@@ -47,3 +47,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: [CI #91](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41805332970) includes 28 real Chromium tests. The new shelf test checks three rectangular shelves in the SVG, numeric bottom/top faces, actual end clearances and invalid metric-input recovery.
 - PASS: [CI #90](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41804993159) checked that baluster/post SVG widths grow proportionally as actual entered material face width grows; bowl tables show dimensionless ring/segment indexes and angle units while CSV headings match.
 - NOT RUN: manual detailed visual acceptance of every route on real mobile and paper physical scale.
+
+## Soffit datum cross-section — CI #93
+- PASS: roof-top and rafter-underside are now visible as two parallel rafter faces in a proportional section. The dashed finish datum is derived from the same numeric engine values as the on-screen metrics and downloaded two-row cut schedule.
+- PASS: 29 Chromium checks, including changing stock depth, asserting the matching numeric result, checking SVG datum elements, exporting metric CSV and clearing invalid geometry. [Run #93](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41806374873).
+- NOT RUN: reviewed real-size construction details, printed full-size templates, hand verification of physical fascia assemblies, or cross-browser/device acceptance.
