@@ -72,10 +72,12 @@ if(slug){
       const kerfScale=data.shape==="kerfs"?Math.min(W/span,128/data.stockThickness):null;
       const kerfStart=kerfScale===null?left:(900-data.kerfArcLength*kerfScale)/2;
       if(data.shape==="boards"){
-        const w=data.boardWidth||2;
-        for(let i=0;i<Math.min(marks.length,180);i++){
-          const px=x(marks[i].x),nx=x(Math.min(span,marks[i].x+w));
-          content+='<rect x="'+px+'" y="125" width="'+Math.max(1,nx-px)+'" height="104" rx="1" fill="'+(i%2?"#d2b18b":"#e0c6a5")+'" stroke="#9e764c"/>';
+        // Exactly the cut-list faces: no fake minimum width and no silently
+        // omitted rows beyond the former 180-face drawing cap.
+        content+='<rect class="deck-face-outline" x="'+left+'" y="123" width="'+W+'" height="108" fill="#f3f0e8" stroke="#ac9f8c" stroke-width="1"/>';
+        for(const [i,row] of data.boardRows.entries()){
+          const x1=x(row.left),x2=x(row.right);
+          content+='<rect class="deck-board-face" data-row="'+(i+1)+'" x="'+x1+'" y="125" width="'+(x2-x1)+'" height="104" fill="'+(i%2?"#d2b18b":"#e0c6a5")+'" stroke="#9e764c" stroke-width=".35"><title>'+esc(row.item+" · face "+fmt(row.left)+" to "+fmt(row.right)+" · rip "+fmt(row.ripWidth))+'</title></rect>';
         }
       }else if(data.shape==="panels"){
         // Draw exactly the stored cut-list edges, with no fabricated
@@ -139,14 +141,16 @@ if(slug){
         for(const [i,p] of marks.entries()){
           const px=x(p.x);
           if(data.shape==="balusters"||data.shape==="posts"){
-            const pieceWidth=Math.min(105,Math.max(.15,(data.itemWidth||1)*W/span));
-            content+='<rect class="'+(data.shape==="posts"?"post-face":"baluster-face")+'" x="'+(px-pieceWidth/2)+'" y="113" width="'+pieceWidth+'" height="141" rx=".6" fill="#b78d5b"><title>'+esc(fmt(data.itemWidth||1)+" actual face width")+'</title></rect>';
+            const row=data.faceRows[i];
+            const map=data.shape==="posts"?v=>left+(v+data.itemWidth/2)/(span+data.itemWidth)*W:x;
+            const faceX=map(row.faceLeft),faceRight=map(row.faceRight);
+            content+='<rect class="'+(data.shape==="posts"?"post-face":"baluster-face")+'" data-index="'+(i+1)+'" x="'+faceX+'" y="113" width="'+(faceRight-faceX)+'" height="141" rx=".6" fill="#b78d5b"><title>'+esc(row.item+" · face "+fmt(row.faceLeft)+" to "+fmt(row.faceRight))+'</title></rect>';
           }
-          else content+='<line x1="'+px+'" y1="101" x2="'+px+'" y2="253" stroke="#ba8f60" stroke-width="'+(data.shape==="kerfs"?"2":"1.5")+'"/>';
+          else content+='<line x1="'+px+'" y1="101" x2="'+px+'" y2="253" stroke="#ba8f60" stroke-width="1.5"/>';
         }
       }
       for(let i=0;i<marks.length;i+=tick){
-        const p=marks[i],px=data.shape==="holes"?holeStart+p.x*holeScale:data.shape==="kerfs"?kerfStart+p.x*kerfScale:x(p.x);
+        const p=marks[i],px=data.shape==="holes"?holeStart+p.x*holeScale:data.shape==="kerfs"?kerfStart+p.x*kerfScale:data.shape==="posts"?left+(p.x+data.itemWidth/2)/(span+data.itemWidth)*W:x(p.x);
         content+='<line x1="'+px+'" y1="'+base+'" x2="'+px+'" y2="'+(base+9)+'" stroke="#1e6454"/>';
         if(marks.length<=24||i%Math.max(tick,2)===0)content+=svgText(px-10,base+27,p.label?String(p.label).slice(0,9):trim(convertFromInches(p.x,unit),1),"tick-label");
       }
@@ -155,6 +159,9 @@ if(slug){
         const start=data.shape==="holes"?holeStart:kerfStart;
         content+=svgText(start,302,"0 "+unit,"dim-label");
         content+=svgText(start+data.span*scale-100,302,fmt(data.span),"dim-label");
+      }else if(data.shape==="posts"){
+        content+=svgText(left,317,"OUTSIDE FACES "+fmt(data.outsideLength),"dim-label");
+        content+=svgText(left,338,"END CENTERS 0 TO "+fmt(span),"tick-label");
       }else content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
     }else if(data.shape==="rafter"){
       // Side-elevation reference, deliberately not a paper-scale cutting template.

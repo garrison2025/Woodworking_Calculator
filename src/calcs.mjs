@@ -141,21 +141,65 @@ export function compute(slug,a){
     positive("width","length","board","stock");nonnegative("gap","waste");
     need(a.waste<=200,"Waste allowance is unreasonably large.");
     n=ceilStable((a.width+a.gap)/(a.board+a.gap));
-    need(n<=1200,"Too many rows to display.");const last=a.width-(n-1)*(a.board+a.gap);
-    need(last>0&&last<=a.board+1e-7,"Board width/gap combination is invalid.");
+    need(n>=1&&n<=1200,"Board-row count exceeds supported layout.");
+    const last=a.width-(n-1)*(a.board+a.gap);
+    need(last>=1e-7&&last<=a.board+1e-8,
+      "The final rip is not a representable positive board width; adjust board size or coverage.");
+    const faceTotal=(n-1)*a.board+last,gapsTotal=(n-1)*a.gap;
+    need(Math.abs(faceTotal+gapsTotal-a.width)<=Math.max(1e-7,a.width*1e-10),
+      "Board faces and spaces do not close to the entered deck width.");
     const linear=n*a.length;
-    const conservativeOrder=ceilStable(n*ceilStable(a.length/a.stock)*(1+a.waste/100));
-    rows=Array.from({length:n},(_,i)=>({item:"Row "+(i+1),position:q(i*(a.board+a.gap)),length:q(a.length),ripWidth:q(i===n-1?last:a.board)}));
-    return result([M("Board rows",n,"N"),M("Last rip width",last),M("Installed linear footage",linear/12,"FT"),M("Stock pieces: no offcut reuse",conservativeOrder,"N")],rows.map(r=>P(r.position,r.item)),a.width,rows,"boards",{boardWidth:a.board,lastWidth:last});
+    const piecesPerRow=ceilStable(a.length/a.stock);
+    const conservativeOrder=ceilStable(n*piecesPerRow*(1+a.waste/100));
+    rows=Array.from({length:n},(_,i)=>{
+      const left=i*(a.board+a.gap);
+      const rip=i===n-1?last:a.board;
+      return {item:"Row "+(i+1),position:q(left),left:q(left),
+        right:q(left+rip),length:q(a.length),ripWidth:q(rip),
+        gapAfter:i===n-1?null:q(a.gap)};
+    });
+    need(rows.every(row=>row.right>row.left&&row.ripWidth>0),
+      "The board edges collapse at coordinate precision.");
+    return result([
+      M("Board rows",n,"N"),M("Last rip width",last),
+      M("Total installed board-face width",faceTotal),
+      M("Total spaces between board rows",gapsTotal),
+      M("Covered deck width",faceTotal+gapsTotal),
+      M("Installed linear footage",linear/12,"FT"),
+      M("Stock pieces per row (unverified joints)",piecesPerRow,"N"),
+      M("Stock pieces: no offcut reuse",conservativeOrder,"N")
+    ],rows.map(row=>P(row.left+row.ripWidth/2,row.item)),a.width,rows,"boards",
+    {boardWidth:a.board,lastWidth:last,boardRows:rows,boardGap:a.gap});
   }
   case "baluster-spacing-calculator":{
     positive("length","width","gap");
+    need(a.width>=1e-7,"Baluster faces must exceed the cut-coordinate resolution.");
     n=Math.max(1,ceilStable((a.length-a.gap)/(a.width+a.gap)));
     need(n<=500&&n*a.width<=a.length,"Balusters cannot fit in the opening.");
-    g=(a.length-n*a.width)/(n+1);need(g>=-1e-8&&g<=a.gap+1e-7,"No feasible spacing.");
-    xs=Array.from({length:n},(_,i)=>g+(i*(a.width+g))+a.width/2);
-    rows=xs.map((x,i)=>({item:"Baluster "+(i+1),center:q(x),clearGap:q(g)}));
-    return result([M("Baluster count",n,"N"),M("Equal clear gap",g),M("Center pitch",a.width+g),M("Edge gap",g)],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"balusters",{itemWidth:a.width});
+    g=(a.length-n*a.width)/(n+1);
+    need(g>=-1e-8&&g<=a.gap+1e-7,"No feasible spacing.");
+    const actualGap=Math.max(0,g);
+    const faceTotal=n*a.width,spaceTotal=(n+1)*actualGap;
+    need(Math.abs(faceTotal+spaceTotal-a.length)<=Math.max(1e-7,a.length*1e-10),
+      "Baluster faces and equal gaps do not close to the entered clear opening.");
+    xs=Array.from({length:n},(_,i)=>actualGap+i*(a.width+actualGap)+a.width/2);
+    rows=xs.map((center,i)=>{
+      const faceLeft=center-a.width/2,faceRight=center+a.width/2;
+      return {item:"Baluster "+(i+1),center:q(center),
+        faceLeft:q(faceLeft),faceRight:q(faceRight),
+        clearGap:q(actualGap),
+        clearGapToNext:i===n-1?null:q(actualGap)};
+    });
+    need(rows.every(row=>row.faceRight>row.faceLeft),
+      "Baluster faces collapse at the cut-coordinate resolution.");
+    return result([
+      M("Baluster count",n,"N"),M("Equal clear gap",actualGap),
+      M("Center pitch",a.width+actualGap),M("Edge gap",actualGap),
+      M("Total baluster face width",faceTotal),
+      M("Total clear spaces",spaceTotal),
+      M("Opening closure width",faceTotal+spaceTotal)
+    ],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"balusters",
+    {itemWidth:a.width,faceRows:rows});
   }
   case "rafter-calculator":{
     positive("run","depth");nonnegative("pitch","ridge","overhang","seat");
@@ -599,18 +643,31 @@ export function compute(slug,a){
   }
   case "fence-post-calculator":{
     positive("length","bay","post");
-    // 'length' is explicitly the center-to-center distance between end posts,
-    // rather than the overall outside-to-outside width of the two end posts.
+    // The entered run is end-post CENTER to end-post CENTER.
+    // Physical faces extend beyond both end-center datums by half a post.
     const bays=ceilStable(a.length/a.bay);
     need(bays>=1&&bays<=500,"Number of bays exceeds the supported layout.");
     const interval=a.length/bays,clear=interval-a.post;
-    need(clear>1e-8,"Post faces overlap or touch at this maximum bay spacing. Reduce post width or increase the allowed center-to-center span.");
+    need(clear>=1e-7,"Post faces overlap, touch, or have an unresolvable clear bay. Reduce post width or increase the center span.");
     xs=Array.from({length:bays+1},(_,i)=>i*interval);
-    rows=xs.map((x,i)=>({item:"Post "+(i+1),center:q(x),clearBayToNext:i<bays?q(clear):null}));
+    rows=xs.map((center,i)=>({
+      item:"Post "+(i+1),center:q(center),
+      faceLeft:q(center-a.post/2),faceRight:q(center+a.post/2),
+      clearBayToNext:i<bays?q(clear):null
+    }));
+    const outsideLength=a.length+a.post;
+    need(Math.abs((bays+1)*a.post+bays*clear-outsideLength)<=Math.max(1e-7,outsideLength*1e-10),
+      "Fence post faces and clear bays do not close to outside-to-outside length.");
+    need(rows.every(row=>row.faceRight>row.faceLeft),
+      "Post faces collapse at cut-coordinate precision.");
     return result([
       M("Bays",bays,"N"),M("Posts",bays+1,"N"),
-      M("True OC interval",interval),M("Approximate clear bay",clear)
-    ],xs.map(x=>P(x)),a.length,rows,"posts",{itemWidth:a.post});
+      M("True OC interval",interval),M("Approximate clear bay",clear),
+      M("Outside-to-outside fence length",outsideLength),
+      M("Total post face widths",(bays+1)*a.post),
+      M("Total usable clear bays",bays*clear)
+    ],xs.map(x=>P(x)),a.length,rows,"posts",
+    {itemWidth:a.post,faceRows:rows,outsideLength});
   }
   default:throw new Error("Calculator not implemented: "+slug);
   }

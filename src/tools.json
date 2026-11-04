@@ -203,7 +203,7 @@
       "keyword": "deck board calculator",
       "volume": 6600,
       "kd": 12,
-      "desc": "Number of straight decking rows and last rip width",
+      "desc": "Straight decking row count with exact board face edges, clear gaps, last rip and explicitly unverified stock-segment joints",
       "inputs": [
         {
           "key": "width",
@@ -242,10 +242,24 @@
           "kind": "D"
         }
       ],
-      "formula": "rows = ceil((width+gap)/(board+gap)); last width = width−(rows−1)(board+gap)",
-      "example": "120 in at 5.5 in board + 0.125 in gap gives 22 rows and 1.875 in final rip",
-      "limit": "No joist load design or joint optimization",
-      "status": "BETA_NO_INDEX"
+      "formula": "Rows = ceil((coverage width+gap)/(actual board width+gap)); final rip = coverage width−(rows−1)×(board+gap); face total=(rows−1)×board width+final rip; clear spaces=(rows−1)×gap; face total+spaces=coverage width. Conservative stock pieces=ceil(rows×ceil(row length/stock length)×(1+waste%)); no offcut reuse, butt-joint support or stock-layout optimization.",
+      "example": "120-in coverage, 5.5-in boards, 0.125-in gaps: 22 rows and a 1.875-in final rip. The 21 full faces sum to 115.5 in, plus 1.875 in final rip and 21 × 0.125 in gaps = 120 in total. If stock is shorter than each row, stock count is an ordering reference only, not an approved seam plan.",
+      "limit": "Straight parallel row quantity and face dimensions only; does NOT check joist alignment or provide a usable butt-joint plan when stock length is shorter than row length. The stock-piece estimate ignores offcut reuse, joist end support, fastening, board expansion, end trim, stagger patterns, tolerance, structural spans and code. Rows with extremely small final rip (<1e-7 in) are rejected. SVG is a schematic, not a physical cutting template. Use Deck Material Estimator for joist-center reference seam planning.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Verify the last rip and every clear gap",
+          "text": "The cut list now includes left and right face positions, physical rip width and the gap following each row. The last row has no following gap. Board-face widths, all inter-row gaps and the last rip must add exactly to the entered coverage."
+        },
+        {
+          "heading": "Count stock conservatively, not as an approved joint plan",
+          "text": "Stock pieces per row = ceiling(row length ÷ stock length). The displayed suggested order applies waste and assumes no offcut reuse. For stock shorter than a run, no joist or attachment positions are provided here: do not treat the quantity as a verified butt-joint layout."
+        },
+        {
+          "heading": "Compare with the joist-aware tool",
+          "text": "For a reference joist grid and allowable seams at those centers, use Deck Material Estimator. Actual joist dimensions, fasteners, staggered ends, edge supports and safe installations still require validation."
+        }
+      ]
     },
     {
       "slug": "baluster-spacing-calculator",
@@ -255,7 +269,7 @@
       "keyword": "baluster spacing calculator",
       "volume": 1000,
       "kd": 16,
-      "desc": "Equal clear gaps and individual baluster coordinates",
+      "desc": "Equal clear baluster gaps and accurate left/right face locations with end-gap and opening-closure verification",
       "inputs": [
         {
           "key": "length",
@@ -276,10 +290,24 @@
           "kind": "L"
         }
       ],
-      "formula": "n = ceil((opening−maxGap)/(width+maxGap)); equal gap = (opening−n×width)/(n+1)",
-      "example": "96 in clear, 1.5 in faces, 4 in maximum: 17 balusters, 3.9167 in gaps",
-      "limit": "Not a safety-code compliance certificate",
-      "status": "BETA_NO_INDEX"
+      "formula": "Number of balusters = max(1,ceil((clear opening−maximum desired gap)/(actual baluster width+maximum gap))); equal clear gap = (opening−count×face width)/(count+1). Face i spans center±face width/2; all count faces and count+1 gaps must sum to the entered opening.",
+      "example": "96 in clear opening, 1.5 in faces and maximum 4 in clear gap yield 17 balusters and 18 gaps at 3.916666… in each; 17×1.5 + 18×3.916666… = 96 in. Each face has its own left/right coordinates.",
+      "limit": "A mathematical straight-run spacing reference only, NOT a baluster safety-code certificate. The selected maximum gap may not match local requirements, particularly for stairs or children. Faces are measured perpendicular to the opening; actual rails, attachments, posts, rail slope, compliance and finished clearances require independent verification. Zero clear gap is mathematically possible but may be unusable. SVG and printed schematics are not 1:1 templates.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Use the actual clear opening",
+          "text": "Enter the unobstructed inside-face span between the two supporting post/rail boundaries and the measured face width of one baluster. Maximum gap means the upper limit of the OPEN gap, not the center pitch."
+        },
+        {
+          "heading": "Check both boundary gaps and every baluster face",
+          "text": "The equal gap appears before the first face, between neighboring faces, and after the last face. Each exported record gives center, physical left/right face edges and clear gap to the next; the full sum must close to the clear opening."
+        },
+        {
+          "heading": "Confirm safety and installation outside this calculator",
+          "text": "Actual railing compliance depends on the local code, real materials, slope/angle, attachment system and approved gauge. A numeric gap at or below the selected maximum is not a safety approval."
+        }
+      ]
     },
     {
       "slug": "rafter-calculator",
@@ -1445,7 +1473,7 @@
       "keyword": "fence post calculator",
       "volume": 880,
       "kd": 16,
-      "desc": "Fit non-overlapping straight-fence posts across an explicit end-center-to-end-center run and list each usable clear bay",
+      "desc": "End-center-to-end-center fence post layout with physical left/right post faces, true outside length and clear-bay conservation",
       "inputs": [
         {
           "key": "length",
@@ -1466,22 +1494,22 @@
           "kind": "L"
         }
       ],
-      "formula": "Bays = ceil(end-post center distance / maximum OC spacing); actual OC = center distance/bays; clear gap = actual OC−actual post face width. Impossible overlapping or touching posts are rejected.",
-      "example": "100 ft between end-post centers at a maximum 8 ft OC uses 13 bays and 14 posts, 92.3077 in actual OC. With 3.5 in post faces, each clear bay is 88.8077 in.",
-      "limit": "Length means distance between first and last post centers, NOT outside-to-outside fence length. Ends extend half a post width beyond those centers. Layout is a straight-line reference; footing, grade, wind, code, panels and gate loads are not assessed.",
+      "formula": "Bays = ceil(end-center distance/maximum OC); actual OC = end-center distance/bays; clear bay = actual OC−post face width. Outside-to-outside length = center span+one full post face width; (bays+1) post faces + bays clear bays = outside length.",
+      "example": "1200 in between end post centers at maximum 96 in OC uses 13 bays, 14 posts and 92.3077 in actual center spacing. With 3.5-in faces, each clear bay is 88.8077 in; total outside-to-outside span is 1203.5 in.",
+      "limit": "Length is between END POST CENTERS, not outside-to-outside fence length. The first face extends half a post width BEFORE center coordinate zero, and the last extends half a width beyond the final center. The diagram spans outer post faces, while ticks mark the entered center references. Actual posts, lateral load, footing, slope, rails, gate frames, hardware and codes are excluded; geometric spacing is NOT construction approval.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Set the correct end-to-end datum",
-          "text": "Measure from the center of the first post to the center of the last post. The outside faces of these two end posts extend by half a post width at either end; do not confuse the centerline run with the overall finished outside length."
+          "heading": "Start and end at post centers",
+          "text": "Enter the measured distance between the first and last post center. The physical post faces occupy coordinates center±half the actual face width. Outside-to-outside length is consequently one post width greater than the center run."
         },
         {
-          "heading": "No negative clear bays",
-          "text": "The calculator shortens the specified maximum on-center spacing to fit equal bays. If the resulting spacing is no greater than the actual post face width, the calculation is rejected instead of reporting negative usable opening."
+          "heading": "Check clear bay and full post-face conservation",
+          "text": "The tool equally divides the center run into a whole number of bays at or below the maximum entered OC spacing. Every gap between adjacent post faces is the OC interval less one full post width. Posts cannot touch or overlap. The sum of all faces and all clear bays must equal the outside total length."
         },
         {
-          "heading": "This is layout geometry, not a fence specification",
-          "text": "The listed center coordinates and clear bay widths do not establish safe posts, foundations, panel support, gate spacing or local-code compliance. Check local requirements and actual material faces."
+          "heading": "The drawing is the whole physical outside span",
+          "text": "The SVG now maps every actual post face within an outside-to-outside reference frame, rather than drawing half of the first and last posts beyond the diagram bounds. The CSV retains signed end-face coordinates because center zero is the datum. Field installation and structural design are separate."
         }
       ]
     },
