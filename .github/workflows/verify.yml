@@ -45,6 +45,14 @@ jobs:
           path: visual-evidence/
           if-no-files-found: error
           retention-days: 4
+      - name: Upload printable A4 and Letter calibration worksheets
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: print-calibration-pdfs
+          path: print-evidence/
+          if-no-files-found: error
+          retention-days: 4
       - name: Preserve browser failure evidence
         if: failure()
         uses: actions/upload-artifact@v4

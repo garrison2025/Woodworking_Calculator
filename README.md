@@ -114,3 +114,9 @@ The separate `/deck-material-calculator/` now calculates actual parallel board r
 ## 2026-11-04 — Static SEO and responsive verification
 
 Tool meta descriptions are now punctuated and length-bounded; the static release checker prevents regression of the malformed `... plan Formula, dimension diagram...` pattern. Responsive overflow checks now visit framing, deck-material and roof-sheathing workspaces at five widths, and the screenshot artifact samples all three at both desktop and mobile sizes. These are Chromium automation checks, not real-device touch or independent structural validation.
+
+## Print scale calibration (A4 / Letter preview)
+
+The **Print / PDF** worksheet now contains two physically sized CSS reference bars: 100 mm and 1 inch. Use Chrome's *Actual size / 100%* setting and turn off fit-to-page. Compare the printed paper bars to a reliable ruler; reject the printout if either differs by more than 0.5%. **Only these bars are physical-size references:** the SVG calculation drawing remains a scaled schematic and must NEVER be used as a 1:1 saw/cut template.
+
+GitHub Actions exports two print evidence PDFs (Letter and A4) from headless Chromium and checks their page dimensions and browser CSS physical-unit widths. These tests do **not** verify real paper output or printer settings; actual ruler measurements remain an explicit production acceptance blocker.

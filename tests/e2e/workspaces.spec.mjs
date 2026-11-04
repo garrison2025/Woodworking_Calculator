@@ -124,6 +124,40 @@ test("copy results and print controls are wired to the live worksheet",async({pa
   expect(await page.evaluate(()=>window.__printInvoked)).toBe(true);
 });
 
+test("print calibration stays hidden on screen and renders in Letter and A4 PDFs",async({page})=>{
+  const {mkdirSync,writeFileSync}=await import("node:fs");
+  await page.goto("/stud-calculator/");
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+  const calibration=page.locator("#print-calibration");
+  await expect(calibration).toBeHidden();
+  await page.emulateMedia({media:"print"});
+  await expect(calibration).toBeVisible();
+  const dimensions=await page.evaluate(()=>{
+    const width=sel=>document.querySelector(sel).getBoundingClientRect().width;
+    return {mm:width(".calibration-100mm"),inch:width(".calibration-1in"),
+      main:getComputedStyle(document.querySelector(".topbar")).display,
+      drawing:getComputedStyle(document.querySelector("#dimension-svg")).display};
+  });
+  expect(dimensions.mm).toBeCloseTo(100*96/25.4,1);
+  expect(dimensions.inch).toBeCloseTo(96,1);
+  expect(dimensions.main).toBe("none");
+  expect(dimensions.drawing).not.toBe("none");
+  mkdirSync("print-evidence",{recursive:true});
+  for(const [paper,w,h] of [["Letter",612,792],["A4",595.28,841.89]]){
+    const pdf=await page.pdf({format:paper,printBackground:true,preferCSSPageSize:false,scale:1,
+      margin:{top:"15mm",bottom:"15mm",left:"15mm",right:"15mm"}});
+    expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+    expect(pdf.length).toBeGreaterThan(5000);
+    const mediaBox=pdf.toString("latin1").match(/\\/MediaBox\\s*\\[\\s*0\\s+0\\s+([0-9.]+)\\s+([0-9.]+)\\s*\\]/);
+    expect(mediaBox, paper+" missing PDF MediaBox").not.toBeNull();
+    expect(Number(mediaBox[1])).toBeCloseTo(w,0);
+    expect(Number(mediaBox[2])).toBeCloseTo(h,0);
+    writeFileSync("print-evidence/stud-"+paper.toLowerCase()+".pdf",pdf);
+  }
+  await page.emulateMedia({media:"screen"});
+  await expect(calibration).toBeHidden();
+});
+
 test("workspaces load without third-party API or font requests",async({page})=>{
   const external=[];
   page.on("request",r=>{

@@ -61,6 +61,9 @@ for p in pages:
 
     if c.canon:errors.append(f"{u}: preview must not claim a custom-domain canonical")
     if any(t["slug"]==u.strip("/") for t in active) and c.forms!=1:errors.append(f"{u}: calculator form absent")
+    if any(t["slug"]==u.strip("/") for t in active):
+        for marker in ('id="print-calibration"', 'calibration-100mm', 'calibration-1in', 'NOT a 1:1 template'):
+            if marker not in body:errors.append(f"{u}: missing physical print scale caveat or calibration marker {marker}")
     for link in c.links:
         if link.startswith("/#"):continue
         path=dist/link.lstrip("/")
