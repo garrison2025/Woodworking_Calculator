@@ -63,6 +63,15 @@ test("inch to millimeter toggle preserves physical lengths",async({page})=>{
   expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(3657.6,1);
   const last=page.locator("#result-cards .metric").filter({hasText:"Last cut length"});
   await expect(last).toContainText("4,152.9 mm");
+  await page.locator("#unit-select").selectOption("cm");
+  expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(365.76,3);
+  await expect(last).toContainText("415.29 cm");
+  await page.locator("#unit-select").selectOption("m");
+  expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(3.6576,4);
+  await expect(last).toContainText("4.1529 m");
+  await page.locator("#unit-select").selectOption("ft");
+  expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(12,4);
+  await expect(last).toContainText("13.625 ft");
   await page.locator("#unit-select").selectOption("in");
   expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(144,4);
 });
