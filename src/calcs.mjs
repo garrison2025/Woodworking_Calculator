@@ -17,8 +17,9 @@ const positions=(length,spacing)=>{
   return xs;
 };
 const q=(x)=>Math.round(x*1e8)/1e8;
-export const convertToInches=(value,units)=>units==="mm"?value/25.4:value;
-export const convertFromInches=(value,units)=>units==="mm"?value*25.4:value;
+const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
+export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
+export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
   a={opening2Start:0,opening2Width:0,opening3Start:0,opening3Width:0,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
