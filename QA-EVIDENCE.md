@@ -1,9 +1,9 @@
 # QA evidence — 2026-11-04
 ## Executed
-- **PASS:** GitHub Actions run [41780919798](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41780919798), workflow **Verify Woodworking Tools**, outcome success.
-- **PASS:** Node test runner: **216 / 216** passing; 0 failing. This covers 26 distinct golden-default fixtures, input validation and generic deterministic/unit-conversion invariants; it does **not** equal 8 independently sourced geometry golden cases per tool.
+- **PASS:** GitHub Actions run [41782065704](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41782065704), workflow **Verify Woodworking Tools**, outcome success.
+- **PASS:** Node test runner: **219 / 219** passing; 0 failing. This covers 26 distinct golden-default fixtures, three targeted opening/stock regressions, input validation and generic deterministic/unit-conversion invariants; it does **not** equal 8 independently sourced geometry golden cases per tool.
 - **PASS:** Static build (Python 3.12) emitted **36 HTML pages**, including **26 calculator pages**, five category directories, and four policy/info pages.
-- **PASS:** Static QA verified site links, unique titles, one H1 per page, preview robots, 5 P2 not published, and core assets exist.
+- **PASS:** Static QA verified 152 unique KD≤29 keyword mappings, site links, unique titles, one H1 per page, preview robots, 5 P2 not published, and core assets exist.
 
 ## Not yet executed (release blockers)
 - **NOT RUN:** Browser end-to-end input, unit, export, copy and print checks on desktop Chrome.
