@@ -67,6 +67,7 @@ src/style.css                    Responsive design and printable stylesheet
 research/WOODWORKING_BUILD_SPEC_V3_20261104.md
 research/woodworking-keyword-map-152.csv
 tests/calculators.test.mjs       Independent default fixtures, input errors and invariants
+research/GEOMETRY_REFERENCE_NOTES.md  Trade reference conventions and 2-D geometry derivations
 tests/validate_static.py        Static page and crawler-policy checks
 tests/e2e/workspaces.spec.mjs    Actual browser/UI regression checks
 playwright.config.mjs           Local Chromium test harness
@@ -76,7 +77,7 @@ DESIGN.md, QA-EVIDENCE.md, UI-RELEASE-EVIDENCE.md, SEO-GEO-RELEASE-EVIDENCE.md
 
 ## Engineering caveats
 
-Some professional tasks are intentionally **not claimed production complete**: framing king/jack illustrations are schematic (no headers/cripples); rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof sheets are an area lower-bound, not true sheet nesting; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
+Rafter normal-notch depth and stair-stringer flooring correction now have independently derived regression tests; both still require physical construction approval. Some professional tasks are intentionally **not claimed production complete**: framing king/jack illustrations are schematic (no headers/cripples); rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof sheets are an area lower-bound, not true sheet nesting; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
 
 ## SEO research discipline
 
