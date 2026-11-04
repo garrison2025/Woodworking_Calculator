@@ -20,6 +20,8 @@ test("all 26 calculator pages execute JS, render metrics and SVG",async({page})=
   for(const t of active){
     const response=await page.goto("/"+t.slug+"/");
     expect(response.status(),t.slug).toBe(200);
+    const calcError=await page.locator("#calc-error").textContent();
+    if(calcError?.trim())throw new Error(t.slug+": "+calcError.trim());
     await expect(page.locator("#result-cards .metric").first(),t.slug).toBeVisible();
     await expect(page.locator("#dimension-svg svg"),t.slug).toHaveCount(1);
     await expect(page.locator("#calc-error"),t.slug).toBeHidden();
@@ -60,7 +62,7 @@ test("inch to millimeter toggle preserves physical lengths",async({page})=>{
   await page.locator("#unit-select").selectOption("mm");
   expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(3657.6,1);
   const last=page.locator("#result-cards .metric").filter({hasText:"Last cut length"});
-  await expect(last).toContainText("4152.9 mm");
+  await expect(last).toContainText("4,152.9 mm");
   await page.locator("#unit-select").selectOption("in");
   expect(Number(await page.locator("#f-length").inputValue())).toBeCloseTo(144,4);
 });
@@ -95,8 +97,8 @@ for(const width of [360,390,768,1024,1440]){
     for(const url of ["/","/stud-calculator/"]){
       await page.goto(url);
       await expect(page.locator("main")).toBeVisible();
-      const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
-      expect(dims.scroll,url).toBeLessThanOrEqual(dims.client+2);
+      const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,offenders:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,id:el.id,cls:typeof el.className==="string"?el.className.slice(0,70):"",right:Math.round(el.getBoundingClientRect().right),width:Math.round(el.getBoundingClientRect().width)})).filter(el=>el.right>innerWidth+3).slice(0,8)}));
+      expect(dims.scroll,url+" "+JSON.stringify(dims.offenders)).toBeLessThanOrEqual(dims.client+2);
     }
   });
 }
