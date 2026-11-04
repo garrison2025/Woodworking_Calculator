@@ -49,3 +49,8 @@
 ## Drill-hole spacing intent and evidence — CI #98
 - `/hole-spacing-calculator/` now distinguishes *end-center offset* from *clear solid material at the end*, center pitch from *clear material between two holes*, and exposes each hole's two longitudinal boundaries. The new text explicitly rules out across-grain margin and unverified structural/material conclusions.
 - [CI #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) passed. The static 152-row KD≤29 keyword map and 26 active routes remain unchanged; live Cloudflare markup is still noindex with no premature SEO launch.
+
+## Professional cut-reference truthfulness — CI #118
+- The crown tool now explicitly separates mathematical angle magnitudes from illustrative left/right plan sign, and tells users this is not a branded miter-saw settings chart. The stair stringer page now distinguishes the actual notch pitch reference from the floor-to-floor diagonal, which must not be construed as a timber cutting length.
+- Form selections, reproducible 38°/90° and 105-in/14-riser examples, schema-labelled CSV angles and exact stair profile coordinates improve answer accuracy without new unverified keyword claims.
+- [CI #118](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41929865892) passed. No change to 26 published tool URLs, 152 Semrush research keyword entries, or the noindex Pages preview policy.

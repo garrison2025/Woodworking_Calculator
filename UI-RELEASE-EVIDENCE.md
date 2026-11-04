@@ -62,3 +62,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: [CI #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) includes 30 Chromium tests, including four SVG drill-hole circles, isotropic center-pitch/radius ratios, unit-dependent table/CSV edges and hole overlap error clearing.
 - SVG board face width is an arbitrary visual slab, since the user does not input board width; drawn circles preserve equal horizontal and vertical scale and are NOT paper-size drilling templates.
 - PASS: metric CSV export tested without floating precision tails; the geometry engine itself remains unchanged by export formatting.
+
+## True stringer coordinate profile and responsive crown reference — CI #118
+- PASS: SVG stair step polyline consumes the engine's 28 nominal vertices for 14 risers and distinguishes dashed first-tread pitch line, floor datum chord and separate bottom trim reference. Live Chrome test validates equal-scale geometry and edit response.
+- PASS: crown reference sketch changes the plan-view sign for selected corner side/hand while keeping miter/bevel magnitudes fixed; labels explicitly deny saw direction claims. Browser test verifies selects, dynamic ray sign, angle-labelled CSV, metric-unit invariance and invalid input clearing.
+- PASS: [CI #118](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41929865892) includes 33 Chromium E2E checks and the existing multi-breakpoint layout gate. Manual physical saw, print and cross-browser signoff not performed.
