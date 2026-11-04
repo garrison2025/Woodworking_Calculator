@@ -133,3 +133,16 @@ test("workspaces load without third-party API or font requests",async({page})=>{
   await expect(page.locator("#result-cards .metric").first()).toBeVisible();
   expect(external).toEqual([]);
 });
+
+test("capture actual desktop and mobile preview renders for design review",async({page})=>{
+  const {mkdirSync}=await import("node:fs");
+  mkdirSync("visual-evidence",{recursive:true});
+  for(const [label,width,height] of [["desktop",1440,900],["mobile",390,844]]){
+    await page.setViewportSize({width,height});
+    for(const [name,url] of [["home","/"],["stud","/stud-calculator/"],["deck","/deck-board-calculator/"]]){
+      await page.goto(url);
+      if(name!=="home")await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+      await page.screenshot({path:"visual-evidence/"+name+"-"+label+".png",fullPage:true,animations:"disabled"});
+    }
+  }
+});
