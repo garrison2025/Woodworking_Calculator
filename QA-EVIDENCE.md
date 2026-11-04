@@ -1,8 +1,8 @@
 # QA evidence — 2026-11-04 (deployed preview)
 ## Executed / PASS
-- **GitHub Actions:** [run #98](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41810910456) passed on `main` (commit `7c6fc43`).
-- **Geometry:** **257 / 257** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
-- **Real Chromium browser:** **30 / 30** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
+- **GitHub Actions:** [run #106](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41812985103) passed on `main` (commit `acc9720e`).
+- **Geometry:** **260 / 260** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
+- **Real Chromium browser:** **31 / 31** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
 - **Observed live preview:** https://woodworking-calculator.pages.dev/ and `/stud-calculator/` were publicly accessible. The current preview displays evaluated formulas and five unit options. Public meta robots is `noindex,nofollow,noarchive`; `robots.txt` says `User-agent: *\nDisallow: /`.
@@ -96,3 +96,10 @@
 - PASS: the CSV presentation layer normalizes metric floating-point conversion tails (e.g. `4.999999906 mm` to `5 mm`) only to **6 decimal places for mm**, 7 for cm and 10 for m; the source geometry engine and input measurements are not rounded anew. Initial browser test surfaced the issue; CI #98 passes after correction.
 - PASS (public Cloudflare preview): updated `/hole-spacing-calculator/` title/description and source explanations and deployed `/assets/cut-list.mjs` metric normalization observed; preview still explicitly `noindex,nofollow,noarchive`.
 - NOT RUN: actual physical drilled holes and their tolerance, transverse stock width and edge clearance, material strength, proper clamping, drill runout, real paper print scale, Safari/Firefox and assistive technology audits. The SVG is schematic, not a full-size drill template.
+
+## Kerf trial geometry — CI #106 (2026-11-04)
+- PASS: [CI #106](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41812985103) **260/260** Node tests, **31/31** Chromium browser tests, 36 prerendered pages, 26 active calculators, five P2 holds and 152 mapped search keywords; preview meta robots remains `noindex,nofollow,noarchive`.
+- PASS: `kerf-bending-calculator` rejects zero retained web, overlapping/touching kerf mouth geometry, and web/cut depth/saw width smaller than the 1e-8 in cut-coordinate rounding resolution; exported mouth edges and remaining web stay positive.
+- PASS: explicit developed reference arc, per-cut mouth edges, nominal cut depth, preserved web and maximum idealized closure in the typed schedule; browser confirms physical slot section uses one scale on both axes, material ratio, metric CSV headers, invalid-to-valid recovery and error clearing.
+- PASS (public preview): revised kerf cut guidance, source-code overlap and precision checks, `noindex` metadata independently fetched after successful CI.
+- LIMITATIONS: the neutral axis and finished radius are NOT predicted. Trial calculations are neither woodworking safety verification nor certified physical 1:1 saw templates. Scrap tests, paper rulers, Safari/Firefox and real mobile accessibility remain NOT RUN.
