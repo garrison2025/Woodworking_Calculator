@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 259 geometry tests, 31 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 260 geometry tests, 31 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -170,3 +170,5 @@ The P0 kerf-bending trial plan enforces strictly positive retained continuous wo
 ### 2026-11-04 — Kerf plan release QA
 
 [GitHub Actions #103](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41812557680) passed **259/259** Node geometry/CSV tests, **31/31** real Chromium browser tests and all 36-page/26-tool/152-keyword static checks. Tests include physical cut-mouth overlap rejection, strictly positive continuous wood web, idealized turn estimate and coordinate conservation, proportional stock/web/slot SVG, unit-aware CSV and invalid-input recovery. The site is still a **noindex engineering beta**, not a construction-grade springback estimator or a 1:1 cutting template. Independent woodworking trials, printer checks, Safari/Firefox, screen reader and real mobile device testing are not complete.
+
+The additional coordinate-resolution guard is covered by [CI #106](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41812985103), which passed **260/260** Node tests and **31/31** Chromium tests. Kerf mouth, cut depth and web thinner than the engine's reliable cut-list coordinate resolution are explicitly rejected rather than being exported as zero. All 26 tools and 152 mapped keyword rows retain the unindexed Cloudflare preview policy.
