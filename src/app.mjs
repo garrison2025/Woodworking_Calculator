@@ -157,20 +157,25 @@ if(slug){
       content+=svgText(left+24,318,"NORMAL NOTCH "+fmt(data.notchNormal),"dim-label");
       content+=svgText(right-183,318,"EAVE "+fmt(data.overhang),"dim-label");
     }else if(data.shape==="stringer"){
-      const n=Math.max(2,data.risers),dx=W/(n-1),dy=180/n;
-      let stair="M"+left+" "+base;
-      for(let i=0;i<n;i++){
-        const py=base-(i+1)*dy,px=left+i*dx;
-        stair+=" V"+py;
-        if(i<n-1)stair+=" H"+(left+(i+1)*dx);
-      }
-      const upper=base-n*dy;
-      const lowerLine=base+24,upperLine=upper+80;
-      content+='<path d="'+stair+' L'+right+' '+upperLine+' L'+left+' '+lowerLine+' Z" fill="#e3c9a7" stroke="#3b745f" stroke-width="2.4" stroke-linejoin="round"/>';
-      content+='<path d="M'+left+' '+lowerLine+' L'+right+' '+upperLine+'" fill="none" stroke="#a88157" stroke-dasharray="6 5" stroke-width="2"/>';
-      content+=svgText(left+12,55,n+" risers / "+(n-1)+" treads","dim-label");
-      content+=svgText(left+12,320,"bottom riser layout "+fmt(data.bottomLayoutRise),"dim-label");
-      content+=svgText(right-260,320,"nominal throat "+fmt(data.throat),"dim-label");
+      // Actual engine profile vertices: one vertical riser per row and one
+      // horizontal tread between successive risers. Preserve aspect ratio.
+      // This is a nominal reference profile, NOT a certified stock outline.
+      const verts=data.stepVertices,run=(data.risers-1)*data.tread,rise=data.totalRise;
+      const sc=Math.min(650/Math.max(.001,run),185/Math.max(.001,rise));
+      const ox=(900-run*sc)/2,oy=274;
+      const px=v=>ox+v.x*sc,py=v=>oy-v.y*sc;
+      const points=verts.map(v=>px(v)+","+py(v)).join(" ");
+      content+='<polyline class="stringer-step-profile" points="'+points+'" data-vertices="'+verts.length+'" fill="none" stroke="#246a58" stroke-width="2.7" stroke-linejoin="round"><title>Nominal riser and tread cut reference; vertices follow the exported riser elevations and horizontal runs</title></polyline>';
+      const first=verts[1],end=verts.at(-1);
+      content+='<line class="stringer-pitch-line" x1="'+px(first)+'" y1="'+py(first)+'" x2="'+px(end)+'" y2="'+py(end)+'" stroke="#b77b44" stroke-width="1.8" stroke-dasharray="6 4"><title>'+esc("Notch pitch line "+fmt(data.pitchLine)+"; NOT the floor diagonal")+'</title></line>';
+      content+='<line class="stringer-floor-diagonal" x1="'+ox+'" y1="'+oy+'" x2="'+px(end)+'" y2="'+py(end)+'" stroke="#aeb7ad" stroke-width="1.2" stroke-dasharray="3 5"><title>'+esc("Floor datum diagonal "+fmt(data.floorDiagonal)+"; NOT a cut length")+'</title></line>';
+      const bottomTrimY=oy-data.bottomLayoutRise*sc;
+      content+='<line class="stringer-bottom-trim" x1="'+(ox-18)+'" y1="'+bottomTrimY+'" x2="'+(ox+17)+'" y2="'+bottomTrimY+'" stroke="#a85034" stroke-width="2.8"><title>'+esc("Separate bottom trim height "+fmt(data.bottomLayoutRise)+"; actual end fastening not modeled")+'</title></line>';
+      content+=svgText(70,52,data.risers+" risers / "+(data.risers-1)+" treads","dim-label");
+      content+=svgText(70,75,"NOMINAL STEP REFERENCE · SCALED SCHEMATIC","tick-label");
+      content+=svgText(70,309,"NOTCH PITCH "+fmt(data.pitchLine),"dim-label");
+      content+=svgText(70,332,"BOTTOM TRIM "+fmt(data.bottomLayoutRise),"tick-label");
+      content+=svgText(565,309,"THROAT (NOMINAL) "+fmt(data.throat),"dim-label");
     }else if(data.shape==="soffit-section"){
       // All three vertical positions share the wall-rafter-top datum at y=90.
       // The schematic preserves relative scale, but is NOT paper-scale.
