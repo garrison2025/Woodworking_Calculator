@@ -135,6 +135,21 @@ if(slug){
       content+=svgText(left+12,55,n+" risers / "+(n-1)+" treads","dim-label");
       content+=svgText(left+12,320,"bottom riser layout "+fmt(data.bottomLayoutRise),"dim-label");
       content+=svgText(right-260,320,"nominal throat "+fmt(data.throat),"dim-label");
+    }else if(data.shape==="soffit-section"){
+      // All three vertical positions share the wall-rafter-top datum at y=90.
+      // The schematic preserves relative scale, but is NOT paper-scale.
+      const scale=Math.min(535/data.projection,163/Math.max(1,data.roofDrop+data.verticalRafter,data.soffitDatum));
+      const x0=155,x1=x0+data.projection*scale,y0=88;
+      const roofY=y0+data.roofDrop*scale,under0=y0+data.verticalRafter*scale;
+      const under1=roofY+data.verticalRafter*scale,finishY=y0+data.soffitDatum*scale;
+      content+='<polygon class="soffit-rafter" points="'+x0+','+y0+' '+x1+','+roofY+' '+x1+','+under1+' '+x0+','+under0+'" fill="#dec4a1" stroke="#8c693f" stroke-width="2"><title>'+esc("Rafter depth measured normal to slope: "+fmt(data.stockDepth))+'</title></polygon>';
+      content+='<line class="soffit-finished-datum" x1="'+x0+'" y1="'+finishY+'" x2="'+x1+'" y2="'+finishY+'" stroke="#1e6454" stroke-width="2.8" stroke-dasharray="7 4"/>';
+      content+='<line x1="'+x1+'" y1="'+y0+'" x2="'+x1+'" y2="'+finishY+'" stroke="#9c7754" stroke-width="1.5" stroke-dasharray="3 3"/>';
+      content+=svgText(x0,57,"WALL RAFTER TOP = 0","dim-label");
+      content+=svgText(x1+9,Math.max(71,roofY-8),"ROOF TOP","tick-label");
+      content+=svgText(x1+9,Math.min(279,under1+11),"RAFTER UNDERSIDE","tick-label");
+      content+=svgText(x0,300,"RUN "+fmt(data.projection)+" / FALL "+fmt(data.roofDrop),"dim-label");
+      content+=svgText(x0,326,"FINISHED REFERENCE DROP "+fmt(data.soffitDatum),"dim-label");
     }else if(data.shape==="triangle"){
       const run=data.run||span,rise=data.rise||0,hh=Math.max(10,Math.abs(rise));
       const ry=base-Math.min(210,Math.abs(rise)/Math.max(run,hh)*W*.52);

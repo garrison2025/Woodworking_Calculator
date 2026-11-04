@@ -186,10 +186,32 @@ export function compute(slug,a){
     return result([M("Miter magnitude",miter,"A"),M("Bevel magnitude",bevel,"A"),M("Diagram miter sign",sign*miter,"A"),M("Wall corner",a.corner,"A")],[],100,[],"angles",{miter,bevel,inside:!!a.inside,left:!!a.left});
   }
   case "soffit-calculator":{
-    positive("projection");nonnegative("pitch","lining","depth");need(Math.abs(a.fasciaOffset)<1000,"Reference offset out of range.");
-    const drop=a.projection*a.pitch/12, adjusted=drop+a.fasciaOffset+a.lining;
-    need(adjusted>=0,"Offsets produce a negative final drop; review the reference plane.");
-    return result([M("Nominal roof-line drop",drop),M("Specified reference drop",adjusted),M("Roof-line length",Math.hypot(a.projection,drop)),M("Pitch angle",deg(Math.atan(a.pitch/12)),"A")],[],a.projection,[],"triangle",{rise:drop,run:a.projection});
+    positive("projection");nonnegative("pitch","lining","depth");
+    need(Math.abs(a.fasciaOffset)<1000,"Signed fascia adjustment exceeds the reference limit.");
+    // Reference: top face of the rafter at the WALL (zero vertical drop).
+    // 'depth' is perpendicular to the roof slope. For two parallel roof
+    // faces at slope s, vertical separation at equal horizontal x is
+    // depth * hypot(1,s), NOT depth*cos(atan(s)).
+    // This defines a datum model only, not an engineered eave assembly.
+    const slope=a.pitch/12,fall=a.projection*slope;
+    const rafterVertical=a.depth*Math.hypot(1,slope);
+    const underside=fall+rafterVertical;
+    const finished=underside+a.lining+a.fasciaOffset;
+    need(finished>=0,"Offsets place the finished soffit reference above the wall roof-top datum. Review the sign and reference plane.");
+    rows=[
+      {item:"At wall datum",horizontal:0,roofTopDrop:0,rafterUndersideDrop:q(rafterVertical),soffitFaceDrop:null},
+      {item:"At eave / fascia",horizontal:q(a.projection),roofTopDrop:q(fall),rafterUndersideDrop:q(underside),soffitFaceDrop:q(finished)}
+    ];
+    return result([
+      M("Nominal roof-line drop",fall),
+      M("Vertical rafter depth at same station",rafterVertical),
+      M("Eave rafter underside drop",underside),
+      M("Finished soffit reference drop",finished),
+      M("Roof-line length",Math.hypot(a.projection,fall)),
+      M("Pitch angle",deg(Math.atan(slope)),"A")
+    ],rows.map(r=>P(r.horizontal,r.item)),a.projection,rows,"soffit-section",
+    {projection:a.projection,roofDrop:fall,verticalRafter:rafterVertical,
+      soffitDatum:finished,stockDepth:a.depth,lining:a.lining,fasciaOffset:a.fasciaOffset});
   }
   case "kerf-bending-calculator":{
     positive("radius","angle","thickness","kerf");nonnegative("web");need(a.angle<=360,"Bend angle must not exceed 360°.");need(a.web<a.thickness,"Retained web must be thinner than stock.");

@@ -261,6 +261,39 @@ test("Deck stock count does not assume offcut reuse",()=>{
   near(value(r,"Stock pieces: no offcut reuse"),44);
 });
 
+test("Soffit normal stock depth affects finished datum and obeys parallel-line geometry",()=>{
+  const a={projection:24,pitch:6,depth:5.5,lining:.5,fasciaOffset:0};
+  const r=compute("soffit-calculator",a),f=Math.hypot(1,.5);
+  assert.equal(r.shape,"soffit-section");
+  near(value(r,"Nominal roof-line drop"),12,1e-9);
+  near(value(r,"Vertical rafter depth at same station"),5.5*f,1e-9);
+  near(value(r,"Eave rafter underside drop"),12+5.5*f,1e-9);
+  near(value(r,"Finished soffit reference drop"),12+5.5*f+.5,1e-9);
+  near(r.rows[0].roofTopDrop,0);
+  near(r.rows[0].rafterUndersideDrop,5.5*f,1e-7);
+  near(r.rows[1].roofTopDrop,12);
+  near(r.rows[1].rafterUndersideDrop,12+5.5*f,1e-7);
+  near(r.rows[1].soffitFaceDrop,12+5.5*f+.5,1e-7);
+  const deep=compute("soffit-calculator",{...a,depth:11});
+  near(value(deep,"Finished soffit reference drop")-value(r,"Finished soffit reference drop"),5.5*f,1e-9);
+  const noDepth=compute("soffit-calculator",{...a,depth:0});
+  near(value(noDepth,"Finished soffit reference drop"),12.5,1e-9);
+  const offset=compute("soffit-calculator",{...a,fasciaOffset:-2});
+  near(value(offset,"Finished soffit reference drop"),value(r,"Finished soffit reference drop")-2,1e-9);
+  assert.equal(safeCompute("soffit-calculator",{...a,fasciaOffset:-40}).ok,false);
+});
+test("Soffit datum perpendicular depth remains consistent across 0:12 to 24:12 pitches",()=>{
+  for(const pitch of [0,2,6,9,12,24]){
+    const a={projection:36,pitch,depth:7.25,lining:.75,fasciaOffset:1.25};
+    const r=compute("soffit-calculator",a);
+    const s=pitch/12;
+    near(value(r,"Vertical rafter depth at same station")/Math.hypot(1,s),a.depth,1e-9);
+    near(value(r,"Nominal roof-line drop"),36*s,1e-9);
+    near(value(r,"Finished soffit reference drop"),36*s+a.depth*Math.hypot(1,s)+2,1e-9);
+    near(r.rows.at(-1).soffitFaceDrop,value(r,"Finished soffit reference drop"),1e-7);
+    assert.equal(r.marks.length,2);
+  }
+});
 test("Rafter: independent notch geometry and ridge allowance",()=>{
   const a={run:120,pitch:6,ridge:1.5,overhang:12,depth:5.5,seat:3};
   const r=compute("rafter-calculator",a);

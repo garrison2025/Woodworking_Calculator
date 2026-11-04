@@ -399,7 +399,7 @@
       "keyword": "soffit calculator",
       "volume": 1600,
       "kd": 1,
-      "desc": "Roof-line drop over a stated horizontal eave projection",
+      "desc": "Datum-labelled eave section: roof fall, rafter underside, lining and signed fascia adjustment with a proportional cross-section",
       "inputs": [
         {
           "key": "projection",
@@ -415,27 +415,45 @@
         },
         {
           "key": "fasciaOffset",
-          "label": "Reference offset",
+          "label": "Signed fascia datum adjustment (down +)",
           "value": 0,
           "kind": "L"
         },
         {
           "key": "lining",
-          "label": "Soffit lining thickness",
+          "label": "Soffit lining vertical thickness",
           "value": 0.5,
           "kind": "L"
         },
         {
           "key": "depth",
-          "label": "Rafter depth",
+          "label": "Rafter depth (normal to roof face)",
           "value": 5.5,
           "kind": "L"
         }
       ],
-      "formula": "reference drop = projection×pitch/12; adjusted datum = drop+named offsets",
-      "example": "24 in horizontal eave at 6:12: nominal drop 12 in",
-      "limit": "Datum and offset signs require on-site confirmation",
-      "status": "BETA_NO_INDEX"
+      "formula": "Roof-top fall = horizontal eave projection × pitch/12. Vertical separation of parallel roof faces = rafter normal depth × √(1+(pitch/12)²). Finished soffit reference drop from the wall rafter-top datum = roof fall + vertical rafter separation + lining vertical thickness + signed fascia adjustment (down positive).",
+      "example": "At 24 in projection and 6:12 pitch, roof-top fall is 12 in. With a 5.5 in normal rafter depth, 0.5 in lining and zero offset, the vertical rafter separation is 6.1492 in and the finished reference drop is 18.6492 in.",
+      "limit": "Reference datum is the TOP of the rafter at the wall; positive vertical values point DOWN. Rafter depth is perpendicular to its slope; lining thickness is specified vertically; fascia adjustment is a signed downward-positive additive offset. The diagram models these reference surfaces, not eave framing, structural load, material fastening or a 1:1 cutting template. Actual fascia/soffit assemblies may use different planes and must be field checked.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Start from a defined wall reference datum",
+          "text": "The zero-height line is the top face of the rafter at the wall reference. The nominal pitch fall is measured vertically from this datum to the top rafter surface at the outer eave, for the horizontal projection entered."
+        },
+        {
+          "heading": "Convert normal rafter depth into a vertical face difference",
+          "text": "The rafter depth is measured square to the roof slope, not vertically. Parallel surfaces separated by normal stock depth d have vertical difference d×√(1+slope²) at the same horizontal station. At a 6:12 pitch this exceeds d by about 11.8%."
+        },
+        {
+          "heading": "Apply lining thickness and the signed fascia datum separately",
+          "text": "The finished soffit reference adds the stated vertical lining thickness and the signed fascia adjustment to the eave underside drop. Positive adjustment means farther down; a negative adjustment raises the reference. The exact physical reference plane of a real fascia/soffit assembly must be checked on site."
+        },
+        {
+          "heading": "Use dimensioned numbers, not the printed SVG as a cutting template",
+          "text": "The line drawing illustrates the same numeric datum relationships shown in the results and the two-row CSV. It does not dimension the roof from framing grade, promise local code suitability, provide vertical load-bearing recommendations or certify paper-scale cuts."
+        }
+      ]
     },
     {
       "slug": "kerf-bending-calculator",

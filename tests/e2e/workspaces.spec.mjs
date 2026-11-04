@@ -210,6 +210,27 @@ test("capture actual desktop and mobile preview renders for design review",async
   }
 });
 
+test("soffit datum uses real rafter depth and updates cross-section and CSV",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/soffit-calculator/");
+  const result=page.locator("#result-cards .metric").filter({hasText:"Finished soffit reference drop"});
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(result).toContainText("18.6492 in");
+  await expect(page.locator("#dimension-svg svg .soffit-rafter")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .soffit-finished-datum")).toHaveCount(1);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(2);
+  await page.locator("#f-depth").fill("11");
+  await expect(result).toContainText("24.7984 in");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Rafter Underside Drop (mm)");
+  const pending=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const downloaded=readFileSync(await (await pending).path(),"utf8");
+  expect(downloaded).toContain('"Roof Top Drop (mm)","Rafter Underside Drop (mm)","Soffit Face Drop (mm)"');
+  await page.locator("#f-fasciaOffset").fill("-1200");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#dimension-svg svg .soffit-rafter")).toHaveCount(0);
+});
 test("rafter: notch depth is visible and changes when seat is revised",async({page})=>{
   await page.goto("/rafter-calculator/");
   await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("1.3416 in");
