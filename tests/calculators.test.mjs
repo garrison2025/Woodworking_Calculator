@@ -248,6 +248,48 @@ test("Deck estimator handles partial stock pieces and final joist bay",()=>{
   const cutLengthTotal=r.rows.filter(x=>x.type==="Decking").reduce((s,x)=>s+x.cutLength,0);
   near(cutLengthTotal,22*140);
 });
+test("Deck estimator aligns non-divisor stock joints to reachable joist references",()=>{
+  const a={width:120,length:144,board:5.5,gap:.125,stock:100,joists:16,waste:10};
+  const r=compute("deck-material-calculator",a);
+  assert.deepEqual(r.seamCenters,[96]);
+  near(value(r,"Butt joints on joist center references"),22);
+  near(value(r,"Stock boards (no offcut reuse)"),44);
+  near(value(r,"Stock boards with allowance"),49);
+  const segments=r.rows.filter(x=>x.type==="Decking"&&x.item.startsWith("Row 1 "));
+  assert.equal(segments.length,2);
+  assert.deepEqual(segments.map(x=>[x.alongStart,x.cutLength,x.buttJointAtEnd]),[[0,96,96],[96,48,null]]);
+  for(const row of r.rows.filter(x=>x.type==="Decking")){
+    if(row.buttJointAtEnd!==null)assert.ok(r.joistGrid.includes(row.buttJointAtEnd));
+    assert.ok(row.cutLength<=a.stock+1e-7);
+  }
+});
+test("Deck estimator rejects stock that cannot reach even one intermediate joist",()=>{
+  const a={width:120,length:144,board:5.5,gap:.125,stock:15.9,joists:16,waste:10};
+  const out=safeCompute("deck-material-calculator",a);
+  assert.equal(out.ok,false);
+  assert.match(out.error,/no intermediate joist center is reachable/i);
+  assert.equal(safeCompute("deck-material-calculator",{...a,stock:96,joists:100}).ok,false);
+  const exact=compute("deck-material-calculator",{...a,stock:16});
+  near(value(exact,"Stock boards (no offcut reuse)"),198);
+  assert.equal(exact.seamCenters.length,8);
+});
+test("Deck supported seams conserve row lengths across different stock and joist spacings",()=>{
+  for(const len of [110,140,144,183])for(const joists of [12,16,24])for(const stock of [32,50,80,96,100,144,200]){
+    const a={width:30,length:len,board:5.5,gap:.125,stock,joists,waste:0};
+    const r=safeCompute("deck-material-calculator",a);
+    if(!r.ok){
+      assert.match(r.error,/joist center is reachable|900/i);
+      continue;
+    }
+    const data=r.data;
+    assert.deepEqual(data.seamCenters,[...data.seamCenters].sort((u,v)=>u-v));
+    const pieces=data.rows.filter(x=>x.type==="Decking"&&x.item.startsWith("Row 1 "));
+    near(pieces.reduce((s,x)=>s+x.cutLength,0),len,1e-7);
+    assert.equal(pieces.length,data.seamCenters.length+1);
+    assert.ok(pieces.every(x=>x.cutLength>0&&x.cutLength<=stock+1e-7));
+    assert.ok(pieces.slice(0,-1).every(x=>data.joistGrid.some(y=>Math.abs(y-x.buttJointAtEnd)<1e-7)));
+  }
+});
 test("Deck estimator rejects unbounded stock subdivision and zero lengths",()=>{
   const a={width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,waste:10};
   assert.equal(safeCompute("deck-material-calculator",{...a,stock:0}).ok,false);

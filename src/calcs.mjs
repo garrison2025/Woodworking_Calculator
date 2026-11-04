@@ -247,25 +247,44 @@ export function compute(slug,a){
     const boards=ceilStable((a.width+a.gap)/(a.board+a.gap));
     const finalRip=a.width-(boards-1)*(a.board+a.gap);
     need(boards>=1&&boards<=900&&finalRip>0&&finalRip<=a.board+1e-7,"Board width or gap cannot cover this deck safely within the layout limit.");
-    const piecesPerRow=ceilStable(a.length/a.stock);
-    need(piecesPerRow>=1&&boards*piecesPerRow<=900,"Over 900 stock pieces are required; choose longer stock or a smaller footprint.");
     const joistGrid=positions(a.length,a.joists);
     need(joistGrid.length<=900,"Too many joist layout lines.");
+    // Butt joints may occur only at the user-entered joist reference centers.
+    // Greedily use the furthest reachable center to minimize stock pieces per
+    // row within this fixed, unstaggered reference geometry. This does NOT
+    // certify sufficient bearing, fasteners, double joists or safe joist spans.
+    const cutEnds=[0],seamCenters=[];
+    let cutStart=0;
+    while(a.length-cutStart>a.stock+1e-8){
+      let seam=null;
+      for(const center of joistGrid){
+        if(center>cutStart+1e-8&&center<a.length-1e-8&&center<=cutStart+a.stock+1e-8)seam=center;
+      }
+      need(seam!==null,"No intermediate joist center is reachable with this stock length. Use longer stock or closer joist centers; butt joints cannot be placed on the entered reference grid.");
+      seamCenters.push(q(seam));
+      cutEnds.push(q(seam));
+      cutStart=seam;
+      need(cutEnds.length<=900,"Too many supported deck segments; use longer stock or a shorter deck.");
+    }
+    cutEnds.push(a.length);
+    const piecesPerRow=cutEnds.length-1;
+    need(boards*piecesPerRow<=900,"Over 900 supported stock pieces are required; choose longer stock or a smaller footprint.");
     const deckRows=Array.from({length:boards},(_,i)=>({
       item:"Row "+(i+1),acrossStart:q(i*(a.board+a.gap)),
       ripWidth:q(i===boards-1?finalRip:a.board)
     }));
     const schedule=[];
     for(const row of deckRows)for(let j=0;j<piecesPerRow;j++){
-      const start=j*a.stock,segment=Math.min(a.stock,a.length-start);
-      need(segment>1e-8,"Stock subdivision produced an invalid zero-length piece.");
+      const start=cutEnds[j],end=cutEnds[j+1],segment=end-start;
+      need(segment>1e-8&&segment<=a.stock+1e-7,"Supported stock segment exceeds purchased board length.");
       schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
         acrossStart:row.acrossStart,alongStart:q(start),
-        cutLength:q(segment),ripWidth:row.ripWidth,joistCenter:null});
+        cutLength:q(segment),ripWidth:row.ripWidth,
+        buttJointAtEnd:j<piecesPerRow-1?q(end):null,joistCenter:null});
     }
     for(const [i,x] of joistGrid.entries())schedule.push({
       item:"Joist reference "+(i+1),type:"Joist center",acrossStart:null,alongStart:null,
-      cutLength:null,ripWidth:null,joistCenter:q(x)
+      cutLength:null,ripWidth:null,buttJointAtEnd:null,joistCenter:q(x)
     });
     const baseStock=boards*piecesPerRow;
     return result([
@@ -275,9 +294,10 @@ export function compute(slug,a){
       M("Installed linear decking",boards*a.length/12,"FT"),
       M("Stock boards (no offcut reuse)",baseStock,"N"),
       M("Stock boards with allowance",ceilStable(baseStock*(1+a.waste/100)),"N"),
+      M("Butt joints on joist center references",boards*seamCenters.length,"N"),
       M("Board-joist intersections",boards*joistGrid.length,"N")
     ],deckRows.map(row=>P(row.acrossStart,row.item)),a.width,schedule,"deck-plan",
-    {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,stockLength:a.stock});
+    {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,seamCenters,stockLength:a.stock});
   }
   case "segmented-bowl-calculator":{
     positive("outer","inner");whole("segments",3,180);whole("rings",1,100);

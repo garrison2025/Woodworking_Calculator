@@ -617,7 +617,7 @@
       "keyword": "deck estimator",
       "volume": 3600,
       "kd": 15,
-      "desc": "Deck surface, actual board rip widths, stock-piece takeoff and user-selected joist reference centerlines with a printable plan",
+      "desc": "Rectangular deck board rows, final rip, joist-center butt seams, conservative supported stock segments and printable geometry",
       "inputs": [
         {
           "key": "width",
@@ -662,22 +662,22 @@
           "kind": "D"
         }
       ],
-      "formula": "Rows = ceil((coverage+gap)/(board width+gap)); final rip = coverage−(rows−1)×(board width+gap); board stock pieces = rows×ceil(row length/stock length); joist centers = 0, OC, …, final endpoint.",
-      "example": "A 120 × 144 in deck with 5.5 in boards and 1/8 in gaps needs 22 rows, a 1.875 in final rip, 10 joist reference lines at 16 in OC, and 22 stock boards at 144 in length (25 with 10% allowance).",
-      "limit": "Rectangular straight-deck geometry only. Joist marks are user-selected centers, NOT validated safe spans or structurally rated placements. Stock cuts are conservative without offcut reuse; no joint staggering, blocking, fastening, board defects, end gaps, ledger design or footing calculations.",
+      "formula": "Rows = ceil((coverage+gap)/(board face width+gap)); final rip = coverage−(rows−1)×(face width+gap). With given joist center references (0, OC, …, end), each board segment ends at the farthest joist center reachable within purchased stock length, unless the final deck end is reachable. Every supported piece consumes one stock board; no offcut reuse or seam staggering.",
+      "example": "For a 120 × 144 in deck using 5.5 in boards and 0.125 in gaps, 16 in joist centers and 100 in stock: 22 rows with a 1.875 in final rip each receive a 96 in and 48 in segment, joined at the 96 in joist center reference. This gives 44 stock boards before allowance, not a 100 in/44 in unsupported joint.",
+      "limit": "Rectangular straight-deck reference geometry only. Segment butt joints are constrained to entered joist CENTERLINES, not validated bearing widths, joint reinforcement, double-joist blocking or fastening. All rows use identical, UNSTAGGERED joints as a conservative reference, not an approved construction pattern. No offcut reuse, structural span approval, load rating, end gap, board defects, ledger design or footing calculations.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Board direction and actual finished width",
-          "text": "Deck width is measured across rows; length runs along the boards. Enter the actual face width, not nominal lumber dimensions. The final row may be ripped down; verify the last strip on site."
+          "heading": "Boards and joist reference grid",
+          "text": "Deck width runs across parallel decking rows; deck length runs along them. Joist centers begin at zero, follow your chosen OC spacing and end with a potentially shorter last bay. Enter actual face width and purchased stock length, not nominal lumber sizes."
         },
         {
-          "heading": "Stock boards versus installed linear feet",
-          "text": "Stock pieces are calculated per row without reusing offcuts. When the deck is longer than a purchased board, each row is split into multiple segments; the displayed join locations are only numeric cut positions, not a structurally approved seam pattern."
+          "heading": "Every butt seam must have a reference center",
+          "text": "Unlike simple stock-length division, this calculator places every intermediate board end at the furthest joist center that can be reached within one purchased board. If there is no such joist center and stock will not span to the deck end, the tool rejects the layout rather than inventing an unsupported butt seam. The SVG marks each proposed seam and the CSV exports butt-joint coordinates."
         },
         {
-          "heading": "Joist marks are geometry, not structural design",
-          "text": "Specify the joist center spacing yourself. The layout starts at zero and ends at the final deck endpoint, possibly with a shortened last bay. No span, support, bearing or fastener suitability is assessed."
+          "heading": "Layout reference, NOT a fastening or stagger plan",
+          "text": "The reference repeats the same seams across all rows and does not stagger joints. A single joist centerline does not establish sufficient edge bearing for two board ends; joist width, double-joist/blocking support, end gaps, fastening, local rules and safe maximum joist span must be reviewed separately. Counts are conservative without offcut reuse."
         }
       ]
     },
