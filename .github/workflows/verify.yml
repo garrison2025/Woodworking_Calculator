@@ -25,6 +25,8 @@ jobs:
           node-version: '22'
       - name: Build the preview with no index
         run: python3 build.py
+      - name: Validate browser module syntax
+        run: node --check src/app.mjs && node --check src/calcs.mjs
       - name: Run geometry checks
         run: node --test tests/*.test.mjs
       - name: Validate prerendered routes and noindex policy
