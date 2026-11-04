@@ -17,6 +17,7 @@ const q=(x)=>Math.round(x*1e8)/1e8;
 export const convertToInches=(value,units)=>units==="mm"?value/25.4:value;
 export const convertFromInches=(value,units)=>units==="mm"?value*25.4:value;
 export function compute(slug,a){
+  a={opening2Start:0,opening2Width:0,opening3Start:0,opening3Width:0,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -67,8 +68,9 @@ export function compute(slug,a){
     need(n<=1200,"Too many rows to display.");const last=a.width-(n-1)*(a.board+a.gap);
     need(last>0&&last<=a.board+1e-7,"Board width/gap combination is invalid.");
     const linear=n*a.length;
+    const conservativeOrder=Math.ceil(n*Math.ceil(a.length/a.stock)*(1+a.waste/100));
     rows=Array.from({length:n},(_,i)=>({item:"Row "+(i+1),position:q(i*(a.board+a.gap)),length:q(a.length),ripWidth:q(i===n-1?last:a.board)}));
-    return result([M("Board rows",n,"N"),M("Last rip width",last),M("Installed linear footage",linear/12,"FT"),M("Estimated stock pieces",Math.ceil(linear*(1+a.waste/100)/a.stock),"N")],rows.map(r=>P(r.position,r.item)),a.width,rows,"boards",{boardWidth:a.board,lastWidth:last});
+    return result([M("Board rows",n,"N"),M("Last rip width",last),M("Installed linear footage",linear/12,"FT"),M("Stock pieces: no offcut reuse",conservativeOrder,"N")],rows.map(r=>P(r.position,r.item)),a.width,rows,"boards",{boardWidth:a.board,lastWidth:last});
   }
   case "baluster-spacing-calculator":{
     positive("length","width","gap");
