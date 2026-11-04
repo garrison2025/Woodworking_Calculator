@@ -98,11 +98,12 @@ if(slug){
       const atX=bearX-notchW;
       const topSeat=bottomAt(atX)-notchH;
       content+='<path d="M'+atX+' '+bottomAt(atX)+' L'+atX+' '+topSeat+' L'+bearX+' '+topSeat+' L'+bearX+' '+bottomAt(bearX)+' Z" fill="#fcfbf8" stroke="#a05c33" stroke-width="2.4"/>';
-      content+='<line x1="'+bearX+'" y1="54" x2="'+bearX+'" y2="300" stroke="#d09b58" stroke-dasharray="5 5" stroke-width="1.8"/>';
+      content+='<line x1="'+bearX+'" y1="54" x2="'+bearX+'" y2="274" stroke="#d09b58" stroke-dasharray="5 5" stroke-width="1.8"/>';
       content+=svgText(left+25,73,"RIDGE REFERENCE","dim-label");
-      content+=svgText(Math.max(left+290,bearX-85),67,"BEARING","dim-label");
-      content+=svgText(Math.max(left+15,bearX-160),bottomAt(bearX)+49,"seat "+fmt(data.seat)+" · normal depth "+fmt(data.notchNormal),"dim-label");
-      content+=svgText(right-165,300,"eave "+fmt(data.overhang),"dim-label");
+      content+=svgText(Math.max(left+290,bearX-96),67,"BEARING","dim-label");
+      content+=svgText(left+24,291,"SEAT "+fmt(data.seat),"dim-label");
+      content+=svgText(left+24,318,"NORMAL NOTCH "+fmt(data.notchNormal),"dim-label");
+      content+=svgText(right-183,318,"EAVE "+fmt(data.overhang),"dim-label");
     }else if(data.shape==="stringer"){
       const n=Math.max(2,data.risers),dx=W/(n-1),dy=180/n;
       let stair="M"+left+" "+base;
