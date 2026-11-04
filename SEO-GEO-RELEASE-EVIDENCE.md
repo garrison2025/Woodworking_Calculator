@@ -4,7 +4,7 @@
 - **36 prerendered HTML pages** with page-specific H1, title/description, explicit geometry rule, reproducible example, assumptions, real tool controls, related cross-links and legal/navigation pages.
 - All **152 distinct nonbrand/relevant Semrush research entries** have KD≤29, metrics and one target route in `research/woodworking-keyword-map-152.csv`. The export is competitor/model research, not a new-site traffic forecast.
 - All supported in, ft, mm, cm, m conversions happen at the same route; no duplicate-language/units canonical pages.
-- [GitHub Actions run #41793989952](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41793989952) passed **233 unit, 20 actual browser and static site tests**.
+- [GitHub Actions run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) passed **238 unit, 22 actual browser and static site tests**.
 - Observed Cloudflare preview: https://woodworking-calculator.pages.dev/ and `/stud-calculator/` load; raw Python template expression bug fixed. Live meta robots: `noindex,nofollow,noarchive`. Live `/robots.txt` disallows all crawlers. Production sitemap/canonical are gated on actual `SITE_URL` + `RELEASE_APPROVED=1`.
 
 ## Not completed
@@ -23,3 +23,8 @@
 - The single existing `/hip-roof-calculator/` URL now contains functional polygon cuts, orientation selection, per-sheet schedules and a reproducible small flat-roof 4/6/12-sheet example. It keeps the canonical intent distinct from `/hip-rafter-calculator/` (a hip line-length geometry task).
 - Static, crawl-readable title/description/formula/example/limits were updated to describe only implemented functionality. This does **not** claim real valley geometry, sheathing installation or optimized nesting.
 - Indexing still blocked by the preview configuration. No production domain, GSC, AdSense, live Cloudflare deploy test, or physical validation has been completed in this change.
+
+## Descriptions and release propagation — CI #76
+- PASS in generated HTML: all 26 tool metadata descriptions are punctuation-terminated and pass readability-length checks; the former `... plan Formula, dimension ...` concatenation is rejected by automated static tests.
+- Preview noindex/no sitemap/no fake canonical remains intact, with all 152 approved KD<=29 research rows still mapped to the existing 31 intentions.
+- NOT VERIFIED LIVE: at the latest public Pages fetch, Cloudflare still served the **prior meta descriptions**. Source/CI evidence is not equivalent to a verified Pages deployment. A later public fetch of the updated description or a checked Pages build is required before marking live propagation PASS.

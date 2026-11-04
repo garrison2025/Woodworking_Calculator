@@ -3,8 +3,8 @@
 - Practical three-panel desktop calculator: measurement controls, original geometry SVG, live numeric takeoff; mobile order: input → results → diagram → schedule and method.
 - Actual Playwright Chromium navigation and input→result updates passed on **all 26 routes**. Unit dropdown supports inches, feet, millimeters, centimeters and meters.
 - CSV and SVG export download events, result clipboard and print-button invocation confirmed. Print/PDF output and physical scale are **not** certified.
-- No document-level horizontal scrolling at **360/390/768/1024/1440 px** for homepage and stud tool. Narrow workbench layout was corrected after first real browser failure.
-- Desktop and mobile (1440/390px) **12 real screenshots** of homepage/stud/deck/rafter/stringer/hip roof were captured and reviewed from GitHub Actions `verified-ui-screenshots` artifact on [run #41790303379](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41792234356).
+- No document-level horizontal scrolling at **360/390/768/1024/1440 px** for homepage, stud, framing, deck-material and roof-sheathing pages. Narrow workbench layout was corrected after first real browser failure.
+- Desktop and mobile (1440/390px): **18 automated screenshots** of homepage, stud, deck-board, rafter, stringer, hip roof, framing, deck-material and roof-sheathing. [Run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) captured them; manual aesthetic acceptance of every screenshot is not claimed.
 - Desktop uses a measured workshop look with original CAD-style SVG, neutral/green/wood palette, no external fonts. Mobile was compacted into two-column measurement/result cards and diagram blank-height removal, then browser tested again.
 
 ## NOT RUN / LIMITATIONS
@@ -28,3 +28,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: browser test verifies each sheet cut has a visible SVG rectangle, and change of stock orientation updates positions from 8 to 6.
 - PASS: [CI #73](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41794301192) confirms 21 Chromium checks and 12 representative desktop/mobile snapshots.
 - NOT RUN: physical placement/1:1 printing, actual roof fastening or on-device screen reader testing.
+
+## Deck workbench and expanded responsive gate — CI #76
+- PASS: 22 actual Chromium tests. Deck board rows (22), joist reference lines (10), stock length change (22 to 44 boards), CSV result and invalid-input drawing clearance have explicit browser assertions.
+- PASS: five viewport widths (360/390/768/1024/1440) now cover homepage, stud, framing, deck-material and roof-sheathing; all pass document-level horizontal overflow checks.
+- PASS: 18 screenshots captured by [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682); not manually reviewed for physical cut precision or screen-reader performance.

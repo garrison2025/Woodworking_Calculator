@@ -1,12 +1,12 @@
 # QA evidence — 2026-11-04 (deployed preview)
 ## Executed / PASS
-- **GitHub Actions:** [run #73](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41794301192) passed on `main`.
-- **Geometry:** **235 / 235** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
-- **Real Chromium browser:** **21 / 21** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
+- **GitHub Actions:** [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) passed on `main` (commit `6c373d9a`).
+- **Geometry:** **238 / 238** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
+- **Real Chromium browser:** **22 / 22** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
 - **Observed live preview:** https://woodworking-calculator.pages.dev/ and `/stud-calculator/` were publicly accessible. The current preview displays evaluated formulas and five unit options. Public meta robots is `noindex,nofollow,noarchive`; `robots.txt` says `User-agent: *\nDisallow: /`.
-- **UI snapshot artifact:** [run #73](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41794301192) generated 12 Chromium screenshots (desktop and mobile; representative calculator workflows).
+- **UI snapshot artifact:** [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682) generated 18 automatic full-page desktop/mobile screenshots across nine representative routes. Screenshots were captured, not individually manually approved.
 
 ## Remaining release blockers / NOT RUN
 - Independent physical geometry and reference cutting verification for birdsmouth, compound crown saw handedness, kerf/springback, hip roof sheet nesting, stairs, framed openings and actual material stock.
@@ -38,3 +38,11 @@
 - PASS: 21/21 Chromium checks, including SVG cuts, 8-to-6 orientation change, CSV export and invalid-input behavior.
 - PASS: public Cloudflare preview serves updated roof sheathing description and orientation control with noindex metadata.
 - NOT RUN: real sheet cutting, nail/seam/structural review, browser-PDF scale calibration, real-device touch or production GSC indexing.
+
+## Deck material and metadata regression — CI #76
+- PASS: 238/238 Node tests, including actual final-rip width, shortened joist end bay, stock segment coordinates, piece counts, and rejection of unbounded segmentation.
+- PASS: 22/22 Chromium checks, with deck-material SVG and CSV reaction to stock edits, error recovery, and horizontal overflow checks at 360/390/768/1024/1440px on five page types.
+- PASS: generated static HTML has unique H1/title/description; all tool descriptions end with punctuation and do not contain the former malformed `... plan Formula, dimension ...` phrase. Preview remains noindex, 26 calculator routes and 5 P2 holds.
+- PASS (captured by CI): 18 desktop/mobile page screenshots across nine routes; not a substitute for manual full-visual audit or real touch testing.
+- LIVE OBSERVATION: Cloudflare Pages preview was reachable and included the upgraded deck feature copy. At the most recent independent public fetch, the **meta description still showed the older concatenated phrase** even though the GitHub static build had fixed it. This change is validated in source and CI, but the public Cloudflare SEO metadata update is **NOT YET VERIFIED**; do not equate GitHub pass with Pages deploy pass.
+- NOT RUN: physical board layout, seam/fastener support inspection, actual printable scale proof, real-device/mobile browser matrix, production domain indexing.
