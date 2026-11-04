@@ -457,6 +457,12 @@ export function compute(slug,a){
     const bottomLayoutRise=h-a.treadThickness+a.lowerFinish;
     need(throat>0,"The geometric step notch consumes the full stock depth; increase board depth or revise the stairs.");
     need(bottomLayoutRise>0,"The bottom riser cut reference is not positive; review tread and finished floor thickness.");
+    // Pitch line connects first tread/upper riser reference (0,h) to the
+    // upper landing (run,rise). A floor-to-floor (0,0)->(run,rise)
+    // diagonal has DIFFERENT slope and is not a stringer cut length.
+    const pitchRise=(a.risers-1)*h;
+    const pitchLine=Math.hypot(run,pitchRise);
+    const floorDiagonal=Math.hypot(run,a.rise);
     rows=Array.from({length:a.risers},(_,i)=>({
       item:i===a.risers-1?"Top landing vertical":"Riser "+(i+1),
       horizontalRun:q(i*a.tread),
@@ -464,14 +470,27 @@ export function compute(slug,a){
       treadStart:q(i*a.tread),
       treadEnd:i<a.risers-1?q((i+1)*a.tread):null
     }));
+    // The SAME unadjusted (x,height) vertices drive the SVG, while the
+    // bottom finish correction is a separate vertical trim reference.
+    const stepVertices=[{x:0,y:0}];
+    for(let i=0;i<a.risers;i++){
+      const x=i*a.tread,y=(i+1)*h;
+      stepVertices.push({x:q(x),y:q(y)});
+      if(i<a.risers-1)stepVertices.push({x:q((i+1)*a.tread),y:q(y)});
+    }
+    need(stepVertices.length===2*a.risers,"Stair profile count mismatch.");
     return result([
       M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
-      M("Total horizontal run",run),M("Stringer diagonal",Math.hypot(run,a.rise)),
+      M("Total horizontal run",run),
+      M("Notch pitch-line reference",pitchLine),
+      M("Floor-to-floor diagonal (not a cut length)",floorDiagonal),
       M("Bottom riser layout cut",bottomLayoutRise),
       M("Notch penetration (normal)",normalNotch),
       M("Uncut throat (nominal)",throat)
     ],rows.map(r=>P(r.horizontalRun,r.item)),Math.max(run,1),rows,"stringer",
-    {stepRise:h,tread:a.tread,risers:a.risers,throat,bottomLayoutRise,notchNormal:normalNotch});
+    {stepRise:h,tread:a.tread,risers:a.risers,totalRise:a.rise,
+      throat,bottomLayoutRise,notchNormal:normalNotch,
+      pitchLine,floorDiagonal,stepVertices});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
