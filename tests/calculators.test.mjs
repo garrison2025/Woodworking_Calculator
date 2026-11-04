@@ -64,12 +64,15 @@ for(const t of published){
   test(slug+" · arguments are not modified",()=>{
     const frozen=Object.freeze({...original});compute(slug,frozen);assert.deepEqual(frozen,original);
   });
-  test(slug+" · millimeter round-trip preserves lengths and results",()=>{
-    const unitConverted={...original};
-    for(const f of t.inputs)if(f.kind==="L")unitConverted[f.key]=convertToInches(convertFromInches(original[f.key],"mm"),"mm");
-    const before=compute(slug,original),after=compute(slug,unitConverted);
-    assert.equal(before.metrics.length,after.metrics.length);
-    for(let i=0;i<before.metrics.length;i++)near(before.metrics[i].value,after.metrics[i].value,1e-7);
+  test(slug+" · five unit conversions preserve physical lengths",()=>{
+    const before=compute(slug,original);
+    for(const units of ["in","ft","mm","cm","m"]){
+      const unitConverted={...original};
+      for(const f of t.inputs)if(f.kind==="L")unitConverted[f.key]=convertToInches(convertFromInches(original[f.key],units),units);
+      const after=compute(slug,unitConverted);
+      assert.equal(before.metrics.length,after.metrics.length);
+      for(let i=0;i<before.metrics.length;i++)near(before.metrics[i].value,after.metrics[i].value,1e-7);
+    }
   });
   test(slug+" · first invalid negative parameter yields a safe error",()=>{
     const changed={...original,[t.inputs[0].key]:-1};
