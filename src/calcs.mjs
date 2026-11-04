@@ -86,7 +86,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={wallHeight:96,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,...a};
+  a={wallHeight:96,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -435,9 +435,38 @@ export function compute(slug,a){
     return result([M("Half-span run",run),M("Roof rise",rise),M("Each slope length",line),M("Total roof surface",2*line*roofLen/144,"FT2")],[],run,[],"triangle",{run,rise});
   }
   case "square-layout-calculator":{
-    positive("width","length","measuredA","measuredB");
+    positive("width","length","measuredA","measuredB");nonnegative("tolerance");
+    // From two diagonals alone, even equality does not establish actual
+    // perpendicular corners or the real shape of the four-sided layout.
+    // Report only comparisons to the theoretical Pythagorean target.
     const d=Math.hypot(a.width,a.length);
-    return result([M("Ideal right-angle diagonal",d),M("Diagonal A error",a.measuredA-d),M("Diagonal B error",a.measuredB-d),M("Difference between measured diagonals",Math.abs(a.measuredA-a.measuredB))],[],a.length,[],"rectangle",{rectWidth:a.width,rectHeight:a.length});
+    const errA=a.measuredA-d,errB=a.measuredB-d;
+    const spread=Math.abs(a.measuredA-a.measuredB);
+    const within=v=>v<=a.tolerance+1e-9;
+    const row=(item,target,measured,error)=>({
+      item,targetDiagonal:q(target),measuredDiagonal:q(measured),
+      signedError:q(error),absoluteError:q(Math.abs(error)),
+      allowedDeviation:q(a.tolerance),
+      checkResult:within(Math.abs(error))?"Within stated tolerance":"Outside stated tolerance"
+    });
+    rows=[
+      row("Diagonal A",d,a.measuredA,errA),
+      row("Diagonal B",d,a.measuredB,errB),
+      row("A vs B spread",0,spread,spread)
+    ];
+    const withinCount=rows.filter(x=>x.checkResult==="Within stated tolerance").length;
+    return result([
+      M("Ideal right-angle diagonal",d),
+      M("Diagonal A error",errA),M("Diagonal B error",errB),
+      M("Difference between measured diagonals",spread),
+      M("Maximum absolute diagonal target error",Math.max(Math.abs(errA),Math.abs(errB))),
+      M("Chosen diagonal check tolerance",a.tolerance),
+      M("Numeric checks within tolerance (of 3)",withinCount,"N")
+    ],[],Math.max(a.width,a.length),rows,"rectangle",{
+      rectWidth:a.width,rectHeight:a.length,idealDiagonal:d,
+      measuredA:a.measuredA,measuredB:a.measuredB,
+      diagonalTolerance:a.tolerance,withinCount
+    });
   }
   case "diagonal-brace-calculator":{
     positive("width","height");nonnegative("setback");
