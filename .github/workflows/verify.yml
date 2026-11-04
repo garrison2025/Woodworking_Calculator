@@ -1,0 +1,31 @@
+name: Verify Woodworking Tools
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the preview with no index
+        run: python3 build.py
+      - name: Run geometry checks
+        run: node --test tests/*.test.mjs
+      - name: Validate prerendered routes and noindex policy
+        run: python3 tests/validate_static.py
