@@ -48,6 +48,12 @@ for p in pages:
     if not c.title_text:errors.append(f"{u}: missing title")
     if len(c.descriptions)!=1 or len(c.descriptions[0])<35:errors.append(f"{u}: missing unique description")
     if len(c.robots)!=1 or "noindex" not in c.robots[0]:errors.append(f"{u}: preview must be noindex")
+    body=p.read_text(encoding="utf8")
+    if '{esc(t[' in body or '{esc(' in body or '{related_search_terms' in body:
+        errors.append(f"{u}: unrendered Python template expression leaked to HTML")
+    if any(t["slug"]==u.strip("/") for t in active) and 'Geometry rule</strong> {' in body:
+        errors.append(f"{u}: geometry formula not evaluated")
+
     if c.canon:errors.append(f"{u}: preview must not claim a custom-domain canonical")
     if any(t["slug"]==u.strip("/") for t in active) and c.forms!=1:errors.append(f"{u}: calculator form absent")
     for link in c.links:
