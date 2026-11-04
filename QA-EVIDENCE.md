@@ -1,8 +1,8 @@
-# QA evidence — 2026-11-04 (deployed preview)
+# QA evidence — 2026-11-05 (deployed preview)
 ## Executed / PASS
-- **GitHub Actions:** [run #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) passed on `main` (commit `f418b8f8`).
-- **Geometry:** **265 / 265** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
-- **Real Chromium browser:** **34 / 34** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
+- **GitHub Actions:** [run #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) passed on `main` (commit `285a013f`).
+- **Geometry:** **270 / 270** Node unit tests passed; 26 default numerical fixtures, 5-unit round-trip invariants, valid/invalid boundary checks and targeted regressions. This does not constitute independent structural engineering verification.
+- **Real Chromium browser:** **36 / 36** Playwright E2E checks passed, including actual initial JS output and SVG on every one of the 26 routes, deck final rip (1.875 in), change→recalculate, five unit choices (in/ft/mm/cm/m), export downloads, clipboard and print-event wiring, local-only asset requests, zero page-level overflow at 360, 390, 768, 1024 and 1440 px, and actual desktop/mobile screenshots.
 - **Prerender:** **36 HTML pages** built: 26 calculators, five categories, four informational/legal pages and homepage; five P2 routes deliberately withheld.
 - **Static SEO:** verified distinct titles, valid links, one H1, 152 distinct mapped keyword rows with KD≤29, default noindex, preview robots disallow, no preview sitemap or fake canonical.
 - **Observed live preview:** https://woodworking-calculator.pages.dev/ and `/stud-calculator/` were publicly accessible. The current preview displays evaluated formulas and five unit options. Public meta robots is `noindex,nofollow,noarchive`; `robots.txt` says `User-agent: *\nDisallow: /`.
@@ -119,3 +119,11 @@
 - PASS: downloaded metric CSV for 540 records includes first and last scheduled pieces, 540 actual data rows plus a header and the explicit source-note metadata row, independently of the selected screen page.
 - PASS (live Cloudflare preview HTML): `/segmented-bowl-calculator/` serves `#schedule-pager`, page jump control, previous/next buttons and explicit `noindex,nofollow,noarchive`. Deployed JS and CSS contain the pagination implementation.
 - LIMIT: printed worksheet intentionally contains the **current page only**; CSV is the complete output. Actual large-paper printing, mobile/assistive technology use, non-Chromium browsers and practical woodworking dimensions remain unverified.
+
+## Independent diagonal checks and ideal target diagram — CI #127
+- PASS: [CI #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) **270/270** Node unit tests, **36/36** real Chromium E2E checks, 36 prerendered HTML pages, 26 active tools, 152 Semrush research keyword rows and noindex preview policy.
+- PASS: 36×48-in target has 60-in theoretical diagonal. Default user tolerance is 0.125 in. Two equal but wrong 65-in measurements yield zero A–B spread but **both +5-in target errors** and only ONE of three comparisons inside user tolerance. Independent fixtures check exact boundary inclusivity, zero tolerance, negative tolerance rejection, multi-scale 3-4-5 target invariants and an individual diagonal that passes while spread fails.
+- PASS: three typed schedule rows and CSV exports preserve correct target, measured, signed/absolute deviation, user tolerance, and human-readable status across inch/mm conversion, with status remaining text rather than being mislabeled as length.
+- PASS (real Chromium): the SVG target rectangle's width:height equals the entered 36:48 ratio, and **two ideal diagonals** are drawn. Changing measured diagonals leaves the ideal geometry unchanged; altering tolerance changes comparison status, and invalid inputs clear the diagram and schedule.
+- PASS (public Cloudflare preview): `/square-layout-calculator/` serves new `tolerance` input and explicit diagonal limitations, while deployed geometry code and SVG drawing label are available. Robot metadata remains `noindex,nofollow,noarchive`.
+- NOT RUN: real measured edge/angle survey, a determination of the actual four corner angles, structural approval, laser/tape calibration, real printed scale, Safari/Firefox compatibility and manual mobile/screen-reader accessibility. **Three numeric comparisons do not prove squareness or compliance.**

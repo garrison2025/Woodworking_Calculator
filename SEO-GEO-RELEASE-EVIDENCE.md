@@ -59,3 +59,8 @@
 - All 26 existing calculator routes support browsing long computed cut schedules via client-side pagination; the canonical landing-page structure and 152 KD≤29 research keywords are unchanged.
 - Full CSV output remains the durable machine-readable result, with explicit text stating that printed paginated schedules show only the selected page; no new thin generated indexable pages, routing variants, external API or paid dependencies were introduced.
 - [CI #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) passed. The live Cloudflare preview exposes the new page controls while remaining `noindex,nofollow,noarchive` pending ownership of a production domain.
+
+## Square-layout query fulfillment without overclaiming — CI #127
+- `/square-layout-calculator/` now answers **both target deviations and diagonal spread** against explicit user tolerance, instead of implying equal measured diagonals certify a rectangle. The ideal-only schematic and detailed limitations explicitly distinguish theoretical geometry from field proof.
+- Complete three-row CSV enables local calculation workflows with no external API or tracking. Page-specific content and schema remain grounded in source geometry, with no fabricated keyword volumes or new near-duplicate indexable pages.
+- [CI #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) passed. All 26 active tools and 152 Semrush KD≤29 research mappings remain, and Cloudflare Pages preview is still noindex pending a custom production domain.

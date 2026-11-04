@@ -72,3 +72,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - New accessible schedule navigation appears for more than 160 entries with standard Previous, Next, page-number jump and visible page status, while small schedules remain uncluttered.
 - [CI #120](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41931441930) confirms on-screen 160-row DOM cap, 540-row traversal, unit preservation, error recovery, full CSV export and browser accessibility labels on the controls (not a complete screen-reader audit).
 - Published Cloudflare HTML selectors and assets for `/segmented-bowl-calculator/` were independently checked, including explicit preview noindex. Printer-only-current-page disclosure is visible for paginated tables; full source rows remain in CSV.
+
+## Square-layout proportional reference and error visibility — CI #127
+- The static rectangle drawing now uses the **actual target width/length ratio**, has distinct diagonal A/B reference lines, numerical measured-vs-target labels, and the explicit wording `IDEAL RECTANGLE ONLY · ACTUAL CORNERS NOT INFERRED`.
+- Live browser checks cover equal but wrong diagonals, dynamic comparison statuses, preserved target aspect, unit-aware CSV downloads, invalid-input clearing and exact-zero tolerance.
+- [CI #127](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41932935822) confirms 36/36 Chromium tests and static build. Field measurements and real survey graphics are deliberately not simulated.
