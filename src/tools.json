@@ -243,7 +243,7 @@
       "keyword": "rafter calculator",
       "volume": 4400,
       "kd": 7,
-      "desc": "Rafter pitch, slope length and birdsmouth seat reference",
+      "desc": "Ridge-adjusted rafter line, overhang and birdsmouth seat-notch depth reference",
       "inputs": [
         {
           "key": "run",
@@ -282,9 +282,9 @@
           "kind": "L"
         }
       ],
-      "formula": "adjusted run = run−ridge/2; rise=adjusted run×pitch/12; line=hypot(run,rise); seat drop=seat×pitch/12",
+      "formula": "adjustedRun=run−ridge/2; slope=pitch/12; slopeLength=run×√(1+slope²); notchNormalDepth=seat×sin(atan(slope)); remainingDepth=stockDepth−notchNormalDepth",
       "example": "120 in run at 6:12 yields rise 60 in and reference line 134.164 in",
-      "limit": "Birdsmouth and structure need physical verification",
+      "limit": "Seat length is a horizontal cut-reference, not a certified birdsmouth or heel. Notch thickness is measured normal to the rafter's long edges; stock grade, bearing width, local code and roof loads must be checked independently. Diagram is a schematic, never a 1:1 saw template.",
       "status": "BETA_NO_INDEX"
     },
     {
@@ -1021,7 +1021,7 @@
       "keyword": "stair stringer calculator",
       "volume": 8100,
       "kd": 20,
-      "desc": "Repeated riser/tread corner coordinates for straight stringer",
+      "desc": "Straight stair stringer stepped cut coordinates, bottom rise correction and nominal remaining throat",
       "inputs": [
         {
           "key": "rise",
@@ -1046,11 +1046,23 @@
           "label": "Stringer board depth",
           "value": 11.25,
           "kind": "L"
+        },
+        {
+          "key": "treadThickness",
+          "label": "Finished tread thickness",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "lowerFinish",
+          "label": "Lower floor finish (not yet fitted)",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "riser height=rise/risers; horizontal run=(risers−1)×tread",
-      "example": "105 in over 14 risers: 7.5 in; 13×10 in treads =>130 in run",
-      "limit": "Cut reference is not verified stock-strength geometry",
+      "formula": "risePerStep=totalRise/risers; treads=risers−1; notchNormal=stepRise×treadRun/√(stepRise²+treadRun²); bottomCutRise=stepRise−treadThickness+lowerFloorFinish",
+      "example": "105 in / 14 risers => 7.5 in rise and 13 treads of 10 in; with 1.5 in tread material, bottom cut rise is 6 in if lower finished floor is already installed",
+      "limit": "Reference for conventional straight stair stringer layout only. Total rise MUST be finished-floor to finished-floor. Lower finish is additional floor thickness laid after the stringer is installed (set 0 if existing). Top connection, nosing, minimum throat, fasteners and structural capacity require field verification. Do not overcut corners; SVG is not a 1:1 cutting template.",
       "status": "BETA_NO_INDEX"
     },
     {
