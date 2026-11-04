@@ -33,3 +33,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: 22 actual Chromium tests. Deck board rows (22), joist reference lines (10), stock length change (22 to 44 boards), CSV result and invalid-input drawing clearance have explicit browser assertions.
 - PASS: five viewport widths (360/390/768/1024/1440) now cover homepage, stud, framing, deck-material and roof-sheathing; all pass document-level horizontal overflow checks.
 - PASS: 18 screenshots captured by [run #76](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41798293682); not manually reviewed for physical cut precision or screen-reader performance.
+
+## Numeric CSV usability — CI #84
+- PASS: browser-verified download files retain selected units in headers and machine-readable numeric coordinates. Local read-back verified on stud and hip-roof sample pages; standard metric fallback also passed.
+- PASS: existing UI table remains human-readable with unit suffixes, while the CSV is optimized for spreadsheet calculations and SVG drawing labels reflect the same engine units.
+- NOT RUN: Excel spreadsheet import GUI and real device touch downloads.

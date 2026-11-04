@@ -150,7 +150,7 @@ def tool_page(t):
            '<button type="button" id="download-csv" class="btn secondary">↓ Download CSV cut list</button></div>'
            '<p class="action-status" id="action-status" role="status" aria-live="polite">Calculations will update instantly.</p></aside></section>')
     body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
-           '<p>Items below are generated from the same numbers used for the drawing. Use CSV for a portable worksheet; inspect all cuts on site.</p>'
+           '<p>Items below are generated from the same numbers used for the drawing. The downloadable CSV uses plain numeric cells and puts the selected units in column headers for Excel or other spreadsheets. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div><p class="schedule-count" id="schedule-count"></p></div>'
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'

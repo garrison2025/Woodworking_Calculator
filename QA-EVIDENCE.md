@@ -52,3 +52,10 @@
 - PASS: [CI #81](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41799606385): 238/238 Node unit tests, 23/23 browser tests and static page validation. The short-lived `print-calibration-pdfs` artifact is uploaded in the same run.
 - PASS (public preview): `/stud-calculator/` and `/roof-sheathing-calculator/` were fetched independently with the calibration elements present; both retain `noindex,nofollow,noarchive`.
 - NOT RUN: Actual physical printer ruler measurements on A4/Letter; no drawing is a certified 1:1 cutting template.
+
+## Precision CSV exports — CI #84 (2026-11-04)
+- PASS: [run #84](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41800799208), commit `2774dc84`: **242/242** Node unit tests, **24/24** real Chromium browser tests and static HTML checks.
+- PASS: selected length units in CSV column headers, raw numeric values (no formatted unit suffixes or thousands separators), area units (m² or ft²), appropriately converted hip-roof clipped polygon coordinates, nullable heterogeneous rows, signed numeric values and spreadsheet-formula-safe text cells.
+- PASS: browser downloads for stud millimeters, hip-roof polygon millimeters and a no-schedule roof-pitch metric fallback; full CSV streams were inspected in the browser tests.
+- PASS (public Cloudflare preview): `/assets/cut-list.mjs` and `/assets/app.mjs` were independently fetched and contain the new export-module integration. This verifies asset deployment, not file downloads on every real browser/device.
+- NOT RUN: Excel desktop / LibreOffice desktop import compatibility, non-Chromium downloads, professional field certification. The source engine may already round coordinates to its own documented precision; export avoids additional locale rounding.
