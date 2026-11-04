@@ -23,7 +23,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={opening2Start:0,opening2Width:0,opening3Start:0,opening3Width:0,...a};
+  a={wallHeight:96,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -39,33 +39,40 @@ export function compute(slug,a){
     return result([M("Stud positions",rows.length,"N"),M("First cut length",rows[0].length),M("Last cut length",rows.at(-1).length),M("Top cut angle",deg(Math.atan(a.pitch/12)),"A")],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"slope",{rise:a.length*a.pitch/12,start:a.start,boardHeight:a.start+a.length*a.pitch/12});
   }
   case "framing-calculator":{
-    positive("length","spacing","width","openingWidth","openingHeight");
-    nonnegative("openingStart","opening2Start","opening2Width","opening3Start","opening3Width");
+    positive("length","spacing","width","wallHeight","openingWidth","openingHeight");
+    nonnegative("openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill");
     const openings=[
-      {start:a.openingStart,width:a.openingWidth,label:"Opening 1"},
-      {start:a.opening2Start,width:a.opening2Width,label:"Opening 2"},
-      {start:a.opening3Start,width:a.opening3Width,label:"Opening 3"}
-    ].filter(o=>o.width>0).map(o=>({...o,end:o.start+o.width})).sort((u,v)=>u.start-v.start);
+      {start:a.openingStart,width:a.openingWidth,height:a.openingHeight,sill:a.openingSill,label:"Opening 1"},
+      {start:a.opening2Start,width:a.opening2Width,height:a.opening2Height,sill:a.opening2Sill,label:"Opening 2"},
+      {start:a.opening3Start,width:a.opening3Width,height:a.opening3Height,sill:a.opening3Sill,label:"Opening 3"}
+    ].filter(o=>o.width>0).map(o=>({...o,end:o.start+o.width,top:o.sill+o.height})).sort((u,v)=>u.start-v.start);
     for(let i=0;i<openings.length;i++){
       const o=openings[i];
-      need(o.start>0&&o.end<a.length,"Every opening must fit inside solid wall end margins.");
-      if(i>0)need(o.start>openings[i-1].end,"Openings must not overlap or share a boundary.");
+      need(o.start>2.5*a.width&&o.end<a.length-2.5*a.width,"Opening margins must accommodate king/jack reference studs and wall endpoints.");
+      need(o.height>0&&o.sill>=0&&o.top<a.wallHeight,"Opening sill and height must fit below the wall top.");
+      if(i>0)need(o.start-openings[i-1].end>=4*a.width,"Adjacent openings need room for both side-member packs.");
     }
-    xs=positions(a.length,a.spacing).filter(x=>!openings.some(o=>x>o.start&&x<o.end));
-    const studRows=xs.map((x,i)=>({item:"Regular "+(i+1),position:q(x),length:null}));
+    // Reference coordinates denote stud centers, not material-cut lengths.
+    xs=positions(a.length,a.spacing).filter(x=>!openings.some(o=>x>=o.start-2*a.width-1e-8&&x<=o.end+2*a.width+1e-8));
+    const studRows=xs.map((x,i)=>({item:"Regular "+(i+1),position:q(x),referenceTop:q(a.wallHeight)}));
     for(const o of openings){
-      for(const [name,x] of [
-        ["King left",Math.max(0,o.start-a.width)],["Jack left",o.start],
-        ["Jack right",o.end],["King right",Math.min(a.length,o.end+a.width)]
-      ])studRows.push({item:o.label+" "+name,position:q(x),length:null});
+      for(const [name,x,topHeight] of [
+        ["King left",o.start-1.5*a.width,a.wallHeight],
+        ["Jack left",o.start-.5*a.width,o.top],
+        ["Jack right",o.end+.5*a.width,o.top],
+        ["King right",o.end+1.5*a.width,a.wallHeight]
+      ])studRows.push({item:o.label+" "+name,position:q(x),referenceTop:q(topHeight)});
     }
     studRows.sort((u,v)=>u.position-v.position);
+    const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     return result([
       M("Regular studs",xs.length,"N"),M("Opening intervals",openings.length,"N"),
       M("Opening-side reference members",openings.length*4,"N"),
-      M("Total listed pieces",studRows.length,"N")
-    ],studRows.map(r=>P(r.position,r.item,r.item.includes("King")||r.item.includes("Jack")?"accent":"mark")),
-    a.length,studRows,"opening",{openings});
+      M("Total listed pieces",studRows.length,"N"),
+      M("Wall reference height",a.wallHeight),M("Rough opening face area",roughArea,"FT2"),
+      ...openings.map(o=>M(o.label+" top elevation",o.top))
+    ],studRows.map(r=>({...P(r.position,r.item,r.item.includes("King")?"king":r.item.includes("Jack")?"jack":"mark"),topHeight:r.referenceTop})),
+    a.length,studRows,"opening",{openings,wallHeight:a.wallHeight});
   }
   case "deck-board-calculator":{
     positive("width","length","board","stock");nonnegative("gap","waste");

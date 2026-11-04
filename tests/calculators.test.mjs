@@ -19,7 +19,7 @@ test("Manifest has 9 P0, 17 P1 and five held P2 routes",()=>{
 });
 const golden={
   "stud-calculator":["Last cut length",163.5],
-  "framing-calculator":["Regular studs",7],
+  "framing-calculator":["Regular studs",6],
   "deck-board-calculator":["Last rip width",1.875],
   "baluster-spacing-calculator":["Baluster count",17],
   "rafter-calculator":["Rafter reference length",Math.hypot(120,60)],
@@ -194,4 +194,26 @@ test("Stringer: finish-to-install later adds its thickness to bottom layout cut"
   near(value(r,"Bottom riser layout cut"),6.5);
   assert.equal(safeCompute("stair-stringer-calculator",{...base,treadThickness:9,lowerFinish:0}).ok,false);
   assert.equal(safeCompute("stair-stringer-calculator",{...base,depth:5}).ok,false);
+});
+
+test("Framing centers do not duplicate king or jack packs",()=>{
+  const r=compute("framing-calculator",{length:120,spacing:16,width:1.5,wallHeight:96,openingStart:32,openingWidth:36,openingHeight:80,openingSill:0});
+  near(value(r,"Regular studs"),6);near(value(r,"Opening-side reference members"),4);
+  near(value(r,"Opening 1 top elevation"),80);
+  assert.deepEqual(r.rows.filter(x=>x.item.includes("Opening 1")).map(x=>x.position),[29.75,31.25,68.75,70.25]);
+  assert.equal(r.rows.filter(x=>x.item.startsWith("Regular")).some(x=>x.position>=29&&x.position<=71),false);
+  assert.equal(new Set(r.rows.map(x=>x.position)).size,r.rows.length);
+  near(value(r,"Rough opening face area"),36*80/144);
+});
+test("Framing supports a second independently elevated window",()=>{
+  const r=compute("framing-calculator",{length:160,spacing:16,width:1.5,wallHeight:108,openingStart:24,openingWidth:24,openingHeight:80,openingSill:0,opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34});
+  near(value(r,"Opening intervals"),2);near(value(r,"Opening 2 top elevation"),76);
+  near(r.openings[1].sill,34);near(r.openings[1].height,42);
+  assert.equal(r.marks.filter(x=>x.role==="jack"&&x.topHeight===76).length,2);
+});
+test("Framing rejects impossible window elevation and side-member interference",()=>{
+  const base={length:120,spacing:16,width:1.5,wallHeight:96,openingStart:32,openingWidth:36,openingHeight:80,openingSill:0};
+  assert.equal(safeCompute("framing-calculator",{...base,openingSill:22}).ok,false);
+  assert.equal(safeCompute("framing-calculator",{...base,openingStart:2}).ok,false);
+  assert.equal(safeCompute("framing-calculator",{...base,opening2Start:72,opening2Width:20}).ok,false);
 });

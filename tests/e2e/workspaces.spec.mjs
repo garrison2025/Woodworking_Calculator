@@ -171,3 +171,17 @@ test("stringer: calculate finished floor bottom-cut correction with editable fie
   await page.locator("#f-treadThickness").fill("9");
   await expect(page.locator("#calc-error")).toBeVisible();
 });
+
+test("framing elevations render distinct door and window cutouts and reject overflow",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Regular studs"})).toContainText("6");
+  await page.locator("#f-opening2Start").fill("82");
+  await page.locator("#f-opening2Width").fill("18");
+  await page.locator("#f-opening2Height").fill("40");
+  await page.locator("#f-opening2Sill").fill("32");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Opening intervals"})).toContainText("2");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Opening 2 top elevation"})).toContainText("72 in");
+  await expect(page.locator("#dimension-svg svg .opening-cutout")).toHaveCount(2);
+  await page.locator("#f-opening2Sill").fill("70");
+  await expect(page.locator("#calc-error")).toBeVisible();
+});

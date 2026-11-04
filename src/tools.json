@@ -81,7 +81,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Position regular wall studs around up to three explicitly measured door or window opening intervals.",
+      "desc": "Plot full-height studs and reference king/jack centers around up to three door or window openings, each with its own sill and height.",
       "inputs": [
         {
           "key": "length",
@@ -99,6 +99,12 @@
           "key": "width",
           "label": "Stud face width",
           "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "wallHeight",
+          "label": "Wall top reference height",
+          "value": 96,
           "kind": "L"
         },
         {
@@ -120,6 +126,12 @@
           "kind": "L"
         },
         {
+          "key": "openingSill",
+          "label": "First opening sill height (0 = door)",
+          "value": 0,
+          "kind": "L"
+        },
+        {
           "key": "opening2Start",
           "label": "Second opening left edge",
           "value": 0,
@@ -129,6 +141,18 @@
           "key": "opening2Width",
           "label": "Second opening width (0 to skip)",
           "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "opening2Height",
+          "label": "Second opening height",
+          "value": 40,
+          "kind": "L"
+        },
+        {
+          "key": "opening2Sill",
+          "label": "Second opening sill height",
+          "value": 36,
           "kind": "L"
         },
         {
@@ -142,12 +166,34 @@
           "label": "Third opening width (0 to skip)",
           "value": 0,
           "kind": "L"
+        },
+        {
+          "key": "opening3Height",
+          "label": "Third opening height",
+          "value": 40,
+          "kind": "L"
+        },
+        {
+          "key": "opening3Sill",
+          "label": "Third opening sill height",
+          "value": 36,
+          "kind": "L"
         }
       ],
-      "formula": "Build standard on-center grid, omit full-length studs within every nonoverlapping opening, add labeled schematic opening-side members; header sizing is not calculated.",
-      "example": "120 in wall with opening 32–68 in excludes ordinary studs within that interval",
-      "limit": "Schematic king/jack layout only; window cripples, headers, rough-opening tolerances and code-compliant framing must be separately designed.",
-      "status": "BETA_NO_INDEX"
+      "formula": "Use OC grid outside opening side packs; jack centers = opening edges ± studWidth/2; king centers = edges ± 1.5×studWidth; rough opening top = sill + height.",
+      "example": "120 in wall, 16 in OC, 1.5 in studs, opening from 32 to 68 in, 80 in high: six unaffected grid centers and four opening-side reference centers.",
+      "limit": "Reference geometry only: opening elevations are not precut member lengths. Headers, cripples, sill framing, plate deductions, structural sizing and code compliance require separate design.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Door and window elevations share a floor datum",
+          "text": "Set sill to 0 for a door. For a window, enter its sill elevation and opening height separately. The cutout shows the rough opening only; headers, cripple studs and trim are not generated."
+        },
+        {
+          "heading": "Jack and king positions are center marks",
+          "text": "Each jack and king reference center is calculated from a clear opening edge and the stud width. Regular on-center members inside these side packs are omitted. Verify actual stock, rough-opening tolerances, and local requirements before cutting."
+        }
+      ]
     },
     {
       "slug": "deck-board-calculator",

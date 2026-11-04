@@ -65,10 +65,17 @@ if(slug){
         content+='<path d="M'+left+' '+y0+' L'+right+' '+y1+'" stroke="#1e6454" stroke-width="5" fill="none"/>';
         for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+base+'" x2="'+x(p.x)+'" y2="'+(y0+(y1-y0)*p.x/span)+'" stroke="#b98c56" stroke-width="5"/>';
       }else if(data.shape==="opening"){
-        const openings=data.openings||[];
-        content+='<rect x="'+left+'" y="85" width="'+(right-left)+'" height="170" fill="#e6e9de" opacity=".45"/>';
-        for(const o of openings)content+='<rect x="'+x(o.start)+'" y="110" width="'+(x(o.end)-x(o.start))+'" height="145" fill="#f8f7f4" stroke="#ad744e" stroke-width="2" stroke-dasharray="6 4"/>';
-        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="76" x2="'+x(p.x)+'" y2="'+(openings.some(o=>p.x>o.start&&p.x<o.end)?"109":"255")+'" stroke="'+(p.role==="accent"?"#c58c54":"#426b5b")+'" stroke-width="4"/>';
+        const openings=data.openings||[],wallHeight=Math.max(1,data.wallHeight||96);
+        const yLevel=h=>255-179*Math.min(1,Math.max(0,h/wallHeight));
+        content+='<rect x="'+left+'" y="76" width="'+W+'" height="179" fill="#e6e9de" opacity=".6" stroke="#426b5b" stroke-width="2"/>';
+        for(const o of openings){
+          const yTop=yLevel(o.top),ySill=yLevel(o.sill);
+          content+='<rect class="opening-cutout" x="'+x(o.start)+'" y="'+yTop+'" width="'+(x(o.end)-x(o.start))+'" height="'+(ySill-yTop)+'" fill="#fcfbf8" stroke="#ad744e" stroke-width="2" stroke-dasharray="6 4"/>';
+          content+=svgText(x(o.start)+4,Math.max(48,yTop-5),o.label+" · "+fmt(o.height),"tick-label");
+          if(o.sill>0)content+='<line x1="'+x(o.start)+'" y1="'+ySill+'" x2="'+x(o.end)+'" y2="'+ySill+'" stroke="#ad744e" stroke-width="3"/>';
+        }
+        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+yLevel(p.topHeight??wallHeight)+'" x2="'+x(p.x)+'" y2="255" stroke="'+(p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b")+'" stroke-width="'+(p.role==="mark"?"3":"5")+'"/>';
+        content+=svgText(left+5,64,"WALL "+fmt(wallHeight),"dim-label");
       }else if(data.shape==="shelves"){
         for(const p of marks)content+='<line x1="235" y1="'+(base-p.x/span*195)+'" x2="680" y2="'+(base-p.x/span*195)+'" stroke="#b88750" stroke-width="8" stroke-linecap="round"/>';
         content+='<rect x="220" y="73" width="475" height="205" fill="none" stroke="#345f50" stroke-width="8"/>';
