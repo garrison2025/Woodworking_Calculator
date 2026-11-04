@@ -85,6 +85,39 @@ if(slug){
         if(marks.length<=24||i%Math.max(tick,2)===0)content+=svgText(px-10,base+27,p.label?String(p.label).slice(0,9):trim(convertFromInches(p.x,unit),1),"tick-label");
       }
       content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
+    }else if(data.shape==="rafter"){
+      // Side-elevation reference, deliberately not a paper-scale cutting template.
+      // Long edge and cutout are schematic; the numeric schedule comes from the geometry engine.
+      const total=Math.max(1,data.run+data.overhang),bearX=x(data.run);
+      const topAt=px=>102+116*(px-left)/W;
+      const bottomAt=px=>topAt(px)+37;
+      const startX=left,endX=right;
+      content+='<path d="M'+startX+' '+topAt(startX)+' L'+endX+' '+topAt(endX)+' L'+endX+' '+bottomAt(endX)+' L'+startX+' '+bottomAt(startX)+' Z" fill="#dfc4a0" stroke="#8b6843" stroke-width="2"/>';
+      const notchW=Math.min(Math.max(9,data.seat/total*W),bearX-left);
+      const notchH=Math.max(3,Math.min(28,37*data.notchNormal/data.stockDepth));
+      const atX=bearX-notchW;
+      const topSeat=bottomAt(atX)-notchH;
+      content+='<path d="M'+atX+' '+bottomAt(atX)+' L'+atX+' '+topSeat+' L'+bearX+' '+topSeat+' L'+bearX+' '+bottomAt(bearX)+' Z" fill="#fcfbf8" stroke="#a05c33" stroke-width="2.4"/>';
+      content+='<line x1="'+bearX+'" y1="54" x2="'+bearX+'" y2="300" stroke="#d09b58" stroke-dasharray="5 5" stroke-width="1.8"/>';
+      content+=svgText(left+25,73,"RIDGE REFERENCE","dim-label");
+      content+=svgText(Math.max(left+290,bearX-85),67,"BEARING","dim-label");
+      content+=svgText(Math.max(left+15,bearX-160),bottomAt(bearX)+49,"seat "+fmt(data.seat)+" · normal depth "+fmt(data.notchNormal),"dim-label");
+      content+=svgText(right-165,300,"eave "+fmt(data.overhang),"dim-label");
+    }else if(data.shape==="stringer"){
+      const n=Math.max(2,data.risers),dx=W/(n-1),dy=180/n;
+      let stair="M"+left+" "+base;
+      for(let i=0;i<n;i++){
+        const py=base-(i+1)*dy,px=left+i*dx;
+        stair+=" V"+py;
+        if(i<n-1)stair+=" H"+(left+(i+1)*dx);
+      }
+      const upper=base-n*dy;
+      const lowerLine=base+24,upperLine=upper+80;
+      content+='<path d="'+stair+' L'+right+' '+upperLine+' L'+left+' '+lowerLine+' Z" fill="#e3c9a7" stroke="#3b745f" stroke-width="2.4" stroke-linejoin="round"/>';
+      content+='<path d="M'+left+' '+lowerLine+' L'+right+' '+upperLine+'" fill="none" stroke="#a88157" stroke-dasharray="6 5" stroke-width="2"/>';
+      content+=svgText(left+12,55,n+" risers / "+(n-1)+" treads","dim-label");
+      content+=svgText(left+12,320,"bottom riser layout "+fmt(data.bottomLayoutRise),"dim-label");
+      content+=svgText(right-260,320,"nominal throat "+fmt(data.throat),"dim-label");
     }else if(data.shape==="triangle"){
       const run=data.run||span,rise=data.rise||0,hh=Math.max(10,Math.abs(rise));
       const ry=base-Math.min(210,Math.abs(rise)/Math.max(run,hh)*W*.52);
