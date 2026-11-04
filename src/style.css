@@ -273,3 +273,13 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .calibration-1in{width:1in}
   .calibration-warning{font-weight:700}
 }
+
+/* Local-only cut-list pagination: never create thousands of DOM table rows. */
+.schedule-pager{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:13px;padding:13px 0 3px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.schedule-pager[hidden]{display:none!important}
+.schedule-pager-button{border:1px solid #cbdace;background:#f2f7f2;color:#24543c;border-radius:8px;padding:7px 12px;font-weight:700}
+.schedule-pager-button:not(:disabled):hover{background:#dfeee4}
+.schedule-pager label{font-weight:600}
+.schedule-pager input{max-width:65px;min-width:55px;padding:7px 8px;border:1px solid #cbdace;border-radius:7px;background:white;color:var(--ink);font-size:12px}
+#schedule-page-status{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green);white-space:nowrap}
+@media print{.schedule-pager{display:none!important}}

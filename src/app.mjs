@@ -6,7 +6,15 @@ if(slug){
   const tool=manifest.tools.find(t=>t.slug===slug&&t.priority!=="P2");
   if(!tool)throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
-  let unit="in",latest=null,zoom=1;
+  let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[];
+  const schedulePageSize=160;
+  const schedulePager=document.querySelector("#schedule-pager");
+  const schedulePrev=document.querySelector("#schedule-prev");
+  const scheduleNext=document.querySelector("#schedule-next");
+  const schedulePageInput=document.querySelector("#schedule-page-input");
+  const scheduleGo=document.querySelector("#schedule-go");
+  const schedulePageStatus=document.querySelector("#schedule-page-status");
+  const scheduleCount=document.querySelector("#schedule-count");
   const fmt=(x,kind="L")=>{
     if(!Number.isFinite(x))return "—";
     if(kind==="N")return String(Math.round(x));
@@ -291,22 +299,59 @@ if(slug){
     if(kind==="length"&&typeof v==="number")return fmt(v,"L");
     return String(v);
   };
+  const renderSchedule=()=>{
+    if(!latest||!latest.rows.length){
+      cut.innerHTML='<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
+      scheduleCount.textContent="";
+      schedulePager.hidden=true;
+      return;
+    }
+    const count=latest.rows.length,pages=Math.ceil(count/schedulePageSize);
+    schedulePage=Math.min(Math.max(0,schedulePage),pages-1);
+    const start=schedulePage*schedulePageSize,end=Math.min(count,start+schedulePageSize);
+    cut.innerHTML='<thead><tr>'+scheduleCols.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+
+      latest.rows.slice(start,end).map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key]))+'</td>').join("")+'</tr>').join("")+'</tbody>';
+    schedulePager.hidden=pages<=1;
+    schedulePrev.disabled=schedulePage===0;
+    scheduleNext.disabled=schedulePage===pages-1;
+    schedulePageInput.max=String(pages);
+    schedulePageInput.value=String(schedulePage+1);
+    schedulePageStatus.textContent="Page "+(schedulePage+1)+" of "+pages;
+    scheduleCount.textContent=count>schedulePageSize?
+      "Showing rows "+(start+1)+"–"+end+" of "+count+". Print shows this page only; CSV includes all "+count+" rows.":
+      "Showing "+count+" computed rows.";
+  };
   function render(){
     try{
       const data=safeCompute(slug,values());
       if(!data.ok)throw new Error(data.error);
       latest=data.data;error.hidden=true;
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
-      const columns=latest.rows.length?scheduleColumns(latest.rows,unit):[];
-      cut.innerHTML=columns.length?
-        '<thead><tr>'+columns.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+latest.rows.slice(0,160).map(row=>'<tr>'+columns.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key]))+'</td>').join("")+'</tr>').join("")+'</tbody>':
-        '<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
-      const countEl=document.querySelector("#schedule-count");if(countEl)countEl.textContent=latest.rows.length>160?"Showing first 160 of "+latest.rows.length+" cuts. Export the CSV for all coordinates.":latest.rows.length?"Showing "+latest.rows.length+" computed rows.":"";
+      scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
+      renderSchedule();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
-    }catch(e){latest=null;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";const note=document.querySelector("#schedule-count");if(note)note.textContent="";status.textContent="Calculation requires correction."}
+    }catch(e){latest=null;scheduleCols=[];schedulePage=0;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";schedulePager.hidden=true;status.textContent="Calculation requires correction."}
   }
+  const showSchedulePage=next=>{
+    if(!latest||!latest.rows.length)return;
+    const pages=Math.ceil(latest.rows.length/schedulePageSize);
+    if(!Number.isInteger(next)||next<0||next>=pages){
+      schedulePageInput.focus();
+      return;
+    }
+    schedulePage=next;
+    renderSchedule();
+    cut.closest(".table-scroll")?.scrollTo(0,0);
+  };
+  schedulePrev.addEventListener("click",()=>showSchedulePage(schedulePage-1));
+  scheduleNext.addEventListener("click",()=>showSchedulePage(schedulePage+1));
+  const jumpSchedule=()=>showSchedulePage(Number(schedulePageInput.value)-1);
+  scheduleGo.addEventListener("click",jumpSchedule);
+  schedulePageInput.addEventListener("keydown",event=>{
+    if(event.key==="Enter"){event.preventDefault();jumpSchedule();}
+  });
   const restoreValues=()=>{
     for(const f of tool.inputs){
       const el=form.elements.namedItem(f.key);
@@ -321,8 +366,9 @@ if(slug){
     }
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
-  form.addEventListener("input",render);fraction.addEventListener("change",render);
-  reset.addEventListener("click",()=>{restoreValues();zoom=1;render();});
+  form.addEventListener("input",()=>{schedulePage=0;render();});
+  fraction.addEventListener("change",render);
+  reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
   for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");});
   zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");});
   copy.addEventListener("click",async()=>{

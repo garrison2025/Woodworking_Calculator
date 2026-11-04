@@ -256,6 +256,22 @@ test("Fence-post property grid conserves centers, widths and maximum OC",()=>{
     assert.ok(usable<=maxBay+1e-9);
   }
 });
+test("maximum supported segmented bowl yields 18,000 ordered entries without missing ring endpoints",()=>{
+  const r=compute("segmented-bowl-calculator",{outer:30,inner:22,segments:180,rings:100});
+  assert.equal(r.rows.length,18000);
+  assert.equal(r.rows[0].item,"Ring 1 / segment 1");
+  assert.equal(r.rows[179].item,"Ring 1 / segment 180");
+  assert.equal(r.rows[180].item,"Ring 2 / segment 1");
+  assert.equal(r.rows.at(-1).item,"Ring 100 / segment 180");
+  assert.equal(r.rows.at(-1).ring,100);
+  assert.equal(r.rows.at(-1).segment,180);
+  near(r.rows.at(-1).endAngle,360);
+  near(value(r,"Total segments"),18000);
+  for(const k of [0,179,180,8999,17999]){
+    near(r.rows[k].outerChord,30*Math.sin(Math.PI/180),1e-7);
+    near(r.rows[k].radialDepth,4);
+  }
+});
 test("Segmented-bowl per-piece schedule conserves ring sweeps and chord lengths",()=>{
   for(const n of [3,6,12,24,48,180])for(const rings of [1,2,4]){
     const a={outer:12,inner:8,segments:n,rings};
