@@ -1185,7 +1185,7 @@
       "keyword": "roof sheathing calculator",
       "volume": 590,
       "kd": 3,
-      "desc": "Sloped surface area and area-based sheet count",
+      "desc": "Rectangular single-plane sheathing layout with true sloped depth, clipped edge sheets and a complete cut schedule",
       "inputs": [
         {
           "key": "width",
@@ -1222,12 +1222,42 @@
           "label": "Waste percentage",
           "value": 10,
           "kind": "D"
+        },
+        {
+          "key": "orientation",
+          "label": "Sheet direction",
+          "value": 0,
+          "kind": "E",
+          "options": [
+            {
+              "value": 0,
+              "label": "Long edge along eave"
+            },
+            {
+              "value": 1,
+              "label": "Short edge along eave"
+            }
+          ]
         }
       ],
-      "formula": "sloped area=plan area×sqrt(1+(pitch/12)^2); sheets lower bound=ceil(area/sheet area)",
-      "example": "120 ft² / 32 ft² = 4 sheets minimum before geometry waste",
-      "limit": "Not a cut nesting or staggered installation plan",
-      "status": "BETA_NO_INDEX"
+      "formula": "True sloped depth = roof plan width × sqrt(1+(pitch/12)^2); clip a grid of stock sheets to the roof plane; purchase count = occupied sheet positions plus optional allowance.",
+      "example": "A flat 110 × 70 in roof plane with 96 × 48 in sheets needs four sheet positions, including three edge cuts, before allowance.",
+      "limit": "Single rectangular roof plane only; eave-origin grid without seam gaps, staggering, offcut reuse, fastening, bearing or structural compliance checks. SVG is a scaled schematic, not a certified 1:1 pattern.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Understand eave and uphill dimensions",
+          "text": "Roof plan width measures the horizontal uphill run; plan length measures the eave. The pitched run is converted to its true sloped surface length before positioning each sheet."
+        },
+        {
+          "heading": "Review every sheet cut",
+          "text": "The diagram shows the single plane in flat sloped-surface coordinates. Eave start and slope start locate each sheet from the lower-left eave corner. Cut along and cut uphill are the cut dimensions, all exported in CSV."
+        },
+        {
+          "heading": "Conservative purchasing, not a fastening plan",
+          "text": "Every occupied position consumes one stock sheet without offcut reuse. Compare sheet orientations to reduce the conservative count. Allowance applies to occupied sheets, not the area lower bound; confirm real fastening, seam and support details separately."
+        }
+      ]
     },
     {
       "slug": "fence-post-calculator",

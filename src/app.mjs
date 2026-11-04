@@ -138,7 +138,19 @@ if(slug){
       d+=" V"+(base-n*stepH);
       content+='<path d="'+d+'" fill="none" stroke="#1e6454" stroke-width="4" stroke-linecap="round"/>';
       content+=svgText(left+12,55,n+" risers · "+(n-1)+" treads","dim-label");
-     }else if(data.shape==="roof-panels"){
+     }else if(data.shape==="sheathing-panels"){
+      const scale=Math.min(715/data.roofEave,207/data.roofSlope);
+      const ww=data.roofEave*scale,hh=data.roofSlope*scale,x0=(900-ww)/2,y0=(344-hh)/2;
+      for(const [i,sheet] of data.roofSheets.entries()){
+        const xx=x0+sheet.eaveStart*scale,yy=y0+sheet.slopeStart*scale;
+        const sw=sheet.cutAlong*scale,sh=sheet.cutUphill*scale;
+        content+='<rect class="sheathing-cut" x="'+xx+'" y="'+yy+'" width="'+sw+'" height="'+sh+'" fill="'+(i%2?"#d9bc95":"#c7ddcc")+'" stroke="#fffefd" stroke-width="1.6"><title>'+esc(sheet.id+" · "+fmt(sheet.cutAlong)+" × "+fmt(sheet.cutUphill))+'</title></rect>';
+        if(sw>37&&sh>24)content+=svgText(xx+5,yy+17,sheet.id,"tick-label");
+      }
+      content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="none" stroke="#1e6454" stroke-width="2.5"/>';
+      content+=svgText(x0,Math.max(22,y0-12),"EAVE "+fmt(data.roofEave),"dim-label");
+      content+=svgText(x0,Math.min(337,y0+hh+23),"UP SLOPE "+fmt(data.roofSlope)+" | "+data.roofSheets.length+" SHEETS","dim-label");
+    }else if(data.shape==="roof-panels"){
       const scale=Math.min(710/data.roofMajor,213/data.roofMinor),ww=data.roofMajor*scale,hh=data.roofMinor*scale;
       const x0=(900-ww)/2,y0=(344-hh)/2,colors=["#c7ddcc","#d9bc95","#bdd7c9","#ead1b0"];
       for(const sheet of data.roofPanels){

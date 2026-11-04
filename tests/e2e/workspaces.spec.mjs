@@ -186,6 +186,22 @@ test("framing elevations render distinct door and window cutouts and reject over
   await expect(page.locator("#calc-error")).toBeVisible();
 });
 
+test("single-plane sheathing SVG reflects sheet orientation and exports a cut list",async({page})=>{
+  await page.goto("/roof-sheathing-calculator/");
+  const count=page.locator("#result-cards .metric").filter({hasText:"Sheet positions (no offcut reuse)"});
+  await expect(count).toContainText("8");
+  await expect(page.locator("#dimension-svg svg .sheathing-cut")).toHaveCount(8);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(8);
+  await page.locator("#f-orientation").selectOption("1");
+  await expect(count).toContainText("6");
+  await expect(page.locator("#dimension-svg svg .sheathing-cut")).toHaveCount(6);
+  const downloaded=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  expect((await downloaded).suggestedFilename()).toContain("roof-sheathing-calculator-in-cut-list.csv");
+  await page.locator("#f-sheetWidth").fill("0.0001");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#dimension-svg svg .sheathing-cut")).toHaveCount(0);
+});
 test("hip roof clipped sheets are visible and orientation, export and error controls work",async({page})=>{
   await page.goto("/hip-roof-calculator/");
   await expect(page.locator("#calc-error")).toBeHidden();

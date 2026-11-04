@@ -325,9 +325,40 @@ export function compute(slug,a){
     {stepRise:h,tread:a.tread,risers:a.risers,throat,bottomLayoutRise,notchNormal:normalNotch});
   }
   case "roof-sheathing-calculator":{
-    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");need(a.waste<=200,"Waste must be 0–200%.");
-    const area=a.width*a.length*Math.hypot(1,a.pitch/12),per=a.sheetWidth*a.sheetLength,minimum=ceilStable(area/per),ordered=ceilStable(area*(1+a.waste/100)/per);
-    return result([M("Sloped roof surface",area/144,"FT2"),M("Sheet geometric lower bound",minimum,"N"),M("With percent allowance",ordered,"N"),M("Sheet face area",per/144,"FT2")],[],a.length,[],"rectangle",{rectWidth:a.width,rectHeight:a.length});
+    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
+    need(a.waste<=200,"Waste must be 0–200%.");
+    // Single rectangular plane; eave = roof plan length, uphill run = roof plan width.
+    // Project the uphill run onto the sloped surface before laying out stock sheets.
+    const uphillLength=a.width*Math.hypot(1,a.pitch/12),eaveLength=a.length;
+    const area=eaveLength*uphillLength,per=a.sheetWidth*a.sheetLength;
+    const along=a.orientation===0?a.sheetLength:a.sheetWidth;
+    const uphill=a.orientation===0?a.sheetWidth:a.sheetLength;
+    const cols=ceilStable(eaveLength/along),rowCount=ceilStable(uphillLength/uphill);
+    need(cols>0&&rowCount>0&&cols*rowCount<=900,"Sheet grid exceeds 900 positions; use larger sheets or a smaller plane.");
+    const sheets=[];
+    for(let row=0;row<rowCount;row++)for(let col=0;col<cols;col++){
+      const eaveStart=col*along,slopeStart=row*uphill;
+      const cutAlong=Math.min(along,eaveLength-eaveStart);
+      const cutUphill=Math.min(uphill,uphillLength-slopeStart);
+      if(cutAlong<=1e-8||cutUphill<=1e-8)continue;
+      sheets.push({id:"S"+(sheets.length+1),eaveStart:q(eaveStart),slopeStart:q(slopeStart),
+        cutAlong:q(cutAlong),cutUphill:q(cutUphill),cutAreaSqIn:cutAlong*cutUphill,
+        full:Math.abs(cutAlong-along)<1e-7&&Math.abs(cutUphill-uphill)<1e-7});
+    }
+    const coverage=sheets.reduce((sum,s)=>sum+s.cutAreaSqIn,0);
+    need(Math.abs(coverage-area)<=Math.max(1e-6,area*1e-8),"Sheet positions do not conserve the sloped roof area.");
+    const full=sheets.filter(s=>s.full).length;
+    const cutRows=sheets.map(s=>({item:s.id,eaveStart:s.eaveStart,slopeStart:s.slopeStart,
+      cutAlong:s.cutAlong,cutUphill:s.cutUphill,cutAreaFt2:s.cutAreaSqIn/144}));
+    return result([
+      M("Sloped roof surface",area/144,"FT2"),
+      M("Sheet geometric lower bound",ceilStable(area/per),"N"),
+      M("Sheet positions (no offcut reuse)",sheets.length,"N"),
+      M("Full sheets",full,"N"),M("Edge-cut sheets",sheets.length-full,"N"),
+      M("Order sheets with allowance",ceilStable(sheets.length*(1+a.waste/100)),"N"),
+      M("Unreused offcut area",Math.max(0,sheets.length*per-area)/144,"FT2")
+    ],[],eaveLength,cutRows,"sheathing-panels",
+    {roofEave:eaveLength,roofSlope:uphillLength,roofSheets:sheets,sheetAlong:along,sheetUphill:uphill});
   }
   case "fence-post-calculator":{
     positive("length","bay","post");need(a.post<a.length,"Post wider than run.");

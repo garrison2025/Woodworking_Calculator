@@ -218,6 +218,34 @@ test("Framing rejects impossible window elevation and side-member interference",
   assert.equal(safeCompute("framing-calculator",{...base,opening2Start:72,opening2Width:20}).ok,false);
 });
 
+test("Single-plane roof sheathing conserves area, counts cuts and rotates sheets",()=>{
+  const a={width:144,length:120,pitch:6,sheetWidth:48,sheetLength:96,waste:10,orientation:0};
+  const r=compute("roof-sheathing-calculator",a);
+  assert.equal(r.shape,"sheathing-panels");
+  near(value(r,"Sheet geometric lower bound"),5);
+  near(value(r,"Sheet positions (no offcut reuse)"),8);
+  near(value(r,"Order sheets with allowance"),9);
+  near(r.roofSheets.reduce((sum,s)=>sum+s.cutAreaSqIn,0),r.roofEave*r.roofSlope,1e-5);
+  for(const s of r.roofSheets){
+    assert.ok(s.cutAlong>0&&s.cutAlong<=96+1e-6);
+    assert.ok(s.cutUphill>0&&s.cutUphill<=48+1e-6);
+    assert.ok(s.eaveStart+s.cutAlong<=r.roofEave+1e-6);
+    assert.ok(s.slopeStart+s.cutUphill<=r.roofSlope+1e-6);
+  }
+  const rotated=compute("roof-sheathing-calculator",{...a,orientation:1});
+  near(value(rotated,"Sheet positions (no offcut reuse)"),6);
+  near(value(rotated,"Sloped roof surface"),value(r,"Sloped roof surface"));
+});
+test("Single-plane sheathing edge cuts and invalid grid inputs are checked",()=>{
+  const a={width:70,length:110,pitch:0,sheetWidth:48,sheetLength:96,waste:0,orientation:0};
+  const r=compute("roof-sheathing-calculator",a);
+  near(value(r,"Sheet positions (no offcut reuse)"),4);
+  near(value(r,"Full sheets"),1);
+  near(value(r,"Edge-cut sheets"),3);
+  near(r.roofSheets.reduce((sum,s)=>sum+s.cutAreaSqIn,0),7700);
+  assert.equal(safeCompute("roof-sheathing-calculator",{...a,orientation:3}).ok,false);
+  assert.equal(safeCompute("roof-sheathing-calculator",{...a,sheetWidth:.001,sheetLength:.001}).ok,false);
+});
 test("Hip four-plane clipped sheet area conserves exact sloped area",()=>{
   const a={width:240,length:360,pitch:6,overhang:12,sheetWidth:48,sheetLength:96,orientation:0};
   const r=compute("hip-roof-calculator",a);

@@ -14,6 +14,7 @@ A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes,
 - 152 keyword rows, with Semrush estimates and mapped URLs, saved in `research/woodworking-keyword-map-152.csv`. The owner-approved complete V3 specification is saved in `research/WOODWORKING_BUILD_SPEC_V3_20261104.md`.
 - Calculators written as pure JavaScript functions (`src/calcs.mjs`). No database, paid API, third-party font or runtime backend.
 - Safety policies: no unsupported structural span, official code compliance, physical 1:1 printing scale, or material springback guarantees.
+- Roof sheathing now supports a clipped **single-plane sheet grid** with eave/uphill cut coordinates and a conservative purchase count, separately from the four-plane hip roof layout. No offcut reuse or engineered fastening pattern is implied.
 
 ## Local development
 
