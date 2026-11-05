@@ -2294,3 +2294,51 @@ test("Rafter: seat and heel XY run across five pitches without geometric coordin
     near((r.heelBottom.y-r.heelTop.y)/k,11.25-value(r,"Remaining stock (normal)"),1e-7);
   }
 });
+
+test("Deck optional full-width joist procurement conserves cuts, reserve stock and exact user quotes",()=>{
+  const a={width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,
+    waste:10,boardUnitPrice:8,fastenersPerContact:2,
+    fastenerPackSize:100,fastenerPackPrice:20,
+    joistStockLength:144,joistUnitPrice:9};
+  const r=compute("deck-material-calculator",a);
+  assert.equal(r.deckJoistStockEnabled,true);
+  const joists=r.rows.filter(row=>row.type==="Joist straight cut");
+  assert.equal(joists.length,10);
+  for(const [i,j] of joists.entries()){
+    near(j.joistCenter,i*16);near(j.cutLength,120);
+    near(j.purchasedStockLength,144);
+    near(j.sourceOffcutLength,24);
+  }
+  near(value(r,"Straight joist cuts"),10);
+  near(value(r,"Joist stock sticks with allowance"),11);
+  near(value(r,"Total nominal joist cut length"),100);
+  near(value(r,"Unreused joist source offcut length"),20);
+  assert.equal(r.deckPurchaseRows.length,3);
+  const joistBuy=r.deckPurchaseRows.at(-1);
+  assert.equal(joistBuy.material,"Optional full-width joist stock");
+  near(joistBuy.plannedQuantity,10);near(joistBuy.purchaseQuantity,11);
+  near(joistBuy.unitPrice,9);near(joistBuy.purchaseCost,99);
+  near(value(r,"Quoted deck materials total"),399);
+  assert.equal(r.deckCostSummary.allPricesEntered,true);
+});
+test("Deck optional joists do not invent structural spans, splices or free quotes",()=>{
+  const base={width:120,length:144,board:5.5,gap:.125,stock:144,
+    joists:16,waste:10,boardUnitPrice:8,fastenersPerContact:2,
+    fastenerPackSize:100,fastenerPackPrice:20};
+  const absent=compute("deck-material-calculator",base);
+  assert.equal(absent.deckPurchaseRows.length,2);
+  assert.equal(absent.rows.filter(r=>r.type==="Joist straight cut").length,0);
+  near(value(absent,"Quoted deck materials total"),300);
+  const unquoted=compute("deck-material-calculator",{...base,joistStockLength:144});
+  assert.equal(unquoted.deckPurchaseRows.length,3);
+  assert.equal(unquoted.deckPurchaseRows[2].purchaseCost,null);
+  assert.equal(unquoted.deckCostSummary.allPricesEntered,false);
+  assert.ok(unquoted.deckCostSummary.missingQuotes.includes("Full-width joist stock"));
+  assert.equal(unquoted.metrics.some(r=>r.label==="Quoted deck materials total"),false);
+  for(const bad of [
+    {joistStockLength:110,joistUnitPrice:9},
+    {joistStockLength:0,joistUnitPrice:9},
+    {joistStockLength:-1},
+    {joistStockLength:144,joistUnitPrice:-1}
+  ])assert.equal(safeCompute("deck-material-calculator",{...base,...bad}).ok,false,JSON.stringify(bad));
+});
