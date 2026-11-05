@@ -920,3 +920,81 @@ test("Rejects cuts too long for stock, impossible kerf and excess reserve percen
   assert.equal(noKerf.materialSummary[0].kerfLoss,0);
   assert.equal(noKerf.stockCuts.length,noKerf.rows.length);
 });
+
+
+test("Framing zero price means missing quote, not free material",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator");
+  const r=compute("framing-calculator",defaults(t));
+  assert.deepEqual(r.costSummary.unpricedGroups,["Stud","Header"]);
+  assert.equal(r.costSummary.allPricesEntered,false);
+  assert.equal(r.costSummary.requiredGroups,2);
+  assert.equal(r.costSummary.pricedGroups,0);
+  assert.equal(r.costSummary.quotedSubtotal,0);
+  assert.equal(r.materialSummary[0].unitPrice,null);
+  assert.equal(r.materialSummary[0].purchaseCost,null);
+  assert.equal(r.materialSummary[2].unitPrice,null);
+  assert.equal(r.materialSummary[2].purchaseCost,0);
+  assert.equal(r.metrics.some(m=>m.label==="Quoted purchase total"),false);
+  near(value(r,"Material families awaiting quotes"),2);
+});
+
+test("Complete supplier quotes reconcile planned purchase and reserve costs",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const r=compute("framing-calculator",{...base,studUnitPrice:5.5,
+    headerUnitPrice:14.25,sillUnitPrice:0});
+  assert.equal(r.costSummary.allPricesEntered,true);
+  assert.deepEqual(r.costSummary.unpricedGroups,[]);
+  near(r.costSummary.quotedPlanned,69.25,1e-7);
+  near(r.costSummary.quotedReserve,0,1e-7);
+  near(r.costSummary.quotedSubtotal,69.25,1e-7);
+  near(value(r,"Quoted purchase total"),69.25,1e-7);
+  near(value(r,"Material families awaiting quotes"),0);
+  assert.deepEqual(r.materialSummary.slice(0,2).map(s=>s.purchaseCost),[55,14.25]);
+  const withReserve=compute("framing-calculator",{...base,studUnitPrice:5.5,
+    headerUnitPrice:14.25,stockWaste:10});
+  near(withReserve.costSummary.quotedPlanned,69.25,1e-7);
+  near(withReserve.costSummary.quotedReserve,19.75,1e-7);
+  near(withReserve.costSummary.quotedSubtotal,89,1e-7);
+  near(value(withReserve,"Quoted reserve cost"),19.75,1e-7);
+  assert.deepEqual(withReserve.materialSummary.map(s=>s.purchaseSticks),[11,2,0]);
+  for(const row of withReserve.materialSummary){
+    near((row.plannedCost??0)+(row.allowanceCost??0),row.purchaseCost??0,1e-7);
+  }
+});
+
+test("Partial framing quote only reports a labeled subtotal, never a total",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const r=compute("framing-calculator",{...base,studUnitPrice:7.25,headerUnitPrice:0});
+  assert.deepEqual(r.costSummary.unpricedGroups,["Header"]);
+  assert.equal(r.costSummary.allPricesEntered,false);
+  near(r.costSummary.quotedSubtotal,72.5);
+  assert.equal(r.materialSummary[1].purchaseCost,null);
+  assert.equal(r.metrics.some(m=>m.label==="Quoted purchase total"),false);
+});
+
+test("Second opening activates a separately quoted sill cost without mixing stock families",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const r=compute("framing-calculator",{...base,opening2Start:82,
+    opening2Width:18,opening2Sill:32,opening2Height:40,
+    studUnitPrice:8,headerUnitPrice:12,sillUnitPrice:4,stockWaste:10});
+  assert.equal(r.costSummary.allPricesEntered,true);
+  assert.equal(r.costSummary.requiredGroups,3);
+  const sill=r.materialSummary.find(x=>x.stockGroup==="Sill");
+  assert.equal(sill.pieces,1);
+  assert.equal(sill.unitPrice,4);
+  assert.ok(sill.purchaseSticks>=1);
+  assert.equal(sill.purchaseCost,sill.purchaseSticks*4);
+  const sum=r.materialSummary.reduce((s,row)=>s+(row.purchaseCost??0),0);
+  near(sum,r.costSummary.quotedSubtotal);
+  for(const g of r.materialSummary)
+    assert.ok(g.quoted&&g.purchaseCost===g.purchaseSticks*g.unitPrice);
+});
+
+test("Framing price quotes reject negative or implausibly large per-stick numbers",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  for(const q of [
+    {studUnitPrice:-0.01},{headerUnitPrice:-1},{sillUnitPrice:-3},
+    {studUnitPrice:1e6+1},{headerUnitPrice:1e6+1},{sillUnitPrice:1e6+1}
+  ])assert.equal(safeCompute("framing-calculator",{...base,...q}).ok,false,JSON.stringify(q));
+  assert.equal(safeCompute("framing-calculator",{...base,studUnitPrice:0,headerUnitPrice:0}).ok,true);
+});
