@@ -560,10 +560,17 @@ if(slug){
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
       error.textContent=e.message;error.hidden=false;
-      if(e.fieldKey){
-        const field=form.elements.namedItem(e.fieldKey);
-        field?.setAttribute("aria-invalid","true");
-        field?.setAttribute("aria-describedby","field-note-"+e.fieldKey+" calc-error");
+      // Input parsing supplies its own field key. Most calculator rules use
+      // "fieldKey must/cannot ..." messages; link those to the real input too.
+      // Do not guess a field from cross-dimensional geometry explanations.
+      const ruleKey=/^([A-Za-z][A-Za-z0-9]*) (?:must|cannot)\b/.exec(e.message)?.[1];
+      const fieldKey=e.fieldKey||ruleKey;
+      if(fieldKey){
+        const field=form.elements.namedItem(fieldKey);
+        if(field){
+          field.setAttribute("aria-invalid","true");
+          field.setAttribute("aria-describedby","field-note-"+fieldKey+" calc-error");
+        }
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
@@ -609,10 +616,6 @@ if(slug){
   });
   form.addEventListener("submit",event=>event.preventDefault());
   form.addEventListener("input",()=>{schedulePage=0;render();});
-  form.addEventListener("change",event=>{
-    // Native select controls can fire change without an input event.
-    if(event.target?.tagName==="SELECT"){schedulePage=0;render();}
-  });
   fraction.addEventListener("change",render);
   currency?.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
