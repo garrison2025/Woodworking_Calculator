@@ -849,7 +849,7 @@ test("Framing stock takeoff conserves every member, kerf and remaining stick len
   assert.deepEqual([header.stockGroup,header.pieces,header.cutLength,header.plannedSticks],
     ["Header",1,39,1]);
   assert.deepEqual([sill.stockGroup,sill.pieces,sill.plannedSticks,sill.purchaseSticks],
-    ["Sill",0,0,0,0]);
+    ["Sill",0,0,0]);
   assert.deepEqual(r.stockCuts.map(x=>x.item).sort(),r.rows.map(x=>x.item).sort());
   for(const bar of r.stockPlan){
     assert.ok(bar.cuts.length>0);
