@@ -36,7 +36,8 @@ test("6:12 common roof, common rafter and 45-degree-plan hip have distinct but c
   assert.equal(hip.rows[0].item,"Hip line reference");
   assert.deepEqual(hip.referencePoints,[{x:0,y:0,z:0},{x:120,y:120,z:60}]);
   assert.equal(common.shape,"rafter");
-  assert.equal(common.referencePoints,common.rows);
+  assert.deepEqual(common.referencePoints,common.rows.slice(0,3));
+  assert.deepEqual(common.birdsmouthCutRows,common.rows.slice(3));
   assert.equal(pitch.shape,"triangle");
 });
 
