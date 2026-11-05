@@ -628,3 +628,99 @@ test("Hip clipping area is conserved across 72 dimension, slope, orientation fix
     assert.ok(value(r,"Sheet positions (no offcut reuse)")>=value(r,"Sheet area lower bound"));
   }
 });
+
+test("Stud and Wall Stud use the same flat-wall centers and net lengths",()=>{
+  const opts={length:120,spacing:16,studWidth:1.5,plates:4.5};
+  const slope=compute("stud-calculator",{...opts,start:96,pitch:0});
+  const wall=compute("wall-stud-calculator",{...opts,height:96});
+  assert.deepEqual(slope.rows.map(r=>r.position),wall.rows.map(r=>r.position));
+  assert.deepEqual(slope.rows.map(r=>r.length),wall.rows.map(r=>r.cutLength));
+  assert.equal(wall.rows.length,9);
+  for(let i=0;i<wall.rows.length;i++){
+    near(slope.rows[i].grossHeight,96);
+    near(slope.rows[i].length,91.5);
+    near(slope.marks[i].topHeight,slope.rows[i].length);
+    near(wall.marks[i].topHeight,wall.rows[i].cutLength);
+  }
+});
+
+test("Rake Stud cut-list heights and drawing marks subtract total plates once",()=>{
+  const r=compute("stud-calculator",{length:144,start:96,pitch:6,spacing:16,studWidth:1.5,plates:4.5});
+  near(r.rows[0].grossHeight,96);
+  near(r.rows[0].length,91.5);
+  near(r.rows.at(-1).grossHeight,168);
+  near(r.rows.at(-1).length,163.5);
+  assert.equal(r.shape,"slope");
+  assert.equal(r.rows.length,r.marks.length);
+  for(let i=0;i<r.rows.length;i++){
+    const row=r.rows[i],mark=r.marks[i];
+    near(row.length,row.grossHeight-4.5,1e-7);
+    near(row.topElevation-row.bottomElevation,row.length,1e-7);
+    near(row.faceRight-row.faceLeft,1.5,1e-7);
+    near(row.position,mark.x,1e-7);
+    near(row.length,mark.cutLength,1e-7);
+  }
+  const m=compute("stud-calculator",{
+    length:144/25.4*25.4,start:96,pitch:6,spacing:16,studWidth:1.5,plates:4.5
+  });
+  near(value(m,"Last cut length"),value(r,"Last cut length"));
+});
+
+test("Opening frame counts, center faces and plate-referenced cut rows match drawing",()=>{
+  const a={length:120,spacing:16,width:1.5,wallHeight:96,bottomPlate:1.5,
+    topPlate:3,openingStart:32,openingWidth:36,openingHeight:80,openingSill:0};
+  const r=compute("framing-calculator",a);
+  assert.equal(r.rows.length,10);
+  assert.equal(r.rows.length,r.marks.length);
+  near(value(r,"Regular studs"),6);
+  near(value(r,"Opening-side reference members"),4);
+  near(value(r,"Regular and king cut length"),91.5);
+  for(let i=0;i<r.rows.length;i++){
+    const row=r.rows[i],mark=r.marks[i];
+    near(row.faceRight-row.faceLeft,1.5,1e-7);
+    near(row.position,(row.faceLeft+row.faceRight)/2,1e-7);
+    near(row.topElevation-row.bottomElevation,row.cutLength,1e-7);
+    near(row.position,mark.x,1e-7);
+    near(row.cutLength,mark.cutLength,1e-7);
+    near(row.topElevation,mark.topHeight,1e-7);
+    near(row.bottomElevation,mark.bottomHeight,1e-7);
+    near(row.cutLength,row.type==="Jack"?78.5:91.5,1e-7);
+  }
+  const plain=compute("wall-stud-calculator",{length:120,spacing:16,height:96,plates:4.5,studWidth:1.5});
+  for(const row of r.rows.filter(x=>x.type==="Regular")){
+    const corresponding=plain.rows.find(p=>p.position===row.position);
+    assert.ok(corresponding);
+    near(row.cutLength,corresponding.cutLength,1e-7);
+  }
+});
+
+test("Framing excludes nominal studs that partially overlap side-member faces",()=>{
+  const r=compute("framing-calculator",{length:120,spacing:14,width:1.5,wallHeight:96,
+    bottomPlate:1.5,topPlate:3,openingStart:31.2,openingWidth:28,openingHeight:80,openingSill:0});
+  assert.equal(r.rows.some(row=>row.type==="Regular"&&row.position===28),false);
+  for(let i=1;i<r.rows.length;i++)
+    assert.ok(r.rows[i].faceLeft>=r.rows[i-1].faceRight-1e-7,
+      "Overlapping faces at "+r.rows[i-1].item+" / "+r.rows[i].item);
+});
+
+test("Mandatory far-end stud center cannot overlap last OC member",()=>{
+  for(const slug of ["stud-calculator","wall-stud-calculator"]){
+    const a={length:113,spacing:16,studWidth:1.5,plates:4.5,start:96,pitch:0,height:96};
+    const r=compute(slug,a);
+    assert.ok(!r.rows.some(row=>row.position===112));
+    assert.equal(r.rows.at(-1).position,113);
+    for(let i=1;i<r.rows.length;i++)
+      assert.ok(r.rows[i].position-r.rows[i-1].position>=1.5-1e-7);
+  }
+  assert.equal(safeCompute("wall-stud-calculator",{length:120,spacing:1,height:96,plates:4.5,studWidth:1.5}).ok,false);
+});
+
+test("Framing plate thickness and impossible jack net lengths fail visibly",()=>{
+  const a={length:120,spacing:16,width:1.5,wallHeight:96,openingStart:32,
+    openingWidth:36,openingHeight:80,openingSill:0};
+  assert.equal(safeCompute("framing-calculator",{...a,bottomPlate:95,topPlate:3}).ok,false);
+  assert.equal(safeCompute("framing-calculator",{...a,bottomPlate:1.5,openingHeight:1}).ok,false);
+  const r=compute("framing-calculator",{...a,bottomPlate:2,topPlate:2});
+  near(value(r,"Regular and king cut length"),92);
+  near(r.rows.find(row=>row.type==="Jack").cutLength,78);
+});
