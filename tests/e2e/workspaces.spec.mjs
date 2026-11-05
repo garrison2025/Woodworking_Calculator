@@ -1968,3 +1968,41 @@ test("Rafter birdsmouth sawline and heel endpoints match CSV, polygon, HAP and e
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(heel).toHaveCount(0);
 });
+
+test("Deck optional full-width joists give honest supplier budget and numeric stock CSV",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/deck-material-calculator/");
+  await page.locator("#f-boardUnitPrice").fill("8");
+  await page.locator("#f-fastenerPackPrice").fill("20");
+  await page.locator("#f-joistStockLength").fill("144");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Joist stock sticks with allowance"})).toContainText("11");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Material families awaiting quotes"})).toContainText("1");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Quoted deck materials total"})).toHaveCount(0);
+  await page.locator("#f-joistUnitPrice").fill("9");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Quoted deck materials total"})).toContainText("399.00");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Source Offcut Length (mm)");
+  const download=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const schedule=readFileSync(await (await download).path(),"utf8");
+  expect(schedule).toContain('"Joist straight cut"');
+  expect(schedule).toContain('"3657.6"');
+  expect(schedule).toContain('"609.6"');
+  const budgetReady=page.waitForEvent("download");
+  await page.locator("#download-deck-budget-csv").click();
+  const budget=readFileSync(await (await budgetReady).path(),"utf8");
+  expect(budget).toContain('"Optional full-width joist stock"');
+  expect(budget).toContain('"99"');
+  await page.locator("#f-joistStockLength").fill("119");
+  await expect(page.locator("#calc-error")).toContainText("cannot cover full deck width");
+  await page.locator("#f-joistStockLength").fill("144");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-joistStockLength")).toHaveValue("0");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Joist stock sticks with allowance"})).toHaveCount(0);
+});
