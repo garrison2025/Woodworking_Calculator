@@ -2109,3 +2109,72 @@ test("Stringer optional measured support elevations classify 2D corner, interior
   await expect(contact).toHaveCount(0);
   await expect(page.locator("#download-stringer-end-contact-csv")).toBeDisabled();
 });
+
+test("Print/PDF includes every row of a paginated 540-piece cut list and restores page 4 afterwards",async({page})=>{
+  test.setTimeout(90000);
+  const {mkdirSync,writeFileSync}=await import("node:fs");
+  await page.goto("/segmented-bowl-calculator/");
+  await page.locator("#f-segments").fill("180");
+  await page.locator("#f-rings").fill("3");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const entries=page.locator("#cut-table tbody tr");
+  await expect(entries).toHaveCount(160);
+  await page.locator("#schedule-page-input").fill("4");
+  await page.locator("#schedule-go").click();
+  await expect(entries).toHaveCount(60);
+  await expect(entries.first()).toContainText("Ring 3 / segment 121");
+  await expect(entries.last()).toContainText("Ring 3 / segment 180");
+  await expect(page.locator("#schedule-count")).toContainText(
+    "Print / PDF includes ALL 540 rows");
+  // Exact native before/after print contract, independent of browser's
+  // print-preview timing. This is also used by the Print/PDF button.
+  await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
+  await expect(entries).toHaveCount(540);
+  await expect(entries.first()).toContainText("Ring 1 / segment 1");
+  await expect(entries.last()).toContainText("Ring 3 / segment 180");
+  await expect(page.locator("#schedule-count")).toContainText(
+    "PRINT WORKSHEET — all 540 calculated rows included");
+  await expect(page.locator("#schedule-pager")).toBeHidden();
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#print-calibration")).toBeVisible();
+  const printHeading=await page.locator("#cut-table thead").evaluate(el=>
+    getComputedStyle(el).display);
+  expect(printHeading).toBe("table-header-group");
+  await page.emulateMedia({media:"screen"});
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+  await expect(entries).toHaveCount(60);
+  await expect(entries.first()).toContainText("Ring 3 / segment 121");
+  await expect(page.locator("#schedule-page-status")).toHaveText("Page 4 of 4");
+  await expect(page.locator("#schedule-pager")).toBeVisible();
+  // A *real* Chromium PDF invokes beforeprint. Record the DOM row count
+  // inside the browser's native event, not only through our synthetic test.
+  await page.evaluate(()=>{
+    window.__pdfSnapshotRows=-1;
+    window.__pdfSnapshotLast="";
+    window.addEventListener("beforeprint",()=>{
+      const rows=document.querySelectorAll("#cut-table tbody tr");
+      window.__pdfSnapshotRows=rows.length;
+      window.__pdfSnapshotLast=rows[rows.length-1]?.textContent||"";
+    });
+  });
+  const pdf=await page.pdf({format:"A4",printBackground:true,
+    margin:{top:"15mm",bottom:"15mm",left:"15mm",right:"15mm"}});
+  expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+  expect(pdf.length).toBeGreaterThan(18000);
+  expect(await page.evaluate(()=>window.__pdfSnapshotRows)).toBe(540);
+  expect(await page.evaluate(()=>window.__pdfSnapshotLast)).toContain(
+    "Ring 3 / segment 180");
+  mkdirSync("print-evidence",{recursive:true});
+  writeFileSync("print-evidence/segmented-bowl-complete-540-rows-a4.pdf",pdf);
+  // Browser event ordering may vary, but restoring print state must never
+  // change the user's selected screen page.
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+  await expect(entries).toHaveCount(60);
+  await expect(page.locator("#schedule-page-status")).toHaveText("Page 4 of 4");
+  // Invalid geometry still clears the table instead of printing stale rows.
+  await page.locator("#f-inner").fill("999");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
+  await expect(entries).toHaveCount(0);
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+});
