@@ -22,6 +22,8 @@ if(slug){
   const currency=document.querySelector("#framing-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
   const framingComparisons=document.querySelector("#framing-offer-table tbody");
+  const framingProof=document.querySelector("#framing-proof-table tbody");
+  const framingProofStatus=document.querySelector("#framing-optimizer-status");
   const framingPriceStatus=document.querySelector("#framing-price-status");
   const framingTicket=document.querySelector("#framing-ticket-list");
   const framingTicketStatus=document.querySelector("#framing-ticket-status");
@@ -463,9 +465,10 @@ if(slug){
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
   const renderFramingTakeoff=()=>{
-    if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
+    if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
     const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[],
-      variants=latest?.purchaseVariants||[],comparisons=latest?.stockComparisons||[];
+      variants=latest?.purchaseVariants||[],comparisons=latest?.stockComparisons||[],
+      checks=latest?.optimizerStatus||[];
     framingMaterial.innerHTML=groups.map(r=>'<tr>'+
       [r.stockGroup,r.pieces,takeoffLength(r.cutLength),r.mixedLengths?"Mixed lengths":takeoffLength(r.stockLength),
        r.plannedSticks,r.allowanceSticks,r.purchaseSticks,takeoffLength(r.offcutLength)]
@@ -490,6 +493,24 @@ if(slug){
         r.quoted?money(r.purchaseCost):"Quote needed",
         takeoffLength(r.offcutLength),r.selected?"SELECTED":"Alternative"]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    const meaning={proved:"Completed exact enumeration", "size-limit":"Heuristic (over 9 pieces)",
+      "node-limit":"Heuristic (40,000-state limit)", "quote-needed":"Quote required",
+      "not-required":"No material required"};
+    framingProof.innerHTML=checks.map(check=>'<tr>'+
+      [check.stockGroup,check.pieceCount,meaning[check.status]||"Not verified",
+       check.nodes?check.nodes.toLocaleString("en-US"):"—",
+       check.certified?"PROVEN optimal in model":"Not proven"]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    const summary=latest?.costSummary;
+    const required=checks.filter(s=>s.pieceCount>0);
+    framingProofStatus.textContent=!summary?"Correct inputs to see validation.":
+      summary.allGroupsCertified?
+        "CERTIFIED: lowest purchase cost under the quoted-stock model for all "+
+          required.length+" required material families. This is not a real-world universal optimum.":
+        "NOT CERTIFIED for the whole wall — "+summary.certifiedGroups+
+          " of "+required.length+" required material families have completed exact search. "+
+          (summary.allPricesEntered?"Remaining results use a bounded heuristic.":"Missing supplier quotes.")+
+          " No global optimality claim.";
     const missing=summary?.unpricedGroups||[];
     framingPriceStatus.textContent=!summary?"Fix inputs to see supplier quote costs.":
       !summary.allPricesEntered?
