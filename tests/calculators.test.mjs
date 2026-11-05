@@ -998,3 +998,140 @@ test("Framing price quotes reject negative or implausibly large per-stick number
   ])assert.equal(safeCompute("framing-calculator",{...base,...q}).ok,false,JSON.stringify(q));
   assert.equal(safeCompute("framing-calculator",{...base,studUnitPrice:0,headerUnitPrice:0}).ok,true);
 });
+
+
+test("Unquoted 10ft/12ft offers preserve all legacy single-stock outputs",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const current=compute("framing-calculator",base);
+  const legacy=compute("framing-calculator",{...base,
+    studAltUnitPrice:0,studAlt2UnitPrice:0,
+    headerAltUnitPrice:0,headerAlt2UnitPrice:0,
+    sillAltUnitPrice:0,sillAlt2UnitPrice:0});
+  near(value(current,"Planned stock sticks (FFD estimate)"),11);
+  assert.equal(current.stockPlan.length,legacy.stockPlan.length);
+  assert.deepEqual(current.materialSummary,legacy.materialSummary);
+  assert.equal(current.stockComparisons.filter(p=>p.stockGroup==="Stud").length,1);
+  assert.equal(current.stockComparisons.filter(p=>p.stockGroup==="Header").length,1);
+  assert.equal(current.purchaseVariants.filter(p=>p.purchaseSticks>0).length,2);
+  assert.equal(current.stockCuts.length,13);
+  assert.ok(current.stockCuts.every(p=>p.stockLength===96&&p.offerLabel==="Base"));
+  assert.equal(current.costSummary.allPricesEntered,false);
+});
+
+test("Multi-length framing quote comparison selects cheaper mixed-stick plan",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const a={...base,wallHeight:80,openingHeight:60,studUnitPrice:8,
+    studAltUnitPrice:8.2,studAlt2UnitPrice:8.5,headerUnitPrice:12};
+  const result=compute("framing-calculator",a);
+  assert.equal(result.costSummary.allPricesEntered,true);
+  const stu=result.materialSummary.find(r=>r.stockGroup==="Stud");
+  assert.equal(stu.mixedLengths,true);
+  assert.equal(stu.stockLength,null);
+  assert.equal(stu.unitPrice,null);
+  assert.equal(stu.plannedSticks,8);
+  near(stu.purchaseCost,65);
+  near(result.costSummary.quotedSubtotal,77);
+  assert.deepEqual(result.purchaseVariants.filter(x=>x.stockGroup==="Stud")
+    .map(r=>[r.offerLabel,r.stockLength,r.purchaseSticks,r.unitPrice]),[
+      ["Base",96,6,8],["Alternative 2",144,2,8.5]
+    ]);
+  const comp=result.stockComparisons.filter(r=>r.stockGroup==="Stud");
+  assert.equal(comp.length,4);
+  const names=comp.map(r=>r.planLabel);
+  assert.ok(names.includes("Single length · Base"));
+  assert.ok(names.includes("Single length · Alternative 1"));
+  assert.ok(names.includes("Single length · Alternative 2"));
+  const chosen=comp.find(r=>r.selected);
+  assert.ok(chosen);
+  assert.equal(chosen.planLabel,"Greedy mixed lengths");
+  near(chosen.purchaseCost,65);
+  near(comp.find(r=>r.planLabel==="Single length · Base").purchaseCost,80);
+  near(comp.find(r=>r.planLabel==="Single length · Alternative 1").purchaseCost,73.8);
+  near(comp.find(r=>r.planLabel==="Single length · Alternative 2").purchaseCost,68);
+  assert.equal(result.stockCuts.length,result.rows.length);
+  assert.deepEqual(result.stockCuts.map(r=>r.item).sort(),
+    result.rows.map(r=>r.item).sort());
+  assert.equal(new Set(result.stockPlan.filter(b=>b.stockGroup==="Stud")
+    .map(b=>b.stockLength)).size,2);
+  for(const bar of result.stockPlan)
+    near(bar.piecesLength+bar.kerfLoss+bar.offcutLength,bar.stockLength,1e-7);
+});
+
+test("Reserve-aware multi-length selection recomputes by chosen offered size",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const without=compute("framing-calculator",{...base,wallHeight:80,
+    openingHeight:60,studUnitPrice:8,studAltUnitPrice:8.2,
+    studAlt2UnitPrice:8.5,headerUnitPrice:12,stockWaste:0});
+  const reserve=compute("framing-calculator",{...base,wallHeight:80,
+    openingHeight:60,studUnitPrice:8,studAltUnitPrice:8.2,
+    studAlt2UnitPrice:8.5,headerUnitPrice:12,stockWaste:10});
+  assert.equal(without.materialSummary[0].mixedLengths,true);
+  assert.equal(reserve.materialSummary[0].mixedLengths,false);
+  assert.equal(reserve.materialSummary[0].stockLength,144);
+  assert.equal(reserve.materialSummary[0].plannedSticks,8);
+  assert.equal(reserve.materialSummary[0].purchaseSticks,9);
+  near(reserve.materialSummary[0].purchaseCost,76.5);
+  near(reserve.costSummary.quotedSubtotal,100.5);
+  near(reserve.costSummary.quotedPlanned,80);
+  near(reserve.costSummary.quotedReserve,20.5);
+  assert.deepEqual(reserve.purchaseVariants.filter(p=>p.purchaseSticks>0)
+    .map(p=>[p.stockGroup,p.stockLength,p.purchaseSticks]),
+    [["Stud",144,9],["Header",96,2]]);
+});
+
+test("Longer quoted alternative can satisfy a member that cannot fit base stock",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),a={...defaults(t),wallHeight:108};
+  assert.equal(safeCompute("framing-calculator",a).ok,false);
+  const result=compute("framing-calculator",{...a,studAltUnitPrice:11,
+    headerUnitPrice:15});
+  assert.equal(result.costSummary.allPricesEntered,true);
+  const s=result.materialSummary[0];
+  assert.equal(s.stockLength,120);
+  assert.equal(s.mixedLengths,false);
+  assert.ok(result.stockPlan.filter(x=>x.stockGroup==="Stud")
+    .every(x=>x.stockLength===120));
+  assert.ok(result.stockCuts.every(x=>x.cutLength<=x.stockLength));
+});
+
+test("Mixed-size purchase variants conserve quoted costs and do not cross material families",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator");
+  const r=compute("framing-calculator",{...defaults(t),wallHeight:80,openingHeight:60,
+    studUnitPrice:8,studAltUnitPrice:8.2,studAlt2UnitPrice:8.5,
+    headerUnitPrice:12,opening2Start:82,opening2Width:18,opening2Height:36,
+    opening2Sill:28,sillUnitPrice:5});
+  for(const group of r.materialSummary){
+    const variants=r.purchaseVariants.filter(x=>x.stockGroup===group.stockGroup);
+    const cost=variants.reduce((s,v)=>s+(v.purchaseCost??0),0);
+    near(cost,group.purchaseCost??0);
+    assert.equal(variants.reduce((s,v)=>s+v.plannedSticks,0),group.plannedSticks);
+    assert.equal(variants.reduce((s,v)=>s+v.purchaseSticks,0),group.purchaseSticks);
+    assert.equal(variants.reduce((s,v)=>s+v.allowanceSticks,0),group.allowanceSticks);
+  }
+  assert.ok(r.stockPlan.some(x=>x.stockGroup==="Sill"));
+  assert.equal(new Set(r.stockCuts.map(x=>x.item)).size,r.rows.length);
+  assert.ok(r.stockPlan.every(x=>x.cuts.every(piece=>
+    (x.stockGroup==="Stud"&&!["Header","Sill"].includes(piece.type))||
+    x.stockGroup===piece.type)));
+  near(r.stockPlan.reduce((s,b)=>s+b.stockLength,0),
+    r.stockPlan.reduce((s,b)=>s+b.piecesLength+b.kerfLoss+b.offcutLength,0),1e-7);
+});
+
+test("Alternative supplier offer prices and lengths enforce safe boundaries",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  for(const changes of [
+    {studAltUnitPrice:-1},{headerAlt2UnitPrice:-1},{sillAltUnitPrice:-1},
+    {studAlt2UnitPrice:1e6+1},{studAltUnitPrice:5.555},
+    {headerAltStockLength:0,headerAltUnitPrice:6},
+    {studAltStockLength:0,studAltUnitPrice:4},
+    {sillAlt2StockLength:0,sillAlt2UnitPrice:5}
+  ]){
+    assert.equal(safeCompute("framing-calculator",{...base,...changes}).ok,
+      false,"Should reject "+JSON.stringify(changes));
+  }
+  const partial=compute("framing-calculator",{...base,studUnitPrice:0,
+    studAltUnitPrice:11,headerUnitPrice:0});
+  assert.deepEqual(partial.costSummary.unpricedGroups,["Header"]);
+  assert.equal(partial.metrics.some(m=>m.label==="Quoted purchase total"),false);
+  assert.equal(partial.stockPlan.filter(p=>p.stockGroup==="Stud")[0].offerLabel,
+    "Alternative 1");
+});
