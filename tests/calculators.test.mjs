@@ -1153,7 +1153,7 @@ test("Small fully quoted wall gets per-family exhaustive search certificates",()
   assert.equal(r.costSummary.allGroupsCertified,true);
   near(value(r,"Proven optimal material families"),2);
   assert.ok(r.optimizerStatus[0].nodes>0);
-  assert.equal(r.optimizerStatus[0].maxPieces,9);
+  assert.equal(r.optimizerStatus[0].maxPieces,16);
   assert.equal(r.optimizerStatus[0].limit,40000);
   assert.equal(r.stockComparisons.filter(s=>s.planLabel==="Exhaustive small-layout plan").length,2);
   assert.ok(r.stockComparisons.filter(s=>s.selected).every(s=>
@@ -1163,18 +1163,18 @@ test("Small fully quoted wall gets per-family exhaustive search certificates",()
 });
 test("Large priced wall remains explicitly uncertified even if header is proved",()=>{
   const t=tools.find(t=>t.slug==="framing-calculator"),a={
-    ...defaults(t),studUnitPrice:5.5,headerUnitPrice:14.25
+    ...defaults(t),length:240,studUnitPrice:5.5,headerUnitPrice:14.25
   };
   const r=compute("framing-calculator",a);
   const stud=r.optimizerStatus.find(s=>s.stockGroup==="Stud");
   assert.equal(stud.status,"size-limit");
   assert.equal(stud.nodes,0);
   assert.equal(stud.certified,false);
-  assert.ok(stud.pieceCount>9);
+  assert.ok(stud.pieceCount>16);
   assert.equal(r.optimizerStatus.find(s=>s.stockGroup==="Header").status,"proved");
   assert.equal(r.costSummary.certifiedGroups,1);
   assert.equal(r.costSummary.allGroupsCertified,false);
-  near(value(r,"Quoted purchase total"),69.25);
+  assert.ok(value(r,"Quoted purchase total")>69.25);
   near(value(r,"Proven optimal material families"),1);
 });
 test("Small wall with incomplete header quote never claims all materials optimal",()=>{
@@ -1258,12 +1258,12 @@ test("Exact solver's node and size caps never issue a false proof",()=>{
   const cutoff=exactFramingStock(pieces,[offer],.125,0,seed,{nodeLimit:1});
   assert.equal(cutoff.status,"node-limit");
   assert.equal(cutoff.certified,false);
-  assert.equal(cutoff.nodes,2);
+  assert.equal(cutoff.nodes,1);
   assert.ok(cutoff.candidate);
   const noQuotes=exactFramingStock(pieces,[],.125,0,seed);
   assert.equal(noQuotes.status,"quote-needed");
   assert.equal(noQuotes.certified,false);
-  const overSize=exactFramingStock(Array.from({length:10},(_,i)=>({
+  const overSize=exactFramingStock(Array.from({length:17},(_,i)=>({
     item:"n"+i,cutLength:1
   })),[offer],.125,0,seed);
   assert.equal(overSize.status,"size-limit");
@@ -1272,4 +1272,106 @@ test("Exact solver's node and size caps never issue a false proof",()=>{
   const empty=exactFramingStock([],[offer],.125,0,seed);
   assert.equal(empty.status,"not-required");
   assert.equal(empty.certified,false);
+});
+
+
+test("Memoized exact solver proves 16 identical cuts without expanding all equivalent permutations",()=>{
+  const pieces=Array.from({length:16},(_,i)=>({item:"Identical "+i,cutLength:1}));
+  const offer={code:"BASE",label:"Base",stockLength:4,unitPrice:5};
+  const seed={bars:pieces.map(p=>({offer,used:p.cutLength,cuts:[p]})),purchaseCost:80,purchaseCount:16};
+  const exact=exactFramingStock(pieces,[offer],0,0,seed);
+  assert.equal(exact.status,"proved");
+  assert.equal(exact.certified,true);
+  assert.equal(exact.maxPieces,16);
+  assert.ok(exact.nodes>0&&exact.nodes<=exact.nodeLimit,exact.nodes);
+  assert.ok(exact.memoHits>0,"Repeated equivalent partial stock plans must be merged");
+  const bars=exact.candidate.bars;
+  assert.equal(bars.length,4);
+  assert.equal(bars.reduce((s,b)=>s+b.cuts.length,0),16);
+  for(const bar of bars){
+    assert.equal(bar.cuts.length,4);
+    assert.equal(bar.used,4);
+    assert.equal(bar.offer.stockLength,4);
+  }
+});
+
+test("One-offer 12-member default framing is now certifiable without extra API or stock cost",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const data=compute("framing-calculator",{...base,studUnitPrice:5.5,headerUnitPrice:14.25});
+  assert.equal(data.materialSummary[0].pieces,12);
+  const stud=data.optimizerStatus[0];
+  assert.equal(stud.maxPieces,16);
+  assert.equal(stud.status,"proved");
+  assert.equal(stud.certified,true);
+  assert.ok(stud.nodes<=stud.limit);
+  assert.equal(data.costSummary.allGroupsCertified,true);
+  assert.equal(data.costSummary.certifiedGroups,2);
+  near(value(data,"Quoted purchase total"),69.25);
+  assert.equal(data.stockCuts.length,data.rows.length);
+  assert.deepEqual(data.stockCuts.map(x=>x.item).sort(),data.rows.map(x=>x.item).sort());
+});
+
+test("Larger memoized exact model remains unproved if distinct-state search budget is exhausted",()=>{
+  const pieces=Array.from({length:14},(_,i)=>({
+    item:"Variable "+i,cutLength:2+(i%7)*0.71
+  }));
+  const offers=[
+    {code:"BASE",label:"Base",stockLength:18,unitPrice:10},
+    {code:"ALT1",label:"Alternative 1",stockLength:22,unitPrice:11},
+    {code:"ALT2",label:"Alternative 2",stockLength:26,unitPrice:12}
+  ];
+  const bars=pieces.map(p=>({offer:offers[0],used:p.cutLength,cuts:[p]}));
+  const seed={bars,purchaseCount:14,purchaseCost:140};
+  const result=exactFramingStock(pieces,offers,.125,10,seed,{nodeLimit:20});
+  assert.equal(result.certified,false);
+  assert.equal(result.status,"node-limit");
+  assert.equal(result.nodes,20);
+  assert.ok(result.candidate.bars.length>=1);
+  assert.ok(result.memoHits>=0);
+});
+
+test("Memoized canonical search matches brute force even with repeated equal-size pieces",()=>{
+  const prices=[
+    {code:"BASE",label:"Base",stockLength:8,unitPrice:3},
+    {code:"ALT1",label:"Alternative 1",stockLength:12,unitPrice:4.5}
+  ];
+  const pieces=[5,5,3,3,3,2].map((cutLength,i)=>({item:"Tie "+i,cutLength}));
+  const seed={bars:pieces.map(p=>({offer:prices[1],used:p.cutLength,cuts:[p]})),
+    purchaseCount:pieces.length,purchaseCost:pieces.length*4.5};
+  const exact=exactFramingStock(pieces,prices,.125,10,seed);
+  assert.equal(exact.certified,true);
+  assert.ok(exact.memoHits>0);
+  let bruteMin=Infinity;
+  const allocations=[];
+  const recurse=i=>{
+    if(i===pieces.length){
+      let cost=0;
+      for(const o of prices){
+        const n=allocations.filter(b=>b.offer.code===o.code).length;
+        if(n)cost+=Math.ceil(n*1.1-1e-10)*o.unitPrice;
+      }
+      bruteMin=Math.min(bruteMin,cost);
+      return;
+    }
+    const p=pieces[i];
+    for(const bar of allocations){
+      const add=p.cutLength+(bar.cuts.length?.125:0);
+      if(bar.used+add>bar.offer.stockLength+1e-8)continue;
+      bar.used+=add;bar.cuts.push(p);
+      recurse(i+1);
+      bar.cuts.pop();bar.used-=add;
+    }
+    for(const offer of prices){
+      if(p.cutLength>offer.stockLength)continue;
+      allocations.push({offer,used:p.cutLength,cuts:[p]});
+      recurse(i+1);
+      allocations.pop();
+    }
+  };
+  recurse(0);
+  const byOffer=prices.map(o=>exact.candidate.bars.filter(b=>b.offer.code===o.code).length);
+  const optimized=byOffer.reduce((sum,n,i)=>
+    sum+(n?Math.ceil(n*1.1-1e-10)*prices[i].unitPrice:0),0);
+  near(optimized,bruteMin,1e-7);
+  assert.equal(exact.candidate.bars.reduce((s,b)=>s+b.cuts.length,0),pieces.length);
 });
