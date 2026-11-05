@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1475,7 +1475,8 @@ export function compute(slug,a){
   case "stair-stringer-calculator":{
     positive("rise","tread","depth");whole("risers",2,200);
     nonnegative("treadThickness","lowerFinish","nosing","upperLandingDepth",
-      "lowerSupportRun","upperSupportRun");
+      "lowerSupportRun","upperSupportRun",
+      "lowerEndCutRun","upperEndCutRun","measuredBlankLength","blankEndAllowance");
     need(a.nosing<a.tread,"Tread nose projection must be smaller than the horizontal tread run.");
     const h=a.rise/a.risers,run=(a.risers-1)*a.tread;
     need(a.lowerSupportRun<=run&&a.upperSupportRun<=run,
@@ -1562,6 +1563,58 @@ export function compute(slug,a){
         "Parallel lower reference edge",
       x:v.x,elevation:v.y
     }));
+    // Each NOMINAL saw tooth leg is exported as two real (X,Y) endpoints.
+    // These are line segments on the notch reference; wood-grade and saw
+    // depth/overcut are NOT inferred. The two optional timber end planes
+    // are specified by a field-measured lower-edge horizontal intersection.
+    const stringerCutLineRows=stepVertices.slice(1).map((end,i)=>{
+      const start=stepVertices[i];
+      const dx=end.x-start.x,dy=end.y-start.y;
+      const vertical=Math.abs(dx)<1e-8;
+      return {item:(vertical?"Riser sawline ":"Tread sawline ")+(i+1),
+        index:i+1,cutType:vertical?"Riser":"Tread",
+        startX:start.x,startY:start.y,endX:end.x,endY:end.y,
+        cutLength:q(Math.hypot(dx,dy)),
+        cutAngleDeg:q(deg(Math.atan2(dy,dx)))};
+    });
+    const measuredEndCuts=[];
+    const selectedEnds=[
+      {role:"Lower",extension:a.lowerEndCutRun,
+        start:{x:0,y:0},x:-a.lowerEndCutRun},
+      {role:"Upper",extension:a.upperEndCutRun,
+        start:stepVertices.at(-1),x:run+a.upperEndCutRun}
+    ];
+    for(const end of selectedEnds){
+      if(end.extension<=0)continue;
+      const y=lowerEdgeAt(end.x);
+      need(end.role==="Lower"?y<0:y<a.rise,
+        end.role+" chosen cut endpoint crosses the upper stair notch profile; reduce horizontal extension.");
+      const endpoint={x:q(end.x),y:q(y)};
+      const dx=endpoint.x-end.start.x,dy=endpoint.y-end.start.y;
+      measuredEndCuts.push({item:end.role+" user-chosen end line",
+        startX:end.start.x,startY:end.start.y,
+        endX:endpoint.x,endY:endpoint.y,
+        cutLength:q(Math.hypot(dx,dy)),
+        cutAngleDeg:q(deg(Math.atan2(dy,dx))),
+        cutType:"Measured reference – NOT bearing approved"});
+    }
+    const lowerSelected=measuredEndCuts.find(r=>r.item.startsWith("Lower"));
+    const upperSelected=measuredEndCuts.find(r=>r.item.startsWith("Upper"));
+    const stockAxisProfile=[
+      ...stepVertices,
+      {x:upperSelected?.endX??q(run),y:upperSelected?.endY??q(lowerAtTop)},
+      {x:lowerSelected?.endX??0,y:lowerSelected?.endY??q(lowerAtStart)}
+    ];
+    const angle=Math.atan2(h,a.tread),cs=Math.cos(angle),sn=Math.sin(angle);
+    const longitudinal=stockAxisProfile.map(p=>p.x*cs+(p.y-h)*sn);
+    const minStockAxis=Math.min(...longitudinal),maxStockAxis=Math.max(...longitudinal);
+    const stockAxisSpan=maxStockAxis-minStockAxis,
+      requiredBlankAxis=stockAxisSpan+2*a.blankEndAllowance;
+    const stockFitsModel=a.measuredBlankLength>0?
+      a.measuredBlankLength+1e-8>=requiredBlankAxis:null;
+    // This is only the projected length needed to contain the drawn 2-D
+    // profile at the chosen pitch. Actual board length requires end-bearing
+    // design, defects, overcut allowances and chosen stock.
     return result([
       M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
       M("Total horizontal run",run),
@@ -1576,7 +1629,14 @@ export function compute(slug,a){
       M("Modeled section minimum throat",minThroatFromVertices),
       M("Modeled section face area",envelopeAreaSqIn/144,"FT2"),
       M("Lower support surface reference run",a.lowerSupportRun),
-      M("Upper support surface reference run",a.upperSupportRun)
+      M("Upper support surface reference run",a.upperSupportRun),
+      M("Nominal sawline segments",stringerCutLineRows.length,"N"),
+      M("Modeled stock-axis length envelope",stockAxisSpan),
+      M("Axis envelope plus chosen trim allowances",requiredBlankAxis),
+      ...(a.measuredBlankLength>0?[
+        M("Measured raw stock length",a.measuredBlankLength),
+        M("Raw stock meets geometric length envelope",stockFitsModel?1:0,"N")
+      ]:[])
     ],rows.map(r=>P(r.horizontalRun,r.item)),Math.max(run,1),rows,"stringer",
     {stepRise:h,tread:a.tread,risers:a.risers,totalRise:a.rise,
       throat,bottomLayoutRise,notchNormal:normalNotch,
@@ -1587,7 +1647,11 @@ export function compute(slug,a){
       stockNormalDepth:a.depth,stockEnvelopeVertices:envelopeVertices,
       stringerEnvelopeRows,envelopeAreaSqIn,minThroatFromVertices,
       supportReferences,lowerSupportRun:a.lowerSupportRun,
-      upperSupportRun:a.upperSupportRun});
+      upperSupportRun:a.upperSupportRun,
+      lowerEndCutRun:a.lowerEndCutRun,upperEndCutRun:a.upperEndCutRun,
+      measuredEndCuts,stringerCutLineRows,stockAxisProfile,
+      stockAxisSpan,requiredBlankAxis,stockFitsModel,
+      measuredBlankLength:a.measuredBlankLength,blankEndAllowance:a.blankEndAllowance});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
