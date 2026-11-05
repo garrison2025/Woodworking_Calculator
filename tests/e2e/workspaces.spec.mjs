@@ -2058,3 +2058,54 @@ test("P1 stringer physical 2D blank and independent end X projections round-trip
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(raw).toHaveCount(1);
 });
+
+test("Stringer optional measured support elevations classify 2D corner, interior point and zero contact across SVG/CSV",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/stair-stringer-calculator/");
+  const table=page.locator("#stringer-end-contact-table");
+  const contact=page.locator("#dimension-svg svg .stringer-end-support-point");
+  const noncontact=page.locator("#dimension-svg svg .stringer-end-support-noncontact");
+  await expect(page.locator("#download-stringer-end-contact-csv")).toBeDisabled();
+  await page.locator("#f-lowerEndCutRun").fill("3");
+  await page.locator("#f-upperEndCutRun").fill("6");
+  await page.locator("#f-lowerSupportRun").fill("5");
+  await page.locator("#f-upperSupportRun").fill("4");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(table.locator("tbody tr")).toHaveCount(2);
+  await expect(table).toContainText("Shared corner only");
+  await expect(contact).toHaveCount(2);
+  await expect(noncontact).toHaveCount(0);
+  await expect(contact.first()).toHaveAttribute("data-shared-length","0");
+  await page.locator("#f-lowerSupportVerticalOffset").fill("-4.40625");
+  await page.locator("#f-upperSupportVerticalOffset").fill("-4.78125");
+  await expect(table).toContainText("Single point only");
+  await expect(table).toContainText("100.2188 in");
+  await expect(contact).toHaveCount(2);
+  await expect(contact.last()).toHaveAttribute("data-x","133");
+  await expect(contact.last()).toHaveAttribute("data-y","100.21875");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"End/support pairs touching at one point only"})).toContainText("2");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(table).toContainText("3378.2 mm");
+  let d=page.waitForEvent("download");
+  await page.locator("#download-stringer-end-contact-csv").click();
+  let csv=readFileSync(await (await d).path(),"utf8");
+  expect(csv).toContain('"Cut Parameter"');
+  expect(csv).not.toContain('"Cut Parameter (mm)"');
+  expect(csv).toContain('"3378.2"');
+  expect(csv).toContain('"2545.55625"');
+  expect(csv).toContain('"Single point only"');
+  await page.locator("#f-upperSupportVerticalOffset").fill("-203.2"); // -8 in
+  await expect(noncontact).toHaveCount(1);
+  await expect(contact).toHaveCount(1);
+  await expect(table).toContainText("No 2D intersection");
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"End/support pairs without 2D line intersection"})).toContainText("1");
+  await page.locator("#f-upperSupportVerticalOffset").fill("-121.44375");
+  await expect(noncontact).toHaveCount(0);
+  await expect(contact).toHaveCount(2);
+  await page.locator("#f-upperEndCutRun").fill("1100");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(contact).toHaveCount(0);
+  await expect(page.locator("#download-stringer-end-contact-csv")).toBeDisabled();
+});
