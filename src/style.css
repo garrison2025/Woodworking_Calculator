@@ -696,6 +696,11 @@ tbody tr:nth-child(2n){background:#fafbf8}
  body[data-tool="framing-calculator"] .print-schedule-part th{
    padding-top:3.4pt;padding-bottom:3.4pt
  }
+ /* A forced page break after the cut schedule created a completely blank
+    Letter sheet when the schedule ended at the paper boundary. */
+ body[data-tool="framing-calculator"] .framing-takeoff{
+   break-before:auto!important;page-break-before:auto!important
+ }
  body[data-tool="stair-stringer-calculator"] .proof #print-assumptions{
    font-size:8.5pt;line-height:1.28
  }
