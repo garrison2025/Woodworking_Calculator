@@ -668,7 +668,11 @@ if(slug){
         const xx=x0+sheet.eaveStart*scale,yy=y0+sheet.slopeStart*scale;
         const sw=(sheet.eaveEnd-sheet.eaveStart)*scale;
         const sh=(sheet.slopeEnd-sheet.slopeStart)*scale;
-        content+='<rect class="sheathing-cut" data-row="'+sheet.row+'" data-column="'+sheet.column+'" x="'+xx+'" y="'+yy+'" width="'+sw+'" height="'+sh+'" fill="'+(i%2?"#d9bc95":"#c7ddcc")+'" stroke="#fffefd" stroke-width="1.6"><title>'+esc(sheet.id+" · eave "+fmt(sheet.eaveStart)+" to "+fmt(sheet.eaveEnd)+" · slope "+fmt(sheet.slopeStart)+" to "+fmt(sheet.slopeEnd)+" · offcut "+fmt(sheet.offcutAreaSqIn/144)+" ft²")+'</title></rect>';
+        content+='<rect class="sheathing-cut" data-row="'+sheet.row+'" data-column="'+sheet.column+
+          '" data-eave-start="'+sheet.eaveStart+'" data-eave-end="'+sheet.eaveEnd+
+          '" data-slope-start="'+sheet.slopeStart+'" data-slope-end="'+sheet.slopeEnd+
+          '" data-cut-along="'+sheet.cutAlong+'" data-cut-uphill="'+sheet.cutUphill+
+          '" x="'+xx+'" y="'+yy+'" width="'+sw+'" height="'+sh+'" fill="'+(i%2?"#d9bc95":"#c7ddcc")+'" stroke="#fffefd" stroke-width="1.6"><title>'+esc(sheet.id+" · eave "+fmt(sheet.eaveStart)+" to "+fmt(sheet.eaveEnd)+" · slope "+fmt(sheet.slopeStart)+" to "+fmt(sheet.slopeEnd)+" · offcut "+fmt(sheet.offcutAreaSqIn/144)+" ft²")+'</title></rect>';
         if(sw>37&&sh>24)content+=svgText(xx+5,yy+17,sheet.id,"tick-label");
       }
       content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="none" stroke="#1e6454" stroke-width="2.5"/>';
