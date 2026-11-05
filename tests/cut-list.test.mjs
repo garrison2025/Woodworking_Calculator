@@ -453,3 +453,15 @@ test("P1 tapered bowl exports every ring's distinct stock blank and elevation me
  assert.ok(mm.includes('"Stack Bottom (mm)","Stack Top (mm)"'),mm.slice(0,750));
  assert.ok(mm.includes('"Ring 3 / segment 12"'),mm.slice(-1000));
 });
+
+test("P1 stringer complete sawline schedule and user end-line CSV retain endpoint units",()=>{
+ const r=compute("stair-stringer-calculator",{rise:105,risers:14,tread:10,depth:11.25,
+  treadThickness:1.5,lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6});
+ const csv=buildScheduleCsv(r.stringerCutLineRows,"mm");
+ assert.ok(csv.includes('"Start X (mm)","Start Y (mm)","End X (mm)","End Y (mm)","Cut Length (mm)","Cut Angle (°)"'),csv.slice(0,400));
+ assert.ok(csv.includes('"Riser sawline 1"'),csv.slice(0,600));
+ const ends=buildScheduleCsv(r.measuredEndCuts,"mm");
+ assert.ok(ends.includes('"Lower user-chosen end line"'),ends);
+ assert.ok(ends.includes('"-76.2"'),ends);
+ assert.ok(ends.includes('"3454.4"'),ends);
+});
