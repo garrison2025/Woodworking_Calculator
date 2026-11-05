@@ -1052,7 +1052,7 @@ export function compute(slug,a){
         const segment=end-start;
         need(segment>1e-8&&segment<=a.stock+1e-7,
           "Butt-end gaps consume a board cut or a cut exceeds purchased stock length.");
-        need(j===ends.length-2||joistGrid.some(x=>Math.abs(x-end)<1e-7),
+        need(j===ends.length-2||joistGrid.some(x=>Math.abs(x-referenceEnd)<1e-7),
           "Butt seam is not on the measured joist-center reference.");
         schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
           acrossStart:row.acrossStart,alongStart:q(start),
