@@ -1711,7 +1711,7 @@
       "keyword": "stair stringer calculator",
       "volume": 8100,
       "kd": 20,
-      "desc": "Straight stair stringer nominal notch profile, riser/tread coordinates, tread-nose references, landing reach, bottom trim and residual throat.",
+      "desc": "Straight stair stringer notch coordinates and modeled side section, remaining wood throat, stair nose, end support surface references and printable measurements.",
       "inputs": [
         {
           "key": "rise",
@@ -1760,11 +1760,23 @@
           "label": "Upper landing reference extension",
           "value": 0,
           "kind": "L"
+        },
+        {
+          "key": "lowerSupportRun",
+          "label": "Lower support surface reference run",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "upperSupportRun",
+          "label": "Upper support surface reference run",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "Riser height = total finished-floor rise/risers; treads=risers−1; horizontal run=treads×tread run. The notch pitch line from first tread at (0,riser height) to upper landing at (run,total rise) measures hypot(run,treads×riser height). The different floor datum diagonal measures hypot(run,total rise) and is NOT a stringer cut length. Notch penetration=step rise×tread run/hypot(step rise,tread run); nominal throat=board normal depth−notch penetration; bottom trim=step rise−tread thickness+additional lower finish. Optional tread nosing is a nonstructural HORIZONTAL projection toward the downhill side from each riser's vertical line, modeled as x(start)−nosing; it does not alter notch pitch, tread count or stringer cutting vertices. Optional upper landing reference depth starts after final riser and adds to the displayed horizontal footprint, not to the notched stringer cut length.",
-      "example": "105 in between finished floors, 14 risers and 10 in tread run yield 7.5 in risers, 13 treads, 130 in horizontal run, 162.5 in first-tread-to-landing notch pitch reference and about 167.1 in floor-to-floor diagonal (not a board cut length). With 1.5 in tread stock and no later lower finish, bottom trim reference is 6 in. A separately entered 1.25 in tread-nose projection starts the first nose at x=−1.25 in; a 36 in upper landing reference extends from x=130 to x=166 in without changing the 130 in nominal stringer notch run.",
-      "limit": "Nominal straight-stair *reference* only. The floor-to-floor diagonal is NOT a stringer cut length or stock length. The first riser nominal profile is distinct from the bottom trim that compensates for the tread/floor finish. SVG uses nominal step vertices and is NOT a 1:1 saw template or actual stock outline. Actual top/bottom bearing, nosing, throat code limits, fasteners, total stock, fit and structural safety require site verification. Nosing and optional upper landing are drawn as distinct reference overlays, not actual saw cut geometry, support details, board stock length or a guaranteed stock purchasing length. Enter a nosing projection smaller than the horizontal tread run. Coordinate datums refer to the nominal notch profile, not measured finished tread overhang or construction approval.",
+      "formula": "Riser height = total finished-floor rise/risers; treads=risers−1; horizontal run=treads×tread run. The notch pitch line from first tread at (0,riser height) to upper landing at (run,total rise) measures hypot(run,treads×riser height). The different floor datum diagonal measures hypot(run,total rise) and is NOT a stringer cut length. Notch penetration=step rise×tread run/hypot(step rise,tread run); nominal throat=board normal depth−notch penetration; bottom trim=step rise−tread thickness+additional lower finish. Optional tread nosing is a nonstructural HORIZONTAL projection toward the downhill side from each riser's vertical line, modeled as x(start)−nosing; it does not alter notch pitch, tread count or stringer cutting vertices. Optional upper landing reference depth starts after final riser and adds to the displayed horizontal footprint, not to the notched stringer cut length. Modeled section: slope m = riser height / tread run; nominal upper pitch line is y=m*x + riser height; a parallel lower reference edge at stock normal depth D is y=m*x + riser height − D*sqrt(1+m²). Joining the exact repeated notch vertices to this lower edge at the FIRST and FINAL riser x datums gives a closed modeled side-section polygon, but these artificial vertical end-closing edges are NOT top/bottom bearing cuts. Minimum modeled perpendicular throat = D − riser height/sqrt(1+m²), and modeled section face area = horizontal flight run × (D*sqrt(1+m²) − riser height/2). Optional measured lower and upper horizontal support surface references lie outside the nominal notch span and do not create or certify bearing cuts.",
+      "example": "105 in between finished floors, 14 risers and 10 in tread run yield 7.5 in risers, 13 treads, 130 in horizontal run, 162.5 in first-tread-to-landing notch pitch reference and about 167.1 in floor-to-floor diagonal (not a board cut length). With 1.5 in tread stock and no later lower finish, bottom trim reference is 6 in. A separately entered 1.25 in tread-nose projection starts the first nose at x=−1.25 in; a 36 in upper landing reference extends from x=130 to x=166 in without changing the 130 in nominal stringer notch run. With 7.5 in rise/step, 10 in tread and 11.25 in stock normal depth, the lower parallel reference edge is y=0.75x−6.5625 in; the modeled minimum throat is 5.25 in, and the 130 in long nominal cross-sectional envelope has 1340.625 in² face area (a geometry reference, NOT lumber purchase area). Optional 3 in lower and 6 in upper horizontal support surface runs are separately indicated, not transferred automatically to saw cuts.",
+      "limit": "Nominal straight-stair *reference* only. The floor-to-floor diagonal is NOT a stringer cut length or stock length. The first riser nominal profile is distinct from the bottom trim that compensates for the tread/floor finish. SVG uses nominal step vertices and is NOT a 1:1 saw template or actual stock outline. Actual top/bottom bearing, nosing, throat code limits, fasteners, total stock, fit and structural safety require site verification. Nosing and optional upper landing are drawn as distinct reference overlays, not actual saw cut geometry, support details, board stock length or a guaranteed stock purchasing length. Enter a nosing projection smaller than the horizontal tread run. Coordinate datums refer to the nominal notch profile, not measured finished tread overhang or construction approval. The calculated notched section and parallel lower stock edge are a mathematical side-view MODEL, not a verified original rectangular blank, complete physical cut outline or structural timber specification. Their vertical end-closing edges are reference clips at the first and last riser x coordinates, NOT safe bearing cut positions. Lower and upper support run inputs represent measured horizontal surface references only: they do not determine contact, end cuts, bolts, landings or bearing adequacy. No purchase board length or 1:1 template is inferred. Use independent field verification and professional structural review for actual end bearing.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1790,6 +1802,18 @@
         {
           "heading": "Show upper landing reach without inflating notch length",
           "text": "If you have a separate top landing depth measurement, enter its optional horizontal extension. The worksheet shows its start at the final riser x coordinate and its end at the nominal flight run plus the extension. This is NOT a longer stringer notch pitch line, physical board cut length, engineered top connection or extra counted tread."
+        },
+        {
+          "heading": "Read the colored section as a modeled profile, not a raw stock cut template",
+          "text": "The shaded polygon follows the repeated saw-tooth notch references and a mathematically parallel lower edge separated from the upper pitch line by the entered nominal board depth. The lower boundary and the vertical closing edges at the first and last risers are idealized reference boundaries; physical bearing cuts, end trim, ledger connection, full raw board dimensions, knots and real stock face defects are NOT supplied. The computed face area is a side-section geometry check, not a lumber purchase or strength rating."
+        },
+        {
+          "heading": "Check the minimum remaining wood depth using a perpendicular throat",
+          "text": "The deepest modeled notch corners all lie one riser below the upper pitch line. Convert that drop into a distance perpendicular to the stringer pitch, then subtract from the user-entered normal stock depth. For 7.5 in rise per 10 in tread and 11.25 in normal depth, penetration is 6 in and nominal minimum throat 5.25 in. The tool rejects a nonpositive remaining throat; positive alone does not establish structural suitability or compliance."
+        },
+        {
+          "heading": "Lower and upper support surfaces are independent site measurements",
+          "text": "Optional lower and upper horizontal support surface runs appear as separately styled reference segments at the bottom and top finished-level datums, outside the nominal stringer cut span. They are not cut faces and they do not imply the stringer physically sits on either segment. Actual end-bearing shape, clearance, fastening, attachment strength and local building-code checks require measured framing details and professional review."
         }
       ]
     },
