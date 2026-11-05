@@ -1989,3 +1989,36 @@ test("P1 brace coordinate projections conserve length on varied slope and unit c
       finish.verticalY-start.verticalY),full-2*setback,1e-7);
   }
 });
+
+test("P1 ring distinguishes polygon corner diameters, perpendicular face depth and turning circle",()=>{
+  const n=12,theta=Math.PI/n;
+  const r=compute("segmented-bowl-calculator",{outer:12,inner:8,segments:n,rings:3});
+  near(value(r,"Outer chord"),12*Math.sin(theta),1e-7);
+  near(value(r,"Inner chord"),8*Math.sin(theta),1e-7);
+  near(value(r,"Segment radial depth"),2);
+  near(value(r,"Perpendicular stock-face depth"),2*Math.cos(theta),1e-7);
+  near(value(r,"Maximum circular outside diameter (ideal)"),12*Math.cos(theta),1e-7);
+  near(value(r,"One complete polygon-ring face area")*144,60,1e-7);
+  near(value(r,"One segment face area")*144,5,1e-7);
+  near(r.rows[0].perpendicularFaceDepth,2*Math.cos(theta),1e-7);
+  near(r.rows[0].segmentFaceAreaFt2*144,5,1e-6);
+  assert.deepEqual(r.segmentTemplateVertices[0],[0,0]);
+  near(r.segmentTemplateVertices[1][0],12*Math.sin(theta),1e-7);
+  near(r.segmentTemplateVertices[2][1],2*Math.cos(theta),1e-7);
+  near(r.segmentTemplateVertices[3][1],2*Math.cos(theta),1e-7);
+  assert.ok(value(r,"Maximum circular outside diameter (ideal)")<12);
+});
+test("P1 polygon ring trapezoids conserve total area across segment counts and ring sizes",()=>{
+  for(const n of [3,4,6,8,12,24,48,180]){
+    for(const [outer,inner] of [[12,8],[30,22],[1,.5]]){
+      const r=compute("segmented-bowl-calculator",{outer,inner,segments:n,rings:1});
+      const theta=Math.PI/n;
+      const independent=n*(outer*outer-inner*inner)*Math.sin(2*theta)/8;
+      near(r.ringAreaSqIn,independent,1e-7);
+      near(n*r.trapezoidAreaSqIn,independent,1e-7);
+      near(r.turningLimit,outer*Math.cos(theta),1e-7);
+      near(r.faceDepth,(outer-inner)/2*Math.cos(theta),1e-7);
+      assert.equal(r.rows.length,n);
+    }
+  }
+});
