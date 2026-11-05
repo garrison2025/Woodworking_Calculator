@@ -585,3 +585,20 @@ test("flat and sloped stud drawings expose exactly the exported center-cut pairs
   await expect(wall.last()).toHaveAttribute("data-position","113");
   await expect(page.locator('#dimension-svg svg .wall-cut-stud[data-position="112"]')).toHaveCount(0);
 });
+
+test("rake stud physical face polygons share short/long cuts with the exported row",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const faces=page.locator("#dimension-svg svg .gable-cut-face");
+  await expect(faces).toHaveCount(10);
+  await expect(faces.first()).toHaveAttribute("data-left-cut","91.125");
+  await expect(faces.first()).toHaveAttribute("data-center-cut","91.5");
+  await expect(faces.first()).toHaveAttribute("data-right-cut","91.875");
+  await expect(faces.last()).toHaveAttribute("data-left-cut","163.125");
+  await expect(faces.last()).toHaveAttribute("data-center-cut","163.5");
+  await expect(faces.last()).toHaveAttribute("data-right-cut","163.875");
+  await expect(page.locator("#cut-table thead")).toContainText("Left Edge Cut");
+  await expect(page.locator("#cut-table thead")).toContainText("Right Edge Cut");
+  await page.locator("#f-pitch").fill("0");
+  await expect(faces.first()).toHaveAttribute("data-left-cut","91.5");
+  await expect(faces.first()).toHaveAttribute("data-right-cut","91.5");
+});
