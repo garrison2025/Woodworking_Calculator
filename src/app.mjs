@@ -15,6 +15,9 @@ if(slug){
   const scheduleGo=document.querySelector("#schedule-go");
   const schedulePageStatus=document.querySelector("#schedule-page-status");
   const scheduleCount=document.querySelector("#schedule-count");
+  const framingMaterial=document.querySelector("#framing-material-table tbody");
+  const framingStock=document.querySelector("#framing-stock-table tbody");
+  const stockExport=document.querySelector("#download-stock-csv");
   const fmt=(x,kind="L")=>{
     if(!Number.isFinite(x))return "—";
     if(kind==="N")return String(Math.round(x));
@@ -415,13 +418,13 @@ if(slug){
   const save=(name,content,type)=>{
     const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
   };
-  const scheduleValue=(kind,v)=>{
+  const scheduleValue=(kind,v,key="")=>{
     if(v===null||v===undefined)return "—";
     if(kind==="vertices"&&Array.isArray(v))
       return v.map(point=>"("+point.map(n=>fmt(n)).join(", ")+")").join("; ");
     if(kind==="area")return fmt(v,"FT2");
     if(kind==="angle")return fmt(v,"A");
-    if(kind==="length"&&typeof v==="number")return fmt(v,"L");
+    if(kind==="length"&&typeof v==="number")return fmt(v,"L")+(slug==="framing-calculator"&&key==="cutLength"&&unit==="in"?" (≈ "+frac(v)+")":"");
     return String(v);
   };
   const renderSchedule=()=>{
@@ -435,7 +438,7 @@ if(slug){
     schedulePage=Math.min(Math.max(0,schedulePage),pages-1);
     const start=schedulePage*schedulePageSize,end=Math.min(count,start+schedulePageSize);
     cut.innerHTML='<thead><tr>'+scheduleCols.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+
-      latest.rows.slice(start,end).map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key]))+'</td>').join("")+'</tr>').join("")+'</tbody>';
+      latest.rows.slice(start,end).map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>').join("")+'</tr>').join("")+'</tbody>';
     schedulePager.hidden=pages<=1;
     schedulePrev.disabled=schedulePage===0;
     scheduleNext.disabled=schedulePage===pages-1;
@@ -446,6 +449,21 @@ if(slug){
       "Showing rows "+(start+1)+"–"+end+" of "+count+". Print shows this page only; CSV includes all "+count+" rows.":
       "Showing "+count+" computed rows.";
   };
+  // Framing summary and stock-by-stock schedule reuse exactly the engine's
+  // stockPlan/materialSummary. Fraction rounding remains UI-only.
+  const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
+  const renderFramingTakeoff=()=>{
+    if(!framingMaterial||!framingStock)return;
+    const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[];
+    framingMaterial.innerHTML=groups.map(r=>'<tr>'+
+      [r.stockGroup,r.pieces,takeoffLength(r.cutLength),takeoffLength(r.stockLength),
+       r.plannedSticks,r.allowanceSticks,r.purchaseSticks,takeoffLength(r.offcutLength)]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    framingStock.innerHTML=bars.map(bar=>'<tr><td>'+esc(bar.stockId)+'</td><td>'+
+      bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))).join("<br>")+
+      '</td><td>'+esc(takeoffLength(bar.kerfLoss))+'</td><td>'+
+      esc(takeoffLength(bar.offcutLength))+'</td></tr>').join("");
+  };
   function render(){
     try{
       const data=safeCompute(slug,values());
@@ -454,10 +472,11 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
+      renderFramingTakeoff();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
-    }catch(e){latest=null;scheduleCols=[];schedulePage=0;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";schedulePager.hidden=true;status.textContent="Calculation requires correction."}
+    }catch(e){latest=null;scheduleCols=[];schedulePage=0;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";schedulePager.hidden=true;renderFramingTakeoff();status.textContent="Calculation requires correction."}
   }
   const showSchedulePage=next=>{
     if(!latest||!latest.rows.length)return;
@@ -507,6 +526,13 @@ if(slug){
     const text=buildScheduleCsv(rows,unit,tool.limit);
     save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");
     status.textContent="CSV saved locally.";
+  });
+  stockExport?.addEventListener("click",()=>{
+    if(!latest||!Array.isArray(latest.stockCuts)||!latest.stockCuts.length)return;
+    const text=buildScheduleCsv(latest.stockCuts,unit,
+      "FFD stock cutting estimate; groups cannot mix; kerf charged between cuts; extra reserve sticks omitted from plan; not a structural or optimality guarantee.");
+    save(slug+"-"+unit+"-stock-cut-plan.csv",text,"text/csv;charset=utf-8");
+    status.textContent="Stock cut plan CSV saved locally.";
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
