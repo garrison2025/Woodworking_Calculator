@@ -56,9 +56,17 @@ if(slug){
     const a={};
     for(const f of tool.inputs){
       const el=form.elements.namedItem(f.key);
-      if(!el||el.value.trim()==="")throw new Error(f.label+" is required.");
+      if(!el||el.value.trim()===""){
+        const issue=new Error(f.label+" is required.");
+        issue.fieldKey=f.key;
+        throw issue;
+      }
       const v=Number(el.value);
-      if(!Number.isFinite(v))throw new Error(f.label+" must be a valid number.");
+      if(!Number.isFinite(v)){
+        const issue=new Error(f.label+" must be a valid number.");
+        issue.fieldKey=f.key;
+        throw issue;
+      }
       a[f.key]=f.kind==="L"?convertToInches(v,unit):v;
     }
     return a;
@@ -531,6 +539,13 @@ if(slug){
       esc(r.unitPrice!==null?money(r.purchaseCost):"QUOTE NEEDED")+'</span></li>').join("");
   };
   function render(){
+    // Clear field-specific validation before re-reading the current inputs.
+    // Errors caused by cross-field geometry rules remain in the main alert.
+    for(const f of tool.inputs){
+      const field=form.elements.namedItem(f.key);
+      field?.removeAttribute("aria-invalid");
+      field?.setAttribute("aria-describedby","field-note-"+f.key);
+    }
     try{
       const data=safeCompute(slug,values());
       if(!data.ok)throw new Error(data.error);
@@ -542,7 +557,19 @@ if(slug){
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
-    }catch(e){latest=null;scheduleCols=[];schedulePage=0;error.hidden=false;error.textContent=e.message;out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";schedulePager.hidden=true;renderFramingTakeoff();status.textContent="Calculation requires correction."}
+    }catch(e){
+      latest=null;scheduleCols=[];schedulePage=0;
+      error.textContent=e.message;error.hidden=false;
+      if(e.fieldKey){
+        const field=form.elements.namedItem(e.fieldKey);
+        field?.setAttribute("aria-invalid","true");
+        field?.setAttribute("aria-describedby","field-note-"+e.fieldKey+" calc-error");
+      }
+      out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
+      cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
+      schedulePager.hidden=true;renderFramingTakeoff();
+      status.textContent="Calculation requires correction.";
+    }
   }
   const showSchedulePage=next=>{
     if(!latest||!latest.rows.length)return;
@@ -571,12 +598,21 @@ if(slug){
   units.addEventListener("change",()=>{
     const before=unit,after=units.value;if(before===after)return;
     for(const f of tool.inputs)if(f.kind==="L"){
-      const el=form.elements.namedItem(f.key),v=Number(el.value);
+      const el=form.elements.namedItem(f.key);
+      // Never turn an intentionally blank or invalid field into a false zero
+      // when the user switches between inches and metric units.
+      if(!el||el.value.trim()==="")continue;
+      const v=Number(el.value);
       if(Number.isFinite(v))el.value=Number(convertFromInches(convertToInches(v,before),after).toFixed(after==="m"?7:6));
     }
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
+  form.addEventListener("submit",event=>event.preventDefault());
   form.addEventListener("input",()=>{schedulePage=0;render();});
+  form.addEventListener("change",event=>{
+    // Native select controls can fire change without an input event.
+    if(event.target?.tagName==="SELECT"){schedulePage=0;render();}
+  });
   fraction.addEventListener("change",render);
   currency?.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
