@@ -2185,3 +2185,56 @@ test("P1 hip developed-surface polygon reuse proves stock bounding box and full 
       x<=p.stockWidth+1e-7&&y<=p.stockHeight+1e-7));
  }
 });
+
+test("P1 deck physical board-end positions conserve every row with entered butt gap",()=>{
+  const inputs={width:11.125,length:144,board:5.5,gap:.125,stock:100,
+    joists:16,waste:0,seamMode:0,buttEndGap:.25,joistFaceWidth:3.5,minEndBearing:1.5};
+  const r=compute("deck-material-calculator",inputs);
+  const pieces=r.rows.filter(row=>row.type==="Decking");
+  assert.equal(r.deckRows.length,2);
+  assert.equal(pieces.length,4);
+  near(value(r,"Geometric face overlap per joined end"),1.625);
+  near(value(r,"Installed physical board cut length"),287.5);
+  near(value(r,"Installed linear decking"),287.5/12);
+  for(let i=0;i<2;i++){
+    const [before,after]=pieces.slice(i*2,i*2+2);
+    near(before.buttJointAtEnd,96);
+    near(before.actualCutEnd,95.875);
+    near(after.alongStart,96.125);
+    near(after.alongStart-before.actualCutEnd,.25);
+    near(before.cutLength+after.cutLength+.25,144);
+    near(before.geometricFaceOverlap,1.625);
+    near(after.geometricFaceOverlap,1.625);
+  }
+  near(pieces.reduce((sum,row)=>sum+row.cutLength,0)+2*.25,2*144);
+});
+test("P1 deck measured joist face and minimum physical overlap reject impossible seams",()=>{
+  const base={width:11.125,length:144,board:5.5,gap:.125,stock:100,joists:16,waste:0};
+  for(const bad of [
+    {buttEndGap:2,joistFaceWidth:1.5,minEndBearing:0},
+    {buttEndGap:.25,joistFaceWidth:3.5,minEndBearing:1.7},
+    {buttEndGap:1.5,joistFaceWidth:1.5},
+    {buttEndGap:-.01},{joistFaceWidth:0},{minEndBearing:-1}
+  ])assert.equal(safeCompute("deck-material-calculator",{...base,...bad}).ok,false,JSON.stringify(bad));
+  const seamless=compute("deck-material-calculator",{
+    ...base,stock:144,buttEndGap:2,joistFaceWidth:.5,minEndBearing:10
+  });
+  assert.equal(seamless.deckRows.every(row=>row.seamCenters.length===0),true);
+});
+test("P1 deck positive-gap opt-in retains original zero-gap results and independent seam centers",()=>{
+  const base={width:120,length:144,board:5.5,gap:.125,stock:100,joists:16,
+    waste:10,seamMode:1,boardUnitPrice:8.75,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:22};
+  assert.deepEqual(compute("deck-material-calculator",base),compute("deck-material-calculator",{
+    ...base,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0
+  }));
+  const altered=compute("deck-material-calculator",{
+    ...base,buttEndGap:.125,joistFaceWidth:3.5,minEndBearing:1.5
+  });
+  assert.deepEqual(altered.deckRows[0].seamCenters,[96]);
+  assert.deepEqual(altered.deckRows[1].seamCenters,[48]);
+  const count=altered.deckRows.reduce((sum,row)=>sum+row.seamCenters.length,0);
+  const cuts=altered.rows.filter(row=>row.type==="Decking");
+  near(cuts.reduce((sum,row)=>sum+row.cutLength,0)+count*.125,22*144);
+  near(value(altered,"Piece-joist fastening contacts"),242);
+  near(value(altered,"Stock boards (no offcut reuse)"),44);
+});
