@@ -1607,3 +1607,50 @@ test("Deck fastener pack rounding is stable at exact pack boundaries",()=>{
   assert.equal(value(joined,"Fasteners requested"),484);
   assert.equal(value(joined,"Fastener packs to buy"),5);
 });
+
+
+test("Stringer nosing and landing references keep the real nominal notch vertices unchanged",()=>{
+  const t=tools.find(t=>t.slug==="stair-stringer-calculator"),
+    original=compute(t.slug,defaults(t));
+  const r=compute(t.slug,{...defaults(t),nosing:1.25,upperLandingDepth:36});
+  near(value(r,"Uniform riser height"),7.5);
+  near(value(r,"Total horizontal run"),130);
+  near(value(r,"Tread nosing reference"),1.25);
+  near(value(r,"Upper landing reference depth"),36);
+  near(value(r,"Total horizontal planning reach"),166);
+  near(value(r,"Notch pitch-line reference"),value(original,"Notch pitch-line reference"));
+  near(value(r,"Floor-to-floor diagonal (not a cut length)"),
+    value(original,"Floor-to-floor diagonal (not a cut length)"));
+  near(value(r,"Uncut throat (nominal)"),5.25);
+  assert.deepEqual(r.stepVertices,original.stepVertices);
+  assert.equal(r.rows.length,14);
+  assert.equal(r.noseReferences.length,13);
+  near(r.rows[0].noseStart,-1.25);
+  near(r.rows[0].noseEnd,0);
+  near(r.rows[1].noseStart,8.75);
+  near(r.rows[1].noseEnd,10);
+  assert.equal(r.rows.at(-1).landingReferenceEnd,166);
+  assert.equal(r.rows.at(-1).treadEnd,null);
+  assert.equal(r.landingReferenceEnd,166);
+  for(const [i,n] of r.noseReferences.entries()){
+    near(n.noseEnd-n.noseStart,1.25,1e-7);
+    near(n.rise,(i+1)*7.5,1e-7);
+  }
+});
+test("Stringer reference options reject nonsensical nosing and preserve original default schedule",()=>{
+  const t=tools.find(t=>t.slug==="stair-stringer-calculator"),d=defaults(t);
+  for(const bad of [
+    {nosing:-1},{nosing:10},{nosing:11},
+    {upperLandingDepth:-1},{nosing:1e8}
+  ]){
+    assert.equal(safeCompute(t.slug,{...d,...bad}).ok,false,JSON.stringify(bad));
+  }
+  const legacy=compute(t.slug,{rise:105,risers:14,tread:10,
+    depth:11.25,treadThickness:1.5,lowerFinish:0});
+  assert.equal(legacy.noseReferences.length,0);
+  assert.equal(legacy.landingReferenceEnd,130);
+  assert.ok(legacy.rows.every(r=>!Object.hasOwn(r,"noseStart")&&
+    !Object.hasOwn(r,"landingReferenceEnd")));
+  assert.equal(legacy.stepVertices.length,28);
+  near(value(legacy,"Total horizontal run"),130);
+});
