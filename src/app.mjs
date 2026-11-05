@@ -61,7 +61,7 @@ if(slug){
     let content='<line class="axis" x1="'+left+'" y1="'+base+'" x2="'+right+'" y2="'+base+'"/>';
     let marks=data.marks||[];
     const tick=marks.length>60?Math.ceil(marks.length/60):1;
-    if(["ruler","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening"].includes(data.shape)){
+    if(["ruler","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening","wall-studs"].includes(data.shape)){
       // A single isotropic scale prevents wide drilled holes from becoming
       // distorted: shrink the board horizontally if the diameter would not
       // fit the fixed vertical diagram viewport.
@@ -91,22 +91,51 @@ if(slug){
         content+=svgText(right-227,69,"RIGHT MARGIN "+fmt(data.rightMargin),"tick-label");
         content+=svgText(left,335,"PANEL GAP "+fmt(data.gap)+" · ACTUAL END COORDINATES","tick-label");
       }else if(data.shape==="slope"){
-        const min=Math.max(1,Math.max(data.start||1,data.boardHeight||1));
-        const y0=base-(data.start/min)*175,y1=base-(data.boardHeight/min)*175;
-        content+='<path d="M'+left+' '+y0+' L'+right+' '+y1+'" stroke="#1e6454" stroke-width="5" fill="none"/>';
-        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+base+'" x2="'+x(p.x)+'" y2="'+(y0+(y1-y0)*p.x/span)+'" stroke="#b98c56" stroke-width="5"/>';
+        // Draw the ACTUAL cut heights from the exact rows also exported as CSV.
+        // The dashed upper line is gross wall height before plate deductions.
+        const rows=data.studRows||[];
+        const topHeight=Math.max(1,data.grossEnd||1,...rows.map(r=>r.grossHeight||0));
+        const yHeight=h=>base-175*h/topHeight;
+        const yGross0=yHeight(data.grossStart),yGross1=yHeight(data.grossEnd);
+        content+='<path class="gable-gross-reference" d="M'+left+' '+yGross0+' L'+right+' '+yGross1+'" fill="none" stroke="#89968d" stroke-width="1.5" stroke-dasharray="6 4"/>';
+        content+='<path class="gable-net-cutline" d="M'+left+' '+yHeight(rows[0].length)+' L'+right+' '+yHeight(rows.at(-1).length)+'" fill="none" stroke="#1e6454" stroke-width="3"/>';
+        for(const [i,r] of rows.entries()){
+          content+='<line class="gable-cut-stud" data-index="'+(i+1)+'" data-position="'+r.position+'" data-cut-length="'+r.length+'" x1="'+x(r.position)+'" y1="'+base+'" x2="'+x(r.position)+'" y2="'+yHeight(r.length)+'" stroke="#b98c56" stroke-width="4"><title>'+esc(r.item+" · center "+fmt(r.position)+" · net cut "+fmt(r.length)+" · gross height "+fmt(r.grossHeight))+'</title></line>';
+        }
+        content+=svgText(left,34,"NET LEFT "+fmt(rows[0].length)+" · RIGHT "+fmt(rows.at(-1).length),"dim-label");
+        content+=svgText(left,324,"DASHED = GROSS HEIGHT · SOLID = NET CUT AFTER PLATES","tick-label");
       }else if(data.shape==="opening"){
         const openings=data.openings||[],wallHeight=Math.max(1,data.wallHeight||96);
         const yLevel=h=>255-179*Math.min(1,Math.max(0,h/wallHeight));
+        const rawX=v=>left+(v/span)*W;
         content+='<rect x="'+left+'" y="76" width="'+W+'" height="179" fill="#e6e9de" opacity=".6" stroke="#426b5b" stroke-width="2"/>';
+        if(data.bottomPlate>0)content+='<rect class="framing-bottom-plate" x="'+left+'" y="'+yLevel(data.bottomPlate)+'" width="'+W+'" height="'+(yLevel(0)-yLevel(data.bottomPlate))+'" fill="#b9a28a" opacity=".7"/>';
+        if(data.topPlate>0)content+='<rect class="framing-top-plate" x="'+left+'" y="'+yLevel(wallHeight)+'" width="'+W+'" height="'+(yLevel(wallHeight-data.topPlate)-yLevel(wallHeight))+'" fill="#a2b8a5" opacity=".85"/>';
         for(const o of openings){
           const yTop=yLevel(o.top),ySill=yLevel(o.sill);
           content+='<rect class="opening-cutout" x="'+x(o.start)+'" y="'+yTop+'" width="'+(x(o.end)-x(o.start))+'" height="'+(ySill-yTop)+'" fill="#fcfbf8" stroke="#ad744e" stroke-width="2" stroke-dasharray="6 4"/>';
           content+=svgText(x(o.start)+4,Math.max(48,yTop-5),o.label+" · "+fmt(o.height),"tick-label");
           if(o.sill>0)content+='<line x1="'+x(o.start)+'" y1="'+ySill+'" x2="'+x(o.end)+'" y2="'+ySill+'" stroke="#ad744e" stroke-width="3"/>';
         }
-        for(const p of marks)content+='<line x1="'+x(p.x)+'" y1="'+yLevel(p.topHeight??wallHeight)+'" x2="'+x(p.x)+'" y2="255" stroke="'+(p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b")+'" stroke-width="'+(p.role==="mark"?"3":"5")+'"/>';
-        content+=svgText(left+5,64,"WALL "+fmt(wallHeight),"dim-label");
+        // Real bar faces and vertical ends are taken directly from rows.
+        // The reference wall endpoints are CENTER datums; outside bar faces
+        // may extend beyond that center-to-center dimension.
+        for(const p of marks){
+          const yTop=yLevel(p.topHeight),yBottom=yLevel(p.bottomHeight);
+          const fill=p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b";
+          content+='<rect class="framing-member" data-position="'+p.x+'" data-cut-length="'+p.cutLength+'" x="'+rawX(p.faceLeft)+'" y="'+yTop+'" width="'+(rawX(p.faceRight)-rawX(p.faceLeft))+'" height="'+(yBottom-yTop)+'" fill="'+fill+'" opacity=".9"><title>'+esc(p.label+" · center "+fmt(p.x)+" · cut "+fmt(p.cutLength)+" · bottom "+fmt(p.bottomHeight)+" · top "+fmt(p.topHeight))+'</title></rect>';
+        }
+        content+=svgText(left+5,64,"WALL "+fmt(wallHeight)+" · BOTTOM "+fmt(data.bottomPlate)+" · TOP "+fmt(data.topPlate),"dim-label");
+        content+=svgText(left,322,"FULL STUD CUT "+fmt(wallHeight-data.bottomPlate-data.topPlate)+" · NO HEADER / CRIPPLE TAKEOFF","tick-label");
+      }else if(data.shape==="wall-studs"){
+        const rows=data.studRows||[],height=data.wallHeight;
+        const rawX=v=>left+v/span*W, yHeight=v=>base-179*v/height;
+        content+='<line class="wall-gross-reference" x1="'+left+'" y1="'+yHeight(height)+'" x2="'+right+'" y2="'+yHeight(height)+'" stroke="#89968d" stroke-width="1.5" stroke-dasharray="6 4"/>';
+        for(const r of rows){
+          content+='<rect class="wall-cut-stud" data-position="'+r.position+'" data-cut-length="'+r.cutLength+'" x="'+rawX(r.faceLeft)+'" y="'+yHeight(r.cutLength)+'" width="'+(rawX(r.faceRight)-rawX(r.faceLeft))+'" height="'+(base-yHeight(r.cutLength))+'" fill="#426b5b"><title>'+esc(r.item+" · center "+fmt(r.position)+" · cut "+fmt(r.cutLength)+" · gross "+fmt(r.grossHeight))+'</title></rect>';
+        }
+        content+=svgText(left,64,"NET STUD CUT "+fmt(rows[0].cutLength)+" · "+rows.length+" STUD CENTERS","dim-label");
+        content+=svgText(left,323,"DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
       }else if(data.shape==="holes"){
         const boardWidth=span*holeScale;
         content+='<rect class="drilling-stock" x="'+holeStart+'" y="110" width="'+boardWidth+'" height="128" fill="#ead4b2" stroke="#8e6b43" stroke-width="2"><title>Length reference only; stock face width and cross-grain clearance not supplied</title></rect>';
