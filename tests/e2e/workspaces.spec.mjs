@@ -2225,6 +2225,8 @@ test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrolla
   await expect(region).toHaveAttribute("tabindex","0");
   await expect(region).toHaveAttribute("role","region");
   await expect(region).toHaveAttribute("aria-label","Calculated cut and measurement schedule — arrow keys to scroll");
+  await expect(page.locator("#cut-table tbody tr").first().locator('[role="rowheader"]'))
+    .toHaveText("Ring 1 / segment 1");
   await region.focus();
   await page.keyboard.press("PageDown");
   await expect.poll(()=>region.evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
