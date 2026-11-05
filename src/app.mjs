@@ -267,8 +267,11 @@ if(slug){
       const scale=Math.min(710/data.roofMajor,213/data.roofMinor),ww=data.roofMajor*scale,hh=data.roofMinor*scale;
       const x0=(900-ww)/2,y0=(344-hh)/2,colors=["#c7ddcc","#d9bc95","#bdd7c9","#ead1b0"];
       for(const sheet of data.roofPanels){
-        const p=sheet.planPoints.map(x=>(x0+x[0]*scale).toFixed(2)+","+(y0+x[1]*scale).toFixed(2)).join(" ");
-        content+='<polygon class="roof-panel-cut" points="'+p+'" fill="'+colors[sheet.planeIndex]+'" stroke="#fffefd" stroke-width="1"><title>'+esc(sheet.plane+" "+sheet.id)+'</title></polygon>';
+        // The exported projected-plan vertices are the SVG's sole source of
+        // polygon coordinates. Do not round to 0.01 pixels: tiny hip cuts
+        // can collapse or misalign at sheet/diagonal intersections.
+        const p=sheet.planPoints.map(x=>(x0+x[0]*scale).toFixed(6)+","+(y0+x[1]*scale).toFixed(6)).join(" ");
+        content+='<polygon class="roof-panel-cut" data-panel="'+sheet.id+'" data-plane="'+sheet.planeIndex+'" data-row="'+sheet.row+'" data-column="'+sheet.column+'" points="'+p+'" fill="'+colors[sheet.planeIndex]+'" stroke="#fffefd" stroke-width="1"><title>'+esc(sheet.plane+" "+sheet.id+" · "+sheet.localVertices.length+" nonzero cut edges · "+fmt(sheet.cutAreaSqIn/144)+" ft² used · "+fmt(sheet.offcutAreaSqIn/144)+" ft² unreused offcut")+'</title></polygon>';
       }
       const ridge0=x0+data.roofMinor*scale/2,ridge1=x0+(data.roofMajor-data.roofMinor/2)*scale,mid=y0+hh/2;
       content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="none" stroke="#1e6454" stroke-width="2.5"/>';

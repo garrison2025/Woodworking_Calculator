@@ -49,6 +49,34 @@ function roofClipPolygon(poly,u0,v0,u1,v1){
   }
   return result;
 }
+// Remove degenerate clipping vertices before issuing any polygon cut coordinates.
+// A hip line through an exact stock-grid corner otherwise creates a duplicate
+// endpoint and zero-length cutting edge (e.g. square roof, rotated stock).
+function roofCleanPolygon(vertices){
+  const tol=1e-8;
+  const same=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<=tol;
+  let poly=[];
+  for(const p of vertices)if(!poly.length||!same(p,poly.at(-1)))poly.push(p);
+  if(poly.length>1&&same(poly[0],poly.at(-1)))poly.pop();
+  if(poly.length<3)return [];
+  // A collinear midpoint has no independent edge or cutting instruction.
+  // Remove only when it lies on the segment between its neighbors.
+  let changed=true;
+  while(changed&&poly.length>3){
+    changed=false;
+    for(let i=0;i<poly.length;i++){
+      const prev=poly[(i+poly.length-1)%poly.length],cur=poly[i],next=poly[(i+1)%poly.length];
+      const dx=next[0]-prev[0],dy=next[1]-prev[1],norm=Math.hypot(dx,dy);
+      if(norm<=tol)continue;
+      const cross=Math.abs((cur[0]-prev[0])*dy-(cur[1]-prev[1])*dx)/norm;
+      const projection=((cur[0]-prev[0])*dx+(cur[1]-prev[1])*dy)/(norm*norm);
+      if(cross<=tol&&projection>=0&&projection<=1){
+        poly.splice(i,1);changed=true;break;
+      }
+    }
+  }
+  return poly;
+}
 // Each clipped position consumes a separate sheet. No reuse, staggering, or structural joint design.
 function layoutHipSheets(major,minor,factor,sheetAlong,sheetUphill){
   const h=minor*factor/2;
@@ -67,14 +95,20 @@ function layoutHipSheets(major,minor,factor,sheetAlong,sheetUphill){
     need(cols>=1&&rows>=1&&cols*rows<=900,"Roof sheet grid is too dense; enter a larger sheet or smaller roof.");
     for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
       const u0=col*sheetAlong,v0=row*sheetUphill;
-      const clipped=roofClipPolygon(plane.poly,u0,v0,u0+sheetAlong,v0+sheetUphill);
+      const clipped=roofCleanPolygon(roofClipPolygon(plane.poly,u0,v0,u0+sheetAlong,v0+sheetUphill));
       const area=roofPolygonArea(clipped);
       if(area<=1e-9)continue;
+      const sheetArea=sheetAlong*sheetUphill;
+      need(area<=sheetArea+Math.max(1e-6,sheetArea*1e-9),
+        "Clipped hip polygon exceeds the original sheet surface.");
+      const localVertices=clipped.map(p=>[q(p[0]-u0),q(p[1]-v0)]);
+      const planPoints=clipped.map(p=>plane.toPlan(p[0],p[1]).map(q));
       panels.push({
         id:"S"+(panels.length+1),plane:plane.name,planeIndex:idx,
-        eaveOffset:q(u0),slopeOffset:q(v0),cutAreaSqIn:area,
-        localVertices:clipped.map(p=>[q(p[0]-u0),q(p[1]-v0)]),
-        planPoints:clipped.map(p=>plane.toPlan(p[0],p[1]).map(q))
+        row:row+1,column:col+1,
+        eaveOffset:q(u0),slopeOffset:q(v0),
+        cutAreaSqIn:area,offcutAreaSqIn:Math.max(0,sheetArea-area),
+        localVertices,planPoints
       });
       need(panels.length<=900,"Over 900 roof sheet positions; simplify the layout.");
     }
@@ -458,16 +492,38 @@ export function compute(slug,a){
     const panels=layoutHipSheets(large,small,factor,sheetAlong,sheetUphill);
     const tiledArea=panels.reduce((sum,p)=>sum+p.cutAreaSqIn,0);
     need(Math.abs(tiledArea-area)<=Math.max(1e-6,area*1e-8),"Roof panel clipping did not conserve the sloped area.");
+    // North/south trapezoids and west/east triangles must also individually
+    // close to their analytically derived developed-surface plane areas.
+    for(const idx of [0,1,2,3]){
+      const actual=panels.filter(p=>p.planeIndex===idx).reduce((sum,p)=>sum+p.cutAreaSqIn,0);
+      const target=idx<2?sideArea:endArea;
+      need(Math.abs(actual-target)<=Math.max(1e-6,target*1e-8),
+        "The clipped sheets do not conserve one hip-roof plane.");
+    }
+    const stockArea=panels.length*sheetArea;
+    const offcuts=panels.reduce((sum,p)=>sum+p.offcutAreaSqIn,0);
+    need(Math.abs(tiledArea+offcuts-stockArea)<=Math.max(1e-6,stockArea*1e-10),
+      "Hip roof used and discarded sheet areas do not conserve consumed stock.");
     const uncut=panels.filter(p=>Math.abs(p.cutAreaSqIn-sheetArea)<=Math.max(1e-6,sheetArea*1e-8)).length;
-    rows=panels.map(p=>({item:p.id,plane:p.plane,eaveOffset:p.eaveOffset,slopeOffset:p.slopeOffset,cutAreaFt2:p.cutAreaSqIn/144,cutVertices:p.localVertices}));
+    rows=panels.map(p=>({
+      item:p.id,plane:p.plane,row:p.row,column:p.column,
+      eaveOffset:p.eaveOffset,slopeOffset:p.slopeOffset,
+      cutAreaFt2:p.cutAreaSqIn/144,offcutAreaFt2:p.offcutAreaSqIn/144,
+      cutVertices:p.localVertices,planVertices:p.planPoints
+    }));
     return result([
       M("Ridge length",ridge),M("Whole sloped area",area/144,"FT2"),
       M("Each hip-end plane",endArea/144,"FT2"),M("Each long-side plane",sideArea/144,"FT2"),
       M("Sheet area lower bound",ceilStable(area/sheetArea),"N"),
       M("Sheet positions (no offcut reuse)",panels.length,"N"),
       M("Full rectangular sheets",uncut,"N"),M("Edge-cut sheets",panels.length-uncut,"N"),
-      M("Unreused stock area",Math.max(0,panels.length*sheetArea-area)/144,"FT2")
-    ],[],large,rows,"roof-panels",{roofMajor:large,roofMinor:small,roofPanels:panels,sheetAlong,sheetUphill});
+      M("Stock face area before allowance",stockArea/144,"FT2"),
+      M("Unreused stock area",offcuts/144,"FT2")
+    ],[],large,rows,"roof-panels",{
+      roofMajor:large,roofMinor:small,roofFactor:factor,
+      roofPanels:panels,sheetAlong,sheetUphill,
+      stockAreaSqIn:stockArea,coveredAreaSqIn:tiledArea,offcutAreaSqIn:offcuts
+    });
   }
   case "wall-stud-calculator":{
     positive("length","spacing","height");nonnegative("plates");need(a.height>a.plates,"Plate deduction leaves no cut length.");

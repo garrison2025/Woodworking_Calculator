@@ -947,7 +947,7 @@
       "keyword": "hip roof calculator",
       "volume": 390,
       "kd": 2,
-      "desc": "Divide an equal-pitch rectangular hip roof into four actual slope-face panels, inspect clipped sheet layouts and export cut coordinates.",
+      "desc": "Four-plane equal-pitch hip-roof sheets with cleaned triangular/trapezoid cuts, exported local and projected vertices, and sheet-by-sheet material conservation",
       "inputs": [
         {
           "key": "width",
@@ -1002,22 +1002,26 @@
           ]
         }
       ],
-      "formula": "Slope factor = sqrt(1+(pitch/12)^2). Each hip plane becomes a local triangle or trapezoid. Clip its outline to every sheet rectangle and sum the resulting polygon areas.",
-      "example": "For a flat 192 × 96 in hip-roof footprint and 96 × 48 in sheets, area requires at least four sheets, but a separate-sheet-per-cut layout uses six positions.",
-      "limit": "Geometry of an equal-pitch rectangular four-plane roof only. Sheets are placed in straight eave-origin rows, without seam gaps, staggering, offcut reuse, fastening or building-code checks. Plans are scaled schematics and NOT certified full-size cutting templates.",
+      "formula": "Equal-pitch hip roof: developed surface factor=sqrt(1+(pitch/12)²). Project each north/south trapezoid and west/east triangle to its actual developed slope plane; clip stock-sheet rectangles against every slope polygon; remove duplicate and redundant collinear vertices. For each occupied sheet: local polygon area + discarded offcut area = original stock face area. Each slope's polygon areas and the combined four-plane area must equal their analytical surfaces; projected plan vertices map to the top-down SVG.",
+      "example": "A flat 192×96-in rectangular hip roof with 96×48-in sheets (long edge eave-parallel) has a 128-ft² footprint. The four slope surfaces together require six separate stock positions rather than the four-sheet geometric area lower bound; per-piece local cut polygon and projected plan vertices now appear in CSV. Counts assume no offcut reuse.",
+      "limit": "Geometry-only equal-pitch four-plane roof: planar triangles/trapezoids and developed-surface stock polygon cuts. Cut Vertices are sheet-LOCAL developed-slope coordinates, while Plan Projection Vertices are roof-PLAN coordinates used solely for the diagram, NOT flat cutting shapes. No cross-plane offcut reuse, actual sheathing bearing, fastener design, joint stagger, allowable roof loading, material expansion or building-code approval. Cleaned polygon vertices and areas are reference geometry, not certified 1:1 saw templates.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Sheet orientation and the four local axes",
-          "text": "The default places the long sheet edge parallel to each roof eave and the short edge up the slope. Rotate by 90 degrees with the sheet direction control. The (eave, uphill) coordinates in the table restart at each of the four roof planes."
+          "heading": "Identify the two different vertex coordinate systems",
+          "text": "Cut Vertices are (eave direction, uphill direction) pairs measured from a sheet's own lower-left corner on its developed sloped plane. Each sheet also has a slope-specific Eave Offset and Slope Offset. Plan Projection Vertices are global overhead roof-outline (x,y) coordinates, and those projected points drive the top-down SVG. A projected polygon is NOT the same physical cut shape as a tilted sheet."
         },
         {
-          "heading": "Cut polygon coordinates",
-          "text": "For each listed sheet, cut vertices are measured from that sheet's lower-left local corner. The colored rooftop plan view projects exactly those clipped polygons into a bird's-eye diagram. The CSV preserves all row coordinates for bench-side checking."
+          "heading": "Inspect the diagonal hip cut as a proper polygon",
+          "text": "The intersection between a diagonal hip boundary and a stock-sheet cell generates a triangle, quadrilateral or clipped multi-vertex polygon. Duplicate corners and redundant collinear middle points at exact grid intersections are removed, so the cut list no longer contains zero-length edge instructions. Grid row, column, plane name and actual cut polygon vertices identify each piece."
         },
         {
-          "heading": "No offcut reuse or engineered joint layout",
-          "text": "A cut sheet may contain a small triangular remnant that this conservative count discards. This is not optimized stock nesting, a structural sheathing schedule, or a substitute for checking fastening, edge setbacks and actual cut tolerances."
+          "heading": "Check the area of every slope, sheet and discarded offcut",
+          "text": "The four separate slope-plane cut areas must match the analytical north/south trapezoid and east/west triangle surfaces. Each occupied sheet uses one original full sheet: reported used cut area plus its unreused stock offcut must equal the original stock face area. The total before any optional allowance is shown separately from installed developed roof area."
+        },
+        {
+          "heading": "Confirm roof installation independently",
+          "text": "The app does not nest triangular scraps from one slope into other positions; counts are conservative. Verify actual roof sheathing support, stagger, nail patterns, allowable gaps, engineered loads, safe access and construction tolerances separately. The SVG is a scaled schematic, not a certified cutting pattern."
         }
       ]
     },
