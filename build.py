@@ -187,6 +187,22 @@ def tool_page(t):
         '<p class="caution">This model is NOT a full-size cutting template. Side-section area is a geometry cross-check, not a lumber board purchasing quantity or strength rating. Structural and end-bearing acceptance require independent measurements and professional review.</p>'
         '</section>'
     ) if t["slug"]=="stair-stringer-calculator" else ""
+
+    roof_reuse_section=(
+        '<section class="content-block roof-reuse-panel" id="roof-reuse-panel">'
+        '<span class="eyebrow">OPTIONAL STOCK-CUT VERIFICATION</span>'
+        '<h2>Full-sheet cut-box reuse layout</h2>'
+        '<p>Opt into the bounded guillotine packing estimate to place each rectangular roof cut or hip polygon BOUNDING BOX onto full stock sheets. Every piece has its own stock-local X/Y placement and polygon vertices. The algorithm checks nonoverlap, charges user-entered split-line kerf and conserves stock area. It does NOT reuse scraps inside angled polygons, certify a real saw path, panel support, fasteners, installation staggering or the lowest sheet count.</p>'
+        '<p id="roof-reuse-status" class="framing-price-status" role="status" aria-live="polite">Select optional stock reuse to evaluate sheet placements.</p>'
+        '<div id="roof-reuse-svg" class="shelf-pin-drawing" aria-label="Proportional stock sheet layouts, first six source sheets"></div>'
+        '<h3>Stock-local piece placement schedule</h3>'
+        '<div class="table-scroll"><table id="roof-reuse-table" aria-label="Verified stock bounding boxes and cut polygon coordinates">'
+        '<thead><tr><th>Roof cut</th><th>Roof plane</th><th>Stock sheet</th><th>Stock X</th><th>Stock Y</th><th>Box width</th><th>Box height</th><th>Installed area</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-actions"><button id="download-roof-reuse-csv" type="button" class="btn secondary" disabled>↓ Download full stock-cut placement CSV</button>'
+        '<button id="download-roof-reuse-svg" type="button" class="btn secondary" disabled>↓ Download stock-layout preview SVG</button></div>'
+        '<p class="caution">The drawing previews at most SIX stock sheets; the numeric CSV lists ALL stock placements and cutting vertices. Not a 1:1 saw template or structural roofing plan. Split-line kerf does not include every angled polygon-perimeter cut.</p>'
+        '</section>'
+    ) if t["slug"] in ("hip-roof-calculator","roof-sheathing-calculator") else ""
     body+=(f'<section class="workspace wrap" data-workspace><div class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
@@ -282,7 +298,7 @@ def tool_page(t):
            '<input id="schedule-page-input" type="number" min="1" step="1" value="1" inputmode="numeric">'
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
-           +framing_takeoff+deck_takeoff+stringer_section+shelf_pin_panel+
+           +framing_takeoff+deck_takeoff+stringer_section+roof_reuse_section+shelf_pin_panel+
            '<div class="content-block proof"<span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
