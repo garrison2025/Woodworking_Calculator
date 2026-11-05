@@ -137,7 +137,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -176,8 +176,10 @@ export function compute(slug,a){
     });
   }
   case "framing-calculator":{
-    positive("length","spacing","width","wallHeight","openingWidth","openingHeight","headerDepth","sillThickness");
-    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill");
+    positive("length","spacing","width","wallHeight","openingWidth","openingHeight","headerDepth","sillThickness","studStockLength","headerStockLength","sillStockLength");
+    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill","stockKerf","stockWaste");
+    need(a.stockWaste<=100,"Purchase allowance must be 0–100 percent.");
+    need(a.stockKerf<Math.min(a.studStockLength,a.headerStockLength,a.sillStockLength),"Kerf must be shorter than every stock stick.");
     need(a.spacing>=a.width&&a.length>=a.width,"Stud face width must fit the wall and OC interval.");
     const fullCut=a.wallHeight-a.bottomPlate-a.topPlate;
     need(fullCut>0,"Bottom and top plates leave no full-height stud cut length.");
@@ -274,6 +276,66 @@ export function compute(slug,a){
       bottomHeight:r.bottomElevation,cutLength:r.cutLength,
       faceLeft:r.faceLeft,faceRight:r.faceRight
     }));
+    // Deterministic first-fit decreasing cutting estimate. Studs, headers
+    // and sills MUST NOT be mixed: their stock cross-sections are not
+    // interchangeable. No splice, end trim, or cross-family offcut reuse.
+    const stockGroups=[
+      {name:"Stud",stockLength:a.studStockLength,items:framingRows.filter(r=>r.orientation==="vertical")},
+      {name:"Header",stockLength:a.headerStockLength,items:framingRows.filter(r=>r.type==="Header")},
+      {name:"Sill",stockLength:a.sillStockLength,items:framingRows.filter(r=>r.type==="Sill")}
+    ];
+    const stockPlan=[],stockCuts=[],materialSummary=[];
+    for(const group of stockGroups){
+      const bins=[];
+      const ordered=[...group.items].sort((u,v)=>
+        v.cutLength-u.cutLength||u.item.localeCompare(v.item));
+      for(const piece of ordered){
+        need(piece.cutLength<=group.stockLength+1e-8,
+          piece.item+" cut exceeds "+group.name+" stock length; longer stock required (no splices).");
+        let bin=bins.find(b=>b.used+piece.cutLength+
+          (b.cuts.length?a.stockKerf:0)<=group.stockLength+1e-8);
+        if(!bin){bin={used:0,kerf:0,cuts:[]};bins.push(bin);}
+        const before=bin.cuts.length?a.stockKerf:0;
+        bin.used=q(bin.used+piece.cutLength+before);
+        bin.kerf=q(bin.kerf+before);
+        bin.cuts.push({...piece,kerfBefore:q(before)});
+      }
+      let sumCut=0,sumOffcut=0,sumKerf=0;
+      for(const [i,b] of bins.entries()){
+        const stockId=group.name.toUpperCase()+"-"+String(i+1).padStart(3,"0"),
+          cutsLength=q(b.cuts.reduce((s,p)=>s+p.cutLength,0)),
+          remaining=q(Math.max(0,group.stockLength-b.used));
+        sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=b.kerf;
+        stockPlan.push({stockGroup:group.name,stockId,stockLength:q(group.stockLength),
+          cuts:b.cuts.map(p=>({item:p.item,type:p.type,cutLength:p.cutLength})),
+          cutCount:b.cuts.length,piecesLength:cutsLength,kerfLoss:q(b.kerf),
+          usedLength:q(b.used),offcutLength:remaining});
+        let consumed=0;
+        for(const [idx,p] of b.cuts.entries()){
+          consumed=q(consumed+p.cutLength+p.kerfBefore);
+          stockCuts.push({stockGroup:group.name,stockId,index:idx+1,
+            item:p.item,type:p.type,cutLength:p.cutLength,
+            kerfBefore:p.kerfBefore,stockLength:q(group.stockLength),
+            runningUsedLength:consumed,remainingLength:q(Math.max(0,group.stockLength-consumed))});
+        }
+        need(Math.abs(cutsLength+b.kerf+remaining-group.stockLength)<1e-6,
+          "Stock bar cut and offcut dimensions do not conserve original length.");
+      }
+      const purchaseSticks=Math.ceil(bins.length*(1+a.stockWaste/100)-1e-10);
+      materialSummary.push({stockGroup:group.name,pieces:group.items.length,
+        cutLength:q(sumCut),stockLength:q(group.stockLength),
+        plannedSticks:bins.length,purchaseSticks,
+        allowanceSticks:purchaseSticks-bins.length,
+        kerfLoss:q(sumKerf),offcutLength:q(sumOffcut)});
+    }
+    need(stockCuts.length===framingRows.length,"Stock cut plan does not include all framing members.");
+    const total=(key)=>materialSummary.reduce((sum,r)=>sum+r[key],0);
+    const fullStockCount=total("plannedSticks"),purchaseCount=total("purchaseSticks"),
+      totalCutLength=total("cutLength"),totalOffcut=total("offcutLength"),
+      totalKerf=total("kerfLoss");
+    need(Math.abs(totalCutLength+totalOffcut+totalKerf-
+      materialSummary.reduce((s,r)=>s+r.plannedSticks*r.stockLength,0))<1e-5,
+      "Material summary does not conserve purchased stock lengths.");
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     const upper=crippleRows.filter(r=>r.type==="Upper cripple").length,
       lower=crippleRows.length-upper;
@@ -286,6 +348,11 @@ export function compute(slug,a){
       M("Window sills",horizontalRows.length-openings.length,"N"),
       M("Upper cripples",upper,"N"),M("Lower cripples",lower,"N"),
       M("Total listed pieces",framingRows.length,"N"),
+      M("Installed member linear length",totalCutLength/12,"FT"),
+      M("Planned stock sticks (FFD estimate)",fullStockCount,"N"),
+      M("Purchase sticks incl. allowance",purchaseCount,"N"),
+      M("Planned reusable offcut length",totalOffcut/12,"FT"),
+      M("Planned saw kerf loss",totalKerf),
       M("Wall reference height",a.wallHeight),M("Regular and king cut length",fullCut),
       M("Bottom plate thickness",a.bottomPlate),M("Top plate thickness",a.topPlate),
       M("Header vertical depth (user-defined)",a.headerDepth),
@@ -295,7 +362,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts
     });
   }
   case "deck-board-calculator":{
