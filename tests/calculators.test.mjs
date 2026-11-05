@@ -1448,3 +1448,66 @@ test("Stair landing input rejects negatives and preserves zero as the original c
   const withoutLanding=compute(t.slug,{rise:105,desired:7.5,tread:10});
   near(value(withoutLanding,"Total reference footprint"),130);
 });
+
+
+test("Equal spacing derives real part faces and clear gaps from measured center offsets",()=>{
+  const mm=x=>x/25.4;
+  const t=tools.find(t=>t.slug==="equal-spacing-calculator");
+  const r=compute(t.slug,{...defaults(t),length:mm(1000),count:6,
+    left:mm(50),right:mm(50),itemWidth:mm(30)});
+  assert.equal(r.shape,"spacing-faces");
+  assert.equal(r.rows.length,6);
+  near(value(r,"Equal center interval")*25.4,180,2e-7);
+  near(value(r,"Clear space between faces")*25.4,150,2e-7);
+  near(value(r,"Left end face margin")*25.4,35,2e-7);
+  near(value(r,"Right end face margin")*25.4,35,2e-7);
+  assert.deepEqual(r.rows.map(row=>Math.round(row.position*25.4)),[
+    50,230,410,590,770,950
+  ]);
+  for(const [i,row] of r.rows.entries()){
+    near((row.faceRightEdge-row.faceLeftEdge)*25.4,30,3e-7);
+    near((row.faceRightEdge+row.faceLeftEdge)/2,row.position,1e-7);
+    if(i===0)assert.equal(row.clearToPrevious,null);
+    else near(row.clearToPrevious*25.4,150,3e-7);
+  }
+  assert.equal(r.faceRows,r.rows);
+  near(r.partFaceWidth*25.4,30);
+});
+test("Single equal-width part has a centered face and undefined between-part gap",()=>{
+  const r=compute("equal-spacing-calculator",{
+    length:100,count:1,left:10,right:20,itemWidth:12
+  });
+  assert.equal(r.rows.length,1);
+  near(r.rows[0].position,45);
+  near(r.rows[0].faceLeftEdge,39);
+  near(r.rows[0].faceRightEdge,51);
+  assert.equal(r.rows[0].clearToPrevious,null);
+  assert.equal(r.clearFaceGap,null);
+  near(value(r,"Left end face margin"),39);
+  near(value(r,"Right end face margin"),49);
+  assert.equal(r.metrics.some(m=>m.label==="Clear space between faces"),false);
+});
+test("Center-only equal spacing remains backwards compatible without fabricated face widths",()=>{
+  const t=tools.find(t=>t.slug==="equal-spacing-calculator");
+  const r=compute(t.slug,defaults(t));
+  assert.equal(r.shape,"ruler");
+  assert.equal(r.rows.length,6);
+  assert.ok(r.rows.every(row=>row.faceLeftEdge===null&&
+    row.faceRightEdge===null&&row.clearToPrevious===null));
+  assert.equal(r.metrics.some(m=>m.label==="Clear space between faces"),false);
+  assert.equal(r.metrics.some(m=>m.label==="Left end face margin"),false);
+  const legacy=compute(t.slug,{length:39.37008,count:6,left:0,right:0});
+  near(value(legacy,"Equal center interval"),value(r,"Equal center interval"));
+});
+test("Physical equal-spacing parts reject overlap and faces beyond stock boundaries",()=>{
+  const a={length:100,count:4,left:10,right:10,itemWidth:10};
+  assert.equal(safeCompute("equal-spacing-calculator",a).ok,true);
+  for(const bad of [
+    {...a,left:3},{...a,right:4},
+    {...a,itemWidth:30},{...a,itemWidth:-1},
+    {...a,length:15},{...a,count:0},{...a,left:60,right:40}
+  ]){
+    assert.equal(safeCompute("equal-spacing-calculator",bad).ok,false,
+      "Should reject invalid face geometry "+JSON.stringify(bad));
+  }
+});
