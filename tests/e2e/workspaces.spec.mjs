@@ -1750,3 +1750,32 @@ test("P1 polygon bowl ring exports true straight chords and a distinct round tur
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(chords).toHaveCount(12);
 });
+
+test("P1 deck alternating joist center seams render and export per-row real positions",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/deck-material-calculator/");
+  await page.locator("#f-stock").fill("100");
+  await page.locator("#f-seamMode").selectOption("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Rows with different seam stations"}))
+    .toContainText("11");
+  const seam=page.locator("#dimension-svg svg .deck-plan-seam");
+  await expect(seam).toHaveCount(22);
+  const first=Number(await seam.nth(0).getAttribute("x1"));
+  const second=Number(await seam.nth(1).getAttribute("x1"));
+  expect(first).toBeGreaterThan(second);
+  const rows=page.locator("#cut-table tbody tr");
+  await expect(rows.first()).toContainText("Row 1 piece 1");
+  const csvReady=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await csvReady).path(),"utf8");
+  expect(csv).toContain('"96"');
+  expect(csv).toContain('"48"');
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const secondCsvReady=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const metricCsv=readFileSync(await (await secondCsvReady).path(),"utf8");
+  expect(metricCsv).toContain('"2438.4"');
+  expect(metricCsv).toContain('"1219.2"');
+});
