@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 278 geometry tests, 41 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 281 geometry tests, 43 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -208,3 +208,5 @@ The three spacing tools now return actual **left/right face coordinates** and cl
 ## 2026-11-05 — Roof sheathing per-sheet physical conservation
 
 The single-plane Roof Sheathing Calculator now exports a **complete sheet grid row/column, eave start/end, slope start/end, installed cut dimensions, cut area and discarded offcut area for every used sheet**. The roof's developed surface area and every per-sheet stock consumption are independently conserved: covered roof area + unreused offcut area = all stock-sheet face area (before any optional purchase allowance). CSV recognizes ALL fields ending in `AreaFt2` as real areas, with **ft² or m²** headers rather than wrongly converting a scrap area as a linear length. The SVG follows the same absolute cut boundaries as the cut list, rather than drawing cut width from a separate value. The one-stock-sheet-per-position assumption is intentional and does **not** imply optimal offcut nesting or engineered roof fastener layouts.
+
+**Roof sheathing QA:** [GitHub Actions #143](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41938897190) passed **281/281 Node** and **43/43 real Chromium** tests. In 128 independent orientation/pitch/dimension fixtures, each occupied sheet's cut plus unused offcut conserves its original face area. A flat 110×70-in target with four 96×48-in sheets reports 7700 in² installed surface and 10732 in² discarded stock area, accounting for 18432 in² purchased stock area before waste allowance. All five units have typed length and area CSV headers. Browser tests check true eave and slope cut boundaries, visible SVG seams, sheet rotation, complete CSV and invalid-input cleanup. The live Cloudflare preview serves the new method, calculation engine, CSV typing code and drawing code with `noindex,nofollow,noarchive`. Real sheathing support, roof framing/fastening, tolerances, exact print size and physical installation remain NOT VERIFIED.

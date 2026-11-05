@@ -87,3 +87,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - PASS: these three layout diagrams now render each stock face from the cut-list's actual left/right coordinates. The former deck SVG rendered only the first 180 rows and inflated very narrow faces to at least one pixel; the new diagram renders all modeled rows with true scale.
 - PASS: baluster faces and both end gaps preserve their proportional width, including changes to physical face width; post faces now occupy the diagram's complete OUTSIDE span (centers are a separate reference) rather than protruding outside the center-to-center diagram edges.
 - PASS: [CI #138](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41936114849) tested SVG face proportions, correct edge/space coordinates, CSV export and calculator error recovery in Chromium. Real construction materials, printer scale and Safari/Firefox are NOT VERIFIED.
+
+## Roof sheathing cut bounds shared by diagram and CSV — CI #143
+- Each sheet rectangle now renders directly from saved eave-start/end and uphill-start/end coordinates; SVG carries the grid row/column and a cut-boundary title with discarded offcut area, and these same values appear in the typed cut schedule.
+- Independent browser checks confirm the four-sheet 110×70-in fixture has touching adjacent cut edges, expected 14/96 and 22/48 edge ratios, correct stock-area total, unit-aware CSV area headers and invalid input clearing.
+- [CI #143](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41938897190): 43 Chromium E2E checks passed. Diagram and print remain schematic and NOT full-size certified cutting plans.
