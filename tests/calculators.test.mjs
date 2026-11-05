@@ -1511,3 +1511,99 @@ test("Physical equal-spacing parts reject overlap and faces beyond stock boundar
       "Should reject invalid face geometry "+JSON.stringify(bad));
   }
 });
+
+
+test("Deck material budget counts both pieces at a joist-centered butt seam",()=>{
+  const t=tools.find(t=>t.slug==="deck-material-calculator");
+  const a={...defaults(t),stock:100,boardUnitPrice:8.75,
+    fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:22};
+  const r=compute(t.slug,a);
+  near(value(r,"Deck area"),120);
+  assert.equal(value(r,"Stock boards (no offcut reuse)"),44);
+  assert.equal(value(r,"Stock boards with allowance"),49);
+  assert.equal(value(r,"Board-joist intersections"),220);
+  assert.equal(value(r,"Butt joints on joist center references"),22);
+  assert.equal(value(r,"Piece-joist fastening contacts"),242);
+  assert.equal(value(r,"Fasteners requested"),484);
+  assert.equal(value(r,"Fastener packs to buy"),5);
+  near(value(r,"Quoted deck materials total"),538.75);
+  assert.equal(r.deckCostSummary.allPricesEntered,true);
+  assert.deepEqual(r.deckCostSummary.missingQuotes,[]);
+  assert.equal(r.deckCostSummary.boardCost,428.75);
+  assert.equal(r.deckCostSummary.fastenerCost,110);
+  assert.deepEqual(r.deckPurchaseRows.map(x=>
+    [x.material,x.plannedQuantity,x.purchaseQuantity,x.unitPrice,x.purchaseCost]),[
+    ["Decking stock boards",44,49,8.75,428.75],
+    ["Fastener packs",5,5,22,110]
+  ]);
+  assert.equal(r.deckFastenerRows.length,22);
+  for(const row of r.deckFastenerRows){
+    assert.equal(row.joistReferences,10);
+    assert.equal(row.buttSeams,1);
+    assert.equal(row.fasteningContacts,11);
+    assert.equal(row.fastenersPerContact,2);
+    assert.equal(row.fastenerPiecesPerRow,22);
+    near(row.firstSeamAt,96);
+    near(row.lastSeamAt,96);
+  }
+  assert.equal(r.deckFastenerRows.reduce((s,row)=>s+row.fastenerPiecesPerRow,0),484);
+  assert.deepEqual(r.seamCenters,[96]);
+});
+test("Deck no-seam rows never double-count fastener contacts",()=>{
+  const t=tools.find(t=>t.slug==="deck-material-calculator");
+  const a={...defaults(t),stock:144,boardUnitPrice:9.25,
+    fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:12.6};
+  const r=compute(t.slug,a);
+  assert.equal(value(r,"Stock boards (no offcut reuse)"),22);
+  assert.equal(value(r,"Stock boards with allowance"),25);
+  assert.equal(value(r,"Butt joints on joist center references"),0);
+  assert.equal(value(r,"Piece-joist fastening contacts"),220);
+  assert.equal(value(r,"Fasteners requested"),440);
+  assert.equal(value(r,"Fastener packs to buy"),5);
+  near(value(r,"Quoted deck materials total"),25*9.25+5*12.6);
+  assert.ok(r.deckFastenerRows.every(x=>x.buttSeams===0&&
+    x.firstSeamAt===null&&x.lastSeamAt===null&&x.fasteningContacts===10));
+});
+test("Deck partial quotes display partial subtotal without inventing free materials",()=>{
+  const t=tools.find(t=>t.slug==="deck-material-calculator"),d=defaults(t);
+  const unpriced=compute(t.slug,d);
+  assert.equal(unpriced.deckCostSummary.allPricesEntered,false);
+  assert.deepEqual(unpriced.deckCostSummary.missingQuotes,["Decking boards","Fastener packs"]);
+  assert.equal(unpriced.metrics.some(x=>x.label==="Quoted deck materials total"),false);
+  assert.equal(unpriced.deckPurchaseRows[0].purchaseCost,null);
+  assert.equal(unpriced.deckPurchaseRows[1].purchaseCost,null);
+  const partial=compute(t.slug,{...d,boardUnitPrice:7.25});
+  assert.deepEqual(partial.deckCostSummary.missingQuotes,["Fastener packs"]);
+  assert.equal(partial.deckCostSummary.quotedSubtotal,25*7.25);
+  assert.equal(partial.metrics.some(x=>x.label==="Quoted deck materials total"),false);
+  const noFasteners=compute(t.slug,{...d,boardUnitPrice:7.25,fastenersPerContact:0});
+  assert.equal(noFasteners.deckCostSummary.allPricesEntered,true);
+  assert.equal(noFasteners.deckCostSummary.fastenerPacks,0);
+  assert.equal(noFasteners.deckCostSummary.fastenerCost,0);
+  assert.equal(noFasteners.deckPurchaseRows[1].purchaseQuantity,0);
+  near(value(noFasteners,"Quoted deck materials total"),25*7.25);
+});
+test("Deck fastener packs and supplier quotes enforce integer, precision and range constraints",()=>{
+  const t=tools.find(t=>t.slug==="deck-material-calculator"),d=defaults(t);
+  for(const overrides of [
+    {fastenersPerContact:-1},{fastenersPerContact:2.5},{fastenersPerContact:21},
+    {fastenerPackSize:0},{fastenerPackSize:2.2},{fastenerPackSize:100001},
+    {boardUnitPrice:-.5},{fastenerPackPrice:-1},{boardUnitPrice:1e6+1},
+    {fastenerPackPrice:1e6+1},{boardUnitPrice:2.555},{fastenerPackPrice:1.999}
+  ]){
+    assert.equal(safeCompute(t.slug,{...d,...overrides}).ok,false,JSON.stringify(overrides));
+  }
+  assert.equal(safeCompute(t.slug,{...d,fastenersPerContact:0}).ok,true);
+});
+test("Deck fastener pack rounding is stable at exact pack boundaries",()=>{
+  const t=tools.find(t=>t.slug==="deck-material-calculator"),d=defaults(t);
+  const a={...d,fastenerPackSize:110,fastenersPerContact:2,stock:144};
+  const exact=compute(t.slug,a);
+  assert.equal(value(exact,"Fasteners requested"),440);
+  assert.equal(value(exact,"Fastener packs to buy"),4);
+  const nearly=compute(t.slug,{...a,fastenerPackSize:109});
+  assert.equal(value(nearly,"Fastener packs to buy"),5);
+  const joined=compute(t.slug,{...a,stock:100});
+  assert.equal(value(joined,"Fasteners requested"),484);
+  assert.equal(value(joined,"Fastener packs to buy"),5);
+});
