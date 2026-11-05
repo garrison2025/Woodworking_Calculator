@@ -35,7 +35,7 @@
       "keyword": "stud calculator",
       "volume": 3600,
       "kd": 1,
-      "desc": "Gable/rake stud centerline cuts and left/right face lengths under a sloping top plate, with gross-height datum shown separately.",
+      "desc": "Calculate sloped gable and rake wall stud centerline cuts, face-edge lengths and total plate deductions with a coordinate schedule.",
       "inputs": [
         {
           "key": "length",
@@ -77,7 +77,21 @@
       "formula": "Gross height(x) = left gross height + x × pitch/12; net CENTER cut = gross height − total vertical plate deduction; left/right edge cuts = center cut ± stud face width × pitch / 24.",
       "example": "144 in wall, 96 in start height, 6:12 gives end height 168 in before plates",
       "limit": "Reference vertical centerline and two edge cuts, not structural/cutting certification. Total plate deduction is assumed vertical and applied once; wall run is between end centers, not outside faces. Confirm actual plate geometry.",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Measure from the left reference center",
+          "text": "The wall run is the distance between the two end stud centers, not the outside-to-outside framed dimension. Enter the gross wall height at the left and the rise per 12 inches of horizontal run. The layout lists each stud center at the requested on-center interval and includes the far-end reference center."
+        },
+        {
+          "heading": "Center cut versus face-edge cut",
+          "text": "A sloped top plate crosses the left and right faces of a stud at different elevations. The tool exports the vertical centerline cut and both edge-cut heights based on the entered face width; they should not be treated as interchangeable marks. Deduct the total vertical plate height only once."
+        },
+        {
+          "heading": "Choose the right wall calculator",
+          "text": "This page describes a single sloped-top reference. Use Wall Stud Count & Layout for a uniform-height wall, or Wall Framing with Doors & Windows when actual rough openings, kings, jacks or cripple pieces must appear in the takeoff. Check each reference against the built wall before cutting."
+        }
+      ]
     },
     {
       "slug": "framing-calculator",
@@ -851,7 +865,7 @@
       "keyword": "stair treads calculator",
       "volume": 1600,
       "kd": 18,
-      "desc": "Riser count, rise, tread count and run",
+      "desc": "Calculate straight stair risers, actual riser height, tread count, horizontal run and the incline from a chosen tread depth.",
       "inputs": [
         {
           "key": "rise",
@@ -875,7 +889,21 @@
       "formula": "risers=ceil(rise/desired); actual rise=rise/risers; treads=risers−1",
       "example": "105 in / 7.5 in ⇒ 14 risers and 13 treads",
       "limit": "Geometry, not a stair-code certificate",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Count actual risers from total vertical rise",
+          "text": "Measure floor-to-floor rise using the intended finished walking surfaces. Enter a positive desired maximum riser height: the calculator rounds the number of risers up, then divides the total rise equally among them. This means the displayed actual riser can be shorter than the requested maximum."
+        },
+        {
+          "heading": "Why tread count is one less than riser count",
+          "text": "For this simple straight-flight model, the upper finished landing is the final walking surface. A flight with 14 risers therefore has 13 separately counted treads; multiplying that count by the entered tread run gives the horizontal flight distance. Platform size, nosing and turning steps are not included."
+        },
+        {
+          "heading": "When to use the more detailed stringer tool",
+          "text": "This is a layout arithmetic check, not an approval of stair geometry, handrails or building-code limits. Use the separate Stair Stringer Calculator for a reference cutting schedule that considers tread thickness and lower-floor correction. Verify finished heights and local requirements before construction."
+        }
+      ]
     },
     {
       "slug": "rise-run-calculator",
@@ -885,7 +913,7 @@
       "keyword": "rise and run",
       "volume": 1300,
       "kd": 20,
-      "desc": "Rise/run, slope angle and hypotenuse",
+      "desc": "Convert a measured vertical rise and horizontal run into slope angle, true diagonal length, pitch per 12 and percent grade.",
       "inputs": [
         {
           "key": "rise",
@@ -903,7 +931,21 @@
       "formula": "slope=rise/run; angle=atan(slope); length=hypot(rise,run)",
       "example": "36 in rise / 72 in run = 6:12, 26.565°",
       "limit": "Run must be nonzero",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Use actual horizontal run, not diagonal length",
+          "text": "Enter the vertical height change as Rise and the horizontal projection as Run. The slope length is the hypotenuse computed from those two legs. Entering an already-sloped tape-measure length as Run would overstate the diagonal result."
+        },
+        {
+          "heading": "Compare pitch, degrees and percent grade",
+          "text": "Pitch per 12 is 12 times rise divided by run, while grade is 100 times the same ratio. The angle comes from atan2(rise,run), converted to degrees. For example, a 36-inch rise over 72 inches of horizontal run is 6:12, 50% grade and approximately 26.565 degrees."
+        },
+        {
+          "heading": "Zero rise and unsupported layouts",
+          "text": "A horizontal reference with zero rise is valid and yields zero angle, but the run must be positive. This is a right-triangle converter, not a structural roof or stair design; use Rafter Calculator for ridge and birdsmouth references when those dimensions matter."
+        }
+      ]
     },
     {
       "slug": "deck-material-calculator",
@@ -1081,7 +1123,7 @@
       "keyword": "equal spacing calculator",
       "volume": 480,
       "kd": 7,
-      "desc": "Place points exactly between two end offsets",
+      "desc": "Calculate evenly spaced center positions, the exact center interval and usable run between adjustable left and right offsets.",
       "inputs": [
         {
           "key": "length",
@@ -1111,7 +1153,21 @@
       "formula": "pitch=(length−left−right)/(n−1); n=1 is centered",
       "example": "1000 mm and 6 endpoint centers ⇒ 200 mm intervals",
       "limit": "Offsets are to centers, not item edges",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Offsets refer to centers, not object edges",
+          "text": "The left and right offsets locate the first and final center marks within the full measured length. The output is a centerline schedule, so include half the actual item width yourself when translating marks to face clearances. Both end offsets must leave a positive usable distance."
+        },
+        {
+          "heading": "How equal centers are distributed",
+          "text": "With two or more centers, the calculator divides the usable span (total length minus both offsets) into count minus one equal center intervals. If you request a single center, it places that center halfway between the two offset reference positions and reports zero interval."
+        },
+        {
+          "heading": "Transfer the marks without accumulating rounding drift",
+          "text": "Use the exported coordinates measured from one reference end instead of repeatedly adding an approximate displayed pitch. Inch fractions on screen are rounded guides; the numeric CSV records the computed positions for the selected length unit. This tool does not include part face widths or minimum clearance rules."
+        }
+      ]
     },
     {
       "slug": "hip-rafter-calculator",
@@ -1259,7 +1315,7 @@
       "keyword": "wall stud calculator",
       "volume": 2400,
       "kd": 11,
-      "desc": "Regular wall stud count, end-center layout, physical face intervals and nominal cut lengths after one total plate deduction.",
+      "desc": "Estimate regular wall stud centers, face positions and nominal stud cut length from spacing, wall height and plate thickness.",
       "inputs": [
         {
           "key": "length",
@@ -1295,7 +1351,21 @@
       "formula": "Nominal centers = 0, OC multiples below L, and far-end center L. Remove a nominal center if its face overlaps the mandatory end stud. Cut = gross wall height − total plate deduction.",
       "example": "120 in between end stud centers at 16 in OC gives 9 centers; 96 in gross height minus 4.5 in plates gives 91.5 in cut length.",
       "limit": "Centerline geometry only. End stud faces extend outside the entered center-to-center run; openings require Framing. Total plate deduction is applied once; verify physical field dimensions.",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Wall length is measured between end stud centers",
+          "text": "Place the first nominal stud at center zero and the far-end stud at the entered wall length. Intermediate centers follow the chosen on-center interval, with overlapping near-end faces suppressed. Because this is a center-to-center reference, the outside faces of the end studs extend beyond the entered run."
+        },
+        {
+          "heading": "Calculate the common vertical cut height",
+          "text": "The same nominal stud cut height is used for each member: gross wall height minus one combined plate deduction. The result does not independently measure a bottom and double top plate, so enter their total assumed vertical deduction and verify it against the intended assembly."
+        },
+        {
+          "heading": "Openings require a different takeoff",
+          "text": "This simple straight wall model has no doors or windows. For an opening, use Wall Framing with Doors & Windows, which separately lists king, jack, header, sill and cripple reference members. Neither calculator determines structural capacity or local building-code compliance."
+        }
+      ]
     },
     {
       "slug": "shelf-spacing-calculator",
@@ -1365,7 +1435,7 @@
       "keyword": "gable roof calculator",
       "volume": 170,
       "kd": 4,
-      "desc": "Two planar roof areas using width, pitch and overhangs",
+      "desc": "Estimate two-plane gable roof surface area, pitched half-span rise and sloped length with one uniform eave overhang.",
       "inputs": [
         {
           "key": "width",
@@ -1395,7 +1465,21 @@
       "formula": "line=hypot(halfspan,halfspan×pitch/12); area=2×line×effective length",
       "example": "A symmetric gable has two matching roof planes",
       "limit": "Dormers, valleys and waste excluded",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Define the symmetric roof footprint",
+          "text": "Width is the building's full horizontal span; length runs parallel to the ridge. The calculator assumes two matching roof planes and adds the same horizontal overhang to each eave side and to both ends of the building. It does not support different overhangs on the four sides."
+        },
+        {
+          "heading": "How the total sloped area is calculated",
+          "text": "Each half-plane uses horizontal run equal to half the building width plus the overhang. Multiply that run by the entered pitch per 12 to get rise; the sloped length is the right-triangle hypotenuse. Two times that sloped length times effective roof length produces the displayed area."
+        },
+        {
+          "heading": "Area is not a purchased sheet takeoff",
+          "text": "This result is an idealized surface area with no waste, dormers, skylights or valleys removed. It does not place sheets on a grid, compute actual cuts, or specify fasteners. Use Roof Sheathing Calculator for a separate reference sheet-layout task and check real roof conditions before ordering."
+        }
+      ]
     },
     {
       "slug": "square-layout-calculator",
@@ -1469,7 +1553,7 @@
       "keyword": "cross brace angle calculator",
       "volume": 90,
       "kd": 11,
-      "desc": "Brace diagonal centerline and angle",
+      "desc": "Calculate rectangular brace diagonal centerline, horizontal incline angle and trimmed reference length after equal end setbacks.",
       "inputs": [
         {
           "key": "width",
@@ -1493,7 +1577,21 @@
       "formula": "length=hypot(width,height)−2×setback; angle=atan2(height,width)",
       "example": "3 ft × 4 ft ⇒ 5 ft brace reference",
       "limit": "No end joinery or load calculation",
-      "status": "BETA_NO_INDEX"
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Set the brace's reference geometry",
+          "text": "Enter the horizontal and vertical offsets between the two centerline endpoints. Their right-triangle hypotenuse gives the full straight diagonal; the reported angle is measured upward from the horizontal using atan2(vertical,horizontal). Both offsets must be positive."
+        },
+        {
+          "heading": "What the end setback adjustment means",
+          "text": "The single Setback input removes that same distance from each end along the diagonal, so the reported reference length is full diagonal minus twice the setback. The calculator rejects setbacks that remove the full brace. This is not an end-joint cut detail or an automatic plumb-cut angle."
+        },
+        {
+          "heading": "Check on the real frame",
+          "text": "For a 36-by-48-inch reference triangle, the centerline diagonal is 60 inches before any end setbacks. Transfer the calculation only after checking actual inside faces, connector positions and intended end joinery. The output does not rate brace strength or provide structural bracing approval."
+        }
+      ]
     },
     {
       "slug": "hole-spacing-calculator",
