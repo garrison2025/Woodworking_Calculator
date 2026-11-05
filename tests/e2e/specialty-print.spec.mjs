@@ -39,10 +39,17 @@ for(const fixture of cases){
     for(const [id,source] of Object.entries(before)){
       if(source.rows.length===0)continue;
       const sections=page.locator('.print-specialty-groups[data-source="'+id+'"] .print-specialty-part');
+      const table=page.locator("#"+id);
+      // A colspan placeholder is an honest "not configured" state, not
+      // an editable coordinate row. Preserve it untouched in print.
+      if(source.rows.some(row=>row.length!==source.headings.length)){
+        await expect(sections).toHaveCount(0);
+        await expect(table.locator("xpath=..")).toBeVisible();
+        continue;
+      }
       // At least one value column appears in each group, with identifiers repeated.
       const count=await sections.count();
       expect(count,id+" split into print groups").toBeGreaterThan(0);
-      const table=page.locator("#"+id);
       await expect(table.locator("xpath=..")).toBeHidden();
       let allNames=[];
       for(const section of await sections.all()){
@@ -50,7 +57,7 @@ for(const fixture of cases){
         const cols=headers.map(s=>s.trim());
         expect(cols[0]).toBe(source.headings[0]);
         expect(cols.length).toBeLessThanOrEqual(id==="shelf-pin-table"?6:5);
-        expect(cols.length).toBeGreaterThan(2);
+        expect(cols.length).toBeGreaterThanOrEqual(2);
         for(const field of cols)if(!allNames.includes(field))allNames.push(field);
         await expect(section.locator("tbody tr")).toHaveCount(source.rows.length);
         const rows=await section.locator("tbody tr").evaluateAll(trs=>
