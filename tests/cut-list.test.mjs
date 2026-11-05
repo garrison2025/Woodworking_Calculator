@@ -431,3 +431,14 @@ test("P1 brace CSV exports physical X/Y cut points in typed units",()=>{
   assert.ok(inch.includes('"Cut start","5","3","4"'),inch);
   assert.ok(inch.includes('"Cut finish","55","33","44"'),inch);
 });
+
+test("P1 straight trapezoid ring exports perpendicular depth and actual segment area units",()=>{
+  const r=compute("segmented-bowl-calculator",{outer:12,inner:8,segments:12,rings:1});
+  const csv=buildScheduleCsv(r.rows,"mm","Corner diameters, NOT finished turn diameter.");
+  assert.ok(csv.includes('"Perpendicular Face Depth (mm)","Segment Face Area (m²)"'),csv.slice(0,650));
+  assert.ok(csv.includes('"49.068'),csv.slice(0,650));
+  assert.ok(csv.includes('"0.0032258064516"')||csv.includes('"0.00322580645"'),csv.slice(0,650));
+  const inCsv=buildScheduleCsv(r.rows,"in");
+  assert.ok(inCsv.includes('"Radial Depth (in)","Perpendicular Face Depth (in)"'),inCsv.slice(0,650));
+  assert.ok(inCsv.includes('"Segment Face Area (ft²)"'),inCsv.slice(0,650));
+});
