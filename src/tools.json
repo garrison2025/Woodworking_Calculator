@@ -35,7 +35,7 @@
       "keyword": "stud calculator",
       "volume": 3600,
       "kd": 1,
-      "desc": "Length of every stud beneath a sloping top plate",
+      "desc": "Gable/rake stud center positions and plate-adjusted net cut lengths, with gross-height datum shown separately.",
       "inputs": [
         {
           "key": "length",
@@ -62,15 +62,21 @@
           "kind": "L"
         },
         {
+          "key": "studWidth",
+          "label": "Stud face width (for center overlap)",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
           "key": "plates",
           "label": "Total plate deduction",
           "value": 4.5,
           "kind": "L"
         }
       ],
-      "formula": "height(x) = start + x × pitch/12; cut = height − plate deduction",
+      "formula": "gross height(x) = left gross height + x × pitch/12; net cut = gross height − total plate deduction; centers at nominal OC plus far end.",
       "example": "144 in wall, 96 in start height, 6:12 gives end height 168 in before plates",
-      "limit": "Geometry only; no structural approval",
+      "limit": "Reference geometry, not structural/cutting certification. Plate deduction is a single total. Wall run is between end stud centers, not outside faces.",
       "status": "BETA_NO_INDEX"
     },
     {
@@ -81,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Plot full-height studs and reference king/jack centers around up to three door or window openings, each with its own sill and height.",
+      "desc": "Plot regular, king and jack stud centers, physical face intervals and nominal plate-adjusted cut lengths beside up to three rough openings.",
       "inputs": [
         {
           "key": "length",
@@ -105,6 +111,18 @@
           "key": "wallHeight",
           "label": "Wall top reference height",
           "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "bottomPlate",
+          "label": "Bottom plate thickness",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "topPlate",
+          "label": "Total top plate thickness",
+          "value": 3,
           "kind": "L"
         },
         {
@@ -180,9 +198,9 @@
           "kind": "L"
         }
       ],
-      "formula": "Use OC grid outside opening side packs; jack centers = opening edges ± studWidth/2; king centers = edges ± 1.5×studWidth; rough opening top = sill + height.",
-      "example": "120 in wall, 16 in OC, 1.5 in studs, opening from 32 to 68 in, 80 in high: six unaffected grid centers and four opening-side reference centers.",
-      "limit": "Reference geometry only: opening elevations are not precut member lengths. Headers, cripples, sill framing, plate deductions, structural sizing and code compliance require separate design.",
+      "formula": "Regular/king cut = wall top datum − top plate − bottom plate; jack cut = rough opening top (sill + height) − bottom plate. Each side pack uses true stud face width; regular grid centers intersecting packs are omitted.",
+      "example": "120 in wall at 16 in OC, 96 in gross height, 1.5 in bottom and 3 in top plates, 32–68 in × 80 in door: six regular studs, four king/jack members; regular/king cuts 91.5 in and jack cuts 78.5 in.",
+      "limit": "Unengineered nominal geometry: rough opening top is assumed to be the jack bearing reference; no header thickness, sill, cripple takeoff or structural compliance. End positions denote centers; verify field cuts.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1065,7 +1083,7 @@
       "keyword": "wall stud calculator",
       "volume": 2400,
       "kd": 11,
-      "desc": "Regular vertical stud centers and last-end placement",
+      "desc": "Regular wall stud count, end-center layout, physical face intervals and nominal cut lengths after one total plate deduction.",
       "inputs": [
         {
           "key": "length",
@@ -1077,6 +1095,12 @@
           "key": "spacing",
           "label": "Stud OC interval",
           "value": 16,
+          "kind": "L"
+        },
+        {
+          "key": "studWidth",
+          "label": "Stud face width (for center overlap)",
+          "value": 1.5,
           "kind": "L"
         },
         {
@@ -1092,9 +1116,9 @@
           "kind": "L"
         }
       ],
-      "formula": "positions=0, OC multiples below L, and exactly one far end",
-      "example": "120 in at 16 in spacing gives 9 locations",
-      "limit": "Opening studs require dedicated framing tool",
+      "formula": "Nominal centers = 0, OC multiples below L, and far-end center L. Remove a nominal center if its face overlaps the mandatory end stud. Cut = gross wall height − total plate deduction.",
+      "example": "120 in between end stud centers at 16 in OC gives 9 centers; 96 in gross height minus 4.5 in plates gives 91.5 in cut length.",
+      "limit": "Centerline geometry only. End stud faces extend outside the entered center-to-center run; openings require Framing. Total plate deduction is applied once; verify physical field dimensions.",
       "status": "BETA_NO_INDEX"
     },
     {
