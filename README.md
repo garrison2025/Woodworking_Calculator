@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 295 geometry tests, 50 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 299 geometry tests, 52 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -16,6 +16,12 @@ A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes,
 - Framing/Wall Stud/Rake Stud now share explicit end-center and physical face assumptions. Door/window King/Jack cut rows are plate-referenced; the rake stud SVG also shows separate left/center/right top-cut lengths. See [CI #165](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41945560963) and `QA-EVIDENCE.md` for test cases and remaining physical sign-off requirements.
 - Safety policies: no unsupported structural span, official code compliance, physical 1:1 printing scale, or material springback guarantees.
 - Roof sheathing now supports a clipped **single-plane sheet grid** with eave/uphill cut coordinates and a conservative purchase count, separately from the four-plane hip roof layout. No offcut reuse or engineered fastening pattern is implied.
+
+## 2026-11-05 — Framing headers, window sills and short studs
+
+- `/framing-calculator/` now derives optional window sills, user-depth header references, and upper/lower cripple pieces from one wall center/elevation model, then exports the exact same coordinates to SVG and CSV. Headers are nonstructural reference pieces; user-specified vertical header depth is not a load/span recommendation. A door uses sill elevation zero.
+- Example: a 120-in wall, 16-in OC, 32–68-in door, 96-in overall height, 5.5-in header depth gives 6 regular, 2 king, 2 jack, 1 header (39-in cut) and 2 upper cripples (7.5-in cut): 13 listed reference pieces, excluding plates.
+- [GitHub Actions #173](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41947661501): **299/299 Node tests**, **52/52 real Chromium tests**, plus 36-page static/noindex/152-keyword validation. Physical timber and loading approval remains NOT VERIFIED.
 
 ## Local development
 
