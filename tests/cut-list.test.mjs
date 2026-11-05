@@ -280,3 +280,24 @@ test("Deck fastening contact CSV converts seam coordinates but not pack or conta
   const noSeamCsv=buildScheduleCsv(noSeam.deckFastenerRows,"mm","No seam");
   assert.ok(noSeamCsv.includes('"Row 1","1","10","0","10","2","20","",""'));
 });
+
+
+test("Stair stringer optional nose and landing references export unit-aware coordinates",()=>{
+  const r=compute("stair-stringer-calculator",{
+    rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,nosing:1.25,upperLandingDepth:36
+  });
+  const cols=scheduleColumns(r.rows,"mm");
+  assert.equal(cols.find(c=>c.key==="noseStart").kind,"length");
+  assert.equal(cols.find(c=>c.key==="noseEnd").kind,"length");
+  assert.equal(cols.find(c=>c.key==="landingReferenceEnd").kind,"length");
+  const csv=buildScheduleCsv(r.rows,"mm","Nosing and landing are references, not saw cuts");
+  assert.ok(csv.includes('"Nose Start (mm)"'));
+  assert.ok(csv.includes('"Nose End (mm)"'));
+  assert.ok(csv.includes('"Landing Reference End (mm)"'));
+  assert.ok(csv.includes('"-31.75"'));
+  assert.ok(csv.includes('"0"'));
+  assert.ok(csv.includes('"4216.4"'));
+  assert.ok(csv.includes('"Top landing vertical"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,16);
+});
