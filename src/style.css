@@ -309,3 +309,39 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .framing-takeoff h2{break-after:avoid}
   .framing-takeoff .caution{font-size:8pt}
 }
+
+
+/* Supplier quote and printable framing purchase ticket (currency is a label, never FX). */
+.framing-currency-control{display:flex;flex-wrap:wrap;align-items:center;gap:9px 12px;padding:12px 16px;margin:0 17px 12px;background:#eef3ed;border:1px solid #dfe9df;border-radius:9px}
+.framing-currency-control label{font-size:12px;font-weight:700;color:#2e5343}
+.framing-currency-control select{min-height:36px;padding:6px 12px;border:1px solid #b9c9bc;border-radius:7px;background:#fff;color:#254c3c;font-size:13px}
+.framing-currency-control small{font-size:11px;line-height:1.4;color:#576b5e}
+.framing-price-status{padding:14px 16px;margin-top:12px!important;border-left:4px solid var(--green);background:#edf3ed;color:#2e5343;font-size:13px;font-weight:700;line-height:1.55}
+.framing-takeoff #framing-price-table{min-width:630px}
+.framing-order-ticket{margin-top:21px;padding:19px 20px;border:1px dashed #9eaf9c;border-radius:9px;background:#f7f9f4;break-inside:avoid}
+.framing-order-ticket h3{margin:0 0 7px;font-size:17px}
+.framing-order-ticket>p{font-size:12px;line-height:1.55;color:#455e4c}
+.framing-order-ticket ul{padding:0;margin:14px 0;list-style:none}
+.framing-order-ticket li{display:grid;grid-template-columns:20px minmax(70px,auto) 1fr auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid #dbe5d9;font-size:13px;line-height:1.5}
+.framing-order-ticket li span:last-child{font-weight:700;white-space:nowrap}
+.ticket-check{font:20px serif;line-height:1;color:#426b5b}
+.framing-order-ticket .ticket-caveat{font-size:11px;color:#775740;margin-top:14px}
+.takeoff-actions{gap:10px;flex-wrap:wrap}
+@media(max-width:620px){
+  .framing-currency-control{margin-left:12px;margin-right:12px;padding:10px 12px}
+  .framing-order-ticket{padding:14px}
+  .framing-order-ticket li{grid-template-columns:20px 1fr;gap:4px 9px}
+  .framing-order-ticket li>span:nth-child(3),.framing-order-ticket li>span:last-child{grid-column:2;white-space:normal}
+}
+@media print{
+  .framing-currency-control{display:none!important}
+  .framing-price-status{font-size:9pt;padding:7pt 9pt;margin-top:5pt!important}
+  .framing-takeoff{break-before:page}
+  .framing-takeoff>.eyebrow,.framing-takeoff>p:not(.framing-price-status){font-size:8pt}
+  .framing-order-ticket{border:1px solid #777;padding:8pt 10pt;margin:10pt 0;background:#fff;break-inside:avoid}
+  .framing-order-ticket h3{font-size:11pt;margin:0 0 3pt}
+  .framing-order-ticket li{font-size:8pt;padding:4pt 0;grid-template-columns:14pt 50pt 1fr auto}
+  .ticket-check{font-size:13pt}
+  .framing-order-ticket .ticket-caveat{font-size:7pt}
+  .framing-takeoff #framing-price-table{min-width:0}
+}
