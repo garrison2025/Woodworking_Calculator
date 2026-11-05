@@ -481,7 +481,7 @@ export function compute(slug,a){
         }));
         stockComparisons.push({stockGroup:group.name,
           planLabel:candidate.kind==="mixed"?"Greedy mixed lengths":
-            candidate.kind==="exact"?"Exhaustive small-layout plan":
+            candidate.kind==="exact"?(exact.certified?"Exhaustive small-layout plan":"Bounded search (not certified)"):
             candidate.kind==="empty"?"No material required":
             "Single length · "+sizes[0]?.offerLabel,
           selected:candidate===best,quoted:candidate.purchaseCost!==null,
@@ -559,13 +559,17 @@ export function compute(slug,a){
       quotedSubtotal=q(materialSummary.reduce((sum,r)=>sum+(r.purchaseCost??0),0)),
       quotedPlanned=q(materialSummary.reduce((sum,r)=>sum+(r.plannedCost??0),0)),
       quotedReserve=q(materialSummary.reduce((sum,r)=>sum+(r.allowanceCost??0),0)),
-      allPricesEntered=unpricedGroups.length===0;
+      allPricesEntered=unpricedGroups.length===0,
+      requiredOptimization=optimizerStatus.filter(s=>s.pieceCount>0),
+      certifiedGroups=requiredOptimization.filter(s=>s.certified).length,
+      allGroupsCertified=allPricesEntered&&requiredOptimization.every(s=>s.certified);
     need(Math.abs(quotedPlanned+quotedReserve-quotedSubtotal)<1e-5,
       "Material subtotal does not reconcile to planned and reserve costs.");
     const costSummary={
       allPricesEntered,unpricedGroups,quotedSubtotal,quotedPlanned,quotedReserve,
       pricedGroups:materialSummary.filter(r=>r.quoted&&r.purchaseSticks>0).length,
-      requiredGroups:materialSummary.filter(r=>r.purchaseSticks>0).length
+      requiredGroups:materialSummary.filter(r=>r.purchaseSticks>0).length,
+      certifiedGroups,allGroupsCertified
     };
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     const upper=crippleRows.filter(r=>r.type==="Upper cripple").length,
@@ -585,6 +589,7 @@ export function compute(slug,a){
       M("Planned stock offcut length",totalOffcut/12,"FT"),
       M("Planned saw kerf loss",totalKerf),
       M("Material families awaiting quotes",unpricedGroups.length,"N"),
+      M("Proven optimal material families",certifiedGroups,"N"),
       ...(allPricesEntered?[M("Quoted purchase total",quotedSubtotal,"C"),M("Quoted reserve cost",quotedReserve,"C")]:[]),
       M("Wall reference height",a.wallHeight),M("Regular and king cut length",fullCut),
       M("Bottom plate thickness",a.bottomPlate),M("Top plate thickness",a.topPlate),
