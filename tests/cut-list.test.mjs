@@ -1,6 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {buildScheduleCsv,scheduleColumns} from "../src/cut-list.mjs";
+import {compute} from "../src/calcs.mjs";
 
 test("selected units and raw numeric coordinates are explicit and machine-readable",()=>{
   const rows=[
@@ -77,4 +78,26 @@ test("plain metric fallback and units validation remain supported",()=>{
   assert.ok(csv.includes('"26.565°"'));
   assert.throws(()=>buildScheduleCsv([{item:"test"}],"yards"),/Unsupported unit/);
   assert.throws(()=>buildScheduleCsv([],"mm"),/No schedule available/);
+});
+
+test("Framing stock cut CSV tracks every geometrical piece and typed kerf columns",()=>{
+  const data=compute("framing-calculator",{length:120,spacing:16,width:1.5,wallHeight:96,
+    openingStart:32,openingWidth:36,openingHeight:80,openingSill:0});
+  const csv=buildScheduleCsv(data.stockCuts,"mm","FFD estimate, not structural approval");
+  const col=scheduleColumns(data.stockCuts,"mm");
+  const kind=name=>col.find(c=>c.key===name)?.kind;
+  assert.equal(kind("index"),"plain");
+  assert.equal(kind("cutLength"),"length");
+  assert.equal(kind("kerfBefore"),"length");
+  assert.equal(kind("remainingLength"),"length");
+  assert.ok(csv.includes('"Cut Length (mm)"'),csv.slice(0,500));
+  assert.ok(csv.includes('"Kerf Before (mm)"'));
+  assert.ok(csv.includes('"Running Used Length (mm)"'));
+  assert.ok(csv.includes('"Stock Group"'));
+  assert.ok(csv.includes('"Stock Id"'));
+  assert.ok(csv.includes('"2324.1"'),"91.5 inch stock cut converts to exact mm");
+  assert.ok(csv.includes('"3.175"'),"One eighth inch kerf is 3.175 mm");
+  assert.equal(csv.split("\r\n").filter(Boolean).length,data.rows.length+2);
+  assert.equal(data.stockCuts.length,data.rows.length);
+  assert.ok(csv.endsWith('"\r\n'));
 });
