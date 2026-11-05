@@ -17,6 +17,11 @@ const positions=(length,spacing)=>{
   return xs;
 };
 const q=(x)=>Math.round(x*1e8)/1e8;
+// A nonzero design clearance below one exported coordinate quantum would be
+// shown as zero in a cut list. Do not silently turn a specified clearance
+// into touching faces. Zero itself remains a valid intentionally flush gap.
+const measurableGap=(value,label)=>need(value===0||value>=1e-8,
+  label+" is below cut-coordinate resolution; use zero or a measurable gap.");
 // End positions are reference CENTERS, not the outside faces of a finished wall.
 // Drop a penultimate nominal OC mark when it would physically overlap the
 // mandatory end member. Other layout tools retain their own center policies.
@@ -756,6 +761,7 @@ export function compute(slug,a){
     const last=a.width-(n-1)*(a.board+a.gap);
     need(last>=1e-7&&last<=a.board+1e-8,
       "The final rip is not a representable positive board width; adjust board size or coverage.");
+    if(n>1)measurableGap(a.gap,"Deck board gap");
     const faceTotal=(n-1)*a.board+last,gapsTotal=(n-1)*a.gap;
     need(Math.abs(faceTotal+gapsTotal-a.width)<=Math.max(1e-7,a.width*1e-10),
       "Board faces and spaces do not close to the entered deck width.");
@@ -771,6 +777,8 @@ export function compute(slug,a){
     });
     need(rows.every(row=>row.right>row.left&&row.ripWidth>0),
       "The board edges collapse at coordinate precision.");
+    if(a.gap>0&&n>1)need(rows.slice(1).every((row,i)=>row.left>rows[i].right),
+      "Deck board gaps collapse at cut-coordinate resolution.");
     return result([
       M("Board rows",n,"N"),M("Last rip width",last),
       M("Total installed board-face width",faceTotal),
@@ -790,6 +798,7 @@ export function compute(slug,a){
     g=(a.length-n*a.width)/(n+1);
     need(g>=-1e-8&&g<=a.gap+1e-7,"No feasible spacing.");
     const actualGap=Math.max(0,g);
+    measurableGap(actualGap,"Baluster clear gap");
     const faceTotal=n*a.width,spaceTotal=(n+1)*actualGap;
     need(Math.abs(faceTotal+spaceTotal-a.length)<=Math.max(1e-7,a.length*1e-10),
       "Baluster faces and equal gaps do not close to the entered clear opening.");
@@ -964,6 +973,7 @@ export function compute(slug,a){
   case "wainscoting-calculator":{
     positive("wall","height");nonnegative("margin","gap");whole("panels");
     const totalMargins=2*a.margin,totalGaps=(a.panels-1)*a.gap;
+    if(a.panels>1)measurableGap(a.gap,"Wainscot panel gap");
     const available=a.wall-totalMargins-totalGaps,width=available/a.panels;
     // Cut coordinates are stored at 1e-8 inch resolution. Reject panels
     // that would appear as zero-width or yield indistinguishable edges.
@@ -979,6 +989,9 @@ export function compute(slug,a){
     });
     need(rows.every(r=>r.right>r.left&&r.width>0),
       "Panel edges collapse at the coordinate precision; choose a wider panel.");
+    if(a.gap>0&&a.panels>1)
+      need(rows.slice(1).every((row,i)=>row.left>rows[i].right),
+        "Wainscot panel gaps collapse at cut-coordinate resolution.");
     return result([
       M("Panel width",width),M("Panel count",a.panels,"N"),
       M("Total panel face width",available),
@@ -1048,6 +1061,9 @@ export function compute(slug,a){
     const boards=ceilStable((a.width+a.gap)/(a.board+a.gap));
     const finalRip=a.width-(boards-1)*(a.board+a.gap);
     need(boards>=1&&boards<=900&&finalRip>0&&finalRip<=a.board+1e-7,"Board width or gap cannot cover this deck safely within the layout limit.");
+    need(a.board>=1e-7&&finalRip>=1e-7,
+      "Decking board face or final rip is below cut-coordinate resolution.");
+    if(boards>1)measurableGap(a.gap,"Deck material board gap");
     const joistGrid=positions(a.length,a.joists);
     need(joistGrid.length<=900,"Too many joist layout lines.");
     // Optional full-deck-width joist procurement ONLY; support spacing
@@ -1361,6 +1377,11 @@ export function compute(slug,a){
     // Zero width means center marks only; never imply zero-width pieces have
     // physical face gaps or a computed end-material clearance.
     const physical=a.itemWidth>0;
+    if(physical){
+      need(a.itemWidth>=1e-7,
+        "Part face width is below cut-coordinate resolution; use zero for center-only marks.");
+      if(a.count>1)measurableGap(Math.max(0,pitch-a.itemWidth),"Clear space between part faces");
+    }
     const faces=xs.map((center,i)=>({
       item:"Center "+(i+1),position:q(center),
       faceLeftEdge:physical?q(center-a.itemWidth/2):null,
@@ -1373,6 +1394,9 @@ export function compute(slug,a){
         "Part faces exceed the measured total length. Increase center offsets or reduce width.");
       need(a.count===1||pitch+1e-8>=a.itemWidth,
         "Part faces overlap. Reduce width or part count, or increase the run.");
+      if(a.count>1&&pitch>a.itemWidth)
+        need(faces.slice(1).every((row,i)=>row.faceLeftEdge>faces[i].faceRightEdge),
+          "Clear space between part faces collapses at cut-coordinate resolution.");
     }
     const metrics=[
       M("Centers",a.count,"N"),
