@@ -301,37 +301,63 @@ if(slug){
         content+=svgText(left,338,"END CENTERS 0 TO "+fmt(span),"tick-label");
       }else content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
     }else if(data.shape==="rafter"){
-      // Physically proportional side-elevation of an un-notched rafter stock
-      // strip. Cut marks are REFERENCES, not a fictional birdsmouth silhouette.
+      // True-proportional 2D side section: roof top y=m*x, lower reference
+      // y=m*x+D*sqrt(1+m^2), with PLUMB reference clips at ridge/tail.
+      // Seat and heel cut faces come ONLY from the calculation engine; this
+      // never represents the strength of a constructed rafter/roof joint.
       const slope=data.roofSlope,total=data.totalHorizontalRun,
-        rise=data.totalRise,depth=data.stockDepth,angle=Math.atan(slope);
-      const offsetX=depth*Math.sin(angle),offsetY=depth*Math.cos(angle);
-      const scale=Math.min(640/Math.max(1e-8,total+offsetX),154/Math.max(1e-8,rise+offsetY));
-      const X=v=>120+(v+offsetX)*scale,Y=v=>87+v*scale;
-      const x0=X(0),y0=Y(0),xt=X(total),yt=Y(rise);
-      const low0x=X(-offsetX),low0y=Y(offsetY);
-      const lowTx=X(total-offsetX),lowTy=Y(rise+offsetY);
-      const points=[[x0,y0],[xt,yt],[lowTx,lowTy],[low0x,low0y]]
-        .map(p=>p.join(",")).join(" ");
-      content+='<polygon class="rafter-stock-section" points="'+points+'" fill="#e3c9a5" stroke="#876a48" stroke-width="1.8"><title>'+esc("Proportional reference stock depth "+fmt(depth)+" measured normal to "+trim(data.pitch,3)+":12 roof slope; NOT an actual birdsmouth cut")+'</title></polygon>';
-      content+='<line class="rafter-top-reference" x1="'+x0+'" y1="'+y0+'" x2="'+xt+'" y2="'+yt+'" stroke="#236950" stroke-width="2.3"/>';
-      const bearing=data.referencePoints[1],tail=data.referencePoints[2];
-      const xb=X(bearing.horizontalRun),yb=Y(bearing.verticalDrop);
-      content+='<line class="rafter-bearing" x1="'+xb+'" y1="69" x2="'+xb+'" y2="263" stroke="#bd8051" stroke-dasharray="5 5" stroke-width="1.4"><title>'+esc("Bearing horizontal reference "+fmt(bearing.horizontalRun))+'</title></line>';
+        rise=data.totalRise,depth=data.stockDepth;
+      const bottom=rise+data.verticalDepth;
+      const scale=Math.min(650/Math.max(1e-8,total),172/Math.max(1e-8,bottom));
+      const X=v=>120+v*scale,Y=v=>77+v*scale;
+      const p0={x:0,y:0},p1={x:total,y:rise};
+      const low0={x:0,y:data.verticalDepth},low1={x:total,y:bottom};
+      const a=data.seatStart,b=data.heelTop,c=data.heelBottom;
+      const cutEnabled=(data.birdsmouthCutRows||[]).length===2;
+      const profile=[p0,p1,low1,
+        ...(cutEnabled?[c,b,a]:[]),low0];
+      content+='<polygon class="rafter-stock-section" points="'+profile.map(p=>X(p.x)+","+Y(p.y)).join(" ")+
+        '" fill="#e3c9a5" stroke="#876a48" stroke-width="1.8"><title>'+
+        esc("Nominal plumb-clipped rafter SIDE SECTION at true coordinate scale; "+(cutEnabled?
+          "measured horizontal seat and plumb heel cut are modeled":
+          "no material-removing birdsmouth at zero pitch/seat")+
+          "; not a certified 1:1 saw template")+'</title></polygon>';
+      content+='<line class="rafter-uncut-lower" x1="'+X(low0.x)+'" y1="'+Y(low0.y)+
+        '" x2="'+X(low1.x)+'" y2="'+Y(low1.y)+
+        '" stroke="#a2a59a" stroke-width="1" stroke-dasharray="4 4"><title>Original parallel lower-edge reference BEFORE the selected birdsmouth notch</title></line>';
+      content+='<line class="rafter-top-reference" x1="'+X(0)+'" y1="'+Y(0)+
+        '" x2="'+X(total)+'" y2="'+Y(rise)+'" stroke="#236950" stroke-width="2.3"/>';
+      const bearing=data.referencePoints[1],tail=data.referencePoints[2],
+        xb=X(bearing.horizontalRun),yb=Y(bearing.verticalDrop);
+      content+='<line class="rafter-bearing" x1="'+xb+'" y1="64" x2="'+xb+
+        '" y2="266" stroke="#bd8051" stroke-dasharray="5 5" stroke-width="1.4"><title>'+
+        esc("Wall outside face / heel PLUMB datum at horizontal x "+fmt(bearing.horizontalRun))+
+        '</title></line>';
       content+='<circle class="rafter-bearing-point" cx="'+xb+'" cy="'+yb+'" r="3.1" fill="#236950"/>';
-      content+='<circle class="rafter-tail-point" cx="'+X(tail.horizontalRun)+'" cy="'+Y(tail.verticalDrop)+'" r="3.1" fill="#236950"/>';
-      // Horizontal seat guide starts where nominal lower stock edge
-      // intersects the reference bearing plane. Not a real cut silhouette.
-      const lowerY=worldX=>slope*worldX+depth/Math.cos(angle);
-      const seatX=X(data.run-data.seat),seatY=Y(lowerY(data.run-data.seat));
-      const bearingBottomY=Y(lowerY(data.run));
-      content+='<line class="rafter-seat-reference" x1="'+seatX+'" y1="'+seatY+'" x2="'+xb+'" y2="'+seatY+'" stroke="#a05c33" stroke-width="2.3" stroke-dasharray="5 3"><title>'+esc("Horizontal seat reference "+fmt(data.seat)+"; vertical drop "+fmt(data.seat*slope)+"; NOT an actual saw-cut profile")+'</title></line>';
-      if(data.notchNormal>1e-8)content+='<line class="rafter-notional-notch-depth" x1="'+xb+'" y1="'+seatY+'" x2="'+xb+'" y2="'+bearingBottomY+'" stroke="#a05c33" stroke-width="1.2" stroke-dasharray="2 2"/>';
-      content+=svgText(105,43,"COMMON RAFTER · PROPORTIONAL STOCK SIDE REFERENCE","dim-label");
-      content+=svgText(105,65,"RIDGE FACE → BEARING → TAIL; NOT A CUTTING TEMPLATE","tick-label");
-      content+=svgText(105,292,"ADJUSTED RUN "+fmt(data.run),"dim-label");
-      content+=svgText(105,321,"SEAT "+fmt(data.seat)+" / NORMAL PENETRATION "+fmt(data.notchNormal),"tick-label");
-      content+=svgText(553,321,"TAIL RUN "+fmt(data.overhang),"tick-label");
+      content+='<circle class="rafter-tail-point" cx="'+X(tail.horizontalRun)+
+        '" cy="'+Y(tail.verticalDrop)+'" r="3.1" fill="#236950"/>';
+      // This named line persists for old UI consumers, but its physical XY
+      // endpoints now come from the engine's same selected sawline rows.
+      content+='<line class="rafter-seat-reference" data-start-x="'+a.x+
+        '" data-start-y="'+a.y+'" data-end-x="'+b.x+'" data-end-y="'+b.y+
+        '" x1="'+X(a.x)+'" y1="'+Y(a.y)+'" x2="'+X(b.x)+'" y2="'+Y(b.y)+
+        '" stroke="#a05c33" stroke-width="3.3"><title>'+
+        esc("Selected horizontal seat: "+fmt(data.seat)+
+          " at y "+fmt(a.y)+" downhill from ridge top; verify wall plate and stock")+
+        '</title></line>';
+      if(cutEnabled){
+        content+='<line class="rafter-heel-plumb-cut" data-start-x="'+b.x+
+          '" data-start-y="'+b.y+'" data-end-x="'+c.x+'" data-end-y="'+c.y+
+          '" x1="'+X(b.x)+'" y1="'+Y(b.y)+'" x2="'+X(c.x)+'" y2="'+Y(c.y)+
+          '" stroke="#a05c33" stroke-width="3.3"><title>'+
+          esc("Selected vertical heel cut "+fmt(data.hap)+" top-to-plate reference; actual heel height "+fmt(c.y-b.y))+
+          '</title></line>';
+      }
+      content+=svgText(105,39,"COMMON RAFTER · PLUMB-CLIPPED 2D SIDE SECTION","dim-label");
+      content+=svgText(105,60,"SEAT & HEEL COORDINATES · NOT STRUCTURAL APPROVAL","tick-label");
+      content+=svgText(105,294,"ADJUSTED RUN "+fmt(data.run),"dim-label");
+      content+=svgText(105,322,"SEAT "+fmt(data.seat)+" / HAP "+fmt(data.hap),"tick-label");
+      content+=svgText(563,322,"TAIL "+fmt(data.overhang)+" / NORMAL THROAT "+fmt(depth-data.notchNormal),"tick-label");
     }else if(data.shape==="stringer"){
       // Actual engine profile vertices: one vertical riser per row and one
       // horizontal tread between successive risers. Preserve aspect ratio.
