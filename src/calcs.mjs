@@ -1008,6 +1008,9 @@ export function compute(slug,a){
     const risers=ceilStable(a.rise/a.desired);
     need(risers>=2&&risers<=200,"Stair count outside supported range.");
     const treads=risers-1,h=a.rise/risers,flightRun=treads*a.tread;
+    // Avoid duplicate/zero riser or tread coordinates in cut lists.
+    need(h>=1e-7&&a.tread>=1e-7,
+      "Stair riser height or tread run is below cut-coordinate resolution.");
     const footprint=flightRun+a.landing;
     // The final riser reaches the finished upper floor/landing. There is
     // no additional counted tread at the top in this explicit convention.
@@ -1021,6 +1024,9 @@ export function compute(slug,a){
         walkingSurface:atTop?"Upper landing":"Tread "+(i+1)
       };
     });
+    need(rows.every((r,i)=>r.riserHeight>0&&
+      (i===0||r.rise>rows[i-1].rise&&r.run>rows[i-1].run)),
+      "Stair riser/tread marks collapse at cut-coordinate resolution.");
     need(Math.abs(rows.at(-1).rise-a.rise)<1e-6,
       "Calculated final riser must reach the specified finished floor level.");
     need(Math.abs(rows.at(-1).run-flightRun)<1e-6,
@@ -1761,6 +1767,8 @@ export function compute(slug,a){
       "lowerEndCutRun","upperEndCutRun","measuredBlankLength","blankEndAllowance");
     need(a.nosing<a.tread,"Tread nose projection must be smaller than the horizontal tread run.");
     const h=a.rise/a.risers,run=(a.risers-1)*a.tread;
+    need(h>=1e-7&&a.tread>=1e-7,
+      "Stringer riser height or tread run is below cut-coordinate resolution.");
     need(a.lowerSupportRun<=run&&a.upperSupportRun<=run,
       "Support reference lengths cannot exceed the nominal straight-flight horizontal run.");
     const normalNotch=h*a.tread/Math.hypot(h,a.tread);
@@ -2062,7 +2070,13 @@ export function compute(slug,a){
       const eaveStart=col*along,slopeStart=row*uphill;
       const cutAlong=Math.min(along,eaveLength-eaveStart);
       const cutUphill=Math.min(uphill,uphillLength-slopeStart);
-      if(cutAlong<=1e-8||cutUphill<=1e-8)continue;
+      // Never silently skip a positive edge strip, even when the area
+      // tolerance could mask it. Every grid position is a required cut.
+      need(cutAlong>=1e-7&&cutUphill>=1e-7,
+        "Roof sheathing edge strip is below cut-coordinate resolution; adjust dimensions or sheet size.");
+      need(q(eaveStart+cutAlong)>q(eaveStart)&&
+        q(slopeStart+cutUphill)>q(slopeStart),
+        "Roof sheathing cut edges collapse in the exported coordinates.");
       // Keep absolute cut-box endpoints as well as nominal lengths:
       // these can be independently cross-checked against adjacent sheets.
       // Used and unused stock areas are evaluated BEFORE display rounding.
@@ -2077,6 +2091,8 @@ export function compute(slug,a){
       });
     }
     const coverage=sheets.reduce((sum,s)=>sum+s.cutAreaSqIn,0);
+    need(sheets.length===cols*rowCount,
+      "Roof sheet schedule omitted a required edge strip.");
     need(Math.abs(coverage-area)<=Math.max(1e-6,area*1e-8),"Sheet positions do not conserve the sloped roof area.");
     const offcuts=sheets.reduce((sum,s)=>sum+s.offcutAreaSqIn,0);
     const stockArea=sheets.length*per;
