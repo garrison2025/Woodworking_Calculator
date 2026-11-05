@@ -41,6 +41,10 @@ if(slug){
   const stringerSawExport=document.querySelector("#download-stringer-sawline-csv");
   const stringerEndTable=document.querySelector("#stringer-end-lines-table tbody");
   const stringerEndExport=document.querySelector("#download-stringer-end-lines-csv");
+  const stringerBlankTable=document.querySelector("#stringer-blank-table tbody");
+  const stringerEndProjectionTable=document.querySelector("#stringer-end-projection-table tbody");
+  const stringerBlankExport=document.querySelector("#download-stringer-blank-csv");
+  const stringerProjectionExport=document.querySelector("#download-stringer-projections-csv");
   const roofReuseStatus=document.querySelector("#roof-reuse-status");
   const roofReuseTable=document.querySelector("#roof-reuse-table tbody");
   const roofReuseSvg=document.querySelector("#roof-reuse-svg");
@@ -938,6 +942,10 @@ if(slug){
     if(!stringerModelStatus||!stringerOutlineTable||!stringerSupportTable)return;
     const outline=latest?.stringerEnvelopeRows||[],surfaces=latest?.supportReferences||[];
     const sawlines=latest?.stringerCutLineRows||[],ends=latest?.measuredEndCuts||[];
+    const blankRows=latest?.stringerBlankRows||[],
+      endChecks=latest?.endProjectionChecks||[];
+    if(stringerBlankExport)stringerBlankExport.disabled=!blankRows.length;
+    if(stringerProjectionExport)stringerProjectionExport.disabled=!endChecks.length;
     const enabled=outline.length>0;
     stringerSectionExport.disabled=!enabled;
     stringerSupportExport.disabled=!surfaces.length;
@@ -949,7 +957,11 @@ if(slug){
         " calculated vertices · minimum perpendicular throat "+
         fmt(latest.minThroatFromVertices,"L")+
         " · face area "+fmt(latest.envelopeAreaSqIn/144,"FT2")+
-        ". Vertical end clips and measured support surfaces are NOT physical bearing cuts.";
+        " · pitch-aligned blank "+fmt(latest.blankLengthShown,"L")+
+        " × "+fmt(latest.stockNormalDepth,"L")+
+        (latest.stockFitsModel===false?" · MEASURED STOCK SHORTER THAN MODEL":latest.stockFitsModel===true?" · measured 2D stock envelope fits":" · reference minimum only")+
+        (latest.outOfSupport>0?" · "+latest.outOfSupport+" endpoint X projections outside entered supports":"")+
+        ". End surfaces and material strength are NOT bearing-approved.";
     stringerOutlineTable.innerHTML=outline.map(r=>'<tr>'+
       [r.index,r.boundary,fmt(r.x,"L"),fmt(r.elevation,"L")]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
@@ -957,6 +969,19 @@ if(slug){
       [r.item,fmt(r.startX,"L"),fmt(r.endX,"L"),fmt(r.elevation,"L")]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
       '<tr><td colspan="4">No measured support surface entered. End-bearing geometry is unverified.</td></tr>';
+    if(stringerBlankTable)stringerBlankTable.innerHTML=blankRows.length?
+      blankRows.map(r=>'<tr>'+[
+        r.item,fmt(r.axisStation,"L"),fmt(r.normalOffset,"L"),
+        fmt(r.x,"L"),fmt(r.elevation,"L")
+      ].map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
+      '<tr><td colspan="5">No valid stock reference rectangle.</td></tr>';
+    if(stringerEndProjectionTable)stringerEndProjectionTable.innerHTML=endChecks.length?
+      endChecks.map(r=>'<tr>'+[
+        r.item,fmt(r.projectedEndX,"L"),fmt(r.chosenHorizontalExtension,"L"),
+        fmt(r.measuredSupportReferenceRun,"L"),
+        fmt(r.projectedOutsideSupport,"L"),r.projectionStatus
+      ].map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
+      '<tr><td colspan="6">Enter both end-line and support-reference measurements for a 1D projection check.</td></tr>';
     const lineCells=r=>[r.item,r.cutType,
       fmt(r.startX,"L"),fmt(r.startY,"L"),fmt(r.endX,"L"),fmt(r.endY,"L"),
       fmt(r.cutLength,"L"),fmt(r.cutAngleDeg,"A")]
@@ -1192,6 +1217,20 @@ if(slug){
       "USER-CHOSEN end-edge intersection positions only; actual supports, stock strength, bearing and fastening have NOT been verified.");
     save(slug+"-"+unit+"-user-end-line-references.csv",csv,"text/csv;charset=utf-8");
     status.textContent="Measured reference end-cut CSV saved locally.";
+  });
+  stringerBlankExport?.addEventListener("click",()=>{
+    if(!latest?.stringerBlankRows?.length)return;
+    const csv=buildScheduleCsv(latest.stringerBlankRows,unit,
+      "Pitch-aligned 2D rectangular raw stock REFERENCE only; centered estimated placement. NOT approved bearing, grain, physical purchase or saw template.");
+    save(slug+"-"+unit+"-raw-stock-reference-corners.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Rectangular stock reference corner CSV saved locally.";
+  });
+  stringerProjectionExport?.addEventListener("click",()=>{
+    if(!latest?.endProjectionChecks?.length)return;
+    const csv=buildScheduleCsv(latest.endProjectionChecks,unit,
+      "X projection only; a within-reference result does NOT establish actual bearing or structural acceptance.");
+    save(slug+"-"+unit+"-end-reference-projections.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Nonstructural end X-projection diagnostics CSV saved locally.";
   });
   stringerSupportExport?.addEventListener("click",()=>{
     if(!latest?.supportReferences?.length)return;
