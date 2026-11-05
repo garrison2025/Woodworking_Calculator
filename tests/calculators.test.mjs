@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {compute,safeCompute,convertToInches,convertFromInches} from "../src/calcs.mjs";
+import {compute,safeCompute,convertToInches,convertFromInches,exactFramingStock} from "../src/calcs.mjs";
 
 const {tools}=JSON.parse(readFileSync(new URL("../src/tools.json",import.meta.url),"utf8"));
 const published=tools.filter(t=>t.priority==="P0"||t.priority==="P1");
@@ -1134,4 +1134,142 @@ test("Alternative supplier offer prices and lengths enforce safe boundaries",()=
   assert.equal(partial.metrics.some(m=>m.label==="Quoted purchase total"),false);
   assert.equal(partial.stockPlan.filter(p=>p.stockGroup==="Stud")[0].offerLabel,
     "Alternative 1");
+});
+
+
+test("Small fully quoted wall gets per-family exhaustive search certificates",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator");
+  const a={...defaults(t),length:64,openingStart:16,openingWidth:24,
+    wallHeight:80,openingHeight:60,studUnitPrice:8,headerUnitPrice:12};
+  const r=compute("framing-calculator",a);
+  assert.equal(r.materialSummary[0].pieces,8);
+  assert.equal(r.costSummary.allPricesEntered,true);
+  assert.equal(r.optimizerStatus.length,3);
+  assert.deepEqual(r.optimizerStatus.map(s=>s.status),
+    ["proved","proved","not-required"]);
+  assert.deepEqual(r.optimizerStatus.map(s=>s.certified),
+    [true,true,false]);
+  assert.equal(r.costSummary.certifiedGroups,2);
+  assert.equal(r.costSummary.allGroupsCertified,true);
+  near(value(r,"Proven optimal material families"),2);
+  assert.ok(r.optimizerStatus[0].nodes>0);
+  assert.equal(r.optimizerStatus[0].maxPieces,9);
+  assert.equal(r.optimizerStatus[0].limit,40000);
+  assert.equal(r.stockComparisons.filter(s=>s.planLabel==="Exhaustive small-layout plan").length,2);
+  assert.ok(r.stockComparisons.filter(s=>s.selected).every(s=>
+    s.planLabel==="Exhaustive small-layout plan"||s.planLabel==="No material required"));
+  for(const bar of r.stockPlan)near(bar.stockLength,
+    bar.piecesLength+bar.kerfLoss+bar.offcutLength,1e-7);
+});
+test("Large priced wall remains explicitly uncertified even if header is proved",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),a={
+    ...defaults(t),studUnitPrice:5.5,headerUnitPrice:14.25
+  };
+  const r=compute("framing-calculator",a);
+  const stud=r.optimizerStatus.find(s=>s.stockGroup==="Stud");
+  assert.equal(stud.status,"size-limit");
+  assert.equal(stud.nodes,0);
+  assert.equal(stud.certified,false);
+  assert.ok(stud.pieceCount>9);
+  assert.equal(r.optimizerStatus.find(s=>s.stockGroup==="Header").status,"proved");
+  assert.equal(r.costSummary.certifiedGroups,1);
+  assert.equal(r.costSummary.allGroupsCertified,false);
+  near(value(r,"Quoted purchase total"),69.25);
+  near(value(r,"Proven optimal material families"),1);
+});
+test("Small wall with incomplete header quote never claims all materials optimal",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator");
+  const r=compute("framing-calculator",{...defaults(t),length:64,
+    openingStart:16,openingWidth:24,wallHeight:80,openingHeight:60,
+    studUnitPrice:8,headerUnitPrice:0});
+  assert.equal(r.optimizerStatus[0].status,"proved");
+  assert.equal(r.optimizerStatus[1].status,"quote-needed");
+  assert.equal(r.costSummary.allPricesEntered,false);
+  assert.equal(r.costSummary.allGroupsCertified,false);
+  assert.equal(r.metrics.some(m=>m.label==="Quoted purchase total"),false);
+});
+test("Independent brute-force partition checks exact solver's cost including reserve and kerf",()=>{
+  const pieces=[6.5,5.5,4.1,3.4].map((length,i)=>({
+    item:"Piece "+i,cutLength:length
+  }));
+  const offers=[
+    {code:"BASE",label:"Base",stockLength:10,unitPrice:5.5},
+    {code:"ALT1",label:"Alternative 1",stockLength:12,unitPrice:6.2},
+    {code:"ALT2",label:"Alternative 2",stockLength:14,unitPrice:7}
+  ];
+  for(const waste of [0,10,25]){
+    for(const kerf of [0,.125]){
+      // A deliberately poor but FEASIBLE incumbent: one 10-in stick per piece.
+      const baseCount=Math.ceil(pieces.length*(1+waste/100)-1e-10);
+      const seed={bars:pieces.map(p=>({offer:offers[0],cuts:[p],used:p.cutLength})),
+        purchaseCost:baseCount*offers[0].unitPrice,purchaseCount:baseCount};
+      const exact=exactFramingStock(pieces,offers,kerf,waste,seed);
+      assert.equal(exact.status,"proved");
+      assert.equal(exact.certified,true);
+      assert.ok(exact.nodes>0&&exact.nodes<=40000);
+      // Separate deliberately simple, unconstrained exhaustive oracle.
+      let oracle=Infinity;
+      const brute=(index,bars)=>{
+        if(index===pieces.length){
+          const counts=offers.map(o=>bars.filter(b=>b.offer===o).length);
+          const cents=counts.reduce((sum,n,i)=>
+            sum+Math.ceil(n*(1+waste/100)-1e-10)*
+              Math.round(offers[i].unitPrice*100),0);
+          oracle=Math.min(oracle,cents);
+          return;
+        }
+        const p=pieces[index];
+        for(const bar of bars){
+          const add=p.cutLength+(bar.cuts.length?kerf:0);
+          if(bar.used+add>bar.offer.stockLength+1e-8)continue;
+          bar.used+=add;bar.cuts.push(p);
+          brute(index+1,bars);
+          bar.cuts.pop();bar.used-=add;
+        }
+        for(const offer of offers){
+          if(p.cutLength>offer.stockLength)continue;
+          bars.push({offer,used:p.cutLength,cuts:[p]});
+          brute(index+1,bars);
+          bars.pop();
+        }
+      };
+      brute(0,[]);
+      const counts=offers.map(o=>
+        exact.candidate.bars.filter(b=>b.offer.code===o.code).length);
+      const exactCents=counts.reduce((sum,n,i)=>
+        sum+Math.ceil(n*(1+waste/100)-1e-10)*
+          Math.round(offers[i].unitPrice*100),0);
+      assert.equal(exactCents,oracle,"Independent oracle disagrees for "+JSON.stringify({waste,kerf}));
+      assert.equal(exact.candidate.bars.reduce((s,b)=>s+b.cuts.length,0),pieces.length);
+      for(const b of exact.candidate.bars){
+        const piecesLength=b.cuts.reduce((s,p)=>s+p.cutLength,0);
+        const used=piecesLength+(b.cuts.length-1)*kerf;
+        assert.ok(used<=b.offer.stockLength+1e-8);
+        near(used,b.used,1e-7);
+      }
+    }
+  }
+});
+test("Exact solver's node and size caps never issue a false proof",()=>{
+  const pieces=[6,4,4].map((cutLength,i)=>({item:"Cut "+i,cutLength}));
+  const offer={code:"BASE",label:"Base",stockLength:10,unitPrice:6};
+  const seed={bars:pieces.map(p=>({offer,used:p.cutLength,cuts:[p]})),
+    purchaseCount:3,purchaseCost:18};
+  const cutoff=exactFramingStock(pieces,[offer],.125,0,seed,{nodeLimit:1});
+  assert.equal(cutoff.status,"node-limit");
+  assert.equal(cutoff.certified,false);
+  assert.equal(cutoff.nodes,2);
+  assert.ok(cutoff.candidate);
+  const noQuotes=exactFramingStock(pieces,[],.125,0,seed);
+  assert.equal(noQuotes.status,"quote-needed");
+  assert.equal(noQuotes.certified,false);
+  const overSize=exactFramingStock(Array.from({length:10},(_,i)=>({
+    item:"n"+i,cutLength:1
+  })),[offer],.125,0,seed);
+  assert.equal(overSize.status,"size-limit");
+  assert.equal(overSize.certified,false);
+  assert.equal(overSize.nodes,0);
+  const empty=exactFramingStock([],[offer],.125,0,seed);
+  assert.equal(empty.status,"not-required");
+  assert.equal(empty.certified,false);
 });
