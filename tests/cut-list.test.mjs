@@ -465,3 +465,20 @@ test("P1 stringer complete sawline schedule and user end-line CSV retain endpoin
  assert.ok(ends.includes('"-76.2"'),ends);
  assert.ok(ends.includes('"3454.4"'),ends);
 });
+
+test("P1 hip and sheathing roof reuse CSV converts independent stock coordinates and polygons",()=>{
+ for(const slug of ["hip-roof-calculator","roof-sheathing-calculator"]){
+   const inputs=slug==="hip-roof-calculator"?{
+     width:96,length:192,pitch:0,overhang:0,sheetWidth:48,sheetLength:96,
+     orientation:0,reuseMode:1,roofKerf:0}:{
+     width:70,length:110,pitch:0,sheetWidth:48,sheetLength:96,
+     orientation:0,waste:0,reuseMode:1,roofKerf:0};
+   const r=compute(slug,inputs);
+   const csv=buildScheduleCsv(r.roofReusePlan.rows,"mm","Stock-local, no structural bearing.");
+   assert.ok(csv.includes('"Stock X (mm)","Stock Y (mm)","Box Width (mm)","Box Height (mm)"'),csv.slice(0,900));
+   assert.ok(csv.includes('"Stock Cut Vertices (mm)"'),csv.slice(0,1200));
+   assert.ok(csv.includes('"R1"'),csv.slice(0,1500));
+   assert.ok(!csv.includes("NaN"));
+   assert.ok(!csv.includes("undefined"));
+ }
+});
