@@ -1032,11 +1032,27 @@
           "label": "Fastener pack price (0 = unquoted)",
           "value": 0,
           "kind": "C"
+        },
+        {
+          "key": "seamMode",
+          "label": "Butt seam pattern",
+          "value": 0,
+          "kind": "E",
+          "options": [
+            {
+              "value": 0,
+              "label": "Same seam positions every row"
+            },
+            {
+              "value": 1,
+              "label": "Alternate forward/reverse joist-center seams"
+            }
+          ]
         }
       ],
       "formula": "Rows = ceil((coverage+gap)/(board face width+gap)); final rip = coverage−(rows−1)×(face width+gap). With given joist center references (0, OC, …, end), each board segment ends at the farthest joist center reachable within purchased stock length, unless the final deck end is reachable. Every supported piece consumes one stock board; no offcut reuse or seam staggering. Fastening contact count = decking rows × (joist references + number of butt seams per row), counting each of the TWO stock pieces at a shared butt seam separately. Requested fasteners = fastening contacts × user-entered fasteners per contact; supplier packs = ceil(requested fasteners / supplier pack size). Decking purchase cost = (stock boards with allowance) × per-board quote; fastener purchase cost = packs × pack quote. A 0 price means NOT QUOTED, never free stock. Costs only total once every needed component has a quote.",
       "example": "For a 120 × 144 in deck using 5.5 in boards and 0.125 in gaps, 16 in joist centers and 100 in stock: 22 rows with a 1.875 in final rip each receive a 96 in and 48 in segment, joined at the 96 in joist center reference. This gives 44 stock boards before allowance, not a 100 in/44 in unsupported joint.",
-      "limit": "Rectangular straight-deck reference geometry only. Segment butt joints are constrained to entered joist CENTERLINES, not validated bearing widths, joint reinforcement, double-joist blocking or fastening. All rows use identical, UNSTAGGERED joints as a conservative reference, not an approved construction pattern. No offcut reuse, structural span approval, load rating, end gap, board defects, ledger design or footing calculations. Fastener quantities are a user-controlled arithmetic planning assumption, not a prescribed fastening pattern or building-code recommendation. Each butt seam creates two piece-to-joist contacts on the same single joist centerline; this does not verify that the joist can actually bear both ends. The board segment estimate does not charge saw kerf, trimming, defects, delivery or tax; no joist lumber purchasing estimate is made. Currency is a label only with no automatic exchange conversion.",
+      "limit": "Rectangular straight-deck reference geometry only. Segment butt joints are constrained to entered joist CENTERLINES, not validated bearing widths, joint reinforcement, double-joist blocking or fastening. All rows use identical, UNSTAGGERED joints as a conservative reference, not an approved construction pattern. No offcut reuse, structural span approval, load rating, end gap, board defects, ledger design or footing calculations. Fastener quantities are a user-controlled arithmetic planning assumption, not a prescribed fastening pattern or building-code recommendation. Each butt seam creates two piece-to-joist contacts on the same single joist centerline; this does not verify that the joist can actually bear both ends. The board segment estimate does not charge saw kerf, trimming, defects, delivery or tax; no joist lumber purchasing estimate is made. Currency is a label only with no automatic exchange conversion. Alternate seam mode is only a measured joist-CENTER proposal; different seam stations are reported only when actually obtained. No butt joint support or staggered installation pattern is structurally approved.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1062,6 +1078,10 @@
         {
           "heading": "What the materials budget intentionally excludes",
           "text": "This is a nonstructural reference purchase estimate for decking pieces and selected fastener packs only. The joist lines are user-entered CENTER references, not designed joists; their width, bearing, spans, blocking, hangers, structural attachments, end trimming and extra fastening at supported edges are unverified. Physically validate the proposed joints, real lumber lengths and manufacturer installation instructions before purchasing."
+        },
+        {
+          "heading": "Alternate butt seams without inventing support locations",
+          "text": "The optional alternate seam mode calculates both left-to-right and right-to-left seam chains on the user-entered joist CENTER grid. Odd-numbered rows use the original forward chain; even-numbered rows use the reverse chain. Every cut must fit the stock length. If both chains have the same seams, a stagger cannot be guaranteed. The report counts rows with truly different seam stations, not just the selected mode. Do not treat either pattern as a certified joint-support design; blocking, joist face width and local fastening remain excluded."
         }
       ]
     },
