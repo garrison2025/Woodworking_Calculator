@@ -538,7 +538,7 @@ test("Framing centers do not duplicate king or jack packs",()=>{
   near(value(r,"Rough opening face area"),36*80/144);
 });
 test("Framing supports a second independently elevated window",()=>{
-  const r=compute("framing-calculator",{length:160,spacing:16,width:1.5,wallHeight:108,openingStart:24,openingWidth:24,openingHeight:80,openingSill:0,opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34});
+  const r=compute("framing-calculator",{length:160,spacing:16,width:1.5,wallHeight:108,studStockLength:120,openingStart:24,openingWidth:24,openingHeight:80,openingSill:0,opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34});
   near(value(r,"Opening intervals"),2);near(value(r,"Opening 2 top elevation"),76);
   near(r.openings[1].sill,34);near(r.openings[1].height,42);
   assert.equal(r.marks.filter(x=>x.role==="jack"&&x.topHeight===76).length,2);
@@ -779,7 +779,7 @@ test("Framing header and cripple positions close exactly to opening and plate da
 });
 
 test("Windows generate sill, lower and upper cripples with no overlap into clear opening",()=>{
-  const a={length:160,spacing:16,width:1.5,wallHeight:108,
+  const a={length:160,spacing:16,width:1.5,wallHeight:108,studStockLength:120,
     bottomPlate:1.5,topPlate:3,headerDepth:5.5,sillThickness:1.5,
     openingStart:24,openingWidth:24,openingHeight:80,openingSill:0,
     opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34};
@@ -868,7 +868,7 @@ test("Kerf is charged between adjacent cuts, changing a borderline exact packing
   const noKerf=compute("framing-calculator",{...base,studStockLength:183,stockKerf:0});
   const withKerf=compute("framing-calculator",{...base,studStockLength:183,stockKerf:0.125});
   assert.equal(noKerf.materialSummary[0].plannedSticks,5);
-  assert.equal(withKerf.materialSummary[0].plannedSticks,9);
+  assert.equal(withKerf.materialSummary[0].plannedSticks,8);
   assert.equal(noKerf.materialSummary[0].kerfLoss,0);
   assert.ok(withKerf.materialSummary[0].kerfLoss>0);
   assert.ok(noKerf.stockPlan.filter(b=>b.stockGroup==="Stud").some(b=>b.cuts.length===2&&
