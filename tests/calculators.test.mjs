@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {compute,safeCompute,convertToInches,convertFromInches,exactFramingStock} from "../src/calcs.mjs";
+import {buildScheduleCsv} from "../src/cut-list.mjs";
 
 const {tools}=JSON.parse(readFileSync(new URL("../src/tools.json",import.meta.url),"utf8"));
 const published=tools.filter(t=>t.priority==="P0"||t.priority==="P1");
