@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Calculate wall framing with doors and windows: regular and King/Jack studs, header and window-sill reference cuts, upper/lower cripple positions, SVG layout and CSV schedule.",
+      "desc": "Wall framing calculator for door and window openings, with King/Jack studs, headers, sills, cripple positions, SVG plan and CSV cut list.",
       "inputs": [
         {
           "key": "length",
