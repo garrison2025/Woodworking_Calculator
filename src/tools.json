@@ -1651,7 +1651,7 @@
       "keyword": "cross brace angle calculator",
       "volume": 90,
       "kd": 11,
-      "desc": "Calculate rectangular brace diagonal centerline, horizontal incline angle and trimmed reference length after equal end setbacks.",
+      "desc": "True-scale diagonal brace centerline with along-the-brace end setbacks, exact X/Y cut endpoint coordinates, CSV schedule and proportional SVG.",
       "inputs": [
         {
           "key": "width",
@@ -1667,27 +1667,27 @@
         },
         {
           "key": "setback",
-          "label": "Trim from each end",
+          "label": "Setback along brace from each end",
           "value": 0,
           "kind": "L"
         }
       ],
-      "formula": "length=hypot(width,height)−2×setback; angle=atan2(height,width)",
-      "example": "3 ft × 4 ft ⇒ 5 ft brace reference",
-      "limit": "No end joinery or load calculation",
+      "formula": "Full diagonal = hypot(horizontal, vertical). Unit direction = (horizontal,vertical)/full diagonal. Cut endpoints = unit direction × setback and × (full−setback); cut length = full−2×setback; angle = atan2(vertical,horizontal).",
+      "example": "36 in horizontal × 48 in vertical ⇒ 60 in full centerline. With 5 in trimmed from EACH end along the brace: cut length 50 in; start (3,4) in, finish (33,44) in; cut projections 30 in horizontal and 40 in vertical.",
+      "limit": "The X/Y points describe the brace CENTERLINE relative to the original lower-left datum. No timber face width, actual saw bevel, joint geometry, stock allowance, grain or structural load design is modeled. SVG is scaled for viewing, not a 1:1 template.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Set the brace's reference geometry",
-          "text": "Enter the horizontal and vertical offsets between the two centerline endpoints. Their right-triangle hypotenuse gives the full straight diagonal; the reported angle is measured upward from the horizontal using atan2(vertical,horizontal). Both offsets must be positive."
+          "heading": "Understand the measurement datum",
+          "text": "Horizontal and vertical dimensions locate the original centerline from (0,0) to (width,height). The setback is a measured distance ALONG that diagonal from each original end, not a horizontal or vertical clearance. The worksheet gives both trimmed centerline endpoint coordinates relative to that same datum."
         },
         {
-          "heading": "What the end setback adjustment means",
-          "text": "The single Setback input removes that same distance from each end along the diagonal, so the reported reference length is full diagonal minus twice the setback. The calculator rejects setbacks that remove the full brace. This is not an end-joint cut detail or an automatic plumb-cut angle."
+          "heading": "Check cut coordinates and export",
+          "text": "For a 36×48 in original brace with 5 in of setback per end, the cut endpoints are (3,4) in and (33,44) in, leaving 50 in of usable centerline. CSV fields retain numeric X/Y and along-line station values with explicit units. The green SVG line uses exactly those exported points."
         },
         {
-          "heading": "Check on the real frame",
-          "text": "For a 36-by-48-inch reference triangle, the centerline diagonal is 60 inches before any end setbacks. Transfer the calculation only after checking actual inside faces, connector positions and intended end joinery. The output does not rate brace strength or provide structural bracing approval."
+          "heading": "Centerline is not a physical board cut",
+          "text": "No real timber breadth, end-bearing profile, bevel, connector position or stock allowance is known. The measured endpoint coordinates are layout references only, and the on-screen diagram is not a paper-scale saw guide. Check the actual joint and material before cutting."
         }
       ]
     },
