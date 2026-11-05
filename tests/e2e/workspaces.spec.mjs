@@ -2247,6 +2247,7 @@ test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrolla
   for(let i=0;i<5;i++)await page.locator("#zoom-in").click();
   await expect(drawing).toHaveAttribute("tabindex","0");
   await expect(drawing).toHaveAttribute("role","region");
+  await expect(drawing).toHaveAttribute("aria-label","Zoomed dimension drawing — arrow keys to scroll");
   await drawing.focus();
   await page.keyboard.press("ArrowRight");
   await expect.poll(()=>drawing.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
