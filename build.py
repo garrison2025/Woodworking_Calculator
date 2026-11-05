@@ -231,7 +231,7 @@ def tool_page(t):
            '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
            '<div class="drawing-caption"><span><i></i> SCALED SCHEMATIC</span><span>NOT A VERIFIED 1:1 TEMPLATE</span></div>'
            '<div class="diagram-tools"><button type="button" class="btn subtle" id="download-svg">↓ Save SVG</button><button type="button" class="btn subtle" id="print-sheet">⎙ Print / PDF</button></div>'
-           '<p class="print-advice">Printed worksheets include two physical calibration rulers. Use 100% / Actual size and check them with a real ruler; the geometry diagram itself is NOT a 1:1 template.</p>'
+           '<p class="print-advice">Print / PDF includes the complete measurement schedule, including rows on other screen pages, plus two physical calibration rulers. Use 100% / Actual size and check both with a real ruler; the geometry diagram itself is NOT a 1:1 template. Printed schedules may span many sheets.</p>'
            '<section id="print-calibration" class="print-calibration" aria-label="Printed ruler calibration check">'
            '<h3>Physical print scale check</h3>'
            '<p>Print at 100% / Actual size on A4 or Letter; disable Fit to page. Measure both bars with a trusted ruler before using worksheet values. The drawing remains schematic regardless of this check.</p>'
@@ -303,7 +303,7 @@ def tool_page(t):
         '</div></section>'
     ) if t["slug"]=="deck-material-calculator" else ""
     body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
-           '<p>Items below are generated from the same numbers used for the drawing. The downloadable CSV uses plain numeric cells and puts the selected units in column headers for Excel or other spreadsheets. Inspect all cuts on site.</p>'
+           '<p>Items below are generated from the same numbers used for the drawing. The screen may show only 160 rows per page, but Print / PDF expands the entire schedule before printing and restores your screen page afterwards; CSV always includes all rows. Numeric CSV cells use the selected units in column headers for spreadsheet import. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
            '<p class="schedule-count" id="schedule-count" aria-live="polite"></p>'
            '<nav class="schedule-pager" id="schedule-pager" aria-label="Measurement schedule pages" hidden>'
