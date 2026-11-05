@@ -1268,8 +1268,35 @@ export function compute(slug,a){
   }
   case "diagonal-brace-calculator":{
     positive("width","height");nonnegative("setback");
-    const d=Math.hypot(a.width,a.height);need(2*a.setback<d,"Total cut setbacks exceed brace length.");
-    return result([M("Full centerline",d),M("After end setbacks",d-2*a.setback),M("Brace angle",deg(Math.atan2(a.height,a.width)),"A")],[],a.width,[],"triangle",{rise:a.height,run:a.width});
+    // The two entered offsets locate the ORIGINAL brace centerline endpoints
+    // in a right-handed layout: (0,0) to (width,height). Both end setbacks
+    // are distances measured ALONG that centerline, not X or Y face offsets.
+    const full=Math.hypot(a.width,a.height),cutLength=full-2*a.setback;
+    need(cutLength>=1e-7,
+      "Usable brace centerline is below layout resolution; reduce end setbacks.");
+    const scale0=a.setback/full,scale1=(full-a.setback)/full;
+    const start={x:q(a.width*scale0),y:q(a.height*scale0)};
+    const finish={x:q(a.width*scale1),y:q(a.height*scale1)};
+    need(Math.hypot(finish.x-start.x,finish.y-start.y)>=1e-7,
+      "Brace cut endpoints collapse at coordinate precision; reduce setbacks.");
+    rows=[
+      {item:"Cut start",stationAlongFullLine:q(a.setback),
+        horizontalX:start.x,verticalY:start.y},
+      {item:"Cut finish",stationAlongFullLine:q(full-a.setback),
+        horizontalX:finish.x,verticalY:finish.y}
+    ];
+    return result([
+      M("Full centerline",full),
+      M("After end setbacks",cutLength),
+      M("Brace angle",deg(Math.atan2(a.height,a.width)),"A"),
+      M("Cut horizontal projection",a.width*cutLength/full),
+      M("Cut vertical projection",a.height*cutLength/full)
+    ],[],a.width,rows,"brace",{
+      braceRun:a.width,braceRise:a.height,braceFullLength:full,
+      braceCutLength:cutLength,braceAngle:deg(Math.atan2(a.height,a.width)),
+      braceCutStart:start,braceCutFinish:finish,
+      braceCutRows:rows,braceSetback:a.setback
+    });
   }
   case "hole-spacing-calculator":{
     positive("length","diameter","boardWidth");nonnegative("edge","crossSetback");
