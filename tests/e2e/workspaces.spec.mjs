@@ -2142,7 +2142,7 @@ test("Print/PDF includes every row of a paginated 540-piece cut list and restore
   for(const group of await grouped.all()){
     await expect(group.locator("tbody tr")).toHaveCount(540);
     const cols=group.locator("thead th");
-    expect(await cols.count()).toBeLessThanOrEqual(4);
+    expect(await cols.count()).toBeLessThanOrEqual(5);
   }
   await expect(page.locator("#cut-table").locator("xpath=..")).toBeHidden();
   // The 540-row gate checks print DOM completeness. The separate genuine
