@@ -45,3 +45,22 @@ test("Core pages remain usable at phone width without horizontal overflow",async
     expect(overflow,slug+" horizontal overflow").toBeLessThanOrEqual(1);
   }
 });
+
+test("Stringer 2D stock envelope and X-projection warnings survive Firefox/WebKit units",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  const blank=page.locator("#dimension-svg svg .stringer-blank-reference");
+  await expect(blank).toHaveCount(1);
+  await page.locator("#f-lowerEndCutRun").fill("3");
+  await page.locator("#f-upperEndCutRun").fill("6");
+  await page.locator("#f-lowerSupportRun").fill("5");
+  await page.locator("#f-upperSupportRun").fill("4");
+  await page.locator("#f-measuredBlankLength").fill("200");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(blank).toHaveAttribute("data-stock-fits","true");
+  await expect(page.locator("#dimension-svg svg .stringer-support-projection-warning")).toHaveCount(1);
+  await expect(page.locator("#stringer-blank-table tbody tr")).toHaveCount(4);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#stringer-end-projection-table")).toContainText("50.8 mm");
+  await page.locator("#f-measuredBlankLength").fill("2500");
+  await expect(blank).toHaveAttribute("data-stock-fits","false");
+});
