@@ -116,6 +116,8 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #e4eee7;
 .field label span{color:#7d8e7f;font-weight:500}
 .field input{font:600 14px ui-monospace,Consolas,monospace}
 .field small{display:block;color:#89968b;font-size:10px;margin-top:4px}
+.field [aria-invalid="true"]{border-color:var(--danger);background:#fff8f6;box-shadow:0 0 0 2px rgba(168,58,51,.10)}
+.field [aria-invalid="true"]:focus{border-color:var(--danger);box-shadow:0 0 0 3px rgba(168,58,51,.16)}
 .pane-actions{padding:2px 19px 14px}.pane-actions button{width:100%}
 .sidebar-note{margin:0 19px 20px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;line-height:1.65}
 .sidebar-note span{color:var(--green);font-weight:800;margin-right:4px}
@@ -389,3 +391,11 @@ tbody tr:nth-child(2n){background:#fafbf8}
   #framing-proof-table th,#framing-proof-table td{padding:4pt 3pt;overflow-wrap:anywhere}
   .framing-optimizer-panel .optimizer-note{font-size:7pt}
 }
+
+/* Honor reduced-motion preferences for every tool and the home directory. */
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .btn,.tool-card,.category-pill,.drawing-grid svg,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}
+  .btn:hover,.tool-card:hover{transform:none}
+}
+
