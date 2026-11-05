@@ -1657,7 +1657,7 @@
       "keyword": "hole spacing calculator",
       "volume": 110,
       "kd": 4,
-      "desc": "Drilling centers and hole-edge coordinates, measured end margins, inter-hole clear material and proportional circle layout",
+      "desc": "Lay out one or multiple aligned drilling rows with measured board length and width, full X/Y center coordinates, true circular hole edges and checked end/side margins.",
       "inputs": [
         {
           "key": "length",
@@ -1682,24 +1682,46 @@
           "label": "Hole diameter",
           "value": 0.19685,
           "kind": "L"
+        },
+        {
+          "key": "boardWidth",
+          "label": "Board face width",
+          "value": 1.5748031496062993,
+          "kind": "L"
+        },
+        {
+          "key": "rowCount",
+          "label": "Number of drilling rows",
+          "value": 1,
+          "kind": "N"
+        },
+        {
+          "key": "crossSetback",
+          "label": "Crosswise outer-row center setback",
+          "value": 0.1968503937007874,
+          "kind": "L"
         }
       ],
-      "formula": "Center pitch = (stock length−2×end center setback)/(hole count−1); drilled hole edges = center±hole diameter/2; inter-hole clear material = center pitch−diameter; end material margin = end center setback−diameter/2.",
-      "example": "On a 100 mm board with four 5 mm holes, centered 5 mm in from either end, pitch is 30 mm, hole-to-hole clear material is 25 mm, and the solid end margin is 2.5 mm. Hole edges from the left are 2.5–7.5, 32.5–37.5, 62.5–67.5 and 92.5–97.5 mm.",
-      "limit": "Hole center setback is NOT edge-to-edge material clearance. Hole circles and interval spacing depict longitudinal geometry only; actual board face width, transverse edge clearance, drill-bit runout, grain tear-out, tolerances, clamping, workholding, fastener loads and material strength are not checked. Touching holes may produce 0 clear material. SVG is illustrative, never a 1:1 drilling template.",
+      "formula": "Along length: x pitch = (length−2×end center setback)/(holes per row−1); x centers = end setback + column×x pitch. Across width: when drilling one row, y center = board width/2; for two or more rows, y pitch=(board width−2×outer-row center setback)/(row count−1) and y centers=outer-row setback + row×y pitch. For each hole of diameter d: circle edges are x±d/2 and y±d/2. Longitudinal clear material = x pitch−d; transverse clear material = y pitch−d; physical end and side margins subtract half the diameter from the corresponding center offsets. Total holes = holes per row × row count.",
+      "example": "100 mm board length, 40 mm face width, four 5 mm diameter holes per row, 5 mm end-center setback and 3 drilling rows with 5 mm outer-row center setback: X centers 5,35,65,95 mm; Y centers 5,20,35 mm; 12 holes total. Along-row clearance is 25 mm, between-row clearance is 10 mm, and all four board-edge margins are 2.5 mm. For a single row, Y is automatically centered at 20 mm, regardless of the unused outer-row setback input.",
+      "limit": "Aligned rectangular grid only, measured from one common left/bottom board corner in the flat face plane. Single-row Y is always centered; the crosswise setback applies only when two or more rows are selected. Circular-hole overlap is rejected along both axes. The entire board face width must be entered and at least one hole diameter wide; physical margins account for the hole radius. No staggered or angled rows, drill-bit runout, countersink diameter, material tear-out, grain direction, load strength, workholding or physical printer scaling is checked. The SVG is proportional geometry, never a 1:1 drill template.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Center setback versus remaining end material",
-          "text": "Enter the distance from each stock end to the first or last hole center. The actual wood remaining between the hole edge and stock end is setback minus half the drill diameter. Both are explicitly computed, so a 5 mm center setback on a 5 mm diameter hole leaves 2.5 mm of end wood."
+          "heading": "Choose one row or an aligned drilling grid",
+          "text": "Enter the number of holes PER ROW and the number of drilling rows separately. With one row, all hole centers sit halfway across the entered board face width; this maintains the old longitudinal layout without inventing a second row. With two or more rows, both outside rows are located by the crosswise center setback and the intermediate rows are evenly distributed. All rows have the same column X positions."
         },
         {
-          "heading": "Check spacing between drilled edges",
-          "text": "The center pitch is not the wood thickness between holes. Clear material between neighboring holes is the center pitch minus the full hole diameter; the calculator rejects negative clear material where round holes would overlap along the board."
+          "heading": "Center setbacks are not leftover wood margins",
+          "text": "The longitudinal end-center setback and transverse outer-row center setback are measurements to hole centers, not to hole edges. The actual clear wood at each end or side equals the corresponding center setback minus half the drill diameter. A single centered row has equal side margins of half the board width minus half the drill diameter. Setbacks that allow any hole circle to extend past the board edge are rejected."
         },
         {
-          "heading": "Review exact hole edges and local CSV",
-          "text": "The schedule lists each center coordinate and the hole's left and right extents, its diameter and the material clearance to the previous hole. SVG circles have a consistent horizontal and vertical geometric scale within the diagram. The drawing does not verify perpendicular edge clearance, material tear-out or drill accuracy."
+          "heading": "Reject overlapping drills in either direction",
+          "text": "For an aligned grid, the center distance between adjacent holes in one row is the longitudinal pitch, while the center distance between rows is their transverse pitch. Subtract the diameter from each pitch to obtain clear material. The calculator rejects negative clearance in either direction and also limits total displayed drill coordinates so large grids do not overwhelm a browser or a workshop CSV."
+        },
+        {
+          "heading": "Transfer full X and Y coordinates from one corner",
+          "text": "Use the exported table to find each hole center X measured from the board's left end and Y measured from its bottom side. Every circle has matching left/right and bottom/top hole extents, making the opposite face margins directly checkable. The SVG draws all circles and the board rectangle with one shared X/Y scale; it is a proportional planning view and must not be treated as an actual-size paper drill jig."
         }
       ]
     },
