@@ -1378,3 +1378,73 @@ test("Memoized canonical search matches brute force even with repeated equal-siz
   near(optimized,bruteMin,1e-7);
   assert.equal(exact.candidate.bars.reduce((s,b)=>s+b.cuts.length,0),pieces.length);
 });
+
+
+test("Straight stair default is 14 equal risers, 13 treads, no added landing",()=>{
+  const t=tools.find(t=>t.slug==="stair-calculator"),r=compute(t.slug,defaults(t));
+  assert.equal(value(r,"Risers"),14);
+  assert.equal(value(r,"Treads"),13);
+  near(value(r,"Actual riser height"),7.5);
+  near(value(r,"Horizontal run"),130);
+  near(value(r,"Upper landing reference depth"),0);
+  near(value(r,"Total reference footprint"),130);
+  near(value(r,"Incline"),Math.atan(.75)*180/Math.PI);
+  assert.equal(r.stairRows.length,14);
+  assert.deepEqual(r.rows[0],{
+    item:"Riser 1",rise:7.5,run:0,riserHeight:7.5,
+    treadStart:0,treadEnd:10,walkingSurface:"Tread 1"
+  });
+  assert.deepEqual(r.rows.at(-1),{
+    item:"Riser 14",rise:105,run:130,riserHeight:7.5,
+    treadStart:130,treadEnd:null,walkingSurface:"Upper landing"
+  });
+  assert.equal(r.shape,"stairs");
+});
+test("Upper stair landing changes total reference footprint, not riser or tread count",()=>{
+  const t=tools.find(t=>t.slug==="stair-calculator"),a={...defaults(t),landing:36};
+  const r=compute(t.slug,a),base=compute(t.slug,{...a,landing:0});
+  assert.equal(value(r,"Risers"),value(base,"Risers"));
+  assert.equal(value(r,"Treads"),value(base,"Treads"));
+  near(value(r,"Horizontal run"),130);
+  near(value(r,"Total reference footprint"),166);
+  near(r.flightRun,130);
+  near(r.landingDepth,36);
+  near(r.totalRise,105);
+  assert.equal(r.rows.at(-1).treadEnd,166);
+  assert.equal(r.rows.at(-1).walkingSurface,"Upper landing");
+  assert.deepEqual(r.rows.slice(0,-1),base.rows.slice(0,-1));
+  for(const [i,row] of r.rows.entries()){
+    near(row.run,i*a.tread,1e-7);
+    near(row.rise,(i+1)*a.rise/r.rows.length,1e-7);
+    near(row.riserHeight,a.rise/r.rows.length,1e-7);
+    if(i<r.rows.length-1)near(row.treadEnd-row.treadStart,a.tread);
+  }
+});
+test("Nondivisible stair rise distributes equal risers without cumulative mark drift",()=>{
+  const t=tools.find(t=>t.slug==="stair-calculator"),r=compute(t.slug,{
+    ...defaults(t),rise:95,desired:7,tread:11,landing:28
+  });
+  assert.equal(value(r,"Risers"),14);
+  assert.equal(value(r,"Treads"),13);
+  near(value(r,"Actual riser height"),95/14);
+  near(value(r,"Horizontal run"),143);
+  near(value(r,"Total reference footprint"),171);
+  near(r.rows.at(-1).rise,95);
+  near(r.rows.at(-1).run,143);
+  near(r.rows.at(-1).treadEnd,171);
+  for(let i=1;i<r.rows.length;i++){
+    near(r.rows[i].rise-r.rows[i-1].rise,95/14,1e-7);
+    near(r.rows[i].run-r.rows[i-1].run,11,1e-7);
+  }
+});
+test("Stair landing input rejects negatives and preserves zero as the original convention",()=>{
+  const t=tools.find(t=>t.slug==="stair-calculator"),a=defaults(t);
+  assert.equal(safeCompute(t.slug,{...a,landing:-0.1}).ok,false);
+  assert.equal(safeCompute(t.slug,{...a,desired:0}).ok,false);
+  assert.equal(safeCompute(t.slug,{...a,rise:0}).ok,false);
+  assert.equal(safeCompute(t.slug,{...a,rise:5000,desired:1}).ok,false);
+  assert.equal(safeCompute(t.slug,{...a,tread:0}).ok,false);
+  assert.equal(safeCompute(t.slug,{...a,landing:0}).ok,true);
+  const withoutLanding=compute(t.slug,{rise:105,desired:7.5,tread:10});
+  near(value(withoutLanding,"Total reference footprint"),130);
+});
