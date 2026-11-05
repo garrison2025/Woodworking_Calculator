@@ -782,6 +782,60 @@ if(slug){
     if(kind==="length"&&typeof v==="number")return fmt(v,"L")+(slug==="framing-calculator"&&key==="cutLength"&&unit==="in"?" (≈ "+frac(v)+")":"");
     return String(v);
   };
+  const syncTableColumnNavigator=(region,overflowsHorizontally)=>{
+    // Mobile cut tables often hide most columns past the right viewport
+    // boundary. Display explicit touch/keyboard column controls ONLY when
+    // the true rendered table is wider than its scroll container.
+    const previous=region.previousElementSibling;
+    let nav=previous?.classList.contains("table-navigator")?previous:null;
+    if(!overflowsHorizontally){
+      nav?.remove();
+      delete region.dataset.horizontalScroll;
+      return;
+    }
+    if(!nav){
+      const tableName=region.querySelector("table")?.getAttribute("aria-label")||
+        "Measurement table";
+      nav=document.createElement("div");
+      nav.className="table-navigator";
+      nav.setAttribute("role","group");
+      nav.setAttribute("aria-label",tableName+" horizontal column controls");
+      nav.innerHTML='<button class="table-nav-prev" type="button" aria-label="Show columns to the left">← Columns</button>'+
+        '<span class="table-nav-position" aria-live="off">Columns: 0% across</span>'+
+        '<button class="table-nav-next" type="button" aria-label="Show columns to the right">Columns →</button>';
+      region.before(nav);
+      for(const [selector,direction] of [[".table-nav-prev",-1],[".table-nav-next",1]]){
+        nav.querySelector(selector).addEventListener("click",()=>{
+          const step=Math.max(120,Math.round(region.clientWidth*.78));
+          region.scrollBy({left:direction*step,behavior:"auto"});
+          updateTableColumnNavigator(region);
+        });
+      }
+      // Register the passive native scroll event once for each stable table
+      // wrapper. Newly recreated toolbar siblings are resolved dynamically.
+      if(region.dataset.columnScrollListener!=="true"){
+        region.addEventListener("scroll",()=>updateTableColumnNavigator(region),
+          {passive:true});
+        region.dataset.columnScrollListener="true";
+      }
+    }
+    region.dataset.horizontalScroll="true";
+    updateTableColumnNavigator(region);
+  };
+  const updateTableColumnNavigator=region=>{
+    const nav=region.previousElementSibling;
+    if(!nav?.classList.contains("table-navigator"))return;
+    const max=Math.max(0,region.scrollWidth-region.clientWidth);
+    const current=Math.max(0,Math.min(max,region.scrollLeft));
+    const first=current<=2,last=current>=max-2;
+    nav.querySelector(".table-nav-prev").disabled=first;
+    nav.querySelector(".table-nav-next").disabled=last;
+    const progress=max?Math.round(100*current/max):0;
+    const message=first?"more columns right":last?"end of columns":
+      "more columns left and right";
+    nav.querySelector(".table-nav-position").textContent=
+      progress+"% across · "+message;
+  };
   const syncKeyboardScrollRegions=()=>{
     // A scroll area is not reachable with a keyboard merely because CSS
     // says overflow:auto. Add ONE native tab stop only when horizontal or
@@ -789,7 +843,11 @@ if(slug){
     for(const region of document.querySelectorAll(".table-scroll, .drawing-grid")){
       const overflowX=region.scrollWidth>region.clientWidth+2;
       const overflowY=region.scrollHeight>region.clientHeight+2;
-      const canScroll=(overflowX||overflowY)&&region.getClientRects().length>0;
+      const visible=region.getClientRects().length>0;
+      const canScroll=(overflowX||overflowY)&&visible;
+      if(region.classList.contains("table-scroll")){
+        syncTableColumnNavigator(region,overflowX&&visible);
+      }
       if(canScroll){
         region.tabIndex=0;
         region.setAttribute("role","region");
