@@ -963,7 +963,8 @@ export function compute(slug,a){
       buttSeams:seamCenters.length,fasteningContacts:contactsPerRow,
       fastenersPerContact:a.fastenersPerContact,
       fastenerPiecesPerRow:contactsPerRow*a.fastenersPerContact,
-      seamCenters:seamCenters.join("; ")
+      firstSeamAt:seamCenters.length?seamCenters[0]:null,
+      lastSeamAt:seamCenters.length?seamCenters.at(-1):null
     }));
     need(deckFastenerRows.reduce((s,row)=>s+row.fasteningContacts,0)===fastenerContacts,
       "Deck fastener reference contacts do not conserve grouped row counts.");
