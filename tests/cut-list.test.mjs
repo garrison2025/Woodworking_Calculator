@@ -524,3 +524,23 @@ test("Rafter birdsmouth CSV carries independent mm X/Y endpoints and angles, not
   assert.equal(flat.rows.length,3);
   assert.ok(!buildScheduleCsv(flat.rows,"in").includes("Birdsmouth plumb heel"));
 });
+
+test("Optional deck joist stock cut CSV preserves center stations and millimeter material lengths",()=>{
+  const r=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,waste:10,
+    boardUnitPrice:8,fastenerPackPrice:20,joistStockLength:144,joistUnitPrice:9
+  });
+  const cuts=r.rows.filter(x=>x.type==="Joist straight cut");
+  const csv=buildScheduleCsv(cuts,"mm","Straight stock only; structural spans not rated.");
+  assert.equal(cuts.length,10);
+  assert.ok(csv.includes('"Purchased Stock Length (mm)"'),csv);
+  assert.ok(csv.includes('"Source Offcut Length (mm)"'),csv);
+  assert.ok(csv.includes('"Cut Length (mm)"'),csv);
+  assert.ok(csv.includes('"3048"'),csv); // joist cut width = 120in
+  assert.ok(csv.includes('"3657.6"'),csv); // raw stock = 144in
+  assert.ok(csv.includes('"609.6"'),csv); // offcut per source = 24in
+  const budget=buildScheduleCsv(r.deckPurchaseRows,"in","User price only.");
+  assert.ok(budget.includes('"Optional full-width joist stock"'));
+  assert.ok(budget.includes('"11"'));
+  assert.ok(budget.includes('"99"'));
+});
