@@ -1679,3 +1679,43 @@ test("shelf support-hole validation clears stale diagram and zero diameter resto
   }));
   expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
 });
+
+test("P1 diagonal brace cut endpoints, proportional SVG and metric CSV share one datum",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/diagonal-brace-calculator/");
+  await page.locator("#f-setback").fill("5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"After end setbacks"}))
+    .toContainText("50 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Cut horizontal projection"}))
+    .toContainText("30 in");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(2);
+  const segment=page.locator("#dimension-svg svg .brace-cut-centerline");
+  await expect(segment).toHaveAttribute("data-start-x","3");
+  await expect(segment).toHaveAttribute("data-start-y","4");
+  await expect(segment).toHaveAttribute("data-end-x","33");
+  await expect(segment).toHaveAttribute("data-end-y","44");
+  const x1=Number(await segment.getAttribute("x1")),y1=Number(await segment.getAttribute("y1")),
+    x2=Number(await segment.getAttribute("x2")),y2=Number(await segment.getAttribute("y2"));
+  expect(Math.abs((y2-y1)/(x2-x1))).toBeCloseTo(40/30,6);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Horizontal X (mm)");
+  await expect(page.locator("#cut-table tbody tr").first()).toContainText("76.2 mm");
+  const download=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await download).path(),"utf8");
+  expect(csv).toContain('"Cut start","127","76.2","101.6"');
+  expect(csv).toContain('"Cut finish","1397","838.2","1117.6"');
+  const svgDownload=page.waitForEvent("download");
+  await page.locator("#download-svg").click();
+  const svg=readFileSync(await (await svgDownload).path(),"utf8");
+  expect(svg).toContain('class="brace-cut-centerline"');
+  expect(svg).toContain('data-start-x="3"');
+  await page.locator("#f-setback").fill("762");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#dimension-svg svg")).toHaveCount(0);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+  await page.locator("#f-setback").fill("127");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(segment).toHaveCount(1);
+});
