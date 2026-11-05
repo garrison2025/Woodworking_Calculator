@@ -269,7 +269,9 @@ test("rafter: notch depth is visible and changes when seat is revised",async({pa
   await page.goto("/rafter-calculator/");
   await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("1.3416 in");
   await expect(page.locator("#dimension-svg svg")).toHaveCount(1);
-  expect(await page.locator("#dimension-svg svg path").count()).toBeGreaterThanOrEqual(2);
+  await expect(page.locator("#dimension-svg svg .rafter-stock-section")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .rafter-top-reference")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .rafter-seat-reference")).toHaveCount(1);
   await expect(page.getByRole("heading",{name:"Differentiate seat length and notch depth"})).toBeVisible();
   await page.locator("#f-seat").fill("4");
   await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("1.7889 in");

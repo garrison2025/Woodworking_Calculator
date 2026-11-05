@@ -370,7 +370,7 @@
           "text": "The overhang is a horizontal eave projection; it adds its own rise and sloping line to the rafter. The bearing point is kept separate from the tail point in the coordinate schedule, and an independent total horizontal-to-tail dimension is shown."
         },
         {
-          "heading": "Treat birdsmouth measurements as references, not a saw template",
+          "heading": "Differentiate seat length and notch depth",
           "text": "The seat is a horizontal reference span. Its vertical change is seat×slope, while its perpendicular stock-depth penetration is seat×sin(arctan(slope)). At zero roof pitch, both reference changes are zero and the side-view marker is flat. The diagram deliberately does not pretend to be a certified notch silhouette."
         },
         {
