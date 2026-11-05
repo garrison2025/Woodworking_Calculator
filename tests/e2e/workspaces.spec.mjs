@@ -959,3 +959,69 @@ test("memoization certifies default twelve-cut Framing wall and shows reused sta
   const csv=readFileSync(await(await download).path(),"utf8");
   expect(csv.split("\r\n").filter(Boolean).length).toBe(15);
 });
+
+
+test("all 26 tools retain blank inputs across unit changes and expose accessible error recovery",async({page})=>{
+  const pageErrors=[];
+  page.on("pageerror",err=>pageErrors.push(err.message));
+  for(const tool of active){
+    await page.goto("/"+tool.slug+"/");
+    const f=tool.inputs.find(x=>x.kind==="L")||
+      tool.inputs.find(x=>!x.options);
+    expect(f,tool.slug+" needs an editable field").toBeTruthy();
+    const field=page.locator("#f-"+f.key),note="field-note-"+f.key;
+    await expect(field,tool.slug).toHaveAttribute("aria-describedby",note);
+    await field.fill("");
+    await expect(page.locator("#calc-error"),tool.slug).toContainText(f.label+" is required");
+    await expect(field,tool.slug).toHaveAttribute("aria-invalid","true");
+    await expect(field,tool.slug).toHaveAttribute("aria-describedby",note+" calc-error");
+    await expect(page.locator("#result-cards .metric"),tool.slug).toHaveCount(0);
+    await expect(page.locator("#dimension-svg svg"),tool.slug).toHaveCount(0);
+    await page.locator("#unit-select").selectOption("mm");
+    await expect(field,tool.slug).toHaveValue("");
+    await expect(page.locator("#calc-error"),tool.slug).toBeVisible();
+    const target=f.kind==="L"?Number((f.value*25.4).toFixed(6)):f.value;
+    await field.fill(String(target));
+    await expect(page.locator("#calc-error"),tool.slug).toBeHidden();
+    await expect(field,tool.slug).not.toHaveAttribute("aria-invalid","true");
+    await expect(field,tool.slug).toHaveAttribute("aria-describedby",note);
+    await expect(page.locator("#result-cards .metric").first(),tool.slug).toBeVisible();
+    await expect(page.locator("#dimension-svg svg"),tool.slug).toHaveCount(1);
+    await page.locator("#unit-select").selectOption("in");
+    const restored=Number(await field.inputValue());
+    expect(restored,tool.slug+" physical input conversion").toBeCloseTo(Number(f.value),4);
+  }
+  expect(pageErrors).toEqual([]);
+});
+
+test("calculator forms prevent accidental Enter submits and maintain accessible live feedback",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const start=await page.locator("#f-length").inputValue();
+  await page.locator("#calculator-form").evaluate(form=>form.requestSubmit());
+  await expect(page.locator("#f-length")).toHaveValue(start);
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+  await page.locator("#f-length").fill("");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#calc-error")).toHaveAttribute("role","alert");
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-length")).toHaveValue(start);
+  await expect(page.locator("#f-length")).not.toHaveAttribute("aria-invalid","true");
+  await expect(page.locator("#calc-error")).toBeHidden();
+});
+
+test("all 26 calculator routes fit a 360px mobile viewport without page-wide horizontal overflow",async({page})=>{
+  await page.setViewportSize({width:360,height:760});
+  for(const tool of active){
+    const response=await page.goto("/"+tool.slug+"/");
+    expect(response.status(),tool.slug).toBe(200);
+    await expect(page.locator("#result-cards .metric").first(),tool.slug).toBeVisible();
+    const dimensions=await page.evaluate(()=>({
+      client:document.documentElement.clientWidth,
+      scroll:document.documentElement.scrollWidth,
+      body:document.body.scrollWidth
+    }));
+    expect(dimensions.scroll,tool.slug+" page overflow").toBeLessThanOrEqual(dimensions.client+1);
+    expect(dimensions.body,tool.slug+" body overflow").toBeLessThanOrEqual(dimensions.client+1);
+  }
+});
