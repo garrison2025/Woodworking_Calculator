@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1145,9 +1145,11 @@ export function compute(slug,a){
     });
   }
   case "shelf-spacing-calculator":{
-    positive("height","thickness");nonnegative("top","bottom");whole("shelves");
-    // Top/bottom are reserved minimum clearance, not the final equalized gaps.
-    // Distribute the remaining free height equally among all n+1 spaces.
+    positive("height","thickness","caseDepth");
+    nonnegative("top","bottom","frontPinInset","backPinInset",
+      "pinCenterDrop","pinHoleDiameter");
+    whole("shelves");
+    // Top/bottom are reserved minimum clearances, not final equalized gaps.
     const free=a.height-a.shelves*a.thickness-a.top-a.bottom;
     need(free>=-1e-8,"Shelf thickness and reserved clearances exceed the case height.");
     const shared=Math.max(0,free)/(a.shelves+1);
@@ -1158,12 +1160,72 @@ export function compute(slug,a){
         clearBelow:q(i===0?lower:shared),
         clearAbove:q(i===a.shelves-1?upper:shared)};
     });
-    need(rows.at(-1).shelfTop<=a.height+1e-7,"Last shelf exceeds the interior height.");
-    return result([
+    need(rows.at(-1).shelfTop<=a.height+1e-7,
+      "Last shelf exceeds the interior height.");
+    // A zero hole diameter is the intentionally OFF mode. It leaves the
+    // original shelf-face rows, CSV, and spacing calculations untouched.
+    // No hardware dimensions are ever assumed from the shelf thickness.
+    const hasPins=a.pinHoleDiameter>0,rad=a.pinHoleDiameter/2;
+    let shelfPinRows=[],sidePanelHoles=[],pinFrontX=null,pinBackX=null;
+    if(hasPins){
+      need(a.shelves<=100,
+        "Support-hole grid is limited to 100 shelves / 400 holes.");
+      need(a.frontPinInset+1e-8>=rad&&a.backPinInset+1e-8>=rad,
+        "Support pin circles extend beyond a cabinet front/back edge.");
+      pinFrontX=a.frontPinInset;
+      pinBackX=a.caseDepth-a.backPinInset;
+      need(pinBackX-pinFrontX>=a.pinHoleDiameter-1e-8,
+        "Front and back support pin holes overlap or cannot fit the cabinet depth.");
+      need(a.pinCenterDrop+1e-8>=rad,
+        "Pin-hole center drop must keep each circle below its shelf underside.");
+      sidePanelHoles=rows.flatMap((r,i)=>{
+        const y=r.shelfBottom-a.pinCenterDrop;
+        const previousTop=i===0?0:rows[i-1].shelfTop;
+        need(y-rad>=previousTop-1e-8,
+          "Shelf support pin circles extend into the preceding shelf or case floor.");
+        need(y+rad<=r.shelfBottom+1e-8,
+          "Shelf support pin circles extend above their shelf underside.");
+        return [
+          {shelfNumber:i+1,position:"Front",x:q(pinFrontX),y:q(y)},
+          {shelfNumber:i+1,position:"Back",x:q(pinBackX),y:q(y)}
+        ];
+      });
+      shelfPinRows=sidePanelHoles.flatMap(h=>["Left","Right"].map(panel=>({
+        shelfNumber:h.shelfNumber,panel,position:h.position,
+        centerX:h.x,centerY:h.y,holeDiameter:q(a.pinHoleDiameter),
+        faceFrontEdge:q(h.x-rad),faceBackEdge:q(h.x+rad),
+        faceBottomEdge:q(h.y-rad),faceTopEdge:q(h.y+rad),
+        undersideClearance:q(a.pinCenterDrop-rad)
+      })));
+      need(shelfPinRows.length===a.shelves*4,
+        "Shelf side-panel support-hole count mismatch.");
+      need(shelfPinRows.every(r=>
+        r.faceFrontEdge>=-1e-7&&r.faceBackEdge<=a.caseDepth+1e-7&&
+        r.faceBottomEdge>=-1e-7&&r.faceTopEdge<=a.height+1e-7),
+        "Shelf pin drilled circles exceed the measured side-panel boundaries.");
+    }
+    const measurements=[
       M("Shared base clear gap",shared),M("Actual bottom clearance",lower),
       M("Actual top clearance",upper),M("Shelf count",a.shelves,"N"),
       M("Shelf stack thickness",a.shelves*a.thickness)
-    ],rows.map(r=>P(r.shelfBottom,r.item)),a.height,rows,"shelves",{shelfThickness:a.thickness});
+    ];
+    if(hasPins)measurements.push(
+      M("Support drill holes (both side panels)",shelfPinRows.length,"N"),
+      M("Front support-hole center X",pinFrontX),
+      M("Back support-hole center X",pinBackX),
+      M("Support-hole center drop",a.pinCenterDrop),
+      M("Support-hole face diameter",a.pinHoleDiameter)
+    );
+    return result(measurements,rows.map(r=>P(r.shelfBottom,r.item)),
+      a.height,rows,"shelves",{
+        shelfThickness:a.thickness,
+        interiorHeight:a.height,caseDepth:a.caseDepth,
+        shelfRows:rows,shelfPinEnabled:hasPins,
+        shelfPinRows,sidePanelHoles,
+        supportHoleDiameter:a.pinHoleDiameter,
+        supportFrontX:pinFrontX,supportBackX:pinBackX,
+        supportCenterDrop:a.pinCenterDrop
+      });
   }
   case "gable-roof-calculator":{
     positive("width","length");nonnegative("pitch","overhang");
