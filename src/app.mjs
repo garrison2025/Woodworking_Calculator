@@ -579,12 +579,33 @@ if(slug){
       content+='<rect x="235" y="73" width="465" height="195" fill="#e4ebe2" stroke="#1e6454" stroke-width="3"/>';
       content+='<path d="M235 170 L333 73 M235 170 L333 268 M700 170 L602 73 M700 170 L602 268 M333 170 L602 170" stroke="#b27f49" stroke-width="2.5" fill="none"/>';
     }else if(data.shape==="ring"){
-      const seg=data.segments||12,R=104,cx=467,cy=166,r=R*(data.inner||1)/(data.outer||2);
-      for(let i=0;i<seg;i++){const a1=i*2*Math.PI/seg-Math.PI/2,a2=(i+1)*2*Math.PI/seg-Math.PI/2;
+      // Each produced face is a real 4-corner trapezoid with straight
+      // chord edges, rather than a curved arc suggesting prebent stock.
+      const seg=data.segments||12,R=105,cx=470,cy=166,r=R*data.inner/data.outer;
+      for(let i=0;i<seg;i++){
+        const a1=i*2*Math.PI/seg-Math.PI/2,a2=(i+1)*2*Math.PI/seg-Math.PI/2;
         const p=(radius,a)=>[cx+radius*Math.cos(a),cy+radius*Math.sin(a)];
-        const [x1,y1]=p(R,a1),[x2,y2]=p(R,a2),[x3,y3]=p(r,a2),[x4,y4]=p(r,a1);
-        content+='<path d="M'+x1+','+y1+' A'+R+','+R+' 0 0,1 '+x2+','+y2+' L'+x3+','+y3+' A'+r+','+r+' 0 0,0 '+x4+','+y4+' Z" fill="'+(i%2?"#dfb989":"#c9945f")+'" stroke="#704f2d"/>';
+        const vertices=[p(R,a1),p(R,a2),p(r,a2),p(r,a1)];
+        const points=vertices.map(v=>v.join(",")).join(" ");
+        content+='<polygon class="ring-segment-face" data-segment="'+(i+1)+
+          '" data-outer-chord="'+data.rows[i].outerChord+
+          '" data-inner-chord="'+data.rows[i].innerChord+
+          '" data-perpendicular-depth="'+data.rows[i].perpendicularFaceDepth+
+          '" points="'+points+'" fill="'+(i%2?"#dfb989":"#c9945f")+
+          '" stroke="#704f2d" stroke-width=".8"><title>'+
+          esc("Straight trapezoid segment "+(i+1)+
+            "; outer chord "+fmt(data.rows[i].outerChord)+
+            "; perpendicular depth "+fmt(data.faceDepth))+'</title></polygon>';
       }
+      const inscribedRadius=R*Math.cos(Math.PI/seg);
+      content+='<circle class="ring-max-turn-circle" cx="'+cx+'" cy="'+cy+
+        '" r="'+inscribedRadius+'" fill="none" stroke="#1e6454" stroke-width="2" stroke-dasharray="4 4"><title>'+
+        esc("Ideal maximum circular outside diameter "+fmt(data.turningLimit)+
+          "; corner-to-corner outside polygon diameter "+fmt(data.outer))+'</title></circle>';
+      content+=svgText(85,43,"STRAIGHT-CHORD POLYGON RING · NOT CURVED STOCK","dim-label");
+      content+=svgText(85,64,"DASHED CIRCLE = MAX IDEAL TURNED OUTER DIAMETER","tick-label");
+      content+=svgText(74,312,"CORNER DIAMETER "+fmt(data.outer),"dim-label");
+      content+=svgText(515,312,"ROUND OD LIMIT "+fmt(data.turningLimit),"dim-label");
     }else if(data.shape==="angles"){
       // Two independent angle illustrations. The inside/left choices affect
       // the PLAN reference orientation only, NEVER a real saw hand setting.
