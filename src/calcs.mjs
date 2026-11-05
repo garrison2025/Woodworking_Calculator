@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1022,56 +1022,88 @@ export function compute(slug,a){
       deckFastenerRows,deckPurchaseRows,deckCostSummary});
   }
   case "segmented-bowl-calculator":{
-    positive("outer","inner");whole("segments",3,180);whole("rings",1,100);
+    positive("outer","inner","ringHeight");
+    nonnegative("ringOversize","ringKerf");
+    whole("segments",3,180);whole("rings",1,100);
     need(a.inner<a.outer,"Inner diameter must be less than outer diameter.");
-    // These are finished ring diameters, not raw board dimensions: chord
-    // lengths do NOT include saw kerf, oversize blanks, or glue-line allowance.
-    // Input diameters locate POLYGON CORNERS (the circle through the
-    // vertices). Straight cut faces are CHORDS, not circular arcs.
-    // A turned circle fits inside the outer polygon's apothem, not its
-    // corner-to-corner diameter: maximum theoretical round OD = D cos(theta).
-    const theta=PI/a.segments,outerChord=a.outer*Math.sin(theta),innerChord=a.inner*Math.sin(theta);
-    const radial=(a.outer-a.inner)/2,faceDepth=radial*Math.cos(theta);
-    const miter=180/a.segments,sector=360/a.segments;
-    const turningLimit=a.outer*Math.cos(theta);
-    const trapezoidAreaSqIn=(outerChord+innerChord)*faceDepth/2;
-    // An independently derived polygon-ring area must equal the sum of
-    // trapezoid face areas, up to rounding at machine export precision.
-    const ringAreaSqIn=a.segments*Math.sin(2*theta)*(a.outer*a.outer-a.inner*a.inner)/8;
-    need(faceDepth>0&&Math.abs(a.segments*trapezoidAreaSqIn-ringAreaSqIn)<=
-      Math.max(1e-7,ringAreaSqIn*1e-10),
-      "Segment chord profile failed polygon area conservation.");
-    const template=[
-      [q(0),q(0)],
-      [q(outerChord),q(0)],
-      [q((outerChord+innerChord)/2),q(faceDepth)],
-      [q((outerChord-innerChord)/2),q(faceDepth)]
-    ];
-    rows=[];
-    for(let ring=1;ring<=a.rings;ring++)for(let segment=1;segment<=a.segments;segment++){
-      rows.push({
-        item:"Ring "+ring+" / segment "+segment,
-        ring,segment,
-        startAngle:q((segment-1)*sector),endAngle:q(segment*sector),
-        miterAngle:q(miter),
-        outerChord:q(outerChord),innerChord:q(innerChord),
-        radialDepth:q(radial),perpendicularFaceDepth:q(faceDepth),
-        segmentFaceAreaFt2:q(trapezoidAreaSqIn/144)
-      });
+    // Diameters are measured THROUGH POLYGON VERTICES, not across finished
+    // round lathe surfaces. Successive ring diameter changes are signed.
+    // One material-allowance margin is added to EACH side of a conceptual
+    // rectangular blank; one kerf per dimension is added as a stated
+    // estimating convention, NOT an exact blade path or optimal nesting.
+    const theta=PI/a.segments,miter=180/a.segments,sector=360/a.segments;
+    const rings=[];
+    for(let index=0;index<a.rings;index++){
+      const outer=a.outer+index*a.outerStep,inner=a.inner+index*a.innerStep;
+      need(outer>0&&inner>0&&inner<outer,
+        "Ring "+(index+1)+" has invalid inner/outer corner diameters after taper; adjust diameter steps.");
+      const outerChord=outer*Math.sin(theta),innerChord=inner*Math.sin(theta);
+      const radialDepth=(outer-inner)/2,faceDepth=radialDepth*Math.cos(theta);
+      need(faceDepth>=1e-7,
+        "Ring "+(index+1)+" has a face depth smaller than coordinate resolution.");
+      const faceAreaSqIn=(outerChord+innerChord)*faceDepth/2;
+      const ringAreaSqIn=a.segments*Math.sin(2*theta)*(outer*outer-inner*inner)/8;
+      need(Math.abs(faceAreaSqIn*a.segments-ringAreaSqIn)<=
+        Math.max(1e-7,ringAreaSqIn*1e-10),
+        "Ring "+(index+1)+" segment area fails polygon conservation.");
+      const blankLength=outerChord+2*a.ringOversize+a.ringKerf;
+      const blankWidth=faceDepth+2*a.ringOversize+a.ringKerf;
+      rings.push({ring:index+1,outer:q(outer),inner:q(inner),outerChord:q(outerChord),
+        innerChord:q(innerChord),radialDepth:q(radialDepth),
+        faceDepth:q(faceDepth),turningLimit:q(outer*Math.cos(theta)),
+        trapezoidAreaSqIn:faceAreaSqIn,ringAreaSqIn,
+        blankLength:q(blankLength),blankWidth:q(blankWidth),
+        blankAreaSqIn:blankLength*blankWidth,stackBottom:q(index*a.ringHeight),
+        stackTop:q((index+1)*a.ringHeight)});
     }
+    const first=rings[0],last=rings.at(-1);
+    const template=[
+      [q(0),q(0)],[first.outerChord,q(0)],
+      [q((first.outerChord+first.innerChord)/2),first.faceDepth],
+      [q((first.outerChord-first.innerChord)/2),first.faceDepth]
+    ];
+    rows=rings.flatMap(ring=>Array.from({length:a.segments},(_,index)=>({
+      item:"Ring "+ring.ring+" / segment "+(index+1),ring:ring.ring,segment:index+1,
+      startAngle:q(index*sector),endAngle:q((index+1)*sector),
+      miterAngle:q(miter),outerCornerDiameter:ring.outer,
+      innerCornerDiameter:ring.inner,outerChord:ring.outerChord,
+      innerChord:ring.innerChord,radialDepth:ring.radialDepth,
+      perpendicularFaceDepth:ring.faceDepth,
+      idealTurnedOuterDiameter:ring.turningLimit,
+      segmentFaceAreaFt2:q(ring.trapezoidAreaSqIn/144),
+      roughBlankLength:ring.blankLength,roughBlankWidth:ring.blankWidth,
+      roughBlankAreaFt2:q(ring.blankAreaSqIn/144),
+      stackBottom:ring.stackBottom,stackTop:ring.stackTop
+    })));
+    const totalFaceArea=rings.reduce((s,r)=>s+r.ringAreaSqIn,0);
+    const totalRoughArea=rings.reduce((s,r)=>s+r.blankAreaSqIn*a.segments,0);
+    need(rows.length===a.segments*a.rings,
+      "Ring profile rows do not match the requested segment count.");
     return result([
-      M("Segment half-miter",miter,"A"),M("Outer chord",outerChord),
-      M("Inner chord",innerChord),M("Segment radial depth",radial),
-      M("Perpendicular stock-face depth",faceDepth),
-      M("Maximum circular outside diameter (ideal)",turningLimit),
-      M("One segment face area",trapezoidAreaSqIn/144,"FT2"),
-      M("One complete polygon-ring face area",ringAreaSqIn/144,"FT2"),
-      M("Total segments",a.segments*a.rings,"N"),
+      M("Segment half-miter",miter,"A"),M("Outer chord",first.outerChord),
+      M("Inner chord",first.innerChord),M("Segment radial depth",first.radialDepth),
+      M("Perpendicular stock-face depth",first.faceDepth),
+      M("Maximum circular outside diameter (ideal)",first.turningLimit),
+      M("One segment face area",first.trapezoidAreaSqIn/144,"FT2"),
+      M("One complete polygon-ring face area",first.ringAreaSqIn/144,"FT2"),
+      M("Last ring outer corner diameter",last.outer),
+      M("Last ring inner corner diameter",last.inner),
+      M("Last ring theoretical round OD",last.turningLimit),
+      M("Stack reference height",a.rings*a.ringHeight),
+      M("One ring-1 rough blank length",first.blankLength),
+      M("One ring-1 rough blank width",first.blankWidth),
+      M("All rings geometric face area",totalFaceArea/144,"FT2"),
+      M("All conceptual rough blanks area",totalRoughArea/144,"FT2"),
+      M("Total segments",rows.length,"N"),
       M("Segment sweep",sector,"A")
-    ],[],a.outer,rows,"ring",{
-      segments:a.segments,inner:a.inner,outer:a.outer,
-      segmentTemplateVertices:template,faceDepth,turningLimit,
-      trapezoidAreaSqIn,ringAreaSqIn
+    ],[],Math.max(a.outer,last.outer),rows,"ring",{
+      segments:a.segments,inner:first.inner,outer:first.outer,
+      segmentTemplateVertices:template,faceDepth:first.faceDepth,
+      turningLimit:first.turningLimit,
+      trapezoidAreaSqIn:first.trapezoidAreaSqIn,ringAreaSqIn:first.ringAreaSqIn,
+      ringProfiles:rings,ringHeight:a.ringHeight,
+      totalRingFaceAreaSqIn:totalFaceArea,totalRoughBlankAreaSqIn:totalRoughArea,
+      ringOversize:a.ringOversize,ringKerf:a.ringKerf
     });
   }
   case "roof-pitch-calculator":{
