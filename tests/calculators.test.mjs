@@ -2415,3 +2415,85 @@ test("P1 stringer independent support X projections expose mismatch without inve
   assert.equal(noSurface.metrics.some(m=>m.label==="Measured end projections outside support references"),false);
   assert.deepEqual(noSurface.measuredEndCuts,r.measuredEndCuts);
 });
+
+test("P1 stringer selected end and default horizontal supports share CORNERS, never a bearing segment",()=>{
+  const args={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4};
+  const r=compute("stair-stringer-calculator",args);
+  assert.equal(r.endContactChecks.length,2);
+  assert.deepEqual(r.endContactChecks.map(c=>c.contactGeometry),
+    ["Shared corner only","Shared corner only"]);
+  assert.deepEqual(r.endContactChecks.map(c=>c.sharedLineLength),[0,0]);
+  assert.deepEqual(r.endContactChecks.map(c=>c.intersectionX),[0,130]);
+  assert.deepEqual(r.endContactChecks.map(c=>c.intersectionElevation),[0,105]);
+  assert.deepEqual(r.endContactChecks.map(c=>c.cutParameter),[0,0]);
+  assert.equal(r.pointOnly2D,2);
+  assert.equal(r.unsupported2D,0);
+  near(value(r,"End/support pairs touching at one point only"),2);
+  near(value(r,"End/support pairs without 2D line intersection"),0);
+  // Existing X datum is OUTSIDE at upper endpoint but the two complete
+  // finite segments still share their initial corner. These differ.
+  assert.equal(r.endProjectionChecks[1].projectionStatus,"Outside reference");
+  assert.equal(r.endContactChecks[1].contactGeometry,"Shared corner only");
+});
+test("P1 stringer measured signed horizontal support Y offsets give exact interior 2D intersections",()=>{
+  const a={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4,
+    lowerSupportVerticalOffset:-4.40625,
+    upperSupportVerticalOffset:-4.78125};
+  const r=compute("stair-stringer-calculator",a);
+  const [lower,upper]=r.endContactChecks;
+  assert.deepEqual([lower.contactGeometry,upper.contactGeometry],
+    ["Single point only","Single point only"]);
+  near(lower.supportElevation,-4.40625);
+  near(upper.supportElevation,100.21875);
+  near(lower.intersectionX,-1.5);
+  near(upper.intersectionX,133);
+  near(lower.intersectionElevation,-4.40625);
+  near(upper.intersectionElevation,100.21875);
+  near(lower.cutParameter,.5);
+  near(upper.cutParameter,.5);
+  near(lower.sharedLineLength,0);near(upper.sharedLineLength,0);
+  near(lower.crossingHorizontalMiss,0);near(upper.crossingHorizontalMiss,0);
+  near(value(r,"End/support pairs without 2D line intersection"),0);
+  near(value(r,"End/support pairs touching at one point only"),2);
+  // The 1D endpoint projection STILL says upper is outside by 2in, but
+  // crossing of the two COMPLETE finite line segments is at x=133in.
+  near(r.endProjectionChecks[1].projectedOutsideSupport,2);
+  assert.equal(r.endProjectionChecks[1].projectionStatus,"Outside reference");
+  assert.equal(upper.contactGeometry,"Single point only");
+  assert.equal(r.supportReferences[0].elevation,-4.40625);
+  assert.equal(r.supportReferences[1].elevation,100.21875);
+});
+test("P1 stringer level miss and X miss are different zero-contact cases",()=>{
+  const base={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4};
+  const far=compute("stair-stringer-calculator",{
+    ...base,lowerSupportVerticalOffset:1,upperSupportVerticalOffset:1
+  });
+  assert.deepEqual(far.endContactChecks.map(x=>x.contactGeometry),
+    ["No 2D intersection","No 2D intersection"]);
+  assert.equal(far.endContactChecks.every(x=>x.cutParameter===null),true);
+  assert.equal(far.endContactChecks.every(x=>x.intersectionX===null),true);
+  assert.equal(far.endContactChecks.every(x=>x.crossingHorizontalMiss===null),true);
+  const beyond=compute("stair-stringer-calculator",{
+    ...base,upperSupportVerticalOffset:-8
+  });
+  const upper=beyond.endContactChecks[1];
+  assert.equal(upper.contactGeometry,"No 2D intersection");
+  assert.ok(upper.cutParameter>.8&&upper.cutParameter<1);
+  assert.ok(upper.crossingHorizontalMiss>0);
+  assert.equal(upper.intersectionX,null);
+  assert.equal(beyond.unsupported2D,1);
+  assert.equal(beyond.pointOnly2D,1);
+  const noSupport=compute("stair-stringer-calculator",{
+    ...base,lowerSupportRun:0,upperSupportRun:0,
+    lowerSupportVerticalOffset:10,upperSupportVerticalOffset:-10
+  });
+  assert.deepEqual(noSupport.endContactChecks,[]);
+  assert.equal(noSupport.metrics.some(x=>
+    x.label==="End/support pairs touching at one point only"),false);
+});
