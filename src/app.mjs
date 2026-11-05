@@ -37,6 +37,10 @@ if(slug){
   const stringerSupportTable=document.querySelector("#stringer-support-table tbody");
   const stringerSectionExport=document.querySelector("#download-stringer-section-csv");
   const stringerSupportExport=document.querySelector("#download-stringer-support-csv");
+  const stringerSawTable=document.querySelector("#stringer-sawline-table tbody");
+  const stringerSawExport=document.querySelector("#download-stringer-sawline-csv");
+  const stringerEndTable=document.querySelector("#stringer-end-lines-table tbody");
+  const stringerEndExport=document.querySelector("#download-stringer-end-lines-csv");
   const deckCostStatus=document.querySelector("#deck-cost-status");
   const deckBudgetTable=document.querySelector("#deck-budget-table tbody");
   const deckFastenerTable=document.querySelector("#deck-fastener-table tbody");
@@ -329,9 +333,10 @@ if(slug){
       // This is a nominal reference profile, NOT a certified stock outline.
       const verts=data.stepVertices,run=(data.risers-1)*data.tread,rise=data.totalRise;
       const nose=data.nosingProjection||0,landing=data.landingDepth||0;
-      const minX=Math.min(0,-nose,-(data.lowerSupportRun||0));
-      const maxX=run+Math.max(landing,data.upperSupportRun||0);
-      const minY=Math.min(0,data.lowerEdgeAtStart??0);
+      const minX=Math.min(0,-nose,-(data.lowerSupportRun||0),-(data.lowerEndCutRun||0));
+      const maxX=run+Math.max(landing,data.upperSupportRun||0,data.upperEndCutRun||0);
+      const minY=Math.min(0,data.lowerEdgeAtStart??0,
+        ...((data.measuredEndCuts||[]).map(ref=>ref.endY)));
       const width=maxX-minX,height=rise-minY;
       const sc=Math.min(650/Math.max(.001,width),185/Math.max(.001,height));
       const ox=(900-width*sc)/2-minX*sc,oy=274+minY*sc;
@@ -356,6 +361,16 @@ if(slug){
           '" x2="'+px(low0)+'" y2="'+py(low0)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a bottom bearing cut</title></line>';
         content+='<line class="stringer-upper-end-clip" x1="'+px(verts.at(-1))+'" y1="'+py(verts.at(-1))+
           '" x2="'+px(low1)+'" y2="'+py(low1)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a top bearing cut</title></line>';
+      }
+      for(const ref of data.measuredEndCuts||[]){
+        content+='<line class="stringer-field-end-line" data-start-x="'+ref.startX+
+          '" data-start-y="'+ref.startY+'" data-end-x="'+ref.endX+
+          '" data-end-y="'+ref.endY+'" x1="'+px({x:ref.startX})+
+          '" y1="'+py({y:ref.startY})+'" x2="'+px({x:ref.endX})+
+          '" y2="'+py({y:ref.endY})+
+          '" stroke="#ab573c" stroke-width="3.2"><title>'+
+          esc(ref.item+" · user-supplied end position; verify actual bearing and cutting details")+
+          '</title></line>';
       }
       for(const ref of data.supportReferences||[]){
         const role=ref.item.startsWith("Lower")?"lower":"upper";
@@ -850,9 +865,12 @@ if(slug){
   const renderStringerSection=()=>{
     if(!stringerModelStatus||!stringerOutlineTable||!stringerSupportTable)return;
     const outline=latest?.stringerEnvelopeRows||[],surfaces=latest?.supportReferences||[];
+    const sawlines=latest?.stringerCutLineRows||[],ends=latest?.measuredEndCuts||[];
     const enabled=outline.length>0;
     stringerSectionExport.disabled=!enabled;
     stringerSupportExport.disabled=!surfaces.length;
+    if(stringerSawExport)stringerSawExport.disabled=!sawlines.length;
+    if(stringerEndExport)stringerEndExport.disabled=!ends.length;
     stringerModelStatus.textContent=!enabled?
       "Correct measurements to view modeled geometry; no cut profile is available.":
       "MODELED SIDE SECTION ONLY — "+outline.length+
@@ -867,6 +885,12 @@ if(slug){
       [r.item,fmt(r.startX,"L"),fmt(r.endX,"L"),fmt(r.elevation,"L")]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
       '<tr><td colspan="4">No measured support surface entered. End-bearing geometry is unverified.</td></tr>';
+    const lineCells=r=>[r.item,r.cutType,
+      fmt(r.startX,"L"),fmt(r.startY,"L"),fmt(r.endX,"L"),fmt(r.endY,"L"),
+      fmt(r.cutLength,"L"),fmt(r.cutAngleDeg,"A")]
+      .map(v=>'<td>'+esc(v)+'</td>').join("");
+    if(stringerSawTable)stringerSawTable.innerHTML=sawlines.map(r=>'<tr>'+lineCells(r)+'</tr>').join("");
+    if(stringerEndTable)stringerEndTable.innerHTML=ends.map(r=>'<tr>'+lineCells(r)+'</tr>').join("");
   };
   function render(){
     // Clear field-specific validation before re-reading the current inputs.
@@ -1020,6 +1044,20 @@ if(slug){
       "MODELED geometry only. Vertical first/last end clips and lower parallel stock edge are NOT finished bearing cuts; no 1:1 template, structural approval or raw stock purchase length.");
     save(slug+"-"+unit+"-modeled-section.csv",csv,"text/csv;charset=utf-8");
     status.textContent="Modeled side-section coordinate CSV saved locally.";
+  });
+  stringerSawExport?.addEventListener("click",()=>{
+    if(!latest?.stringerCutLineRows?.length)return;
+    const csv=buildScheduleCsv(latest.stringerCutLineRows,unit,
+      "One nominal sawline per stair tread/riser leg: X/Y endpoints and lengths. No overcut, end bearing, building-code approval or printable 1:1 cutting template.");
+    save(slug+"-"+unit+"-nominal-notch-sawlines.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Notch sawline CSV saved locally.";
+  });
+  stringerEndExport?.addEventListener("click",()=>{
+    if(!latest?.measuredEndCuts?.length)return;
+    const csv=buildScheduleCsv(latest.measuredEndCuts,unit,
+      "USER-CHOSEN end-edge intersection positions only; actual supports, stock strength, bearing and fastening have NOT been verified.");
+    save(slug+"-"+unit+"-user-end-line-references.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Measured reference end-cut CSV saved locally.";
   });
   stringerSupportExport?.addEventListener("click",()=>{
     if(!latest?.supportReferences?.length)return;
