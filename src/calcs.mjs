@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={landing:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -963,12 +963,41 @@ export function compute(slug,a){
     });
   }
   case "equal-spacing-calculator":{
-    positive("length");nonnegative("left","right");whole("count");
-    need(a.left+a.right<a.length,"Offsets consume the available length.");
-    const p=a.count===1?0:(a.length-a.left-a.right)/(a.count-1);
-    xs=Array.from({length:a.count},(_,i)=>a.count===1?(a.left+a.length-a.right)/2:a.left+i*p);
-    rows=xs.map((x,i)=>({item:"Center "+(i+1),position:q(x)}));
-    return result([M("Centers",a.count,"N"),M("Equal center interval",p),M("Usable length",a.length-a.left-a.right)],xs.map(x=>P(x)),a.length,rows);
+    positive("length");nonnegative("left","right","itemWidth");
+    whole("count");need(a.left+a.right<a.length,"Offsets consume the available length.");
+    const pitch=a.count===1?0:(a.length-a.left-a.right)/(a.count-1);
+    xs=Array.from({length:a.count},(_,i)=>a.count===1?
+      (a.left+a.length-a.right)/2:a.left+i*pitch);
+    // Zero width means center marks only; never imply zero-width pieces have
+    // physical face gaps or a computed end-material clearance.
+    const physical=a.itemWidth>0;
+    const faces=xs.map((center,i)=>({
+      item:"Center "+(i+1),position:q(center),
+      faceLeftEdge:physical?q(center-a.itemWidth/2):null,
+      faceRightEdge:physical?q(center+a.itemWidth/2):null,
+      clearToPrevious:physical&&i>0?q(pitch-a.itemWidth):null
+    }));
+    if(physical){
+      need(faces[0].faceLeftEdge>=-1e-7 &&
+        faces.at(-1).faceRightEdge<=a.length+1e-7,
+        "Part faces exceed the measured total length. Increase center offsets or reduce width.");
+      need(a.count===1||pitch+1e-8>=a.itemWidth,
+        "Part faces overlap. Reduce width or part count, or increase the run.");
+    }
+    const metrics=[
+      M("Centers",a.count,"N"),
+      M("Equal center interval",pitch),
+      M("Usable length",a.length-a.left-a.right)
+    ];
+    if(physical){
+      metrics.push(M("Physical part face width",a.itemWidth),
+        M("Left end face margin",faces[0].faceLeftEdge),
+        M("Right end face margin",a.length-faces.at(-1).faceRightEdge));
+      if(a.count>1)metrics.push(M("Clear space between faces",pitch-a.itemWidth));
+    }
+    return result(metrics,xs.map(x=>P(x)),a.length,faces,
+      physical?"spacing-faces":"ruler",
+      {partFaceWidth:a.itemWidth,faceRows:faces,clearFaceGap:physical&&a.count>1?pitch-a.itemWidth:null});
   }
   case "hip-rafter-calculator":{
     positive("runX","runY");nonnegative("pitch");
