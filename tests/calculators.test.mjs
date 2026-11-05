@@ -2342,3 +2342,76 @@ test("Deck optional joists do not invent structural spans, splices or free quote
     {joistStockLength:144,joistUnitPrice:-1}
   ])assert.equal(safeCompute("deck-material-calculator",{...base,...bad}).ok,false,JSON.stringify(bad));
 });
+
+test("P1 stringer blank rectangle is an actual pitch-aligned 2D bounding geometry with conserved area",()=>{
+  for(const [rise,risers,tread,depth] of [
+    [105,14,10,11.25],[95,14,11,13.5],[42,6,8,10],[15,2,14,8]
+  ]){
+    const a={rise,risers,tread,depth,treadThickness:1,
+      lowerFinish:0,blankEndAllowance:1.25};
+    const r=compute("stair-stringer-calculator",a);
+    const theta=Math.atan2(rise/risers,tread),cs=Math.cos(theta),sn=Math.sin(theta),
+      verts=r.stringerBlankVertices;
+    assert.equal(verts.length,4);
+    assert.equal(r.stringerBlankRows.length,4);
+    near(r.blankLengthShown,r.requiredBlankAxis,1e-7);
+    near(value(r,"Reference blank rectangle normal width"),depth);
+    near(value(r,"Reference blank rectangle longitudinal length"),r.requiredBlankAxis);
+    const along=[verts[1].x-verts[0].x,verts[1].y-verts[0].y],
+      across=[verts[3].x-verts[0].x,verts[3].y-verts[0].y];
+    near(Math.hypot(...along),r.requiredBlankAxis,1e-7);
+    near(Math.hypot(...across),depth,1e-7);
+    near(along[0]*across[0]+along[1]*across[1],0,2e-6);
+    near(along[1]/along[0],sn/cs,1e-7);
+    const area=Math.abs(verts.reduce((sum,p,i)=>{
+      const n=verts[(i+1)%verts.length];return sum+p.x*n.y-n.x*p.y;
+    },0))/2;
+    near(area,r.requiredBlankAxis*depth,Math.max(1e-6,area*1e-9));
+    near(value(r,"Reference blank rectangle area")*144,area,1e-6);
+    for(const p of r.stockAxisProfile){
+      const u=p.x*cs+(p.y-r.stepRise)*sn,
+        v=-p.x*sn+(p.y-r.stepRise)*cs;
+      assert.ok(u>=r.blankStartAxis-1e-7&&u<=r.blankEndAxis+1e-7,
+        "Nominal profile lies outside blank longitudinal reference");
+      assert.ok(v>=-depth-1e-7&&v<=1e-7,
+        "Nominal profile lies outside blank normal depth");
+    }
+  }
+});
+test("P1 measured stringer raw stock visualizes too-short stock without falsely claiming bearing",()=>{
+  const base={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,blankEndAllowance:1};
+  const short=compute("stair-stringer-calculator",{...base,measuredBlankLength:100});
+  const long=compute("stair-stringer-calculator",{...base,measuredBlankLength:200});
+  assert.equal(short.stockFitsModel,false);
+  assert.equal(long.stockFitsModel,true);
+  near(short.blankLengthShown,100);near(long.blankLengthShown,200);
+  near(value(short,"Reference blank rectangle longitudinal length"),100);
+  near(value(long,"Reference blank rectangle longitudinal length"),200);
+  near(short.stockAxisSpan,long.stockAxisSpan);
+  const endpoints=long.stringerBlankRows.map(r=>r.axisStation);
+  near(endpoints[1]-endpoints[0],200);
+  near(endpoints[2]-endpoints[3],200);
+  near(long.stringerBlankRows[0].normalOffset,0);
+  near(long.stringerBlankRows[3].normalOffset,-11.25);
+  assert.equal(long.stringerBlankRows.every(r=>Number.isFinite(r.x)&&Number.isFinite(r.elevation)),true);
+});
+test("P1 stringer independent support X projections expose mismatch without inventing load bearing",()=>{
+  const base={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4};
+  const r=compute("stair-stringer-calculator",base);
+  assert.equal(r.endProjectionChecks.length,2);
+  const [lower,upper]=r.endProjectionChecks;
+  near(lower.projectedEndX,-3);near(lower.projectedOutsideSupport,0);
+  assert.equal(lower.projectionStatus,"Inside reference");
+  near(upper.projectedEndX,136);near(upper.projectedOutsideSupport,2);
+  assert.equal(upper.projectionStatus,"Outside reference");
+  near(value(r,"Measured end projections outside support references"),1);
+  const noSurface=compute("stair-stringer-calculator",{
+    ...base,lowerSupportRun:0,upperSupportRun:0
+  });
+  assert.deepEqual(noSurface.endProjectionChecks,[]);
+  assert.equal(noSurface.metrics.some(m=>m.label==="Measured end projections outside support references"),false);
+  assert.deepEqual(noSurface.measuredEndCuts,r.measuredEndCuts);
+});
