@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {buildScheduleCsv,scheduleColumns} from "../src/cut-list.mjs";
+import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "../src/cut-list.mjs";
 import {compute} from "../src/calcs.mjs";
 
 test("selected units and raw numeric coordinates are explicit and machine-readable",()=>{
@@ -597,4 +597,27 @@ test("Stringer 2D line intersections CSV keeps t dimensionless and signed X/Y in
   assert.ok(mm.includes('"2545.55625"'),mm); // support elevation 100.21875in
   assert.ok(mm.includes('"0.5"'),mm); // true unitless segment fraction
   assert.ok(mm.includes('"0"'),mm); // coincident linear contact length
+});
+
+test("metric-only calculator exports machine-readable numeric values and their physical units",()=>{
+  const metrics=[
+    {label:"Roof angle",value:26.56505117707799,kind:"A"},
+    {label:"Horizontal run",value:120,kind:"L"},
+    {label:"Rise per 12",value:6,kind:"P"},
+    {label:"Estimated pieces",value:13,kind:"N"},
+    {label:"Gross area",value:12.3456789,kind:"FT2"},
+    {label:"Material quote",value:83.75,kind:"C"}
+  ];
+  const text=buildMetricsCsv(metrics,"mm","No 1:1 scale","EUR");
+  assert.ok(text.startsWith("\uFEFF"));
+  assert.ok(text.includes('"Roof angle","26.5650511771","°"'),text);
+  assert.ok(text.includes('"Horizontal run","3048","mm"'));
+  assert.ok(text.includes('"Rise per 12","6","rise per 12 run"'));
+  assert.ok(text.includes('"Estimated pieces","13","count"'));
+  assert.ok(text.includes('"Gross area","1.14735296","m²"')===false,"area should not use arbitrary fixed sample rounding"); 
+  assert.ok(text.includes('"Material quote","83.75","EUR"'));
+  assert.ok(!text.includes('"3,048 mm"'));
+  assert.ok(text.endsWith('"Source note","No 1:1 scale",""\r\n'));
+  assert.equal(text.split("\r\n").filter(Boolean).length,metrics.length+2);
+  assert.throws(()=>buildMetricsCsv(metrics,"yard"),/Unsupported unit/);
 });

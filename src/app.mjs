@@ -1,5 +1,5 @@
-import {safeCompute,convertToInches,convertFromInches} from "./calcs.mjs";
-import {buildScheduleCsv,scheduleColumns} from "./cut-list.mjs";
+import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
+import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -79,15 +79,7 @@ if(slug){
   };
   const trim=(n,d=3)=>Number(n.toFixed(d)).toLocaleString("en-US",{maximumFractionDigits:d});
   const esc=s=>String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-  const frac=(x)=>{
-    if(unit!=="in"||x<0||!Number.isFinite(x))return "";
-    const den=Number(fraction.value)||16,whole=Math.floor(x),numer=Math.round((x-whole)*den);
-    if(numer===den)return String(whole+1)+" in";
-    if(!numer)return whole+" in";
-    const gcd=(a,b)=>b?gcd(b,a%b):a;
-    const d=gcd(numer,den);
-    return (whole?whole+" ":"")+numer/d+"/"+(den/d)+" in";
-  };
+  const frac=x=>unit==="in"?inchFraction(x,Number(fraction.value)||16):"";
   const values=()=>{
     const a={};
     for(const f of tool.inputs){
@@ -1397,7 +1389,7 @@ if(slug){
   const restoreValues=()=>{
     for(const f of tool.inputs){
       const el=form.elements.namedItem(f.key);
-      el.value=f.kind==="L"?Number(convertFromInches(f.value,unit).toFixed(unit==="m"?7:6)):f.value;
+      el.value=f.kind==="L"?convertEditableLength(f.value,"in",unit):f.value;
     }
   };
   units.addEventListener("change",()=>{
@@ -1408,7 +1400,7 @@ if(slug){
       // when the user switches between inches and metric units.
       if(!el||el.value.trim()==="")continue;
       const v=Number(el.value);
-      if(Number.isFinite(v))el.value=Number(convertFromInches(convertToInches(v,before),after).toFixed(after==="m"?7:6));
+      if(Number.isFinite(v))el.value=convertEditableLength(v,before,after);
     }
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
@@ -1432,8 +1424,9 @@ if(slug){
   });
   csv.addEventListener("click",()=>{
     if(!latest)return;
-    const rows=latest.rows.length?latest.rows:latest.metrics.map(m=>({measurement:m.label,value:fmt(m.value,m.kind)}));
-    const text=buildScheduleCsv(rows,unit,tool.limit);
+    const text=latest.rows.length?
+      buildScheduleCsv(latest.rows,unit,tool.limit):
+      buildMetricsCsv(latest.metrics,unit,tool.limit,currencyCode());
     save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");
     status.textContent="CSV saved locally.";
   });

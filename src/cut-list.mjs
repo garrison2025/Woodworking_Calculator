@@ -69,6 +69,33 @@ const converted=(key,value,kind,unit)=>{
  * numbers (no localized commas, suffixes or fraction rounding).
  * The final "Source note" row is explicitly non-schedule metadata.
  */
+// A calculator with summary metrics but NO cut schedule must export actual
+// numeric values, not display-rounded strings such as "26.565°" or "1,200 mm".
+// The exported Unit column also prevents mixing counts, degrees and lengths.
+export function buildMetricsCsv(metrics,unit,sourceNote="",currency="USD"){
+  if(!UNITS.has(unit))throw Error("Unsupported unit.");
+  if(!Array.isArray(metrics)||!metrics.length)throw Error("No metrics available.");
+  const metricValue=(value,kind)=>{
+    if(!Number.isFinite(value))return "";
+    if(kind==="L")return outputLength(value,unit);
+    if(kind==="FT")return numeric(["mm","cm","m"].includes(unit)?value*.3048:value);
+    if(kind==="FT2")return numeric(["mm","cm","m"].includes(unit)?value*.09290304:value);
+    return numeric(value);
+  };
+  const metricUnit=kind=>({
+    L:unit,N:"count",A:"°",D:"%",P:"rise per 12 run",
+    C:currency,FT:["mm","cm","m"].includes(unit)?"m":"ft",
+    FT2:["mm","cm","m"].includes(unit)?"m²":"ft²"
+  })[kind]??"";
+  const lines=['"Measurement","Value","Unit"'];
+  for(const m of metrics){
+    const value=metricValue(m.value,m.kind);
+    lines.push([csvEscape(m.label),csvEscape(value,value!==""),csvEscape(metricUnit(m.kind))].join(","));
+  }
+  lines.push([csvEscape("Source note"),csvEscape(sourceNote),csvEscape("")].join(","));
+  return "\uFEFF"+lines.join("\r\n")+"\r\n";
+}
+
 export function buildScheduleCsv(records,unit,sourceNote=""){
   if(!UNITS.has(unit))throw Error("Unsupported unit.");
   if(!Array.isArray(records)||!records.length)throw Error("No schedule available.");
