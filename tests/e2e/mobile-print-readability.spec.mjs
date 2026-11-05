@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import {mkdirSync,writeFileSync} from "node:fs";
 
 test("320px forms remain single column and legible without horizontal overflow",async({page})=>{
   await page.setViewportSize({width:320,height:740});
@@ -6,6 +7,10 @@ test("320px forms remain single column and legible without horizontal overflow",
     "deck-material-calculator","stair-stringer-calculator","shelf-spacing-calculator"]){
     await page.goto("/"+slug+"/");
     await expect(page.locator("#calc-error"),slug).toBeHidden();
+    if(slug==="stud-calculator"){
+      mkdirSync("visual-evidence",{recursive:true});
+      await page.screenshot({path:"visual-evidence/stud-320-mobile-form.png",fullPage:true});
+    }
     await expect(page.locator("#result-cards .metric").first(),slug).toBeVisible();
     const measurements=await page.evaluate(()=>{
       const fields=[...document.querySelectorAll("#calculator-form > .field")];
@@ -29,6 +34,8 @@ test("320px forms remain single column and legible without horizontal overflow",
 test("390px mobile input editing and unit switching",async({page})=>{
   await page.setViewportSize({width:390,height:844});
   await page.goto("/stud-calculator/");
+  mkdirSync("visual-evidence",{recursive:true});
+  await page.screenshot({path:"visual-evidence/stud-390-mobile-form.png",fullPage:true});
   await page.locator("#unit-select").selectOption("mm");
   await page.locator("#f-length").fill("3000");
   await expect(page.locator("#calc-error")).toBeHidden();
@@ -65,4 +72,27 @@ test("full print schedule splits wide columns into readable labelled groups",asy
   await expect(printed).toBeHidden();
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(160);
   await expect(page.locator("#schedule-page-status")).toHaveText("Page 2 of 3");
+});
+
+test("grouped measurement worksheet exports genuine A4 and Letter PDF examples",async({page})=>{
+  await page.goto("/segmented-bowl-calculator/");
+  await page.locator("#f-segments").fill("12");
+  await page.locator("#f-rings").fill("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#print-schedule-readable")).toBeVisible();
+  await expect(page.locator("#print-calibration")).toBeVisible();
+  mkdirSync("print-evidence",{recursive:true});
+  for(const paper of ["A4","Letter"]){
+    const pdf=await page.pdf({format:paper,printBackground:true,
+      preferCSSPageSize:false,scale:1,
+      margin:{top:"15mm",right:"15mm",bottom:"15mm",left:"15mm"}});
+    expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+    expect(pdf.length).toBeGreaterThan(5000);
+    writeFileSync("print-evidence/segmented-bowl-"+paper.toLowerCase()+"-readable.pdf",pdf);
+  }
+  await page.emulateMedia({media:"screen"});
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+  await expect(page.locator("#print-schedule-readable")).toBeHidden();
 });
