@@ -6,7 +6,7 @@ if(slug){
   const tool=manifest.tools.find(t=>t.slug===slug&&t.priority!=="P2");
   if(!tool)throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
-  let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[];
+  let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
   const schedulePager=document.querySelector("#schedule-pager");
   const schedulePrev=document.querySelector("#schedule-prev");
@@ -789,18 +789,34 @@ if(slug){
     const count=latest.rows.length,pages=Math.ceil(count/schedulePageSize);
     schedulePage=Math.min(Math.max(0,schedulePage),pages-1);
     const start=schedulePage*schedulePageSize,end=Math.min(count,start+schedulePageSize);
+    // Screen DOM stays capped at 160 rows. The browser's beforeprint hook
+    // temporarily materializes the complete schedule so native Ctrl+P and
+    // the Print/PDF button cannot silently omit all nonvisible pages.
+    const visible=printFullSchedule?latest.rows:latest.rows.slice(start,end);
     cut.innerHTML='<thead><tr>'+scheduleCols.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+
-      latest.rows.slice(start,end).map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>').join("")+'</tr>').join("")+'</tbody>';
-    schedulePager.hidden=pages<=1;
+      visible.map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>').join("")+'</tr>').join("")+'</tbody>';
+    schedulePager.hidden=printFullSchedule||pages<=1;
     schedulePrev.disabled=schedulePage===0;
     scheduleNext.disabled=schedulePage===pages-1;
     schedulePageInput.max=String(pages);
     schedulePageInput.value=String(schedulePage+1);
     schedulePageStatus.textContent="Page "+(schedulePage+1)+" of "+pages;
-    scheduleCount.textContent=count>schedulePageSize?
-      "Showing rows "+(start+1)+"–"+end+" of "+count+". Print shows this page only; CSV includes all "+count+" rows.":
-      "Showing "+count+" computed rows.";
+    scheduleCount.textContent=printFullSchedule?
+      "PRINT WORKSHEET — all "+count+" calculated rows included; CSV contains the same "+count+" rows.":
+      count>schedulePageSize?
+        "Showing rows "+(start+1)+"–"+end+" of "+count+
+          ". Print / PDF includes ALL "+count+" rows; CSV also includes all rows.":
+        "Showing "+count+" computed rows.";
   };
+  const setPrintFullSchedule=enabled=>{
+    // Neither a stale invalid worksheet nor a native print dialog should
+    // invent geometry. afterprint restores the EXACT prior screen page.
+    if(printFullSchedule===enabled)return;
+    printFullSchedule=enabled;
+    if(latest?.rows?.length)renderSchedule();
+  };
+  window.addEventListener("beforeprint",()=>setPrintFullSchedule(true));
+  window.addEventListener("afterprint",()=>setPrintFullSchedule(false));
   // Framing summary and stock-by-stock schedule reuse exactly the engine's
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
