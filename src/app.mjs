@@ -74,7 +74,14 @@ if(slug){
     if(kind==="P")return trim(x,3)+":12";
     if(kind==="FT")return ["mm","cm","m"].includes(unit)?trim(x*.3048,3)+" m":trim(x,3)+" ft";
     if(kind==="FT2")return ["mm","cm","m"].includes(unit)?trim(x*.09290304,3)+" m²":trim(x,3)+" ft²";
-    if(kind==="L")return trim(convertFromInches(x,unit),{in:4,ft:5,mm:2,cm:3,m:6}[unit]??4)+" "+unit;
+    if(kind==="L"){
+      const converted=convertFromInches(x,unit);
+      const digits={in:4,ft:5,mm:2,cm:3,m:6}[unit]??4;
+      // Ordinary dimensions stay compact, but a small NONZERO length
+      // must never be rendered as 0 in or 0 mm. Display only.
+      const small=converted!==0&&Number(converted.toFixed(digits))===0;
+      return (small?Number(converted.toPrecision(8)).toString():trim(converted,digits))+" "+unit;
+    }
     return trim(x,3);
   };
   const trim=(n,d=3)=>Number(n.toFixed(d)).toLocaleString("en-US",{maximumFractionDigits:d});

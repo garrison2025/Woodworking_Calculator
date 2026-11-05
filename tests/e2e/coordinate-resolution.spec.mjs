@@ -23,3 +23,16 @@ test("gaps below displayed coordinate precision show an actionable error, then r
     await expect(page.locator("#cut-table tbody tr").first()).toBeVisible();
   }
 });
+
+test("visible tiny nonzero cut clearance never rounds to zero in any selected unit",async({page})=>{
+  await page.goto("/deck-board-calculator/");
+  await page.locator("#f-gap").fill("0.000002");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#cut-table tbody")).toContainText("0.000002 in");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#cut-table tbody")).toContainText("0.0000508 mm");
+  await page.locator("#f-gap").fill("0");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#cut-table tbody")).toContainText("0 mm");
+});
