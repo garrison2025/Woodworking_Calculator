@@ -150,3 +150,61 @@ test("Missing price CSV cells remain empty, and cannot masquerade as zero-dollar
   }],"in","Price not provided");
   assert.ok(csv.includes('"Stud","10","","","USD"'),csv);
 });
+
+
+test("Multi-size supplier quote CSV exports every chosen stock length with money columns untyped",()=>{
+  const r=compute("framing-calculator",{
+    length:120,spacing:16,width:1.5,wallHeight:80,openingStart:32,
+    openingWidth:36,openingHeight:60,studUnitPrice:8,
+    studAltUnitPrice:8.2,studAlt2UnitPrice:8.5,headerUnitPrice:12
+  });
+  assert.equal(r.costSummary.allPricesEntered,true);
+  const rows=r.purchaseVariants.map(v=>({
+    stockGroup:v.stockGroup,offerLabel:v.offerLabel,stockLength:v.stockLength,
+    plannedSticks:v.plannedSticks,allowanceSticks:v.allowanceSticks,
+    purchaseSticks:v.purchaseSticks,unitPrice:v.unitPrice,
+    plannedCost:v.plannedCost,reserveCost:v.reserveCost,
+    purchaseCost:v.purchaseCost,currency:"USD"
+  }));
+  assert.equal(rows.length,5); // 3 stud variants, 1 header, 1 inactive sill
+  const csv=buildScheduleCsv(rows,"mm","Quoted multi-size plan");
+  const cols=scheduleColumns(rows,"mm");
+  assert.equal(cols.find(x=>x.key==="stockLength").kind,"length");
+  assert.equal(cols.find(x=>x.key==="plannedSticks").kind,"plain");
+  assert.equal(cols.find(x=>x.key==="unitPrice").kind,"plain");
+  assert.equal(cols.find(x=>x.key==="purchaseCost").kind,"plain");
+  assert.ok(csv.includes('"Offer Label"'));
+  assert.ok(csv.includes('"Stock Length (mm)"'));
+  assert.ok(csv.includes('"2438.4"'));
+  assert.ok(csv.includes('"3048"'));
+  assert.ok(csv.includes('"3657.6"'));
+  assert.ok(csv.includes('"Alternative 2"'));
+  assert.ok(csv.includes('"8.5"'));
+  assert.ok(csv.includes('"USD"'));
+  assert.ok(!csv.includes('"Purchase Cost (mm)"'));
+  assert.ok(!csv.includes('"Unit Price (mm)"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,rows.length+2);
+  assert.equal(rows.reduce((s,x)=>s+(x.purchaseCost??0),0),r.costSummary.quotedSubtotal);
+});
+test("Mixed-length stock cutting CSV keeps individual stick length and offer for every cut",()=>{
+  const r=compute("framing-calculator",{
+    length:120,spacing:16,width:1.5,wallHeight:80,openingStart:32,
+    openingWidth:36,openingHeight:60,studUnitPrice:8,
+    studAltUnitPrice:8.2,studAlt2UnitPrice:8.5,headerUnitPrice:12
+  });
+  const csv=buildScheduleCsv(r.stockCuts,"in","Never cross-profile splice or trim");
+  assert.ok(csv.includes('"Offer Label"'));
+  assert.ok(csv.includes('"Stock Length (in)"'));
+  assert.ok(csv.includes('"Alternative 1"'));
+  assert.ok(csv.includes('"Alternative 2"'));
+  assert.ok(csv.includes('"120"'));
+  assert.ok(csv.includes('"144"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,r.rows.length+2);
+  const byId=new Map(r.stockPlan.map(bar=>[bar.stockId,bar]));
+  for(const cut of r.stockCuts){
+    const bar=byId.get(cut.stockId);
+    assert.ok(bar);
+    assert.equal(cut.stockLength,bar.stockLength);
+    assert.equal(cut.offerLabel,bar.offerLabel);
+  }
+});
