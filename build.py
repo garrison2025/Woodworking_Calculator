@@ -131,14 +131,15 @@ def tool_page(t):
           f'<span class="eyebrow"><span class="eyebrow-dot"></span> TOOL {esc(t["priority"])} · GEOMETRY WORKSPACE</span>'
           f'<h1>{esc(t["title"])}</h1><p class="tool-lede">{esc(t["desc"])}</p>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
+    quote_currency_id="framing-currency" if t["slug"]=="framing-calculator" else "deck-currency"
     currency_picker=(
-        '<div class="framing-currency-control"><label for="framing-currency">Supplier quote currency</label>'
-        '<select id="framing-currency" aria-label="Currency for entered stock prices">'
+        f'<div class="framing-currency-control"><label for="{quote_currency_id}">Supplier quote currency</label>'
+        f'<select id="{quote_currency_id}" aria-label="Currency for entered stock prices">'
         '<option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>'
         '<option value="CAD">CAD</option><option value="AUD">AUD</option>'
         '<option value="BRL">BRL</option><option value="MXN">MXN</option>'
         '</select><small>No FX conversion: change prices yourself when changing currency.</small></div>'
-    ) if t["slug"]=="framing-calculator" else ""
+    ) if t["slug"] in ("framing-calculator","deck-material-calculator") else ""
     body+=(f'<section class="workspace wrap" data-workspace><div class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
@@ -203,6 +204,26 @@ def tool_page(t):
         '<p class="caution">Reference lengths only. No material grade, structural header sizing, defects, end trimming, splices or real-world optimizer certification. Verify each purchase and cut before working.</p>'
         '</div>'
     ) if t["slug"]=="framing-calculator" else ""
+    deck_takeoff=(
+        '<section class="content-block deck-purchase-plan" id="deck-purchase-plan">'
+        '<span class="eyebrow">DECK MATERIAL PLANNING</span><h2>Supplier quote & fastening reference</h2>'
+        '<p>The counted deck boards include the entered stock allowance, with no offcut reuse. Each installed board piece is counted at every joist CENTERLINE it touches. At each butt seam the two separate pieces create two piece/joist fastening contacts at the same line; this does NOT validate actual bearing, double joists, end gaps, a safe fastener pattern or structural spans. Enter actual supplier quotes to display a complete materials-only total.</p>'
+        '<p id="deck-cost-status" class="framing-price-status" role="status" aria-live="polite">Enter board and fastener pack prices.</p>'
+        '<div class="table-scroll"><table id="deck-budget-table" aria-label="Deck materials buying list">'
+        '<thead><tr><th>Material</th><th>Planned</th><th>Buy</th><th>Units</th><th>Price each</th><th>Purchase cost</th></tr></thead><tbody></tbody></table></div>'
+        '<h3>Fastener contacts by installed row</h3>'
+        '<p>One contact means one individual decking piece at a joist reference line, NOT a code-approved screw count. Set fasteners per contact to zero if hardware is not in scope. Stock purchased boards and fastener packs are rounded separately; supplier pack leftovers are not credited to the cut list.</p>'
+        '<div class="table-scroll deck-fastener-scroll"><table id="deck-fastener-table" aria-label="Fastener count per decking row">'
+        '<thead><tr><th>Row</th><th>Joist lines</th><th>Butt seams</th><th>Piece/joist contacts</th><th>Fasteners/row</th><th>First seam</th><th>Last seam</th></tr></thead><tbody></tbody></table></div>'
+        '<section class="framing-order-ticket" aria-label="Printable deck buying ticket">'
+        '<h3>Deck buying ticket</h3><p id="deck-ticket-status">Supplier quotes required.</p>'
+        '<ul id="deck-ticket-list"></ul>'
+        '<p class="ticket-caveat">Geometry-only reference. Board stock count does not include cutting kerf, end trimming or offcut reuse. Fastener references are not installation specifications. Joist lumber, blocking, footings, tax, delivery and labor are excluded.</p></section>'
+        '<div class="takeoff-actions">'
+        '<button id="download-deck-budget-csv" type="button" class="btn secondary">↓ Download materials quote CSV</button>'
+        '<button id="download-deck-fastener-csv" type="button" class="btn secondary">↓ Download fastener rows CSV</button>'
+        '</div></section>'
+    ) if t["slug"]=="deck-material-calculator" else ""
     body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
            '<p>Items below are generated from the same numbers used for the drawing. The downloadable CSV uses plain numeric cells and puts the selected units in column headers for Excel or other spreadsheets. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
@@ -214,8 +235,8 @@ def tool_page(t):
            '<input id="schedule-page-input" type="number" min="1" step="1" value="1" inputmode="numeric">'
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
-           +framing_takeoff+
-           '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
+           +framing_takeoff+deck_takeoff+
+           '<div class="content-block proof"<span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
