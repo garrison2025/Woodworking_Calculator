@@ -974,6 +974,64 @@ if(slug){
       "No structural or field verification is implied.";
     printInputPanel.hidden=false;
   };
+  // Wide supplier, drilling and stair schedules stay intact on screen and in
+  // CSV. Only the print snapshot repeats identifying columns in readable
+  // sections. Every source cell is copied in row order; no geometry is rerun.
+  const specialtyPrintLayouts=[
+    ["framing-material-table",1,5],["framing-price-table",2,5],
+    ["framing-offer-table",2,5],["framing-proof-table",1,5],
+    ["deck-budget-table",1,5],["deck-fastener-table",1,5],
+    ["stringer-sawline-table",2,5],["stringer-end-lines-table",2,5],
+    ["stringer-end-contact-table",2,5],["shelf-pin-table",3,6],
+    ["roof-reuse-table",3,6]
+  ];
+  const clearSpecialtyPrintTables=()=>{
+    for(const node of document.querySelectorAll(".print-specialty-groups"))node.remove();
+    for(const node of document.querySelectorAll(".print-specialty-original-hidden"))
+      node.classList.remove("print-specialty-original-hidden");
+  };
+  const renderSpecialtyPrintTables=()=>{
+    clearSpecialtyPrintTables();
+    if(!printFullSchedule||!latest)return;
+    for(const [id,identityColumns,maxColumns] of specialtyPrintLayouts){
+      const source=document.getElementById(id);
+      const header=source?.tHead?.rows[0];
+      const body=source?.tBodies[0];
+      if(!header||!body||!body.rows.length||header.cells.length<=maxColumns)continue;
+      const region=source.closest(".table-scroll");
+      if(!region)continue;
+      const names=[...header.cells].map(cell=>cell.textContent.trim());
+      const rows=[...body.rows].map(tr=>[...tr.cells].map(td=>td.textContent.trim()));
+      // Defensive: malformed/incomplete DOM cannot yield a silently
+      // partial worksheet. Leave the original table printable instead.
+      if(rows.some(cells=>cells.length!==names.length))continue;
+      const step=maxColumns-identityColumns;
+      const total=Math.ceil((names.length-identityColumns)/step);
+      const wrapper=document.createElement("div");
+      wrapper.className="print-specialty-groups";
+      wrapper.dataset.source=id;
+      wrapper.setAttribute("aria-label",source.getAttribute("aria-label")||id);
+      const parts=[];
+      for(let offset=identityColumns;offset<names.length;offset+=step){
+        const cols=[...Array(identityColumns).keys(),
+          ...Array.from({length:Math.min(step,names.length-offset)},(_,i)=>offset+i)];
+        const number=1+Math.floor((offset-identityColumns)/step);
+        const tableHead=cols.map(c=>'<th scope="col">'+esc(names[c])+'</th>').join("");
+        const tableRows=rows.map(cells=>'<tr>'+cols.map((c,index)=>
+          '<td'+(index===0?' role="rowheader"':'')+'>'+esc(cells[c])+'</td>'
+        ).join("")+'</tr>').join("");
+        parts.push('<section class="print-specialty-part" data-part="'+number+'">'+
+          '<h4>'+esc(source.getAttribute("aria-label")||id)+' · columns '+number+
+          ' of '+total+'</h4><table aria-label="'+
+          esc(source.getAttribute("aria-label")||id)+' · print columns '+number+
+          ' of '+total+'"><thead><tr>'+tableHead+'</tr></thead><tbody>'+
+          tableRows+'</tbody></table></section>');
+      }
+      wrapper.innerHTML=parts.join("");
+      region.insertAdjacentElement("afterend",wrapper);
+      region.classList.add("print-specialty-original-hidden");
+    }
+  };
   const setPrintFullSchedule=enabled=>{
     // Neither a stale invalid worksheet nor a native print dialog should
     // invent geometry. afterprint restores the EXACT prior screen page.
@@ -981,6 +1039,7 @@ if(slug){
     printFullSchedule=enabled;
     if(latest?.rows?.length)renderSchedule();
     renderReadablePrintSchedule();
+    renderSpecialtyPrintTables();
   };
   window.addEventListener("beforeprint",()=>setPrintFullSchedule(true));
   window.addEventListener("afterprint",()=>setPrintFullSchedule(false));
@@ -1286,6 +1345,7 @@ if(slug){
       renderSchedule();
       if(printFullSchedule)renderReadablePrintSchedule();
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
+      if(printFullSchedule)renderSpecialtyPrintTables();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
@@ -1310,6 +1370,7 @@ if(slug){
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
       renderReadablePrintSchedule();
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
+      renderSpecialtyPrintTables();
       status.textContent="Calculation requires correction; see the error message.";
       requestAnimationFrame(syncKeyboardScrollRegions);
     }

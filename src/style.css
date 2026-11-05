@@ -656,3 +656,34 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .print-schedule-long .print-schedule-part th,
  .print-schedule-long .print-schedule-part td{padding:2.4pt 4pt;line-height:1.22}
 }
+
+/* Print-only split for multi-column supplier, shelf-drill and stair schedules.
+   Leave live scroll tables and all downloadable CSV values untouched. */
+.print-specialty-groups{display:none}
+@media print{
+ .print-specialty-original-hidden{display:none!important}
+ .print-specialty-groups{display:block!important;min-width:0;overflow:visible}
+ .print-specialty-part{page-break-inside:auto;break-inside:auto;margin:9pt 0 12pt}
+ .print-specialty-part h4{font-size:10.5pt;line-height:1.3;margin:6pt 0 5pt;
+   color:#111;break-after:avoid;page-break-after:avoid}
+ .print-specialty-part table{min-width:0!important;max-width:100%;width:100%;
+   table-layout:fixed;border-collapse:collapse;font-size:9pt;line-height:1.35;
+   page-break-inside:auto;break-inside:auto}
+ .print-specialty-part th,.print-specialty-part td{
+   min-width:0!important;max-width:none!important;
+   padding:3.5pt 4pt;border-bottom:.5pt solid #aaa;
+   color:#111;white-space:normal;overflow-wrap:anywhere;word-break:normal;
+   vertical-align:top;line-height:1.35}
+ .print-specialty-part thead{display:table-header-group}
+ .print-specialty-part tr{break-inside:avoid;page-break-inside:avoid}
+ .print-specialty-part th{background:#eee;font-weight:700}
+ .print-specialty-part th:first-child{width:25%}
+ .print-specialty-part tbody tr:nth-child(2n){background:#f6f6f6}
+ .framing-optimizer-panel{break-inside:auto!important;page-break-inside:auto!important}
+ .framing-takeoff #framing-stock-table{font-size:9pt;line-height:1.4}
+ .framing-takeoff #framing-stock-table th,
+ .framing-takeoff #framing-stock-table td{padding:4pt 5pt;line-height:1.4}
+ .stringer-section #stringer-outline-table,
+ .stringer-section #stringer-blank-table,
+ .stringer-section #stringer-support-table{font-size:9pt}
+}
