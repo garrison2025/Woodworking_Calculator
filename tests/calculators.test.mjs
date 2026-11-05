@@ -485,7 +485,7 @@ test("Rafter: independent notch geometry and ridge allowance",()=>{
   near(value(r,"Remaining stock (normal)"),5.5-expectedNotch,1e-8);
   near(value(r,"Notch / stock depth"),100*expectedNotch/5.5,1e-8);
   assert.equal(r.rows.length,3);
-  assert.deepEqual(r.rows.map(p=>p.item),["Ridge reference","Bearing reference","Overhang end"]);
+  assert.deepEqual(r.rows.map(p=>p.item),["Ridge reference","Bearing reference","Overhang end","Birdsmouth horizontal seat","Birdsmouth plumb heel"]);
   near(r.rows[1].horizontalRun,119.25,1e-8);
   near(r.rows[2].horizontalRun,131.25,1e-8);
   assert.equal(r.shape,"rafter");
@@ -2237,4 +2237,60 @@ test("P1 deck positive-gap opt-in retains original zero-gap results and independ
   near(cuts.reduce((sum,row)=>sum+row.cutLength,0)+count*.125,22*144);
   near(value(altered,"Piece-joist fastening contacts"),242);
   near(value(altered,"Stock boards (no offcut reuse)"),44);
+});
+
+test("Rafter: cut seat, vertical heel and HAP conserve a physical 2D notch triangle",()=>{
+  const a={run:120,pitch:6,ridge:1.5,overhang:12,depth:5.5,seat:3};
+  const r=compute("rafter-calculator",a),run=119.25,slope=.5,k=Math.hypot(1,slope);
+  assert.equal(r.birdsmouthCutRows.length,2);
+  near(r.seatStart.x,run-3);
+  near(r.seatStart.y,slope*(run-3)+5.5*k,1e-7);
+  near(r.heelTop.x,run);
+  near(r.heelTop.y,r.seatStart.y,1e-9);
+  near(r.heelBottom.x,run);
+  near(r.heelBottom.y,slope*run+5.5*k,1e-7);
+  const [seat,heel]=r.birdsmouthCutRows;
+  near(seat.startX,r.seatStart.x);near(seat.endX,r.heelTop.x);
+  near(seat.startY,seat.endY);near(seat.cutLength,3);
+  near(heel.startX,heel.endX);
+  near(heel.startY,seat.endY);near(heel.endY,r.heelBottom.y);
+  near(heel.cutLength,1.5);near(heel.cutAngleDeg,90);
+  near(value(r,"HAP (vertical top to seat at wall)"),5.5*k-1.5);
+  near(value(r,"Remaining stock (normal)"),5.5-3*.5/k);
+  const triangle=[r.seatStart,r.heelTop,r.heelBottom];
+  const area=Math.abs(triangle.reduce((sum,p,i)=>{
+    const b=triangle[(i+1)%triangle.length];return sum+p.x*b.y-b.x*p.y;
+  },0))/2;
+  near(area,2.25,1e-7);
+  near(value(r,"Nominal removed triangular face area"),area/144,1e-8);
+});
+test("Rafter: the same notch remains valid when the overhang is zero",()=>{
+  const r=compute("rafter-calculator",{
+    run:120,pitch:12,ridge:0,overhang:0,depth:2.5,seat:3
+  });
+  near(r.heelBottom.x,120);
+  near(r.heelBottom.y-r.heelTop.y,3,1e-7);
+  near(r.hap,2.5*Math.sqrt(2)-3,1e-8);
+  near(r.birdsmouthCutRows[0].cutLength,3);
+});
+test("Rafter: zero pitch or zero seat does not invent a nonzero vertical cut",()=>{
+  const base={run:120,pitch:0,ridge:0,overhang:12,depth:5.5,seat:3};
+  const flat=compute("rafter-calculator",base);
+  assert.deepEqual(flat.birdsmouthCutRows,[]);
+  near(flat.hap,5.5);near(flat.notchAreaSqIn,0);
+  near(flat.heelBottom.y,flat.heelTop.y);
+  const none=compute("rafter-calculator",{...base,pitch:6,seat:0});
+  assert.deepEqual(none.birdsmouthCutRows,[]);
+  near(none.notchAreaSqIn,0);
+});
+test("Rafter: seat and heel XY run across five pitches without geometric coordinate drift",()=>{
+  for(const p of [1,2,4,6,9,12,16]){
+    const base={run:120,pitch:p,ridge:1.5,overhang:0,depth:11.25,seat:3};
+    const r=compute("rafter-calculator",base);
+    const slope=p/12,k=Math.hypot(1,slope);
+    near(r.heelTop.x-r.seatStart.x,3,1e-8);
+    near(r.heelBottom.y-r.heelTop.y,3*slope,1e-8);
+    near(r.hap,11.25*k-3*slope,1e-9);
+    near((r.heelBottom.y-r.heelTop.y)/k,11.25-value(r,"Remaining stock (normal)"),1e-7);
+  }
 });
