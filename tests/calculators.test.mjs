@@ -1029,22 +1029,25 @@ test("Multi-length framing quote comparison selects cheaper mixed-stick plan",()
   assert.equal(stu.stockLength,null);
   assert.equal(stu.unitPrice,null);
   assert.equal(stu.plannedSticks,8);
-  near(stu.purchaseCost,65.2);
-  near(result.costSummary.quotedSubtotal,77.2);
+  near(stu.purchaseCost,65);
+  near(result.costSummary.quotedSubtotal,77);
   assert.deepEqual(result.purchaseVariants.filter(x=>x.stockGroup==="Stud")
     .map(r=>[r.offerLabel,r.stockLength,r.purchaseSticks,r.unitPrice]),[
-      ["Base",96,5,8],["Alternative 1",120,1,8.2],["Alternative 2",144,2,8.5]
+      ["Base",96,6,8],["Alternative 2",144,2,8.5]
     ]);
   const comp=result.stockComparisons.filter(r=>r.stockGroup==="Stud");
-  assert.equal(comp.length,4);
+  assert.equal(comp.length,5);
   const names=comp.map(r=>r.planLabel);
   assert.ok(names.includes("Single length · Base"));
   assert.ok(names.includes("Single length · Alternative 1"));
   assert.ok(names.includes("Single length · Alternative 2"));
   const chosen=comp.find(r=>r.selected);
   assert.ok(chosen);
-  assert.equal(chosen.planLabel,"Greedy mixed lengths");
-  near(chosen.purchaseCost,65.2);
+  assert.equal(chosen.planLabel,"Exhaustive small-layout plan");
+  assert.equal(result.optimizerStatus.find(x=>x.stockGroup==="Stud").certified,true);
+  assert.equal(result.costSummary.allGroupsCertified,true);
+  near(chosen.purchaseCost,65);
+  near(comp.find(r=>r.planLabel==="Greedy mixed lengths").purchaseCost,65.2);
   near(comp.find(r=>r.planLabel==="Single length · Base").purchaseCost,80);
   near(comp.find(r=>r.planLabel==="Single length · Alternative 1").purchaseCost,73.8);
   near(comp.find(r=>r.planLabel==="Single length · Alternative 2").purchaseCost,68);
@@ -1052,7 +1055,7 @@ test("Multi-length framing quote comparison selects cheaper mixed-stick plan",()
   assert.deepEqual(result.stockCuts.map(r=>r.item).sort(),
     result.rows.map(r=>r.item).sort());
   assert.equal(new Set(result.stockPlan.filter(b=>b.stockGroup==="Stud")
-    .map(b=>b.stockLength)).size,3);
+    .map(b=>b.stockLength)).size,2);
   for(const bar of result.stockPlan)
     near(bar.piecesLength+bar.kerfLoss+bar.offcutLength,bar.stockLength,1e-7);
 });
