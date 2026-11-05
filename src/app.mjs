@@ -337,13 +337,34 @@ if(slug){
       content+=svgText(xx0,310,"RISE "+fmt(rise),"tick-label");
       content+=svgText(540,310,"SLOPE LINE "+fmt(data.roofLine),"tick-label");
     }else if(data.shape==="stairs"){
-      const n=data.risers||2,stepW=W/Math.max(1,n-1),stepH=H/Math.max(2,n);
-      let d="M"+left+" "+base;
-      for(let i=1;i<n;i++)d+=" V"+(base-i*stepH)+" H"+(left+i*stepW);
-      d+=" V"+(base-n*stepH);
-      content+='<path d="'+d+'" fill="none" stroke="#1e6454" stroke-width="4" stroke-linecap="round"/>';
-      content+=svgText(left+12,55,n+" risers · "+(n-1)+" treads","dim-label");
-     }else if(data.shape==="deck-plan"){
+      // SVG is an actual proportional elevation of the same coordinates
+      // exported in the stair CSV, not equal-size decorative steps.
+      const risers=data.stairRows||[],landing=data.landingDepth||0;
+      const fullRun=data.totalFootprint||data.flightRun;
+      const rise=data.totalRise||risers.at(-1)?.rise||1;
+      const s=Math.min((W-80)/Math.max(fullRun,1),(H-45)/Math.max(rise,1));
+      const x0=left+(W-fullRun*s)/2,bottom=base-7;
+      const X=v=>Number((x0+v*s).toFixed(4));
+      const Y=v=>Number((bottom-v*s).toFixed(4));
+      content+='<line class="stair-base-datum" x1="'+X(0)+'" x2="'+X(fullRun)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#bccbbd" stroke-dasharray="5 5"/>';
+      for(const [i,r] of risers.entries()){
+        const bx=X(r.run),low=Y(r.rise-r.riserHeight),high=Y(r.rise);
+        content+='<line class="stair-riser" data-index="'+(i+1)+'" data-horizontal-run="'+r.run+'" data-top-rise="'+r.rise+'" x1="'+bx+'" y1="'+low+'" x2="'+bx+'" y2="'+high+'" stroke="#1e6454" stroke-width="3.4"><title>'+
+          esc("Riser "+(i+1)+" · x "+fmt(r.run)+" · upper finished height "+fmt(r.rise))+'</title></line>';
+        if(i<risers.length-1){
+          const end=X(r.treadEnd);
+          content+='<line class="stair-tread" data-index="'+(i+1)+'" data-start="'+r.treadStart+'" data-end="'+r.treadEnd+'" x1="'+bx+'" y1="'+high+'" x2="'+end+'" y2="'+high+'" stroke="#1e6454" stroke-width="3.4"><title>'+
+            esc("Tread "+(i+1)+" · horizontal "+fmt(r.treadEnd-r.treadStart))+'</title></line>';
+          if(end-bx>26&&risers.length<=20)content+=svgText(bx+5,high-8,String(i+1),"tick-label");
+        }else if(landing>0){
+          content+='<line class="stair-landing" data-depth="'+landing+'" data-start="'+r.treadStart+'" data-end="'+r.treadEnd+'" x1="'+bx+'" y1="'+high+'" x2="'+X(fullRun)+'" y2="'+high+'" stroke="#b48456" stroke-width="4"><title>'+
+            esc("Upper landing reference depth "+fmt(landing))+'</title></line>';
+        }
+      }
+      content+=svgText(left,48,risers.length+" RISERS · "+Math.max(0,risers.length-1)+" TREADS · FINISHED DATUM","dim-label");
+      content+=svgText(left,316,"FLIGHT RUN "+fmt(data.flightRun),"dim-label");
+      content+=svgText(466,316,"FOOTPRINT "+fmt(fullRun),"dim-label");
+    }else if(data.shape==="deck-plan"){
       const scale=Math.min(716/data.deckLength,210/data.deckWidth);
       const ww=data.deckLength*scale,hh=data.deckWidth*scale;
       const x0=(900-ww)/2,y0=(344-hh)/2;
