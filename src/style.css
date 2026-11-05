@@ -560,3 +560,74 @@ tbody tr:nth-child(2n){background:#fafbf8}
     min-width:0!important;max-width:none!important
   }
 }
+
+/* Narrow mobile workbench: avoid two cramped columns and OS input zoom. */
+@media(max-width:420px){
+ .wrap{padding-left:12px;padding-right:12px}
+ .topbar-inner{padding:0 12px;gap:10px}
+ .brand{min-width:0;gap:8px}
+ .brand>span:last-child{font-size:10px;letter-spacing:.02em;overflow-wrap:anywhere}
+ .brand small{font-size:8px;letter-spacing:.08em}
+ .brand-icon{flex:0 0 37px;width:37px;height:37px}
+ .tool-heading{padding-top:16px;padding-bottom:18px}
+ .tool-heading h1{font-size:clamp(1.65rem,7.7vw,1.95rem);overflow-wrap:anywhere}
+ .breadcrumbs{gap:6px;margin-bottom:13px;overflow-wrap:anywhere}
+ .tool-lede{font-size:14px;line-height:1.6}
+ .tool-hints{gap:7px 11px;overflow-wrap:anywhere}
+ .workspace{gap:9px}
+ .pane-head{padding:13px 12px;min-height:66px}
+ .pane-state{font-size:8px;padding:4px}
+ .unit-row{padding:12px 12px 7px;gap:6px 8px}
+ .unit-row select{font-size:16px;min-height:44px;padding:9px 6px}
+ #calculator-form{grid-template-columns:minmax(0,1fr);gap:9px;padding:7px 12px 10px}
+ #calculator-form>.field{min-width:0}
+ .field label{min-height:0;line-height:1.35;font-size:13px;margin-bottom:5px}
+ .field input,.field select{font-size:16px;min-height:44px;padding:9px 10px}
+ .field small{font-size:11px;line-height:1.4}
+ .pane-actions{padding:4px 12px 10px}
+ .sidebar-note{margin:0 12px 14px;padding-top:10px}
+ .result-stack{padding:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .metric{min-width:0;padding:10px 8px}
+ .metric strong{font-size:clamp(13px,4.3vw,17px)}
+ .drawing-pane .pane-head{padding:12px}
+ .zoom-controls{gap:1px;flex-shrink:0}
+ .zoom-controls button{min-width:27px;height:30px}
+ .diagram-tools{padding:12px;flex-wrap:wrap}
+ .diagram-tools .btn{min-width:0;white-space:normal;padding:8px 9px;flex:1 1 110px}
+ .drawing-caption{padding:8px 12px;flex-wrap:wrap}
+ .content-block{padding:14px}
+ .content-block h2{font-size:21px;overflow-wrap:anywhere}
+ .table-navigator{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .table-navigator button{min-width:0;width:100%;min-height:44px}
+ .table-nav-position{grid-column:1/-1;grid-row:1;min-width:0;text-align:center}
+ .schedule-pager{gap:6px}
+ .schedule-pager-button,.schedule-pager input{min-height:44px}
+}
+@media(max-width:340px){
+ .tool-grid{grid-template-columns:minmax(0,1fr)}
+ .tool-card{min-height:0}
+ .category-pill{gap:8px}
+ .hero-copy h1{font-size:clamp(2rem,10vw,2.4rem)}
+ .result-stack{grid-template-columns:minmax(0,1fr)}
+ .metric.main-metric{grid-column:1}
+}
+/* Split long print schedules into groups containing row identity + up to three
+   measurement columns; all source rows and unit labels remain intact. */
+.print-schedule-readable{display:none}
+@media print{
+ .print-original-schedule-hidden{display:none!important}
+ .print-schedule-readable:not([hidden]){display:block!important;margin:10pt 0 14pt}
+ .print-schedule-part{break-inside:auto}
+ .print-schedule-part+.print-schedule-part{break-before:page;page-break-before:always}
+ .print-schedule-part h3{font-size:12pt;line-height:1.25;margin:0 0 5pt;break-after:avoid}
+ .print-schedule-part p{font-size:9pt;line-height:1.4;margin:0 0 8pt;color:#222}
+ .print-schedule-part table{min-width:0!important;width:100%;max-width:100%;table-layout:fixed;font-size:9pt;line-height:1.4;border-collapse:collapse}
+ .print-schedule-part th,.print-schedule-part td{padding:5pt 6pt;white-space:normal;overflow-wrap:anywhere;word-break:normal;vertical-align:top;border-bottom:.5pt solid #aaa;color:#111}
+ .print-schedule-part th{font-size:9pt;background:#eee;color:#111;position:static}
+ .print-schedule-part th:first-child{width:33%}
+ .print-schedule-part tbody tr{break-inside:avoid;page-break-inside:avoid}
+ .print-schedule-part thead{display:table-header-group}
+ .print-schedule-part tbody tr:nth-child(even){background:#f6f6f6}
+ #print-input-table{font-size:9pt}
+ #print-input-table th,#print-input-table td{padding:5pt 6pt;line-height:1.4}
+}

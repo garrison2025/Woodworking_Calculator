@@ -15,6 +15,7 @@ if(slug){
   const scheduleGo=document.querySelector("#schedule-go");
   const schedulePageStatus=document.querySelector("#schedule-page-status");
   const scheduleCount=document.querySelector("#schedule-count");
+  const printReadableSchedule=document.querySelector("#print-schedule-readable");
   const printInputPanel=document.querySelector("#print-input-snapshot");
   const printInputRows=document.querySelector("#print-input-table tbody");
   const printInputContext=document.querySelector("#print-input-context");
@@ -906,6 +907,35 @@ if(slug){
           ". Print / PDF includes ALL "+count+" rows; CSV also includes all rows.":
         "Showing "+count+" computed rows.";
   };
+  const renderReadablePrintSchedule=()=>{
+    if(!printReadableSchedule)return;
+    const tableRegion=cut.closest(".table-scroll");
+    if(!printFullSchedule||!latest?.rows?.length||scheduleCols.length<=5){
+      printReadableSchedule.hidden=true;
+      printReadableSchedule.innerHTML="";
+      tableRegion?.classList.remove("print-original-schedule-hidden");
+      return;
+    }
+    const first=scheduleCols[0],parts=[];
+    const total=Math.ceil((scheduleCols.length-1)/3);
+    for(let i=1;i<scheduleCols.length;i+=3){
+      const cols=[first,...scheduleCols.slice(i,i+3)];
+      const part=1+Math.floor((i-1)/3);
+      const header=cols.map(c=>'<th scope="col">'+esc(c.label)+'</th>').join("");
+      const rows=latest.rows.map(row=>'<tr>'+cols.map((c,j)=>
+        '<td'+(j===0?' role="rowheader"':'')+'>'+esc(scheduleValue(c.kind,row[c.key],c.key))+'</td>'
+      ).join("")+'</tr>').join("");
+      parts.push('<section class="print-schedule-part"><h3>Measurement schedule · part '+
+        part+' of '+total+'</h3><p>'+latest.rows.length+
+        ' measured rows · '+esc(cols.slice(1).map(c=>c.label).join(", "))+
+        '. Match entries using the repeated first column.</p>'+
+        '<table aria-label="Print measurement schedule part '+part+' of '+total+
+        '"><thead><tr>'+header+'</tr></thead><tbody>'+rows+'</tbody></table></section>');
+    }
+    printReadableSchedule.innerHTML=parts.join("");
+    printReadableSchedule.hidden=false;
+    tableRegion?.classList.add("print-original-schedule-hidden");
+  };
   const renderPrintInputSnapshot=()=>{
     if(!printInputPanel||!printInputRows||!printInputContext)return;
     if(!latest){
@@ -942,6 +972,7 @@ if(slug){
     if(printFullSchedule===enabled)return;
     printFullSchedule=enabled;
     if(latest?.rows?.length)renderSchedule();
+    renderReadablePrintSchedule();
   };
   window.addEventListener("beforeprint",()=>setPrintFullSchedule(true));
   window.addEventListener("afterprint",()=>setPrintFullSchedule(false));
@@ -1245,6 +1276,7 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
+      if(printFullSchedule)renderReadablePrintSchedule();
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
@@ -1268,6 +1300,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
+      renderReadablePrintSchedule();
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       status.textContent="Calculation requires correction; see the error message.";
       requestAnimationFrame(syncKeyboardScrollRegions);

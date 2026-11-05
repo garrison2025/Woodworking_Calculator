@@ -314,6 +314,7 @@ def tool_page(t):
            '<p>Items below are generated from the same numbers used for the drawing. The screen may show only 160 rows per page, but Print / PDF expands the entire schedule before printing and restores your screen page afterwards; CSV always includes all rows. Numeric CSV cells use the selected units in column headers for spreadsheet import. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table" aria-label="Calculated cut and measurement schedule"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
            '<p class="schedule-count" id="schedule-count" aria-live="polite"></p>'
+           '<div id="print-schedule-readable" class="print-schedule-readable" aria-label="Readable print-only schedule" hidden></div>'
            '<nav class="schedule-pager" id="schedule-pager" aria-label="Measurement schedule pages" hidden>'
            '<button type="button" id="schedule-prev" class="schedule-pager-button">← Previous</button>'
            '<span id="schedule-page-status">Page 1 of 1</span>'
