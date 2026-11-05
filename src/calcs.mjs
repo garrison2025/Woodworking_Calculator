@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1233,9 +1233,12 @@ export function compute(slug,a){
   }
   case "stair-stringer-calculator":{
     positive("rise","tread","depth");whole("risers",2,200);
-    nonnegative("treadThickness","lowerFinish","nosing","upperLandingDepth");
+    nonnegative("treadThickness","lowerFinish","nosing","upperLandingDepth",
+      "lowerSupportRun","upperSupportRun");
     need(a.nosing<a.tread,"Tread nose projection must be smaller than the horizontal tread run.");
     const h=a.rise/a.risers,run=(a.risers-1)*a.tread;
+    need(a.lowerSupportRun<=run&&a.upperSupportRun<=run,
+      "Support reference lengths cannot exceed the nominal straight-flight horizontal run.");
     const normalNotch=h*a.tread/Math.hypot(h,a.tread);
     const throat=a.depth-normalNotch;
     const bottomLayoutRise=h-a.treadThickness+a.lowerFinish;
@@ -1275,6 +1278,49 @@ export function compute(slug,a){
     })):[];
     need(noseReferences.every(r=>r.noseEnd-r.noseStart>=a.nosing-1e-7),
       "Tread nose coordinate drift exceeds the modeled projection.");
+    // Modeled SIDE SECTION: a nominal upper pitch line and a parallel
+    // lower edge offset by the entered normal board depth. Clip at the
+    // first/last riser X datums. The clip ends are NOT physical bearing cuts.
+    const pitchSlope=h/a.tread,normalFactor=Math.hypot(1,pitchSlope);
+    const lowerEdgeAt=x=>h+pitchSlope*x-a.depth*normalFactor;
+    const lowerAtStart=lowerEdgeAt(0),lowerAtTop=lowerEdgeAt(run);
+    const envelopeVertices=[
+      ...stepVertices,
+      {x:q(run),y:q(lowerAtTop)},
+      {x:0,y:q(lowerAtStart)}
+    ];
+    const envelopeArea2=envelopeVertices.reduce((s,v,i)=>{
+      const next=envelopeVertices[(i+1)%envelopeVertices.length];
+      return s+v.x*next.y-next.x*v.y;
+    },0);
+    const envelopeAreaSqIn=Math.abs(envelopeArea2)/2;
+    const analyticAreaSqIn=run*(a.depth*normalFactor-h/2);
+    need(envelopeVertices.length===2*a.risers+2&&
+      Math.abs(envelopeAreaSqIn-analyticAreaSqIn)<=
+        Math.max(1e-5,Math.abs(analyticAreaSqIn)*1e-8),
+      "Modeled stringer section polygon does not conserve analytical area.");
+    const minThroatFromVertices=Math.min(...stepVertices.filter((_,i)=>i%2===0)
+      .map(v=>(v.y-lowerEdgeAt(v.x))/normalFactor));
+    need(Math.abs(minThroatFromVertices-throat)<=
+      Math.max(1e-7,Math.abs(throat)*1e-8),
+      "Modeled notch corners do not conserve the minimum normal throat.");
+    // Surface segments are explicitly OUTSIDE the clipped stock model.
+    // These are measured datum references, not support/bearing cut designs.
+    const supportReferences=[
+      ...(a.lowerSupportRun>0?[{
+        item:"Lower horizontal support surface reference",startX:q(-a.lowerSupportRun),
+        endX:0,elevation:0
+      }]:[]),
+      ...(a.upperSupportRun>0?[{
+        item:"Upper horizontal support surface reference",startX:q(run),
+        endX:q(run+a.upperSupportRun),elevation:q(a.rise)
+      }]:[])
+    ];
+    const stringerEnvelopeRows=envelopeVertices.map((v,i)=>({
+      index:i+1,boundary:i<stepVertices.length?"Nominal notch profile":
+        "Parallel lower reference edge",
+      x:v.x,elevation:v.y
+    }));
     return result([
       M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
       M("Total horizontal run",run),
@@ -1285,13 +1331,22 @@ export function compute(slug,a){
       M("Floor-to-floor diagonal (not a cut length)",floorDiagonal),
       M("Bottom riser layout cut",bottomLayoutRise),
       M("Notch penetration (normal)",normalNotch),
-      M("Uncut throat (nominal)",throat)
+      M("Uncut throat (nominal)",throat),
+      M("Modeled section minimum throat",minThroatFromVertices),
+      M("Modeled section face area",envelopeAreaSqIn/144,"FT2"),
+      M("Lower support surface reference run",a.lowerSupportRun),
+      M("Upper support surface reference run",a.upperSupportRun)
     ],rows.map(r=>P(r.horizontalRun,r.item)),Math.max(run,1),rows,"stringer",
     {stepRise:h,tread:a.tread,risers:a.risers,totalRise:a.rise,
       throat,bottomLayoutRise,notchNormal:normalNotch,
       pitchLine,floorDiagonal,stepVertices,noseReferences,
       nosingProjection:a.nosing,landingDepth:a.upperLandingDepth,
-      landingReferenceEnd:run+a.upperLandingDepth});
+      landingReferenceEnd:run+a.upperLandingDepth,
+      lowerEdgeAtStart:q(lowerAtStart),lowerEdgeAtTop:q(lowerAtTop),
+      stockNormalDepth:a.depth,stockEnvelopeVertices:envelopeVertices,
+      stringerEnvelopeRows,envelopeAreaSqIn,minThroatFromVertices,
+      supportReferences,lowerSupportRun:a.lowerSupportRun,
+      upperSupportRun:a.upperSupportRun});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
