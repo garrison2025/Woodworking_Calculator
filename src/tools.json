@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Wall framing calculator for King/Jack studs, headers, sills and cripples, plus grouped lumber takeoff, stock cutting plans, SVG and CSV.",
+      "desc": "Plan framing studs, headers, sills and cripples with SVG layout, cut list, lumber purchasing estimate and editable quote-based cost.",
       "inputs": [
         {
           "key": "length",
@@ -168,6 +168,24 @@
           "kind": "D"
         },
         {
+          "key": "studUnitPrice",
+          "label": "Stud stock price per purchased stick (0 = quote needed)",
+          "value": 0,
+          "kind": "C"
+        },
+        {
+          "key": "headerUnitPrice",
+          "label": "Header stock price per purchased stick (0 = quote needed)",
+          "value": 0,
+          "kind": "C"
+        },
+        {
+          "key": "sillUnitPrice",
+          "label": "Sill stock price per purchased stick (0 = quote needed)",
+          "value": 0,
+          "kind": "C"
+        },
+        {
           "key": "openingStart",
           "label": "Opening start",
           "value": 32,
@@ -240,9 +258,9 @@
           "kind": "L"
         }
       ],
-      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces. Nominal first-fit decreasing groups cut pieces by Stud, Header or Sill stock type, packs full pieces without splices, charges kerf between consecutive cuts on a stick, and reports planned sticks/offcuts and separately rounded purchase allowance per stock group. It is an estimate, not proven minimum waste.",
+      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces. Nominal first-fit decreasing groups cut pieces by Stud, Header or Sill stock type, packs full pieces without splices, charges kerf between consecutive cuts on a stick, and reports planned sticks/offcuts and separately rounded purchase allowance per stock group. It is an estimate, not proven minimum waste. The quote-based material estimate multiplies each material family's purchased sticks (including reserve) by the user-entered price per stick, with planned and reserve costs separated. Zero means price not supplied; no total purchase price is claimed until each used material family has a quote.",
       "example": "120 in between end centers, 96 in gross wall, 16 in OC, 1.5 in studs, 1.5 in bottom plate, 3 in top plates, 32–68 in door opening top 80 in, 5.5 in header depth: six regular studs, four King/Jack, one 39 in header and two 7.5 in upper cripples; 13 listed pieces (plates not in cut list).",
-      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts. Stock cutting is a deterministic first-fit estimate, not a certified globally optimal nesting algorithm. Profiles are deliberately separate (Stud/Header/Sill); do not combine them without verifying cross sections. No splices, trimming loss, defective boards, or cost/pricing assumptions. Rounding of fractions is display-only: CSV retains numeric dimensions.",
+      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts. Stock cutting is a deterministic first-fit estimate, not a certified globally optimal nesting algorithm. Profiles are deliberately separate (Stud/Header/Sill); do not combine them without verifying cross sections. No splices, trimming loss, defective boards, or cost/pricing assumptions. Rounding of fractions is display-only: CSV retains numeric dimensions. Cost inputs are not market prices and contain no automatic currency exchange, tax, delivery, labor, permit or hardware charges. Currency selection labels the entered quotes only; changing denomination never converts values. A quoted total is a material-only subtotal based on the chosen stock family configuration, not a job estimate.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -264,6 +282,14 @@
         {
           "heading": "Fractional-inch worksheet vs numeric CSV",
           "text": "For inches, the measurement table shows approximate 1/16 or 1/32 inch fractions beside the precise decimal cut length. Print/PDF includes the same fractions; downloadable CSV cut lists and stock plan retain precise numeric lengths in the selected unit. Always measure actual lumber and recheck saw kerf."
+        },
+        {
+          "heading": "Enter supplier quotes rather than simulated market prices",
+          "text": "Set a per-stick price for each stock family that actually has cuts. Prices are entered in the currency selected on the page (USD by default). A price of zero means no quote, not free material. The worksheet will withhold a complete purchase total until all used groups are priced. Changing the currency dropdown changes the denomination label, not the numbers or exchange rates."
+        },
+        {
+          "heading": "Printable purchasing ticket and cost breakdown",
+          "text": "The summary separates planned sticks, extra reserve sticks, their costs and the user-entered stock price by profile. The print ticket lists the actual buy quantity and source length for each used material group, including the 'quote needed' state; a numeric CSV export supports spreadsheet budgeting. Verify external costs such as tax, delivery, waste from defects, structural framing and fasteners separately."
         }
       ]
     },
