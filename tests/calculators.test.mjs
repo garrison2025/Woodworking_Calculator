@@ -1952,3 +1952,40 @@ test("Shelf support drilling holes remain conserved over several valid interior 
     }
   }
 });
+
+test("P1 brace setbacks use diagonal station coordinates, not X/Y face setbacks",()=>{
+  const r=compute("diagonal-brace-calculator",{width:36,height:48,setback:5});
+  assert.equal(r.shape,"brace");
+  near(value(r,"Full centerline"),60);
+  near(value(r,"After end setbacks"),50);
+  near(value(r,"Brace angle"),Math.atan2(48,36)*180/Math.PI,1e-9);
+  near(value(r,"Cut horizontal projection"),30);
+  near(value(r,"Cut vertical projection"),40);
+  assert.deepEqual(r.rows,[
+    {item:"Cut start",stationAlongFullLine:5,horizontalX:3,verticalY:4},
+    {item:"Cut finish",stationAlongFullLine:55,horizontalX:33,verticalY:44}
+  ]);
+  assert.deepEqual(r.braceCutRows,r.rows);
+  near(Math.hypot(r.rows[1].horizontalX-r.rows[0].horizontalX,
+    r.rows[1].verticalY-r.rows[0].verticalY),value(r,"After end setbacks"));
+});
+test("P1 brace keeps exact zero-setback endpoints and rejects degenerate remaining cuts",()=>{
+  const a=compute("diagonal-brace-calculator",{width:3,height:4,setback:0});
+  assert.deepEqual(a.rows.map(p=>[p.horizontalX,p.verticalY]),[[0,0],[3,4]]);
+  near(value(a,"After end setbacks"),5);
+  for(const setback of [2.5,2.50001,2.49999999,-1]){
+    assert.equal(safeCompute("diagonal-brace-calculator",{width:3,height:4,setback}).ok,false);
+  }
+});
+test("P1 brace coordinate projections conserve length on varied slope and unit cases",()=>{
+  for(const [width,height,setback] of [[36,48,5],[48,36,2],[10,10,1],[100,1,3],[1,100,3]]){
+    const r=compute("diagonal-brace-calculator",{width,height,setback});
+    const start=r.rows[0],finish=r.rows[1],full=Math.hypot(width,height);
+    near(start.horizontalX,setback*width/full,1e-7);
+    near(start.verticalY,setback*height/full,1e-7);
+    near(finish.horizontalX,(full-setback)*width/full,1e-7);
+    near(finish.verticalY,(full-setback)*height/full,1e-7);
+    near(Math.hypot(finish.horizontalX-start.horizontalX,
+      finish.verticalY-start.verticalY),full-2*setback,1e-7);
+  }
+});
