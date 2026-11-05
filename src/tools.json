@@ -965,7 +965,7 @@
       "keyword": "deck estimator",
       "volume": 3600,
       "kd": 15,
-      "desc": "Rectangular deck board rows, final rip, joist-center butt seams, conservative supported stock segments and printable geometry",
+      "desc": "Deck boards and joist-reference cutting layout with conservative stock quantities, counted fastening contacts, user-priced packs and purchase totals.",
       "inputs": [
         {
           "key": "width",
@@ -1008,11 +1008,35 @@
           "label": "Waste percentage",
           "value": 10,
           "kind": "D"
+        },
+        {
+          "key": "boardUnitPrice",
+          "label": "Purchased decking board unit price (0 = unquoted)",
+          "value": 0,
+          "kind": "C"
+        },
+        {
+          "key": "fastenersPerContact",
+          "label": "Fasteners per piece / joist contact (0 = exclude)",
+          "value": 2,
+          "kind": "N"
+        },
+        {
+          "key": "fastenerPackSize",
+          "label": "Fasteners per supplier pack",
+          "value": 100,
+          "kind": "N"
+        },
+        {
+          "key": "fastenerPackPrice",
+          "label": "Fastener pack price (0 = unquoted)",
+          "value": 0,
+          "kind": "C"
         }
       ],
-      "formula": "Rows = ceil((coverage+gap)/(board face width+gap)); final rip = coverage−(rows−1)×(face width+gap). With given joist center references (0, OC, …, end), each board segment ends at the farthest joist center reachable within purchased stock length, unless the final deck end is reachable. Every supported piece consumes one stock board; no offcut reuse or seam staggering.",
+      "formula": "Rows = ceil((coverage+gap)/(board face width+gap)); final rip = coverage−(rows−1)×(face width+gap). With given joist center references (0, OC, …, end), each board segment ends at the farthest joist center reachable within purchased stock length, unless the final deck end is reachable. Every supported piece consumes one stock board; no offcut reuse or seam staggering. Fastening contact count = decking rows × (joist references + number of butt seams per row), counting each of the TWO stock pieces at a shared butt seam separately. Requested fasteners = fastening contacts × user-entered fasteners per contact; supplier packs = ceil(requested fasteners / supplier pack size). Decking purchase cost = (stock boards with allowance) × per-board quote; fastener purchase cost = packs × pack quote. A 0 price means NOT QUOTED, never free stock. Costs only total once every needed component has a quote.",
       "example": "For a 120 × 144 in deck using 5.5 in boards and 0.125 in gaps, 16 in joist centers and 100 in stock: 22 rows with a 1.875 in final rip each receive a 96 in and 48 in segment, joined at the 96 in joist center reference. This gives 44 stock boards before allowance, not a 100 in/44 in unsupported joint.",
-      "limit": "Rectangular straight-deck reference geometry only. Segment butt joints are constrained to entered joist CENTERLINES, not validated bearing widths, joint reinforcement, double-joist blocking or fastening. All rows use identical, UNSTAGGERED joints as a conservative reference, not an approved construction pattern. No offcut reuse, structural span approval, load rating, end gap, board defects, ledger design or footing calculations.",
+      "limit": "Rectangular straight-deck reference geometry only. Segment butt joints are constrained to entered joist CENTERLINES, not validated bearing widths, joint reinforcement, double-joist blocking or fastening. All rows use identical, UNSTAGGERED joints as a conservative reference, not an approved construction pattern. No offcut reuse, structural span approval, load rating, end gap, board defects, ledger design or footing calculations. Fastener quantities are a user-controlled arithmetic planning assumption, not a prescribed fastening pattern or building-code recommendation. Each butt seam creates two piece-to-joist contacts on the same single joist centerline; this does not verify that the joist can actually bear both ends. The board segment estimate does not charge saw kerf, trimming, defects, delivery or tax; no joist lumber purchasing estimate is made. Currency is a label only with no automatic exchange conversion.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1026,6 +1050,18 @@
         {
           "heading": "Layout reference, NOT a fastening or stagger plan",
           "text": "The reference repeats the same seams across all rows and does not stagger joints. A single joist centerline does not establish sufficient edge bearing for two board ends; joist width, double-joist/blocking support, end gaps, fastening, local rules and safe maximum joist span must be reviewed separately. Counts are conservative without offcut reuse."
+        },
+        {
+          "heading": "How fastening contacts are counted at butt seams",
+          "text": "At each entered joist-center reference, every independent decking piece touching that line is counted once. A row with no butt seams has one contact per joist line. A single proposed butt seam causes TWO separate pieces to contact that same joist reference, so it adds one more contact per row. Multiply the resulting contacts by your own assumed number of fasteners per piece/contact, or enter zero to exclude hardware."
+        },
+        {
+          "heading": "Build a supplier-priced board and fastener order",
+          "text": "Enter your actual price per purchased decking stock board and per fastener pack, along with fasteners per contact and pack size. The calculator includes separately rounded board reserve stock, whole-pack hardware purchases and partial-price warnings. Enter 0 for an unavailable quote rather than claiming a free material. The price currency selector only changes the displayed label; it does not convert the entered values."
+        },
+        {
+          "heading": "What the materials budget intentionally excludes",
+          "text": "This is a nonstructural reference purchase estimate for decking pieces and selected fastener packs only. The joist lines are user-entered CENTER references, not designed joists; their width, bearing, spans, blocking, hangers, structural attachments, end trimming and extra fastening at supported edges are unverified. Physically validate the proposed joints, real lumber lengths and manufacturer installation instructions before purchasing."
         }
       ]
     },
