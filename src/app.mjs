@@ -164,24 +164,37 @@ if(slug){
         content+=svgText(left,338,"END CENTERS 0 TO "+fmt(span),"tick-label");
       }else content+=svgText(left,319,"0 "+unit,"dim-label")+svgText(right-96,319,fmt(span),"dim-label");
     }else if(data.shape==="rafter"){
-      // Side-elevation reference, deliberately not a paper-scale cutting template.
-      // Long edge and cutout are schematic; the numeric schedule comes from the geometry engine.
-      const total=Math.max(1,data.run+data.overhang),bearX=x(data.run);
-      const topAt=px=>102+116*(px-left)/W;
-      const bottomAt=px=>topAt(px)+37;
-      const startX=left,endX=right;
-      content+='<path d="M'+startX+' '+topAt(startX)+' L'+endX+' '+topAt(endX)+' L'+endX+' '+bottomAt(endX)+' L'+startX+' '+bottomAt(startX)+' Z" fill="#dfc4a0" stroke="#8b6843" stroke-width="2"/>';
-      const notchW=Math.min(Math.max(9,data.seat/total*W),bearX-left);
-      const notchH=Math.max(3,Math.min(28,37*data.notchNormal/data.stockDepth));
-      const atX=bearX-notchW;
-      const topSeat=bottomAt(atX)-notchH;
-      content+='<path d="M'+atX+' '+bottomAt(atX)+' L'+atX+' '+topSeat+' L'+bearX+' '+topSeat+' L'+bearX+' '+bottomAt(bearX)+' Z" fill="#fcfbf8" stroke="#a05c33" stroke-width="2.4"/>';
-      content+='<line x1="'+bearX+'" y1="54" x2="'+bearX+'" y2="274" stroke="#d09b58" stroke-dasharray="5 5" stroke-width="1.8"/>';
-      content+=svgText(left+25,73,"RIDGE REFERENCE","dim-label");
-      content+=svgText(Math.max(left+290,bearX-96),67,"BEARING","dim-label");
-      content+=svgText(left+24,291,"SEAT "+fmt(data.seat),"dim-label");
-      content+=svgText(left+24,318,"NORMAL NOTCH "+fmt(data.notchNormal),"dim-label");
-      content+=svgText(right-183,318,"EAVE "+fmt(data.overhang),"dim-label");
+      // Physically proportional side-elevation of an un-notched rafter stock
+      // strip. Cut marks are REFERENCES, not a fictional birdsmouth silhouette.
+      const slope=data.roofSlope,total=data.totalHorizontalRun,
+        rise=data.totalRise,depth=data.stockDepth,angle=Math.atan(slope);
+      const offsetX=depth*Math.sin(angle),offsetY=depth*Math.cos(angle);
+      const scale=Math.min(640/Math.max(1e-8,total+offsetX),154/Math.max(1e-8,rise+offsetY));
+      const X=v=>120+(v+offsetX)*scale,Y=v=>87+v*scale;
+      const x0=X(0),y0=Y(0),xt=X(total),yt=Y(rise);
+      const low0x=X(-offsetX),low0y=Y(offsetY);
+      const lowTx=X(total-offsetX),lowTy=Y(rise+offsetY);
+      const points=[[x0,y0],[xt,yt],[lowTx,lowTy],[low0x,low0y]]
+        .map(p=>p.join(",")).join(" ");
+      content+='<polygon class="rafter-stock-section" points="'+points+'" fill="#e3c9a5" stroke="#876a48" stroke-width="1.8"><title>'+esc("Proportional reference stock depth "+fmt(depth)+" measured normal to "+trim(data.pitch,3)+":12 roof slope; NOT an actual birdsmouth cut")+'</title></polygon>';
+      content+='<line class="rafter-top-reference" x1="'+x0+'" y1="'+y0+'" x2="'+xt+'" y2="'+yt+'" stroke="#236950" stroke-width="2.3"/>';
+      const bearing=data.referencePoints[1],tail=data.referencePoints[2];
+      const xb=X(bearing.horizontalRun),yb=Y(bearing.verticalDrop);
+      content+='<line class="rafter-bearing" x1="'+xb+'" y1="69" x2="'+xb+'" y2="263" stroke="#bd8051" stroke-dasharray="5 5" stroke-width="1.4"><title>'+esc("Bearing horizontal reference "+fmt(bearing.horizontalRun))+'</title></line>';
+      content+='<circle class="rafter-bearing-point" cx="'+xb+'" cy="'+yb+'" r="3.1" fill="#236950"/>';
+      content+='<circle class="rafter-tail-point" cx="'+X(tail.horizontalRun)+'" cy="'+Y(tail.verticalDrop)+'" r="3.1" fill="#236950"/>';
+      // Horizontal seat guide starts where nominal lower stock edge
+      // intersects the reference bearing plane. Not a real cut silhouette.
+      const lowerY=worldX=>slope*worldX+depth/Math.cos(angle);
+      const seatX=X(data.run-data.seat),seatY=Y(lowerY(data.run-data.seat));
+      const bearingBottomY=Y(lowerY(data.run));
+      content+='<line class="rafter-seat-reference" x1="'+seatX+'" y1="'+seatY+'" x2="'+xb+'" y2="'+seatY+'" stroke="#a05c33" stroke-width="2.3" stroke-dasharray="5 3"><title>'+esc("Horizontal seat reference "+fmt(data.seat)+"; vertical drop "+fmt(data.seat*slope)+"; NOT an actual saw-cut profile")+'</title></line>';
+      if(data.notchNormal>1e-8)content+='<line class="rafter-notional-notch-depth" x1="'+xb+'" y1="'+seatY+'" x2="'+xb+'" y2="'+bearingBottomY+'" stroke="#a05c33" stroke-width="1.2" stroke-dasharray="2 2"/>';
+      content+=svgText(105,43,"COMMON RAFTER · PROPORTIONAL STOCK SIDE REFERENCE","dim-label");
+      content+=svgText(105,65,"RIDGE FACE → BEARING → TAIL; NOT A CUTTING TEMPLATE","tick-label");
+      content+=svgText(105,292,"ADJUSTED RUN "+fmt(data.run),"dim-label");
+      content+=svgText(105,321,"SEAT "+fmt(data.seat)+" / NORMAL PENETRATION "+fmt(data.notchNormal),"tick-label");
+      content+=svgText(553,321,"TAIL RUN "+fmt(data.overhang),"tick-label");
     }else if(data.shape==="stringer"){
       // Actual engine profile vertices: one vertical riser per row and one
       // horizontal tread between successive risers. Preserve aspect ratio.
@@ -217,11 +230,41 @@ if(slug){
       content+=svgText(x1+9,Math.min(279,under1+11),"RAFTER UNDERSIDE","tick-label");
       content+=svgText(x0,300,"RUN "+fmt(data.projection)+" / FALL "+fmt(data.roofDrop),"dim-label");
       content+=svgText(x0,326,"FINISHED REFERENCE DROP "+fmt(data.soffitDatum),"dim-label");
+    }else if(data.shape==="hip-line"){
+      // Two true-scale-within-view triangles. The PLAN and ELEVATION views
+      // have independent viewport fit scales; neither substitutes the
+      // common-face pitch for the shallower hip elevation angle.
+      const xRun=data.hipRunX,yRun=data.hipRunY,plan=data.run,rise=data.rise;
+      const ps=Math.min(310/Math.max(1e-8,xRun),146/Math.max(1e-8,yRun));
+      const px0=100,py0=250,px1=px0+xRun*ps,py1=py0-yRun*ps;
+      content+='<path class="hip-plan-triangle" d="M'+px0+' '+py0+' L'+px1+' '+py0+' L'+px1+' '+py1+' Z" fill="#e3eee5" stroke="#527a68" stroke-width="1.3"/>';
+      content+='<line class="hip-plan-diagonal" x1="'+px0+'" y1="'+py0+'" x2="'+px1+'" y2="'+py1+'" stroke="#b77a43" stroke-width="2.6"><title>'+esc("Plan diagonal "+fmt(plan)+" from along "+fmt(xRun)+" and across "+fmt(yRun))+'</title></line>';
+      const es=Math.min(310/Math.max(1e-8,plan),146/Math.max(1e-8,rise));
+      const ex0=500,ey0=250,ex1=ex0+plan*es,ey1=ey0-rise*es;
+      content+='<path class="hip-elevation-triangle" d="M'+ex0+' '+ey0+' L'+ex1+' '+ey0+' L'+ex1+' '+ey1+' Z" fill="#e7ece7" stroke="#527a68" stroke-width="1.3"/>';
+      content+='<line class="hip-elevation-line" x1="'+ex0+'" y1="'+ey0+'" x2="'+ex1+'" y2="'+ey1+'" stroke="#b77a43" stroke-width="2.6"><title>'+esc("3D hip line "+fmt(data.hipLength)+", slope rise "+fmt(rise)+" over PLAN diagonal "+fmt(plan))+'</title></line>';
+      content+=svgText(102,61,"PLAN VIEW · X / Y","dim-label");
+      content+=svgText(102,82,"ALONG "+fmt(xRun)+" · ACROSS "+fmt(yRun),"tick-label");
+      content+=svgText(100,283,"PLAN DIAGONAL "+fmt(plan),"tick-label");
+      content+=svgText(100,304,"PLAN ANGLE "+trim(data.planAngle,3)+"°","tick-label");
+      content+=svgText(500,61,"HIP ELEVATION · DIAGONAL / RISE","dim-label");
+      content+=svgText(500,82,"RISE "+fmt(rise)+" · ROOF FACE "+trim(data.facePitch,3)+":12","tick-label");
+      content+=svgText(500,283,"TRUE HIP "+fmt(data.hipLength),"tick-label");
+      content+=svgText(500,304,"HIP ELEVATION "+trim(data.elevationAngle,3)+"°","tick-label");
     }else if(data.shape==="triangle"){
-      const run=data.run||span,rise=data.rise||0,hh=Math.max(10,Math.abs(rise));
-      const ry=base-Math.min(210,Math.abs(rise)/Math.max(run,hh)*W*.52);
-      content+='<polygon points="'+left+','+base+' '+right+','+base+' '+right+','+ry+'" fill="#e5ece5" stroke="#356c58" stroke-width="2"/><path d="M'+(right-19)+' '+base+' L'+(right-19)+' '+(base-19)+' L'+right+' '+(base-19)+'" fill="none" stroke="#8d987d"/>';
-      content+=svgText(left+W/2,base+30,fmt(run),"dim-label")+svgText(right-73,(base+ry)/2,fmt(rise),"dim-label")+svgText(left+W/2-15,(base+ry)/2-18,fmt(Math.hypot(run,rise)),"dim-label");
+      // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
+      // previous height-exaggerated sketch which changed the shown pitch.
+      const run=data.run||span,rise=Math.max(0,data.rise??0);
+      const scale=Math.min(610/Math.max(1e-8,run),170/Math.max(1e-8,rise));
+      const xx0=(900-run*scale)/2,yy0=260;
+      const xx1=xx0+run*scale,yy1=yy0-rise*scale;
+      content+='<path class="roof-pitch-triangle" d="M'+xx0+' '+yy0+' L'+xx1+' '+yy0+' L'+xx1+' '+yy1+' Z" fill="#e5ece5" stroke="#356c58" stroke-width="2"/>';
+      content+='<line class="roof-pitch-slope" x1="'+xx0+'" y1="'+yy0+'" x2="'+xx1+'" y2="'+yy1+'" stroke="#b77a43" stroke-width="2.8"/>';
+      content+=svgText(100,60,"ROOF FACE · RISE PER 12 HORIZONTAL","dim-label");
+      content+=svgText(100,84,"TRUE PROPORTIONAL SLOPE TRIANGLE","tick-label");
+      content+=svgText(xx0,288,"RUN "+fmt(run),"dim-label");
+      content+=svgText(xx0,310,"RISE "+fmt(rise),"tick-label");
+      content+=svgText(540,310,"SLOPE LINE "+fmt(data.roofLine),"tick-label");
     }else if(data.shape==="stairs"){
       const n=data.risers||2,stepW=W/Math.max(1,n-1),stepH=H/Math.max(2,n);
       let d="M"+left+" "+base;
