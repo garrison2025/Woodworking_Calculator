@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check real generated HTML, internal links and preview indexing conditions."""
+import html
 import html.parser
 import csv
 import json
@@ -88,7 +89,7 @@ for p in pages:
         for section in guidance:
             if len(section["heading"].strip())<10 or len(section["text"].strip())<60:
                 errors.append(f"{u}: guidance is too thin to explain this calculator")
-            if section["heading"].replace("&","&amp;") not in body:
+            if html.escape(section["heading"],quote=True) not in body:
                 errors.append(f"{u}: practical guidance heading was not prerendered")
 
     if any(t["slug"]==u.strip("/") for t in active):
