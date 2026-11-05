@@ -1431,7 +1431,7 @@
       "keyword": "shelf spacing calculator",
       "volume": 140,
       "kd": 5,
-      "desc": "Equalize shelf clearances between reserved top/bottom minimums and output each shelf's bottom/top face coordinates",
+      "desc": "Equalize shelf openings, report each shelf face, and optionally produce verified four-pin support-hole X/Y coordinates for both cabinet side panels.",
       "inputs": [
         {
           "key": "height",
@@ -1462,11 +1462,41 @@
           "label": "Additional minimum bottom clearance",
           "value": 0,
           "kind": "L"
+        },
+        {
+          "key": "caseDepth",
+          "label": "Interior cabinet depth (front to back)",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "frontPinInset",
+          "label": "Front support-hole center inset",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "backPinInset",
+          "label": "Back support-hole center inset",
+          "value": 1.5,
+          "kind": "L"
+        },
+        {
+          "key": "pinCenterDrop",
+          "label": "Support-hole center drop below shelf underside",
+          "value": 0.25,
+          "kind": "L"
+        },
+        {
+          "key": "pinHoleDiameter",
+          "label": "Support pin hole diameter (0 = no drilling grid)",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "Free height = interior height − shelves×thickness − top reserve − bottom reserve. Shared base gap = free height/(shelves+1). Actual bottom opening = bottom reserve+base gap; actual top opening = top reserve+base gap; all between-shelf gaps = base gap.",
-      "example": "A 40 in interior with three 1 in shelves and 2 in extra bottom and 1 in extra top reserves leaves a shared 8.5 in base gap; actual bottom clear opening is 10.5 in, actual top clear opening 9.5 in.",
-      "limit": "Top and bottom inputs are extra minimum-reserve clearances, not the final visible openings. Finished shelf faces and clear gaps follow the supplied interior height and actual material thickness. No shelf-load, fixing, sag or material tolerance assessment.",
+      "formula": "Free height = interior height − shelves×thickness − top reserve − bottom reserve. Shared base gap = free height/(shelves+1). Actual bottom opening = bottom reserve+base gap; actual top opening = top reserve+base gap; all between-shelf gaps = base gap. Optional drilling model (enabled when pin-hole diameter >0): per shelf pin-center Y = shelf bottom elevation − measured hole-center drop. On EACH cabinet side panel, X positions from the INSIDE FRONT edge = front-center inset and cabinet depth − back-center inset. Repeat front/back positions on both left and right inside side panels (4 holes per shelf). Required clear wood at each panel edge is center distance − hole radius; hole centers must be below the shelf underside and above any prior shelf top. Both X and Y distances are referenced to the same inside-front/bottom corner of each panel.",
+      "example": "A 40 in interior with three 1 in shelves and 2 in extra bottom and 1 in extra top reserves leaves a shared 8.5 in base gap; actual bottom clear opening is 10.5 in, actual top clear opening 9.5 in. With 40 in inside height, 3 shelves of 1 in thickness, 2 in extra bottom and 1 in extra top reserves: shelf bottoms are 10.5, 20, 29.5 in. A 12 in deep cabinet, 1.5 in front/back insets, 0.25 in hole-center drop and 0.19685 in (approx 5 mm) pin holes yields X centers 1.5 and 10.5 in, Y centers 10.25, 19.75 and 29.25 in. Repeat each pair on both left and right panels for 12 holes total.",
+      "limit": "Top and bottom inputs are extra minimum-reserve clearances, not the final visible openings. Finished shelf faces and clear gaps follow the supplied interior height and actual material thickness. No shelf-load, fixing, sag or material tolerance assessment. The optional drilled support pattern is OFF until a positive pin-hole diameter is entered, retaining legacy shelf spacing and cut-list exports. Coordinates refer to a reference hole center on each INSIDE side panel, with FRONT at X=0 and cabinet bottom at Y=0; left/right panels share these FRONT-referenced coordinates, not a blind same-edge mirror. Drill-hole diameter and measured drop are NOT supplied by hardware manufacturers: verify the actual shelf pin shape, bearing height, countersinking, plate thickness, side-panel dimensions, shelf clearance and drilling depth before fabrication. The SVG is proportionally scaled, NOT a 1:1 drilling jig or structural attachment design.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1480,6 +1510,18 @@
         {
           "heading": "Loads and mounting are not sized",
           "text": "This is a geometry-only shelf spacing calculator. It does not recommend material spans, deflection limits, screw spacing, load ratings, wall anchors or fastening methods."
+        },
+        {
+          "heading": "Optional four-hole-per-shelf support drilling",
+          "text": "Enter actual cabinet interior depth, measured front and back hole-center insets, vertical pin-hole center drop below each shelf underside, and the intended drill diameter. A zero diameter disables all support holes while preserving the original shelf-position worksheet. A positive diameter generates exactly two front/back center holes per shelf on each of the two side panels; both side panels use X from the inside FRONT edge and Y from the cabinet's inside bottom."
+        },
+        {
+          "heading": "Verify the shelf underside versus hardware center",
+          "text": "A metal pin's hole-center elevation depends on the real pin/support head design, not on the shelf thickness alone. Measure the vertical difference between shelf underside and required drilling center, then enter that as the drop. The calculator requires every drilled circle to fit entirely below its associated shelf underside, above the previous shelf's top surface, and inside the left/right panel's front/back boundaries. This geometric validation is not proof of the pin load rating."
+        },
+        {
+          "heading": "Use the separate side-panel drill plan and CSV",
+          "text": "The side-panel plan plots depth along X and height along Y on one physical drawing scale, then duplicates the exact front/back coordinates for Left and Right panels. The table exports each shelf number, panel name, front/back position and hole X/Y center and circular edges. Exporting, zooming and printing this reference does not certify the printer's scale, face drilling depth, panel orientation or manufacturer mounting instructions."
         }
       ]
     },
