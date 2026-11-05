@@ -24,11 +24,18 @@ class Checker(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()
         self.title=False;self.title_text="";self.h1=0;self.robots=[];self.links=[];self.descriptions=[];self.canon=[];self.forms=0
+        self.input_ids=[];self.label_targets=set();self.field_note_ids=set()
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
         if tag=="title":self.title=True
         if tag=="h1":self.h1+=1
         if tag=="form":self.forms+=1
+        if tag in ("input","select") and a.get("id","").startswith("f-"):
+            self.input_ids.append(a["id"])
+        if tag=="label" and a.get("for"):
+            self.label_targets.add(a["for"])
+        if a.get("id","").startswith("field-note-"):
+            self.field_note_ids.add(a["id"])
         if tag=="meta" and a.get("name")=="robots":self.robots.append(a.get("content",""))
         if tag=="meta" and a.get("name")=="description":self.descriptions.append(a.get("content",""))
         if tag=="link" and a.get("rel")=="canonical":self.canon.append(a.get("href",""))
@@ -60,7 +67,30 @@ for p in pages:
         errors.append(f"{u}: geometry formula not evaluated")
 
     if c.canon:errors.append(f"{u}: preview must not claim a custom-domain canonical")
-    if any(t["slug"]==u.strip("/") for t in active) and c.forms!=1:errors.append(f"{u}: calculator form absent")
+    page_tool=next((t for t in active if t["slug"]==u.strip("/")),None)
+    if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
+    if page_tool:
+        expected={"f-"+field["key"] for field in page_tool["inputs"]}
+        if len(c.input_ids)!=len(set(c.input_ids)):
+            errors.append(f"{u}: duplicated calculator field IDs")
+        if set(c.input_ids)!=expected:
+            errors.append(f"{u}: generated input fields differ from manifest")
+        for field_id in expected:
+            if field_id not in c.label_targets:
+                errors.append(f"{u}: input lacks a matching visible label: {field_id}")
+            if "field-note-"+field_id[2:] not in c.field_note_ids:
+                errors.append(f"{u}: input lacks its accessible help note: {field_id}")
+        guidance=page_tool.get("guidance",[])
+        if len(guidance)<2:
+            errors.append(f"{u}: fewer than two distinct practical guidance sections")
+        if len({g["heading"] for g in guidance})!=len(guidance):
+            errors.append(f"{u}: guidance headings are duplicated")
+        for section in guidance:
+            if len(section["heading"].strip())<10 or len(section["text"].strip())<60:
+                errors.append(f"{u}: guidance is too thin to explain this calculator")
+            if section["heading"].replace("&","&amp;") not in body:
+                errors.append(f"{u}: practical guidance heading was not prerendered")
+
     if any(t["slug"]==u.strip("/") for t in active):
         for marker in ('id="print-calibration"', 'calibration-100mm', 'calibration-1in', 'NOT a 1:1 template'):
             if marker not in body:errors.append(f"{u}: missing physical print scale caveat or calibration marker {marker}")
@@ -78,8 +108,12 @@ titles=[]
 for p in pages:
     c=Checker();c.feed(p.read_text(encoding="utf8"));titles.append(c.title_text)
 if len(titles)!=len(set(titles)):errors.append("Duplicate page titles")
+descriptions=[]
+for p in pages:
+    c=Checker();c.feed(p.read_text(encoding="utf8"));descriptions.extend(c.descriptions)
+if len(descriptions)!=len(set(descriptions)):errors.append("Duplicate page descriptions")
 print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;",len(hold),"P2 held;",len(research_rows),"keyword rows validated")
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
-print("PASS: static structure, links, metadata, preview noindex, P2 hold")
+print("PASS: static structure, all 26 field labels/guidance, links, metadata, preview noindex, P2 hold")
