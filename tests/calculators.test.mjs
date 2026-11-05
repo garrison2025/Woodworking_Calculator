@@ -831,3 +831,92 @@ test("Header and cripple geometry conserves vertical free space under zero-heigh
   assert.equal(value(r,"Upper cripples"),0);
   assert.ok(r.rows.every(x=>x.cutLength>0));
 });
+
+test("Framing stock takeoff conserves every member, kerf and remaining stick length",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator");
+  const r=compute("framing-calculator",defaults(t));
+  near(value(r,"Installed member linear length"),943/12,1e-7);
+  near(value(r,"Planned stock sticks (FFD estimate)"),11);
+  near(value(r,"Purchase sticks incl. allowance"),11);
+  near(value(r,"Planned stock offcut length"),112.75/12,1e-7);
+  near(value(r,"Planned saw kerf loss"),0.25);
+  assert.equal(r.stockPlan.length,11);
+  assert.equal(r.stockCuts.length,r.rows.length);
+  assert.equal(r.materialSummary.length,3);
+  const [stud,header,sill]=r.materialSummary;
+  assert.deepEqual([stud.stockGroup,stud.pieces,stud.cutLength,stud.plannedSticks,stud.purchaseSticks],
+    ["Stud",12,904,10,10]);
+  assert.deepEqual([header.stockGroup,header.pieces,header.cutLength,header.plannedSticks],
+    ["Header",1,39,1]);
+  assert.deepEqual([sill.stockGroup,sill.pieces,sill.plannedSticks,sill.purchaseSticks],
+    ["Sill",0,0,0,0]);
+  assert.deepEqual(r.stockCuts.map(x=>x.item).sort(),r.rows.map(x=>x.item).sort());
+  for(const bar of r.stockPlan){
+    assert.ok(bar.cuts.length>0);
+    near(bar.cuts.reduce((s,p)=>s+p.cutLength,0),bar.piecesLength,1e-7);
+    near(bar.piecesLength+bar.kerfLoss+bar.offcutLength,bar.stockLength,1e-7);
+    near(bar.kerfLoss,(bar.cuts.length-1)*.125,1e-7);
+    assert.ok(bar.offcutLength>=0);
+  }
+  const stockIds=new Set(r.stockPlan.map(b=>b.stockId));
+  assert.equal(stockIds.size,r.stockPlan.length);
+  assert.ok(r.stockCuts.every(row=>stockIds.has(row.stockId)));
+});
+
+test("Kerf is charged between adjacent cuts, changing a borderline exact packing",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const noKerf=compute("framing-calculator",{...base,studStockLength:183,stockKerf:0});
+  const withKerf=compute("framing-calculator",{...base,studStockLength:183,stockKerf:0.125});
+  assert.equal(noKerf.materialSummary[0].plannedSticks,5);
+  assert.equal(withKerf.materialSummary[0].plannedSticks,9);
+  assert.equal(noKerf.materialSummary[0].kerfLoss,0);
+  assert.ok(withKerf.materialSummary[0].kerfLoss>0);
+  assert.ok(noKerf.stockPlan.filter(b=>b.stockGroup==="Stud").some(b=>b.cuts.length===2&&
+    b.cuts.every(p=>p.cutLength===91.5)));
+  assert.ok(withKerf.stockPlan.filter(b=>b.stockGroup==="Stud").every(b=>
+    !(b.cuts.length===2&&b.cuts.every(p=>p.cutLength===91.5))));
+});
+
+test("Framing allowance adds whole purchase sticks per used material family only",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  const r=compute("framing-calculator",{...base,stockWaste:10});
+  assert.deepEqual(r.materialSummary.map(x=>[x.stockGroup,x.plannedSticks,x.purchaseSticks,x.allowanceSticks]),
+    [["Stud",10,11,1],["Header",1,2,1],["Sill",0,0,0]]);
+  near(value(r,"Purchase sticks incl. allowance"),13);
+  near(value(r,"Planned stock sticks (FFD estimate)"),11);
+  assert.equal(r.stockPlan.length,11,"Reserve sticks must not masquerade as loaded cuts");
+});
+
+test("Different stock profiles never cross-pack, including window sill stock",()=>{
+  const a={length:160,spacing:16,width:1.5,wallHeight:108,bottomPlate:1.5,topPlate:3,
+    headerDepth:5.5,sillThickness:1.5,openingStart:24,openingWidth:24,openingHeight:80,
+    openingSill:0,opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34,
+    studStockLength:120,headerStockLength:36,sillStockLength:25,stockKerf:.125,stockWaste:0};
+  const r=compute("framing-calculator",a);
+  assert.deepEqual(r.materialSummary.map(x=>x.stockGroup),["Stud","Header","Sill"]);
+  const groups={Stud:["Regular","King","Jack","Upper cripple","Lower cripple"],
+    Header:["Header"],Sill:["Sill"]};
+  for(const row of r.stockCuts)
+    assert.ok(groups[row.stockGroup].includes(row.type),
+      "Cross-profile cut: "+row.stockGroup+" / "+row.type);
+  for(const bar of r.stockPlan)assert.ok(bar.usedLength<=bar.stockLength+1e-8);
+  assert.equal(r.materialSummary.find(x=>x.stockGroup==="Header").pieces,2);
+  assert.equal(r.materialSummary.find(x=>x.stockGroup==="Sill").pieces,1);
+  assert.equal(r.stockCuts.length,r.rows.length);
+  assert.deepEqual(r.stockCuts.filter(x=>x.stockGroup==="Sill").map(x=>x.cutLength),[24]);
+});
+
+test("Rejects cuts too long for stock, impossible kerf and excess reserve percent",()=>{
+  const t=tools.find(t=>t.slug==="framing-calculator"),base=defaults(t);
+  for(const override of [
+    {studStockLength:91.4},{headerStockLength:38.9},
+    {studStockLength:0},{sillStockLength:0},
+    {stockKerf:-.1},{stockKerf:96},{stockWaste:-1},{stockWaste:100.1}
+  ]){
+    const r=safeCompute("framing-calculator",{...base,...override});
+    assert.equal(r.ok,false,"Unexpected stock allocation: "+JSON.stringify(override));
+  }
+  const noKerf=compute("framing-calculator",{...base,stockKerf:0});
+  assert.equal(noKerf.materialSummary[0].kerfLoss,0);
+  assert.equal(noKerf.stockCuts.length,noKerf.rows.length);
+});
