@@ -137,7 +137,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -177,8 +177,18 @@ export function compute(slug,a){
   }
   case "framing-calculator":{
     positive("length","spacing","width","wallHeight","openingWidth","openingHeight","headerDepth","sillThickness","studStockLength","headerStockLength","sillStockLength");
-    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill","stockKerf","stockWaste","studUnitPrice","headerUnitPrice","sillUnitPrice");
-    need(a.studUnitPrice<=1e6&&a.headerUnitPrice<=1e6&&a.sillUnitPrice<=1e6,"Per-stick quotes must be no more than one million currency units.");
+    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill","stockKerf","stockWaste","studUnitPrice","headerUnitPrice","sillUnitPrice","studAltStockLength","studAltUnitPrice","studAlt2StockLength","studAlt2UnitPrice","headerAltStockLength","headerAltUnitPrice","headerAlt2StockLength","headerAlt2UnitPrice","sillAltStockLength","sillAltUnitPrice","sillAlt2StockLength","sillAlt2UnitPrice");
+    const prices=["studUnitPrice","headerUnitPrice","sillUnitPrice",
+      "studAltUnitPrice","studAlt2UnitPrice","headerAltUnitPrice",
+      "headerAlt2UnitPrice","sillAltUnitPrice","sillAlt2UnitPrice"];
+    need(prices.every(key=>a[key]<=1e6),"Per-stick quotes must be no more than one million currency units.");
+    need(prices.every(key=>Math.abs(a[key]*100-Math.round(a[key]*100))<1e-6),
+      "Supplier quotes must use at most two decimal places.");
+    for(const family of ["stud","header","sill"])for(const suffix of ["Alt","Alt2"]){
+      if(a[family+suffix+"UnitPrice"]>0)
+        need(a[family+suffix+"StockLength"]>0,
+          family+" "+suffix+" stock option needs a positive purchased length.");
+    }
     need(a.stockWaste<=100,"Purchase allowance must be 0–100 percent.");
     need(a.stockKerf<Math.min(a.studStockLength,a.headerStockLength,a.sillStockLength),"Kerf must be shorter than every stock stick.");
     need(a.spacing>=a.width&&a.length>=a.width,"Stud face width must fit the wall and OC interval.");
@@ -277,64 +287,164 @@ export function compute(slug,a){
       bottomHeight:r.bottomElevation,cutLength:r.cutLength,
       faceLeft:r.faceLeft,faceRight:r.faceRight
     }));
-    // Deterministic first-fit decreasing cutting estimate. Studs, headers
-    // and sills MUST NOT be mixed: their stock cross-sections are not
-    // interchangeable. No splice, end trim, or cross-family offcut reuse.
-    const stockGroups=[
-      {name:"Stud",stockLength:a.studStockLength,unitPrice:a.studUnitPrice,items:framingRows.filter(r=>r.orientation==="vertical")},
-      {name:"Header",stockLength:a.headerStockLength,unitPrice:a.headerUnitPrice,items:framingRows.filter(r=>r.type==="Header")},
-      {name:"Sill",stockLength:a.sillStockLength,unitPrice:a.sillUnitPrice,items:framingRows.filter(r=>r.type==="Sill")}
+    // Quoted stock comparison is bounded to three offers per material
+    // FAMILY. It evaluates every viable single-length FFD plan and one
+    // deterministic mixed-length greedy plan, then selects the lowest
+    // quoted COST among the evaluated candidates. It never claims global
+    // optimum. Alternative offers with zero price are disabled; an unpriced
+    // legacy base is used only when NO priced offer for that family exists.
+    const offer=(family,kind,length,price)=>({
+      code:kind,label:kind==="BASE"?"Base":kind==="ALT1"?"Alternative 1":"Alternative 2",
+      stockLength:length,unitPrice:price>0?price:null,family
+    });
+    const groups=[
+      {name:"Stud",prefix:"stud",items:framingRows.filter(r=>r.orientation==="vertical")},
+      {name:"Header",prefix:"header",items:framingRows.filter(r=>r.type==="Header")},
+      {name:"Sill",prefix:"sill",items:framingRows.filter(r=>r.type==="Sill")}
     ];
-    const stockPlan=[],stockCuts=[],materialSummary=[];
-    for(const group of stockGroups){
-      const bins=[];
+    const stockPlan=[],stockCuts=[],materialSummary=[],purchaseVariants=[];
+    const moneyRound=n=>Math.round((n+Number.EPSILON)*100)/100;
+    for(const group of groups){
+      const prefix=group.prefix;
+      const offers=[
+        offer(group.name,"BASE",a[prefix+"StockLength"],a[prefix+"UnitPrice"]),
+        offer(group.name,"ALT1",a[prefix+"AltStockLength"],a[prefix+"AltUnitPrice"]),
+        offer(group.name,"ALT2",a[prefix+"Alt2StockLength"],a[prefix+"Alt2UnitPrice"])
+      ];
+      const quoted=offers.filter(o=>o.unitPrice!==null);
+      const available=quoted.length?quoted:[offers[0]];
       const ordered=[...group.items].sort((u,v)=>
         v.cutLength-u.cutLength||u.item.localeCompare(v.item));
-      for(const piece of ordered){
-        need(piece.cutLength<=group.stockLength+1e-8,
-          piece.item+" cut exceeds "+group.name+" stock length; longer stock required (no splices).");
-        let bin=bins.find(b=>b.used+piece.cutLength+
-          (b.cuts.length?a.stockKerf:0)<=group.stockLength+1e-8);
-        if(!bin){bin={used:0,kerf:0,cuts:[]};bins.push(bin);}
-        const before=bin.cuts.length?a.stockKerf:0;
-        bin.used=q(bin.used+piece.cutLength+before);
-        bin.kerf=q(bin.kerf+before);
-        bin.cuts.push({...piece,kerfBefore:q(before)});
+      const fitting=available.filter(o=>ordered.every(p=>p.cutLength<=o.stockLength+1e-8));
+      const candidates=[];
+      const makeBar=(source,cuts)=>({
+        offer:source,used:q(cuts.reduce((sum,p,i)=>sum+p.cutLength+(i?a.stockKerf:0),0)),
+        cuts
+      });
+      // Baseline independent FFD plan for each quoted length.
+      for(const o of fitting){
+        const bars=[];
+        for(const p of ordered){
+          let bar=bars.find(b=>b.used+p.cutLength+(b.cuts.length?a.stockKerf:0)<=o.stockLength+1e-8);
+          if(!bar){bar=makeBar(o,[]);bars.push(bar);}
+          bar.cuts.push(p);
+          bar.used=q(bar.used+p.cutLength+(bar.cuts.length>1?a.stockKerf:0));
+        }
+        candidates.push({kind:"single",bars});
       }
+      // Greedy mixed stock candidate. Each step scores the pieces that FIT
+      // on one offered length as currency per captured net piece length,
+      // then compares its completed cost against ALL single-length plans.
+      // For large layouts, bounded at 1200 pieces by studCenters.
+      if(quoted.length>1&&ordered.length){
+        let pending=[...ordered],bars=[];
+        while(pending.length){
+          const options=[];
+          for(const o of quoted){
+            const selected=[];let used=0;
+            for(const p of pending){
+              const needed=p.cutLength+(selected.length?a.stockKerf:0);
+              if(used+needed<=o.stockLength+1e-8){
+                selected.push(p);used=q(used+needed);
+              }
+            }
+            if(!selected.length)continue;
+            const net=selected.reduce((s,p)=>s+p.cutLength,0);
+            options.push({o,selected,used,score:o.unitPrice/net});
+          }
+          if(!options.length)break;
+          options.sort((x,y)=>x.score-y.score||
+            (x.o.stockLength-x.used)-(y.o.stockLength-y.used)||
+            x.o.unitPrice-y.o.unitPrice||x.o.stockLength-y.o.stockLength||
+            x.o.code.localeCompare(y.o.code));
+          const chosen=options[0],taken=new Set(chosen.selected.map(p=>p.item));
+          bars.push(makeBar(chosen.o,chosen.selected));
+          pending=pending.filter(p=>!taken.has(p.item));
+        }
+        if(!pending.length)candidates.push({kind:"mixed",bars});
+      }
+      // An alternative can cover oversized members even when the base
+      // length cannot. No valid source means the user must choose longer
+      // stock; never hide an unsupported splice.
+      if(ordered.length&&!candidates.length)
+        need(false,group.name+" cut exceeds all quoted stock lengths; longer stock required (no splices).");
+      if(!ordered.length)candidates.push({kind:"empty",bars:[]});
+      const rated=candidates.map(candidate=>{
+        const counts=new Map();
+        for(const b of candidate.bars)counts.set(b.offer.code,
+          {offer:b.offer,planned:(counts.get(b.offer.code)?.planned||0)+1});
+        let purchase=0,plannedCost=0,reserveCost=0,offcut=0,quotedCost=true,purchaseCount=0;
+        for(const row of counts.values()){
+          const count=row.planned,reserve=Math.ceil(count*(1+a.stockWaste/100)-1e-10)-count;
+          row.purchase=count+reserve;
+          purchaseCount+=row.purchase;
+          if(row.offer.unitPrice===null)quotedCost=false;
+          else{
+            plannedCost+=count*row.offer.unitPrice;
+            reserveCost+=reserve*row.offer.unitPrice;
+            purchase+=row.purchase*row.offer.unitPrice;
+          }
+        }
+        for(const b of candidate.bars)offcut+=b.offer.stockLength-b.used;
+        return {...candidate,counts,purchaseCost:quotedCost?moneyRound(purchase):null,
+          plannedCost:quotedCost?moneyRound(plannedCost):null,
+          reserveCost:quotedCost?moneyRound(reserveCost):null,
+          offcut:q(offcut),purchaseCount};
+      });
+      rated.sort((x,y)=>(x.purchaseCost??Infinity)-(y.purchaseCost??Infinity)||
+        x.offcut-y.offcut||x.purchaseCount-y.purchaseCount||
+        (x.kind==="single"?-1:1));
+      const best=rated[0],bins=best.bars;
       let sumCut=0,sumOffcut=0,sumKerf=0;
       for(const [i,b] of bins.entries()){
         const stockId=group.name.toUpperCase()+"-"+String(i+1).padStart(3,"0"),
           cutsLength=q(b.cuts.reduce((s,p)=>s+p.cutLength,0)),
-          remaining=q(Math.max(0,group.stockLength-b.used));
-        sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=b.kerf;
-        stockPlan.push({stockGroup:group.name,stockId,stockLength:q(group.stockLength),
-          cuts:b.cuts.map(p=>({item:p.item,type:p.type,cutLength:p.cutLength})),
-          cutCount:b.cuts.length,piecesLength:cutsLength,kerfLoss:q(b.kerf),
+          barKerf=q(Math.max(0,b.cuts.length-1)*a.stockKerf),
+          remaining=q(Math.max(0,b.offer.stockLength-b.used));
+        sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=barKerf;
+        stockPlan.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
+          offerCode:b.offer.code,stockLength:q(b.offer.stockLength),
+          unitPrice:b.offer.unitPrice,cuts:b.cuts.map(p=>({
+            item:p.item,type:p.type,cutLength:p.cutLength})),
+          cutCount:b.cuts.length,piecesLength:cutsLength,kerfLoss:barKerf,
           usedLength:q(b.used),offcutLength:remaining});
         let consumed=0;
         for(const [idx,p] of b.cuts.entries()){
-          consumed=q(consumed+p.cutLength+p.kerfBefore);
-          stockCuts.push({stockGroup:group.name,stockId,index:idx+1,
-            item:p.item,type:p.type,cutLength:p.cutLength,
-            kerfBefore:p.kerfBefore,stockLength:q(group.stockLength),
-            runningUsedLength:consumed,remainingLength:q(Math.max(0,group.stockLength-consumed))});
+          const before=idx?a.stockKerf:0;
+          consumed=q(consumed+p.cutLength+before);
+          stockCuts.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
+            index:idx+1,item:p.item,type:p.type,cutLength:p.cutLength,
+            kerfBefore:q(before),stockLength:q(b.offer.stockLength),
+            runningUsedLength:consumed,remainingLength:q(Math.max(0,b.offer.stockLength-consumed))});
         }
-        need(Math.abs(cutsLength+b.kerf+remaining-group.stockLength)<1e-6,
-          "Stock bar cut and offcut dimensions do not conserve original length.");
+        need(Math.abs(cutsLength+barKerf+remaining-b.offer.stockLength)<1e-6,
+          "Mixed-stock cut and offcut dimensions do not conserve source length.");
       }
-      const purchaseSticks=bins.length?Math.ceil(bins.length*(1+a.stockWaste/100)-1e-10):0;
-      // Zero price is an unquoted material, not a free product. A family
-      // with zero pieces does not require a price and incurs no cost.
-      const quoted=group.unitPrice>0||purchaseSticks===0;
+      const lines=[...best.counts.values()].sort((x,y)=>
+        x.offer.stockLength-y.offer.stockLength||x.offer.code.localeCompare(y.offer.code));
+      let totalPurch=0,totalReserve=0,allQuoted=true;
+      for(const row of lines){
+        const o=row.offer,planned=row.planned,pcs=row.purchase,reserve=pcs-planned;
+        totalPurch+=pcs;totalReserve+=reserve;
+        allQuoted=allQuoted&&o.unitPrice!==null;
+        purchaseVariants.push({stockGroup:group.name,offerLabel:o.label,
+          stockLength:q(o.stockLength),plannedSticks:planned,
+          allowanceSticks:reserve,purchaseSticks:pcs,unitPrice:o.unitPrice,
+          plannedCost:o.unitPrice===null?null:moneyRound(planned*o.unitPrice),
+          reserveCost:o.unitPrice===null?null:moneyRound(reserve*o.unitPrice),
+          purchaseCost:o.unitPrice===null?null:moneyRound(pcs*o.unitPrice)});
+      }
+      const uniform=lines.length===1?lines[0].offer:null;
       materialSummary.push({stockGroup:group.name,pieces:group.items.length,
-        cutLength:q(sumCut),stockLength:q(group.stockLength),
-        plannedSticks:bins.length,purchaseSticks,
-        allowanceSticks:purchaseSticks-bins.length,
-        kerfLoss:q(sumKerf),offcutLength:q(sumOffcut),
-        unitPrice:group.unitPrice>0?group.unitPrice:null,
-        quoted,plannedCost:quoted?q(bins.length*group.unitPrice):null,
-        allowanceCost:quoted?q((purchaseSticks-bins.length)*group.unitPrice):null,
-        purchaseCost:quoted?q(purchaseSticks*group.unitPrice):null});
+        cutLength:q(sumCut),
+        stockLength:uniform?q(uniform.stockLength):group.items.length?null:q(offers[0].stockLength),
+        plannedSticks:bins.length,purchaseSticks:totalPurch,
+        allowanceSticks:totalReserve,kerfLoss:q(sumKerf),offcutLength:q(sumOffcut),
+        unitPrice:uniform?uniform.unitPrice:null,
+        quoted:allQuoted,plannedCost:allQuoted?best.plannedCost:null,
+        allowanceCost:allQuoted?best.reserveCost:null,
+        purchaseCost:allQuoted?best.purchaseCost:null,
+        mixedLengths:lines.length>1});
     }
     need(stockCuts.length===framingRows.length,"Stock cut plan does not include all framing members.");
     const total=(key)=>materialSummary.reduce((sum,r)=>sum+r[key],0);
@@ -342,7 +452,7 @@ export function compute(slug,a){
       totalCutLength=total("cutLength"),totalOffcut=total("offcutLength"),
       totalKerf=total("kerfLoss");
     need(Math.abs(totalCutLength+totalOffcut+totalKerf-
-      materialSummary.reduce((s,r)=>s+r.plannedSticks*r.stockLength,0))<1e-5,
+      stockPlan.reduce((s,r)=>s+r.stockLength,0))<1e-5,
       "Material summary does not conserve purchased stock lengths.");
     const unpricedGroups=materialSummary.filter(r=>!r.quoted&&r.purchaseSticks>0).map(r=>r.stockGroup),
       quotedSubtotal=q(materialSummary.reduce((sum,r)=>sum+(r.purchaseCost??0),0)),
@@ -384,7 +494,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,costSummary
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,costSummary
     });
   }
   case "deck-board-calculator":{
