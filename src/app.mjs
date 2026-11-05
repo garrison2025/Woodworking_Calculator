@@ -521,7 +521,7 @@ if(slug){
       for(const [i,row] of data.deckRows.entries()){
         const yy=y0+row.acrossStart*scale,sh=row.ripWidth*scale;
         content+='<rect class="deck-plan-board" x="'+x0+'" y="'+yy+'" width="'+ww+'" height="'+Math.max(.1,sh)+'" fill="'+(i%2?"#d2b18b":"#e2c8a5")+'" stroke="#957452" stroke-width=".45"><title>'+esc(row.item+" · "+fmt(row.ripWidth)+" rip")+'</title></rect>';
-        for(const seam of data.seamCenters||[]){
+        for(const seam of row.seamCenters||[]){
           const xx=x0+seam*scale;
           content+='<line class="deck-plan-seam" x1="'+xx+'" y1="'+yy+'" x2="'+xx+'" y2="'+(yy+sh)+'" stroke="#9b4e34" stroke-width="2.2"><title>'+esc(row.item+" butt joint at "+fmt(seam)+" on a joist center reference; support, fasteners and staggering are NOT verified")+'</title></line>';
         }
