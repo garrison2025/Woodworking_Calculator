@@ -19,7 +19,7 @@ if(slug){
   const framingStock=document.querySelector("#framing-stock-table tbody");
   const stockExport=document.querySelector("#download-stock-csv");
   const pricingExport=document.querySelector("#download-price-csv");
-  const currency=document.querySelector("#framing-currency");
+  const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
   const framingComparisons=document.querySelector("#framing-offer-table tbody");
   const framingProof=document.querySelector("#framing-proof-table tbody");
@@ -27,6 +27,13 @@ if(slug){
   const framingPriceStatus=document.querySelector("#framing-price-status");
   const framingTicket=document.querySelector("#framing-ticket-list");
   const framingTicketStatus=document.querySelector("#framing-ticket-status");
+  const deckCostStatus=document.querySelector("#deck-cost-status");
+  const deckBudgetTable=document.querySelector("#deck-budget-table tbody");
+  const deckFastenerTable=document.querySelector("#deck-fastener-table tbody");
+  const deckTicketList=document.querySelector("#deck-ticket-list");
+  const deckTicketStatus=document.querySelector("#deck-ticket-status");
+  const deckBudgetExport=document.querySelector("#download-deck-budget-csv");
+  const deckFastenerExport=document.querySelector("#download-deck-fastener-csv");
   const currencyCode=()=>currency?.value||"USD";
   const money=x=>currencyCode()+" "+Number(x).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
   const fmt=(x,kind="L")=>{
@@ -573,6 +580,38 @@ if(slug){
       ' (planned '+r.plannedSticks+' + reserve '+r.allowanceSticks+')</span><span>'+
       esc(r.unitPrice!==null?money(r.purchaseCost):"QUOTE NEEDED")+'</span></li>').join("");
   };
+  const renderDeckTakeoff=()=>{
+    if(!deckCostStatus||!deckBudgetTable||!deckFastenerTable||!deckTicketList||!deckTicketStatus)return;
+    const quote=latest?.deckCostSummary,buys=latest?.deckPurchaseRows||[],
+      rows=latest?.deckFastenerRows||[];
+    deckCostStatus.textContent=!quote?"Correct inputs to see deck supplier costs.":
+      quote.allPricesEntered?
+        "Estimated quoted deck boards + fastener packs: "+money(quote.quotedSubtotal)+
+          " (boards "+money(quote.boardCost)+
+          " + packs "+money(quote.fastenerCost)+
+          "). Excludes structural framing, joist lumber, tax, delivery and labor.":
+        "INCOMPLETE QUOTE — missing: "+quote.missingQuotes.join(", ")+
+          " · quoted components subtotal "+money(quote.quotedSubtotal)+
+          " is NOT the total buying cost.";
+    deckBudgetTable.innerHTML=buys.map(r=>'<tr>'+
+      [r.material,r.plannedQuantity,r.purchaseQuantity,r.unit,
+        r.unitPrice===null?(r.purchaseQuantity?"Quote needed":"Not needed"):money(r.unitPrice),
+        r.purchaseCost===null?"Quote needed":money(r.purchaseCost)]
+          .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    deckFastenerTable.innerHTML=rows.map(r=>'<tr>'+
+      [r.item,r.joistReferences,r.buttSeams,r.fasteningContacts,
+        r.fastenerPiecesPerRow,r.firstSeamAt===null?"—":fmt(r.firstSeamAt,"L"),
+        r.lastSeamAt===null?"—":fmt(r.lastSeamAt,"L")]
+          .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    deckTicketStatus.textContent=!quote?"No current material plan.":
+      quote.allPricesEntered?"COMPLETE quoted material subtotal: "+money(quote.quotedSubtotal):
+        "PRICE INCOMPLETE — "+quote.missingQuotes.join(", ")+" require quotes.";
+    deckTicketList.innerHTML=buys.filter(r=>r.purchaseQuantity>0).map(r=>
+      '<li><span class="ticket-check" aria-hidden="true">□</span><strong>'+esc(r.material)+
+      '</strong><span>'+esc(r.purchaseQuantity+" "+r.unit)+
+      '</span><span>'+esc(r.purchaseCost===null?"QUOTE NEEDED":money(r.purchaseCost))+
+      '</span></li>').join("");
+  };
   function render(){
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
@@ -588,7 +627,7 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
-      renderFramingTakeoff();
+      renderFramingTakeoff();renderDeckTakeoff();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
@@ -609,7 +648,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
-      schedulePager.hidden=true;renderFramingTakeoff();
+      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();
       status.textContent="Calculation requires correction.";
     }
   }
@@ -689,6 +728,22 @@ if(slug){
     save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-material-quote.csv",
       text,"text/csv;charset=utf-8");
     status.textContent="Quoted materials CSV saved locally.";
+  });
+  deckBudgetExport?.addEventListener("click",()=>{
+    if(!latest?.deckPurchaseRows)return;
+    const rows=latest.deckPurchaseRows.map(r=>({...r,currency:currencyCode()}));
+    const body=buildScheduleCsv(rows,unit,
+      "Prices entered by user; zero means quote missing. No FX conversion, taxes, delivery, structural joists, blocking, labor or regulatory approval.");
+    save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-purchase-quote.csv",
+      body,"text/csv;charset=utf-8");
+    status.textContent="Deck material quote CSV saved locally.";
+  });
+  deckFastenerExport?.addEventListener("click",()=>{
+    if(!latest?.deckFastenerRows)return;
+    const body=buildScheduleCsv(latest.deckFastenerRows,unit,
+      "Each separate stock piece at a joist reference = one contact; butt seams count both pieces. Fastener rate is user-entered; actual structural bearing and manufacturer requirements NOT verified.");
+    save(slug+"-"+unit+"-fastener-contacts.csv",body,"text/csv;charset=utf-8");
+    status.textContent="Deck fastener contacts CSV saved locally.";
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
