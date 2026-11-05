@@ -1093,7 +1093,7 @@
       "keyword": "segmented bowl calculator",
       "volume": 260,
       "kd": 17,
-      "desc": "Straight-chord polygon ring pieces: miter and inner/outer chords, true perpendicular trapezoid depth, conservative circular turning envelope, and complete segment CSV.",
+      "desc": "Multiple concentric polygon rings with signed per-ring diameter taper, true trapezoid chords, stack profile, optional rough blank allowances, and a per-segment cutting reference CSV.",
       "inputs": [
         {
           "key": "outer",
@@ -1118,11 +1118,41 @@
           "label": "Ring count",
           "value": 3,
           "kind": "N"
+        },
+        {
+          "key": "outerStep",
+          "label": "Outer corner diameter change per next ring (signed)",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "innerStep",
+          "label": "Inner corner diameter change per next ring (signed)",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "ringHeight",
+          "label": "Nominal stack height per ring",
+          "value": 0.75,
+          "kind": "L"
+        },
+        {
+          "key": "ringOversize",
+          "label": "Rough blank allowance per side",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "ringKerf",
+          "label": "One kerf allowance per blank axis",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "Half-miter=180°/n; outer/inner chord=D×sin(π/n). Radial end-face length=(outerD−innerD)/2, but perpendicular trapezoid face depth=radial length×cos(π/n). The largest ideal turned circular OD fitting the OUTER polygon is outer corner diameter×cos(π/n); chord faces are straight.",
+      "formula": "Half-miter=180°/n; outer/inner chord=D×sin(π/n). Radial end-face length=(outerD−innerD)/2, but perpendicular trapezoid face depth=radial length×cos(π/n). The largest ideal turned circular OD fitting the OUTER polygon is outer corner diameter×cos(π/n); chord faces are straight. For ring i (zero based), outer/inner corner diameter = base diameter + i×signed step. Nominal stack elevation = i×entered layer height. Reference rough rectangular blank length=outer chord+2×edge allowance+one kerf; rough blank width=perpendicular face depth+2×edge allowance+one kerf. This is an explicit conservative estimating convention, not optimized sawing.",
       "example": "12 in outer CORNER diameter, 8 in inner CORNER diameter, 12 segments: 15° half-miter, 3.10583 in outer and 2.07055 in inner chords, 2 in radial end face, 1.93185 in perpendicular face depth. Ideal round OD limit is 11.59111 in, not 12 in.",
-      "limit": "Inputs are corner-to-corner polygon envelope diameters, NOT guaranteed finished turned diameters. Face geometry omits saw kerf, joint loss, glue oversize, stock thickness, wood grain, ring staggering, lathe holding and physical allowances. Finished circular outside diameter should stay BELOW the ideal polygon inradius with a real margin.",
+      "limit": "Inputs are corner-to-corner polygon envelope diameters, NOT guaranteed finished turned diameters. Face geometry omits saw kerf, joint loss, glue oversize, stock thickness, wood grain, ring staggering, lathe holding and physical allowances. Finished circular outside diameter should stay BELOW the ideal polygon inradius with a real margin. Optional multi-ring steps produce independent polygon envelopes, not a continuous finished profile. Rough blank size is a one-piece rectangular reference with 2-sided user margin plus one entered kerf per axis, not an optimized cutting or purchasing layout.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -1136,6 +1166,14 @@
         {
           "heading": "Physical segment schedule and drawing consistency",
           "text": "The SVG uses straight trapezoid polygons, not curved arc pieces. It shows the ideal maximum circular outside diameter as a separate dashed circle. Per-piece CSV exports chord lengths, radial and perpendicular face depths, and geometric face area with typed units. Repeat rings are identical; this does not design a tapered multi-ring bowl profile."
+        },
+        {
+          "heading": "Design different-sized stacked rings without inventing a finished bowl profile",
+          "text": "Enter signed outer and inner polygon corner-diameter changes per successive ring and a nominal layer height. The engine validates every ring, calculates its own cut chords, perpendicular face depth, turning limit and elevation, and exports each physical segment; zero diameter changes keep the original identical-ring workflow. The side preview is a corner-envelope elevation and does not assert actual turned wall thickness or glue deformation."
+        },
+        {
+          "heading": "Bounded rough blank allowance and saw kerf",
+          "text": "The optional allowance adds the entered margin to both sides of the outer-chord length and the perpendicular face-depth width. To make the estimate conservative, the separate entered kerf is charged once to each rough blank axis. This produces individually sized rectangular rough blanks and their sum area, without claiming a minimum stock board size, exact saw sequence, recoverable offcuts or supplier quantity. Measure blade kerf, wood behavior and clamping on actual stock."
         }
       ]
     },
