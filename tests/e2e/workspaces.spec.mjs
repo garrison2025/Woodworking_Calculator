@@ -1779,3 +1779,30 @@ test("P1 deck alternating joist center seams render and export per-row real posi
   expect(metricCsv).toContain('"2438.4"');
   expect(metricCsv).toContain('"1219.2"');
 });
+
+test("P1 bowl tapered rings update stack visualization and rough blank CSV in millimeters",async({page})=>{
+ const {readFileSync}=await import("node:fs");
+ await page.goto("/segmented-bowl-calculator/");
+ await page.locator("#f-outerStep").fill("-1");
+ await page.locator("#f-innerStep").fill("-0.5");
+ await page.locator("#f-ringOversize").fill("0.125");
+ await page.locator("#f-ringKerf").fill("0.1");
+ await expect(page.locator("#calc-error")).toBeHidden();
+ await expect(page.locator("#result-cards .metric").filter({hasText:"Last ring outer corner diameter"}))
+   .toContainText("10 in");
+ await expect(page.locator("#dimension-svg svg .ring-stack-outline")).toHaveCount(3);
+ await expect(page.locator("#dimension-svg svg .ring-stack-outline").nth(2)).toHaveAttribute("data-outer-diameter","10");
+ await expect(page.locator("#cut-table tbody tr")).toHaveCount(36);
+ await page.locator("#unit-select").selectOption("mm");
+ const dl=page.waitForEvent("download");
+ await page.locator("#download-csv").click();
+ const csv=readFileSync(await (await dl).path(),"utf8");
+ expect(csv).toContain('"Outer Corner Diameter (mm)","Inner Corner Diameter (mm)"');
+ expect(csv).toContain('"Stack Bottom (mm)","Stack Top (mm)"');
+ expect(csv).toContain('"254"');
+ await page.locator("#f-outerStep").fill("-152.4");
+ await expect(page.locator("#calc-error")).toBeVisible();
+ await expect(page.locator("#dimension-svg svg")).toHaveCount(0);
+ await page.locator("#f-outerStep").fill("-25.4");
+ await expect(page.locator("#calc-error")).toBeHidden();
+});
