@@ -302,7 +302,7 @@ export function compute(slug,a){
       {name:"Header",prefix:"header",items:framingRows.filter(r=>r.type==="Header")},
       {name:"Sill",prefix:"sill",items:framingRows.filter(r=>r.type==="Sill")}
     ];
-    const stockPlan=[],stockCuts=[],materialSummary=[],purchaseVariants=[];
+    const stockPlan=[],stockCuts=[],materialSummary=[],purchaseVariants=[],stockComparisons=[];
     const moneyRound=n=>Math.round((n+Number.EPSILON)*100)/100;
     for(const group of groups){
       const prefix=group.prefix;
@@ -395,6 +395,21 @@ export function compute(slug,a){
         x.offcut-y.offcut||x.purchaseCount-y.purchaseCount||
         (x.kind==="single"?-1:1));
       const best=rated[0],bins=best.bars;
+      for(const candidate of rated){
+        const sizes=[...candidate.counts.values()].map(v=>({
+          stockLength:q(v.offer.stockLength),offerLabel:v.offer.label,
+          purchaseSticks:v.purchase
+        }));
+        stockComparisons.push({stockGroup:group.name,
+          planLabel:candidate.kind==="mixed"?"Greedy mixed lengths":
+            candidate.kind==="empty"?"No material required":
+            "Single length · "+sizes[0]?.offerLabel,
+          selected:candidate===best,quoted:candidate.purchaseCost!==null,
+          stockSizes:sizes,plannedSticks:candidate.bars.length,
+          purchaseSticks:candidate.purchaseCount,
+          purchaseCost:candidate.purchaseCost,
+          offcutLength:candidate.offcut});
+      }
       let sumCut=0,sumOffcut=0,sumKerf=0;
       for(const [i,b] of bins.entries()){
         const stockId=group.name.toUpperCase()+"-"+String(i+1).padStart(3,"0"),
@@ -433,6 +448,12 @@ export function compute(slug,a){
           plannedCost:o.unitPrice===null?null:moneyRound(planned*o.unitPrice),
           reserveCost:o.unitPrice===null?null:moneyRound(reserve*o.unitPrice),
           purchaseCost:o.unitPrice===null?null:moneyRound(pcs*o.unitPrice)});
+      }
+      if(!lines.length){
+        purchaseVariants.push({stockGroup:group.name,offerLabel:"Base",
+          stockLength:q(offers[0].stockLength),plannedSticks:0,
+          allowanceSticks:0,purchaseSticks:0,unitPrice:null,
+          plannedCost:0,reserveCost:0,purchaseCost:0});
       }
       const uniform=lines.length===1?lines[0].offer:null;
       materialSummary.push({stockGroup:group.name,pieces:group.items.length,
@@ -494,7 +515,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,costSummary
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,costSummary
     });
   }
   case "deck-board-calculator":{
