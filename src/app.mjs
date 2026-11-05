@@ -293,10 +293,45 @@ if(slug){
       // This is a nominal reference profile, NOT a certified stock outline.
       const verts=data.stepVertices,run=(data.risers-1)*data.tread,rise=data.totalRise;
       const nose=data.nosingProjection||0,landing=data.landingDepth||0;
-      const width=run+nose+landing;
-      const sc=Math.min(650/Math.max(.001,width),185/Math.max(.001,rise));
-      const ox=(900-width*sc)/2+nose*sc,oy=274;
+      const minX=Math.min(0,-nose,-(data.lowerSupportRun||0));
+      const maxX=run+Math.max(landing,data.upperSupportRun||0);
+      const minY=Math.min(0,data.lowerEdgeAtStart??0);
+      const width=maxX-minX,height=rise-minY;
+      const sc=Math.min(650/Math.max(.001,width),185/Math.max(.001,height));
+      const ox=(900-width*sc)/2-minX*sc,oy=274+minY*sc;
       const px=v=>ox+v.x*sc,py=v=>oy-v.y*sc;
+      // This closed polygon is a reference SIDE SECTION, not the actual
+      // uncut board blank or a verified top/bottom bearing cut shape.
+      const envelope=data.stockEnvelopeVertices||[];
+      if(envelope.length){
+        const stockPoints=envelope.map(v=>px(v)+","+py(v)).join(" ");
+        content+='<polygon class="stringer-modeled-section" points="'+stockPoints+
+          '" data-area-sqin="'+data.envelopeAreaSqIn+
+          '" data-min-throat="'+data.minThroatFromVertices+
+          '" fill="#d9e9dc" stroke="#648b71" stroke-width="1.4"><title>'+
+          esc("Modeled notched side section; lower stock edge is parallel to pitch; vertical end clips are NOT bearing cuts")+
+          '</title></polygon>';
+        const low0=envelope.at(-1),low1=envelope.at(-2);
+        content+='<line class="stringer-lower-stock-edge" x1="'+px(low0)+'" y1="'+py(low0)+
+          '" x2="'+px(low1)+'" y2="'+py(low1)+'" stroke="#567a61" stroke-width="2.4"><title>'+
+          esc("Nominal parallel bottom reference of uncut board; stock normal depth "+fmt(data.stockNormalDepth))+
+          '</title></line>';
+        content+='<line class="stringer-lower-end-clip" x1="'+px(verts[0])+'" y1="'+py(verts[0])+
+          '" x2="'+px(low0)+'" y2="'+py(low0)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a bottom bearing cut</title></line>';
+        content+='<line class="stringer-upper-end-clip" x1="'+px(verts.at(-1))+'" y1="'+py(verts.at(-1))+
+          '" x2="'+px(low1)+'" y2="'+py(low1)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a top bearing cut</title></line>';
+      }
+      for(const ref of data.supportReferences||[]){
+        const role=ref.item.startsWith("Lower")?"lower":"upper";
+        content+='<line class="stringer-support-surface stringer-support-'+role+
+          '" data-start="'+ref.startX+'" data-end="'+ref.endX+
+          '" data-level="'+ref.elevation+'" x1="'+px({x:ref.startX})+
+          '" y1="'+py({y:ref.elevation})+'" x2="'+px({x:ref.endX})+
+          '" y2="'+py({y:ref.elevation})+
+          '" stroke="#875d8e" stroke-width="3.2" stroke-dasharray="6 3"><title>'+
+          esc(ref.item+" · measured horizontal surface only; NOT a bearing cut or strength certification")+
+          '</title></line>';
+      }
       const points=verts.map(v=>px(v)+","+py(v)).join(" ");
       content+='<polyline class="stringer-step-profile" points="'+points+'" data-vertices="'+verts.length+'" fill="none" stroke="#246a58" stroke-width="2.7" stroke-linejoin="round"><title>Nominal riser and tread cut reference; vertices follow the exported riser elevations and horizontal runs</title></polyline>';
       const first=verts[1],end=verts.at(-1);
@@ -325,7 +360,7 @@ if(slug){
       const bottomTrimY=oy-data.bottomLayoutRise*sc;
       content+='<line class="stringer-bottom-trim" x1="'+(ox-18)+'" y1="'+bottomTrimY+'" x2="'+(ox+17)+'" y2="'+bottomTrimY+'" stroke="#a85034" stroke-width="2.8"><title>'+esc("Separate bottom trim height "+fmt(data.bottomLayoutRise)+"; actual end fastening not modeled")+'</title></line>';
       content+=svgText(70,52,data.risers+" risers / "+(data.risers-1)+" treads","dim-label");
-      content+=svgText(70,75,"NOMINAL STEP REFERENCE · SCALED SCHEMATIC","tick-label");
+      content+=svgText(70,75,"MODELED SIDE SECTION · END CLIPS ARE NOT BEARING CUTS","tick-label");
       content+=svgText(70,309,"NOTCH PITCH "+fmt(data.pitchLine),"dim-label");
       content+=svgText(70,332,"BOTTOM TRIM "+fmt(data.bottomLayoutRise),"tick-label");
       content+=svgText(565,309,"THROAT (NOMINAL) "+fmt(data.throat),"dim-label");
