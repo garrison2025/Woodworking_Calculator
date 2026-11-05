@@ -1806,3 +1806,31 @@ test("P1 bowl tapered rings update stack visualization and rough blank CSV in mi
  await page.locator("#f-outerStep").fill("-25.4");
  await expect(page.locator("#calc-error")).toBeHidden();
 });
+
+test("P1 stringer nominal sawline and measured end-lines export actual named geometry",async({page})=>{
+ const {readFileSync}=await import("node:fs");
+ await page.goto("/stair-stringer-calculator/");
+ await expect(page.locator("#stringer-sawline-table tbody tr")).toHaveCount(27);
+ await expect(page.locator("#download-stringer-sawline-csv")).toBeEnabled();
+ await expect(page.locator("#download-stringer-end-lines-csv")).toBeDisabled();
+ await page.locator("#f-lowerEndCutRun").fill("3");
+ await page.locator("#f-upperEndCutRun").fill("6");
+ await expect(page.locator("#calc-error")).toBeHidden();
+ await expect(page.locator("#stringer-end-lines-table tbody tr")).toHaveCount(2);
+ await expect(page.locator("#dimension-svg svg .stringer-field-end-line")).toHaveCount(2);
+ await expect(page.locator("#dimension-svg svg .stringer-field-end-line").last()).toHaveAttribute("data-end-x","136");
+ await page.locator("#unit-select").selectOption("mm");
+ let dl=page.waitForEvent("download");
+ await page.locator("#download-stringer-sawline-csv").click();
+ const csv=readFileSync(await (await dl).path(),"utf8");
+ expect(csv).toContain('"Start X (mm)","Start Y (mm)","End X (mm)","End Y (mm)"');
+ dl=page.waitForEvent("download");
+ await page.locator("#download-stringer-end-lines-csv").click();
+ const ends=readFileSync(await (await dl).path(),"utf8");
+ expect(ends).toContain('"3454.4"');
+ await page.locator("#f-upperEndCutRun").fill("1016");
+ await expect(page.locator("#calc-error")).toBeVisible();
+ await expect(page.locator("#download-stringer-sawline-csv")).toBeDisabled();
+ await page.locator("#f-upperEndCutRun").fill("152.4");
+ await expect(page.locator("#calc-error")).toBeHidden();
+});
