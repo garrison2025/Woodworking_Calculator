@@ -1278,6 +1278,9 @@ export function compute(slug,a){
     return result([
       M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
       M("Total horizontal run",run),
+      M("Tread nosing reference",a.nosing),
+      M("Upper landing reference depth",a.upperLandingDepth),
+      M("Total horizontal planning reach",run+a.upperLandingDepth),
       M("Notch pitch-line reference",pitchLine),
       M("Floor-to-floor diagonal (not a cut length)",floorDiagonal),
       M("Bottom riser layout cut",bottomLayoutRise),
@@ -1286,7 +1289,9 @@ export function compute(slug,a){
     ],rows.map(r=>P(r.horizontalRun,r.item)),Math.max(run,1),rows,"stringer",
     {stepRise:h,tread:a.tread,risers:a.risers,totalRise:a.rise,
       throat,bottomLayoutRise,notchNormal:normalNotch,
-      pitchLine,floorDiagonal,stepVertices});
+      pitchLine,floorDiagonal,stepVertices,noseReferences,
+      nosingProjection:a.nosing,landingDepth:a.upperLandingDepth,
+      landingReferenceEnd:run+a.upperLandingDepth});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
