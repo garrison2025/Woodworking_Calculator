@@ -1454,3 +1454,108 @@ test("stringer section errors clear stale modeled vertices and reset support ref
   }));
   expect(size.scrollWidth).toBeLessThanOrEqual(size.width+1);
 });
+
+
+test("drill guide creates a proportional aligned 3×4 hole grid and exports real X/Y coordinates",async({page})=>{
+  await page.goto("/hole-spacing-calculator/");
+  await page.locator("#unit-select").selectOption("mm");
+  await page.locator("#f-length").fill("100");
+  await page.locator("#f-holes").fill("4");
+  await page.locator("#f-edge").fill("5");
+  await page.locator("#f-diameter").fill("5");
+  await page.locator("#f-boardWidth").fill("40");
+  await page.locator("#f-crossSetback").fill("5");
+  await page.locator("#f-rowCount").fill("3");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const metric=label=>page.locator("#result-cards .metric").filter({hasText:label});
+  await expect(metric("Hole count")).toContainText("12");
+  await expect(metric("Drilling rows")).toContainText("3");
+  await expect(metric("Hole center pitch")).toContainText("30 mm");
+  await expect(metric("Transverse center pitch")).toContainText("15 mm");
+  await expect(metric("Clear material between holes")).toContainText("25 mm");
+  await expect(metric("Clear material between rows")).toContainText("10 mm");
+  await expect(metric("Side material margin")).toContainText("2.5 mm");
+  await expect(metric("End material margin")).toContainText("2.5 mm");
+  const circles=page.locator("#dimension-svg svg .drill-hole"),
+    guides=page.locator("#dimension-svg svg .drill-row-guide");
+  await expect(circles).toHaveCount(12);
+  await expect(guides).toHaveCount(3);
+  await expect(circles.first()).toHaveAttribute("data-row","1");
+  await expect(circles.first()).toHaveAttribute("data-column","1");
+  await expect(circles.last()).toHaveAttribute("data-row","3");
+  await expect(circles.last()).toHaveAttribute("data-column","4");
+  const proof=await page.locator("#dimension-svg svg").evaluate(svg=>{
+    const stock=svg.querySelector(".drilling-stock"),
+      c=[...svg.querySelectorAll(".drill-hole")],first=c[0],
+      next=c[1],thirdRow=c[8],r=Number(first.getAttribute("r"));
+    return {
+      boardWidth:Number(stock.getAttribute("width")),
+      boardHeight:Number(stock.getAttribute("height")),
+      dx:Number(next.getAttribute("cx"))-Number(first.getAttribute("cx")),
+      dy:Math.abs(Number(thirdRow.getAttribute("cy"))-Number(first.getAttribute("cy"))),
+      diameter:2*r,
+      xIn:Number(first.dataset.x),
+      yIn:Number(first.dataset.y),
+      lastXIn:Number(c[11].dataset.x),
+      lastYIn:Number(c[11].dataset.y)
+    };
+  });
+  expect(proof.boardWidth/proof.boardHeight).toBeCloseTo(100/40,5);
+  expect(proof.dx/proof.diameter).toBeCloseTo(30/5,5);
+  expect(proof.dy/proof.diameter).toBeCloseTo(30/5,5);
+  expect(proof.xIn*25.4).toBeCloseTo(5,5);
+  expect(proof.yIn*25.4).toBeCloseTo(5,5);
+  expect(proof.lastXIn*25.4).toBeCloseTo(95,5);
+  expect(proof.lastYIn*25.4).toBeCloseTo(35,5);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(12);
+  await expect(page.locator("#cut-table tbody tr").last()).toContainText("Row 3 hole 4");
+  await expect(page.locator("#cut-table thead")).toContainText("Center Y (mm)");
+  const dl=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await(await dl).path(),"utf8");
+  expect(csv).toContain('"Row Number","Column Number","Center Y (mm)"');
+  expect(csv).toContain('"Row 1 hole 1","5","2.5","7.5","5","","1","1","5","2.5","7.5",""');
+  expect(csv).toContain('"Row 3 hole 4","95","92.5","97.5","5","25","3","4","35","32.5","37.5","10"');
+  expect(csv.split("\r\n").filter(Boolean)).toHaveLength(14);
+  const svgFile=page.waitForEvent("download");
+  await page.locator("#download-svg").click();
+  const svgText=readFileSync(await(await svgFile).path(),"utf8");
+  expect(svgText.match(/class="drill-hole"/g)).toHaveLength(12);
+  expect(svgText).toContain('data-board-width="');
+});
+
+test("multirow drilling rejects transverse overlaps and returns to exact single-row layout",async({page})=>{
+  await page.goto("/hole-spacing-calculator/");
+  await page.locator("#unit-select").selectOption("mm");
+  await page.locator("#f-length").fill("100");
+  await page.locator("#f-edge").fill("5");
+  await page.locator("#f-diameter").fill("5");
+  await page.locator("#f-boardWidth").fill("40");
+  await page.locator("#f-crossSetback").fill("5");
+  await page.locator("#f-rowCount").fill("3");
+  await expect(page.locator("#dimension-svg svg .drill-hole")).toHaveCount(12);
+  await page.locator("#f-rowCount").fill("9");
+  await expect(page.locator("#calc-error")).toContainText("Drilling rows overlap");
+  await expect(page.locator("#dimension-svg svg .drill-hole")).toHaveCount(0);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+  await page.locator("#f-rowCount").fill("3");
+  await page.locator("#f-crossSetback").fill("2");
+  await expect(page.locator("#calc-error")).toContainText("Crosswise row centers must fit");
+  await page.locator("#f-crossSetback").fill("5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg svg .drill-hole")).toHaveCount(12);
+  await page.locator("#f-rowCount").fill("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg svg .drill-hole")).toHaveCount(4);
+  await expect(page.locator("#dimension-svg svg .drill-row-guide")).toHaveCount(1);
+  await expect(page.locator("#cut-table tbody tr").first()).toContainText("Hole 1");
+  await expect(page.locator("#cut-table thead")).not.toContainText("Center Y (mm)");
+  const coords=await page.locator("#dimension-svg svg .drill-hole").first().evaluate(el=>Number(el.dataset.y));
+  expect(coords*25.4).toBeCloseTo(20,4);
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-rowCount")).toHaveValue("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg svg .drill-hole")).toHaveCount(4);
+  await page.setViewportSize({width:360,height:760});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
+});
