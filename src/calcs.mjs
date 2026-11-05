@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1210,26 +1210,83 @@ export function compute(slug,a){
     return result([M("Full centerline",d),M("After end setbacks",d-2*a.setback),M("Brace angle",deg(Math.atan2(a.height,a.width)),"A")],[],a.width,[],"triangle",{rise:a.height,run:a.width});
   }
   case "hole-spacing-calculator":{
-    positive("length","diameter");nonnegative("edge");whole("holes",2,500);
-    // 'edge' is the distance to the first/last CENTER, not the drilled edge.
-    // The drawing describes longitudinal fit only; board face width and
-    // perpendicular grain/edge margins are intentionally not inferred.
-    need(a.edge>=a.diameter/2&&2*a.edge<a.length,"Hole edges extend outside stock.");
+    positive("length","diameter","boardWidth");nonnegative("edge","crossSetback");
+    whole("holes",2,500);whole("rowCount",1,20);
+    // Guard against a 10k-circle preview and oversized CSV. Existing
+    // single-row workflows retain the original 500-hole maximum.
+    need(a.holes*a.rowCount<=600,
+      "Drilling grid exceeds 600 holes; reduce row count or holes per row.");
+    // Both dimensions are measured on the FLAT board face. The entered
+    // end setback is always to the first/last CENTER, not the hole edge.
+    need(a.edge+1e-9>=a.diameter/2&&2*a.edge<a.length,
+      "Hole edges extend outside stock.");
+    need(a.boardWidth+1e-9>=a.diameter,
+      "Hole diameter exceeds the measured board face width.");
     g=(a.length-2*a.edge)/(a.holes-1);
-    need(g>=a.diameter,"Holes overlap at the requested count.");
-    const gap=g-a.diameter,margin=a.edge-a.diameter/2;
+    need(g+1e-9>=a.diameter,
+      "Holes overlap at the requested count.");
+    const margin=a.edge-a.diameter/2,gap=g-a.diameter;
     xs=Array.from({length:a.holes},(_,i)=>a.edge+i*g);
-    rows=xs.map((x,i)=>({
-      item:"Hole "+(i+1),center:q(x),
-      holeLeftEdge:q(x-a.diameter/2),holeRightEdge:q(x+a.diameter/2),
-      diameter:q(a.diameter),clearToPrevious:i===0?null:q(gap)
+    // A solitary drilling row is centered across the measured width;
+    // crossSetback only applies to two or more aligned drilling rows.
+    const multi=a.rowCount>1;
+    const transversePitch=multi?
+      (a.boardWidth-2*a.crossSetback)/(a.rowCount-1):0;
+    if(multi){
+      need(a.crossSetback+1e-9>=a.diameter/2 &&
+        2*a.crossSetback<a.boardWidth,
+        "Crosswise row centers must fit the board face width.");
+      need(transversePitch+1e-9>=a.diameter,
+        "Drilling rows overlap; increase face width or reduce row count.");
+    }
+    const ys=Array.from({length:a.rowCount},(_,i)=>multi?
+      a.crossSetback+i*transversePitch:a.boardWidth/2);
+    const sideMargin=multi?a.crossSetback-a.diameter/2:
+      (a.boardWidth-a.diameter)/2;
+    need(sideMargin>=-1e-8,
+      "Drilled circles extend outside the board side edges.");
+    rows=ys.flatMap((y,ri)=>xs.map((x,ci)=>{
+      const base={
+        item:multi?"Row "+(ri+1)+" hole "+(ci+1):"Hole "+(ci+1),
+        center:q(x),
+        holeLeftEdge:q(x-a.diameter/2),
+        holeRightEdge:q(x+a.diameter/2),
+        diameter:q(a.diameter),
+        clearToPrevious:ci===0?null:q(Math.max(0,gap))
+      };
+      // Do not silently change the original single-row CSV column layout.
+      if(!multi)return base;
+      return {...base,rowNumber:ri+1,columnNumber:ci+1,
+        centerY:q(y),holeBottomEdge:q(y-a.diameter/2),
+        holeTopEdge:q(y+a.diameter/2),
+        clearToPreviousRow:ri===0?null:q(Math.max(0,transversePitch-a.diameter))};
     }));
-    return result([
-      M("Hole center pitch",g),M("Clear material between holes",gap),
-      M("End material margin",margin),M("Hole count",a.holes,"N"),
-      M("Edge offset",a.edge)
-    ],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"holes",
-    {holeDiameter:a.diameter,holeClearance:gap,endMaterialMargin:margin});
+    need(rows.every(r=>r.holeLeftEdge>=-1e-7&&
+      r.holeRightEdge<=a.length+1e-7),
+      "Drilled hole outside the board end reference.");
+    const holeCenters=ys.flatMap((y,ri)=>xs.map((x,ci)=>({
+      x:q(x),y:q(y),row:ri+1,column:ci+1,
+      item:rows[ri*a.holes+ci].item
+    })));
+    const metrics=[
+      M("Hole center pitch",g),M("Clear material between holes",Math.max(0,gap)),
+      M("End material margin",margin),M("Hole count",rows.length,"N"),
+      M("Edge offset",a.edge),M("Drilling rows",a.rowCount,"N"),
+      M("Measured board face width",a.boardWidth),
+      M("Side material margin",Math.max(0,sideMargin))
+    ];
+    if(multi)metrics.push(
+      M("Transverse center pitch",transversePitch),
+      M("Clear material between rows",Math.max(0,transversePitch-a.diameter))
+    );
+    return result(metrics,xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"holes",{
+      holeDiameter:a.diameter,holeClearance:Math.max(0,gap),
+      endMaterialMargin:margin,boardWidth:a.boardWidth,
+      drillRows:a.rowCount,holesPerRow:a.holes,holeCenters,
+      crossCenters:ys.map(q),transversePitch,
+      transverseClearance:multi?Math.max(0,transversePitch-a.diameter):null,
+      sideMaterialMargin:Math.max(0,sideMargin)
+    });
   }
   case "stair-stringer-calculator":{
     positive("rise","tread","depth");whole("risers",2,200);
