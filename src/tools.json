@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Plot regular, king and jack stud centers, physical face intervals and nominal plate-adjusted cut lengths beside up to three rough openings.",
+      "desc": "Calculate wall framing with doors and windows: regular and King/Jack studs, header and window-sill reference cuts, upper/lower cripple positions, SVG layout and CSV schedule.",
       "inputs": [
         {
           "key": "length",
@@ -124,6 +124,18 @@
           "label": "Total top plate thickness",
           "value": 3,
           "kind": "L"
+        },
+        {
+          "key": "headerDepth",
+          "label": "Header assembly vertical depth (geometry only)",
+          "kind": "L",
+          "value": 5.5
+        },
+        {
+          "key": "sillThickness",
+          "label": "Window sill stock thickness",
+          "kind": "L",
+          "value": 1.5
         },
         {
           "key": "openingStart",
@@ -198,18 +210,22 @@
           "kind": "L"
         }
       ],
-      "formula": "Regular/king cut = wall top datum − top plate − bottom plate; jack cut = rough opening top (sill + height) − bottom plate. Each side pack uses true stud face width; regular grid centers intersecting packs are omitted.",
-      "example": "120 in wall at 16 in OC, 96 in gross height, 1.5 in bottom and 3 in top plates, 32–68 in × 80 in door: six regular studs, four king/jack members; regular/king cuts 91.5 in and jack cuts 78.5 in.",
-      "limit": "Unengineered nominal geometry: rough opening top is assumed to be the jack bearing reference; no header thickness, sill, cripple takeoff or structural compliance. End positions denote centers; verify field cuts.",
+      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces.",
+      "example": "120 in between end centers, 96 in gross wall, 16 in OC, 1.5 in studs, 1.5 in bottom plate, 3 in top plates, 32–68 in door opening top 80 in, 5.5 in header depth: six regular studs, four King/Jack, one 39 in header and two 7.5 in upper cripples; 13 listed pieces (plates not in cut list).",
+      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Door and window elevations share a floor datum",
-          "text": "Set sill to 0 for a door. For a window, enter its sill elevation and opening height separately. The cutout shows the rough opening only; headers, cripple studs and trim are not generated."
+          "heading": "Specify the underside-of-header datum",
+          "text": "Opening sill + opening height is the underside of the header; the selected header depth rises ABOVE that line, while each jack stud ends at it. A header spans between the inner King faces and rests over the Jacks. The program does not size the header for loading or determine built-up header ply counts."
         },
         {
-          "heading": "Jack and king positions are center marks",
-          "text": "Each jack and king reference center is calculated from a clear opening edge and the stud width. Regular on-center members inside these side packs are omitted. Verify actual stock, rough-opening tolerances, and local requirements before cutting."
+          "heading": "Window sills and two cripple zones",
+          "text": "For a window, the sill board sits immediately below the entered sill elevation. Lower cripples fill from the top of the bottom plate to the underside of the sill; upper cripples fill from the top of the header to the underside of the top plates. Only fully fitting nominal on-center positions are used; a zone of zero height yields no cripple."
+        },
+        {
+          "heading": "Unified center, face and cut-list coordinates",
+          "text": "The wall length is measured from one end-stud center to the other. Regular studs that intersect rough openings or King/Jack faces are removed. Each output row stores horizontal extent, elevation and cut length and is reused directly for the schematic SVG and CSV. The diagram is NOT a 1:1 construction cutting template."
         }
       ]
     },
