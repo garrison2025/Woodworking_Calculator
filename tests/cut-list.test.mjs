@@ -621,3 +621,42 @@ test("metric-only calculator exports machine-readable numeric values and their p
   assert.equal(text.split("\r\n").filter(Boolean).length,metrics.length+2);
   assert.throws(()=>buildMetricsCsv(metrics,"yard"),/Unsupported unit/);
 });
+
+
+test("Deck multi-seam station list exports EVERY coordinate in selected units",()=>{
+  const r=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,
+    stock:60,joists:16,waste:0,boardUnitPrice:8.75,
+    fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:20
+  });
+  assert.equal(r.deckFastenerRows.length,r.deckRows.length);
+  for(let i=0;i<r.deckRows.length;i++){
+    assert.deepEqual(r.deckFastenerRows[i].seamStations,r.deckRows[i].seamCenters);
+    assert.deepEqual(r.deckFastenerRows[i].seamStations,[48,96]);
+  }
+  const columns=scheduleColumns(r.deckFastenerRows,"mm");
+  assert.equal(columns.find(c=>c.key==="seamStations").kind,"lengthList");
+  assert.equal(columns.find(c=>c.key==="seamStations").label,"Seam Stations (mm)");
+  const mm=buildScheduleCsv(r.deckFastenerRows,"mm","Joint reference coordinates");
+  assert.ok(mm.includes('"First Seam At (mm)"'));
+  assert.ok(mm.includes('"Last Seam At (mm)"'));
+  assert.ok(mm.includes('"Seam Stations (mm)"'));
+  assert.ok(mm.includes('"1219.2; 2438.4"'),mm.slice(0,800));
+  assert.ok(!mm.includes('"48; 96"'),"raw inch seam labels must not leak into mm CSV");
+  const inches=buildScheduleCsv(r.deckFastenerRows,"in");
+  assert.ok(inches.includes('"Seam Stations (in)"'));
+  assert.ok(inches.includes('"48; 96"'));
+  const meters=buildScheduleCsv(r.deckFastenerRows,"m");
+  assert.ok(meters.includes('"Seam Stations (m)"'));
+  assert.ok(meters.includes('"1.2192; 2.4384"'));
+  assert.deepEqual(r.deckFastenerRows[0].seamStations,[48,96],"source must not be mutated");
+
+  const seamFree=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,waste:0
+  });
+  assert.deepEqual(seamFree.deckFastenerRows[0].seamStations,[]);
+  const blank=buildScheduleCsv(seamFree.deckFastenerRows,"mm");
+  const idx=scheduleColumns(seamFree.deckFastenerRows,"mm").findIndex(c=>c.key==="seamStations");
+  const first=blank.slice(1).split("\r\n")[1].split(",");
+  assert.equal(first[idx],'""',"no seams must produce an empty cell, not a fabricated zero");
+});

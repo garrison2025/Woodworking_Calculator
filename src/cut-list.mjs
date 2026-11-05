@@ -26,6 +26,7 @@ const titleCase=(key)=>key.replace(/([A-Z])/g," $1").replace(/^./,ch=>ch.toUpper
 const fieldType=(key,records)=>{
   if(/AreaFt2$/.test(key))return "area";
   if(key==="cutVertices"||key==="planVertices"||key==="stockCutVertices")return "vertices";
+  if(key==="seamStations")return "lengthList";
   if(!records.some(r=>typeof r[key]==="number"))return "plain";
   // Ring/segment indexes are counts, never lengths. Angular sweeps are degrees.
   if(/(?:angle|degrees|deg)$/i.test(key))return "angle";
@@ -38,7 +39,7 @@ const fieldType=(key,records)=>{
 const unitLabel=(kind,unit)=>{
   if(kind==="area")return ["in","ft"].includes(unit)?"ft²":"m²";
   if(kind==="angle")return "°";
-  if(kind==="vertices"||kind==="length")return unit;
+  if(kind==="vertices"||kind==="length"||kind==="lengthList")return unit;
   return null;
 };
 export const scheduleColumns=(records,unit)=>{
@@ -55,6 +56,10 @@ const converted=(key,value,kind,unit)=>{
   if(value===null||value===undefined)return "";
   if(kind==="vertices"&&Array.isArray(value))
     return JSON.stringify(value.map(pair=>pair.map(v=>Number(outputLength(v,unit)))));
+  // A list of seam coordinates has the SAME physical unit as scalar lengths.
+  // Never export raw inch strings inside an otherwise metric worksheet.
+  if(kind==="lengthList"&&Array.isArray(value))
+    return value.map(v=>outputLength(v,unit)).join("; ");
   if(kind==="area"&&typeof value==="number")
     return numeric(["in","ft"].includes(unit)?value:value*.09290304);
   if(kind==="length"&&typeof value==="number")

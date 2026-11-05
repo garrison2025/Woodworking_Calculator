@@ -770,6 +770,8 @@ if(slug){
     if(v===null||v===undefined)return "—";
     if(kind==="vertices"&&Array.isArray(v))
       return v.map(point=>"("+point.map(n=>fmt(n)).join(", ")+")").join("; ");
+    if(kind==="lengthList"&&Array.isArray(v))
+      return v.length?v.map(n=>fmt(n,"L")).join("; "):"—";
     if(kind==="area")return fmt(v,"FT2");
     if(kind==="angle")return fmt(v,"A");
     if(kind==="length"&&typeof v==="number")return fmt(v,"L")+(slug==="framing-calculator"&&key==="cutLength"&&unit==="in"?" (≈ "+frac(v)+")":"");

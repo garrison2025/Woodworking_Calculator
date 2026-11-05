@@ -60,3 +60,27 @@ test("quoted purchase allowance changes counts and cost but not physical deck la
   expect(csv).toContain('"Purchase Cost"');
   expect(csv).not.toContain('"Purchase Quantity (in)"');
 });
+
+
+test("deck multi-seam fastener CSV converts the full list, not just its endpoints",async({page})=>{
+  await page.goto("/deck-material-calculator/");
+  await page.locator("#f-stock").fill("60");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.locator("#unit-select").selectOption("mm");
+  const dl=page.waitForEvent("download");
+  await page.locator("#download-deck-fastener-csv").click();
+  const csv=readFileSync(await (await dl).path(),"utf8");
+  expect(csv).toContain('"First Seam At (mm)"');
+  expect(csv).toContain('"Last Seam At (mm)"');
+  expect(csv).toContain('"Seam Stations (mm)"');
+  expect(csv).toContain('"1219.2; 2438.4"');
+  expect(csv).not.toContain('"48; 96"');
+  const list=csv.replace(/^\uFEFF/,"").split("\r\n");
+  expect(list.length).toBeGreaterThan(3);
+  await page.locator("#unit-select").selectOption("in");
+  const dl2=page.waitForEvent("download");
+  await page.locator("#download-deck-fastener-csv").click();
+  const source=readFileSync(await (await dl2).path(),"utf8");
+  expect(source).toContain('"Seam Stations (in)"');
+  expect(source).toContain('"48; 96"');
+});

@@ -1196,7 +1196,9 @@ export function compute(slug,a){
       fastenerPiecesPerRow:(joistGrid.length+row.seamCenters.length)*a.fastenersPerContact,
       firstSeamAt:row.seamCenters.length?row.seamCenters[0]:null,
       lastSeamAt:row.seamCenters.length?row.seamCenters.at(-1):null,
-      seamStations:row.seamCenters.join("; "),
+      // Preserve all stations as numeric inch coordinates. CSV converts
+      // EVERY station into the selected unit, not only the first and last.
+      seamStations:[...row.seamCenters],
       layoutDirection:row.layoutDirection
     }));
     need(deckFastenerRows.reduce((s,row)=>s+row.fasteningContacts,0)===fastenerContacts,
