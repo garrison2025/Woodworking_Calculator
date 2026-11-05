@@ -687,3 +687,16 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .stringer-section #stringer-blank-table,
  .stringer-section #stringer-support-table{font-size:9pt}
 }
+
+/* Physical PDF QA: avoid a single trailing cut row before the separate
+   materials plan, and keep all long stair limitations together on the page.
+   These changes affect only the print medium, never the live tables/geometry. */
+@media print{
+ body[data-tool="framing-calculator"] .print-schedule-part td,
+ body[data-tool="framing-calculator"] .print-schedule-part th{
+   padding-top:3.4pt;padding-bottom:3.4pt
+ }
+ body[data-tool="stair-stringer-calculator"] .proof #print-assumptions{
+   font-size:8.5pt;line-height:1.28
+ }
+}

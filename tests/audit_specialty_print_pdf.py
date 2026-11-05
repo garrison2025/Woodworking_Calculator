@@ -28,6 +28,12 @@ def check(folder:Path):
             file=folder/f"specialty-{slug}-{paper}.pdf"
             doc=PdfReader(str(file),strict=True)
             assert 2<=len(doc.pages)<55, (file,len(doc.pages))
+            # Real PDF page content must not leave a single row or a fragment
+            # of caveat text stranded on a nearly-empty final sheet.
+            if slug=="framing-calculator" and paper=="a4":
+                assert len(doc.pages)<=9, (file,"orphan framing cut-list page",len(doc.pages))
+            if slug=="stair-stringer-calculator" and paper=="letter":
+                assert len(doc.pages)<=9, (file,"orphan stair safety-note page",len(doc.pages))
             pages=[]
             for page_no,page in enumerate(doc.pages,1):
                 mediabox=page.mediabox
