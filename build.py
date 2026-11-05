@@ -140,6 +140,24 @@ def tool_page(t):
         '<option value="BRL">BRL</option><option value="MXN">MXN</option>'
         '</select><small>No FX conversion: change prices yourself when changing currency.</small></div>'
     ) if t["slug"] in ("framing-calculator","deck-material-calculator") else ""
+    shelf_pin_panel=(
+        '<section class="content-block shelf-pin-panel" id="shelf-pin-panel">'
+        '<span class="eyebrow">OPTIONAL SUPPORT DRILL GUIDE</span>'
+        '<h2>Measured shelf pin hole positions — left and right side panels</h2>'
+        '<p>Enter a positive support hole diameter to turn on this pattern. Each shelf uses two hole centers on each side panel, one measured from the inside FRONT edge and one from the inside BACK edge. All Y values start at the inside cabinet floor; set the measured hole-center drop BELOW the shelf underside for your actual hardware. A zero hole diameter disables the guide and preserves the original shelf spacing worksheet.</p>'
+        '<p id="shelf-pin-status" class="framing-price-status" role="status" aria-live="polite">Set a support-hole diameter above zero to enable the drilling guide.</p>'
+        '<div id="shelf-pin-svg" class="shelf-pin-drawing" aria-label="Proportional shelf side-panel drilling diagrams"></div>'
+        '<h3>Support-hole centers and circular face edges</h3>'
+        '<div class="table-scroll shelf-pin-scroll"><table id="shelf-pin-table" aria-label="Shelf drilling coordinates from each side panel inside front bottom corner">'
+        '<thead><tr><th>Shelf</th><th>Panel</th><th>Front/back</th><th>Center X</th><th>Center Y</th><th>Hole Ø</th>'
+        '<th>Front X edge</th><th>Back X edge</th><th>Bottom Y edge</th><th>Top Y edge</th><th>Clear below shelf</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-actions">'
+        '<button id="download-shelf-pins-csv" type="button" class="btn secondary" disabled>↓ Export side-panel drill coordinates CSV</button>'
+        '<button id="download-shelf-pin-svg" type="button" class="btn secondary" disabled>↓ Export proportional side-panel SVG</button>'
+        '</div>'
+        '<p class="caution">Reference coordinates only. The same front-referenced X datum is used separately on BOTH left and right panels; never drill from the wrong physical edge. Holes, pin heads, side-panel stock thickness, hardware load ratings and printer dimensions must be verified with the actual supplier and installation. Not a 1:1 drilling jig.</p>'
+        '</section>'
+    ) if t["slug"]=="shelf-spacing-calculator" else ""
     stringer_section=(
         '<section class="content-block stringer-section" id="stringer-section">'
         '<span class="eyebrow">NOMINAL CUT SECTION</span><h2>Modeled stringer profile and support datums</h2>'
@@ -254,7 +272,7 @@ def tool_page(t):
            '<input id="schedule-page-input" type="number" min="1" step="1" value="1" inputmode="numeric">'
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
-           +framing_takeoff+deck_takeoff+stringer_section+
+           +framing_takeoff+deck_takeoff+stringer_section+shelf_pin_panel+
            '<div class="content-block proof"<span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
