@@ -33,12 +33,16 @@ test("roof pitch and common rafter slope references use the same real rise/run r
   const stock=page.locator("#dimension-svg svg .rafter-stock-section");
   await expect(stock).toHaveCount(1);
   const poly=(await stock.getAttribute("points")).split(/\s+/).map(pair=>pair.split(",").map(Number));
-  expect(poly).toHaveLength(4);
+  expect(poly).toHaveLength(7); // real selected notch in a PLUMB-clipped 2D section
   const along=[poly[1][0]-poly[0][0],poly[1][1]-poly[0][1]];
-  const normal=[poly[3][0]-poly[0][0],poly[3][1]-poly[0][1]];
-  expect(along[0]*normal[0]+along[1]*normal[1]).toBeCloseTo(0,6);
+  const scale=along[0]/132; // default 120in bearing run +12in tail
+  const verticalDepth=poly.at(-1)[1]-poly[0][1];
+  expect(verticalDepth/scale).toBeCloseTo(5.5*Math.sqrt(1+.5*.5),7);
+  // The two sloping stock faces remain a measured 5.5in apart NORMAL
+  // to roof pitch; end clips are plumb, not perpendicular end saw cuts.
+  expect((verticalDepth/scale)/Math.sqrt(1+.5*.5)).toBeCloseTo(5.5,7);
   await expect(page.locator("#dimension-svg svg .rafter-seat-reference")).toHaveCount(1);
-  await expect(page.locator("#dimension-svg svg .rafter-notional-notch-depth")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .rafter-heel-plumb-cut")).toHaveCount(1);
   const main=page.locator("#result-cards .metric").filter({hasText:"Adjusted run"});
   await expect(main).toContainText("120 in");
   await page.locator("#f-ridge").fill("1.5");
@@ -48,10 +52,10 @@ test("roof pitch and common rafter slope references use the same real rise/run r
   await expect(page.locator("#calc-error")).toBeHidden();
   const flat=await line(top);
   expect(flat.y1).toBeCloseTo(flat.y2,9);
-  await expect(page.locator("#dimension-svg svg .rafter-notional-notch-depth")).toHaveCount(0);
+  await expect(page.locator("#dimension-svg svg .rafter-heel-plumb-cut")).toHaveCount(0);
   await expect(page.locator("#result-cards .metric").filter({hasText:"Seat notch (normal depth)"})).toContainText("0 in");
   await page.locator("#f-pitch").fill("6");
-  await expect(page.locator("#dimension-svg svg .rafter-notional-notch-depth")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .rafter-heel-plumb-cut")).toHaveCount(1);
 });
 
 test("hip rafter diagram uses distinct plan and true elevation triangles and exports typed angles",async({page})=>{
