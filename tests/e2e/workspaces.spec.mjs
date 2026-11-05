@@ -1737,7 +1737,7 @@ test("P1 polygon bowl ring exports true straight chords and a distinct round tur
   const ready=page.waitForEvent("download");
   await page.locator("#download-csv").click();
   const csv=readFileSync(await (await ready).path(),"utf8");
-  expect(csv).toContain('"Perpendicular Face Depth (mm)","Segment Face Area (m²)"');
+  expect(csv).toContain('"Perpendicular Face Depth (mm)","Ideal Turned Outer Diameter (mm)","Segment Face Area (m²)"');
   const svgReady=page.waitForEvent("download");
   await page.locator("#download-svg").click();
   const svg=readFileSync(await (await svgReady).path(),"utf8");
