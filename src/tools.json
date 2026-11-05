@@ -2043,7 +2043,7 @@
         },
         {
           "heading": "Read the stock-axis envelope as a geometric bound only",
-          "text": "The calculator projects the nominal 2D sawtooth and chosen end points onto the stair pitch direction and adds your per-end stock allowance. A measured board length can be compared to this modeled longitudinal envelope, but width, support cuts, knots, slope-aligned blank positioning, material defects and certified usable stock cannot be inferred. A pass is not construction approval."
+          "text": "The calculator projects all nominal notch vertices and chosen end reference points into a stair-pitch coordinate basis. It then draws a pitch-aligned 2D rectangle using your normal stock depth and required axis length plus per-end allowances; if an actual stock length is supplied, the rectangle is centered on the reference profile for comparison. This checks theoretical 2D coverage only. Actual stock placement, defects, true finished cut faces, structural support and approved site end bearing are NOT inferred."
         },
         {
           "heading": "A complete four-corner blank rectangle, not just a diagonal length",
