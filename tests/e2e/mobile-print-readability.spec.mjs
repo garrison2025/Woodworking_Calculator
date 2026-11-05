@@ -99,7 +99,7 @@ test("grouped measurement worksheet exports genuine A4 and Letter PDF examples",
     expect(pdf.length).toBeGreaterThan(5000);
     // Chromium emits a page dictionary per real PDF page; this catches
     // reintroduced orphan pages and oversized groups in both paper formats.
-    const pageCount=(pdf.toString("latin1").match(/\\/Type\\s*\\/Page\\b/g)||[]).length;
+    const pageCount=(pdf.toString("latin1").match(/\/Type\s*\/Page\b/g)||[]).length;
     expect(pageCount,paper+" worksheet pages").toBeLessThanOrEqual(paper==="A4"?5:6);
     writeFileSync("print-evidence/segmented-bowl-"+paper.toLowerCase()+"-readable.pdf",pdf);
   }
