@@ -782,6 +782,37 @@ if(slug){
     if(kind==="length"&&typeof v==="number")return fmt(v,"L")+(slug==="framing-calculator"&&key==="cutLength"&&unit==="in"?" (≈ "+frac(v)+")":"");
     return String(v);
   };
+  const syncKeyboardScrollRegions=()=>{
+    // A scroll area is not reachable with a keyboard merely because CSS
+    // says overflow:auto. Add ONE native tab stop only when horizontal or
+    // vertical overflow is present, and remove it when resizing resolves it.
+    for(const region of document.querySelectorAll(".table-scroll, .drawing-grid")){
+      const overflowX=region.scrollWidth>region.clientWidth+2;
+      const overflowY=region.scrollHeight>region.clientHeight+2;
+      const canScroll=(overflowX||overflowY)&&region.getClientRects().length>0;
+      if(canScroll){
+        region.tabIndex=0;
+        region.setAttribute("role","region");
+        region.dataset.keyboardScroll="true";
+        if(!region.getAttribute("aria-label")){
+          const label=region.querySelector("table")?.getAttribute("aria-label")||
+            region.closest(".content-block")?.querySelector("h2")?.textContent?.trim()||
+            (region.id==="dimension-svg"?"Zoomed dimension drawing":"Measurement table");
+          region.setAttribute("aria-label",label+" — arrow keys to scroll");
+          region.dataset.autoScrollLabel="true";
+        }
+      }else if(region.dataset.keyboardScroll==="true"){
+        // Preserve author-supplied labels (such as the dimension drawing).
+        region.removeAttribute("tabindex");
+        region.removeAttribute("role");
+        if(region.dataset.autoScrollLabel==="true")region.removeAttribute("aria-label");
+        delete region.dataset.keyboardScroll;
+        delete region.dataset.autoScrollLabel;
+      }
+    }
+  };
+  window.addEventListener("resize",()=>requestAnimationFrame(syncKeyboardScrollRegions));
+  window.addEventListener("afterprint",()=>requestAnimationFrame(syncKeyboardScrollRegions));
   const renderSchedule=()=>{
     if(!latest||!latest.rows.length){
       cut.innerHTML='<tbody><tr><td>Calculated dimensions are shown above. No repeating cut list for this geometry.</td></tr></tbody>';
@@ -1153,7 +1184,8 @@ if(slug){
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
-      status.textContent="Updated from your measurements.";
+      status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
+      requestAnimationFrame(syncKeyboardScrollRegions);
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
       renderPrintInputSnapshot();
@@ -1173,7 +1205,8 @@ if(slug){
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
-      status.textContent="Calculation requires correction.";
+      status.textContent="Calculation requires correction; see the error message.";
+      requestAnimationFrame(syncKeyboardScrollRegions);
     }
   }
   const showSchedulePage=next=>{
@@ -1186,6 +1219,7 @@ if(slug){
     schedulePage=next;
     renderSchedule();
     cut.closest(".table-scroll")?.scrollTo(0,0);
+    requestAnimationFrame(syncKeyboardScrollRegions);
   };
   schedulePrev.addEventListener("click",()=>showSchedulePage(schedulePage-1));
   scheduleNext.addEventListener("click",()=>showSchedulePage(schedulePage+1));
@@ -1217,8 +1251,8 @@ if(slug){
   fraction.addEventListener("change",render);
   currency?.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
-  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");});
-  zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");});
+  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");requestAnimationFrame(syncKeyboardScrollRegions);});
+  zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");requestAnimationFrame(syncKeyboardScrollRegions);});
   copy.addEventListener("click",async()=>{
     if(!latest)return;
     const text=tool.title+"\n"+latest.metrics.map(m=>m.label+": "+fmt(m.value,m.kind)).join("\n")+"\n"+tool.limit;
