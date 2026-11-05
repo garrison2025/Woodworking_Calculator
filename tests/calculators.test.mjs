@@ -1847,3 +1847,108 @@ test("Drill grid counts and center positions agree with independent evenly space
     near(value(r,"Clear material between holes"),gp-d);
   }
 });
+
+
+test("Three shelves create 12 independently checked side-panel support pin hole coordinates",()=>{
+  const a={height:40,shelves:3,thickness:1,top:1,bottom:2,
+    caseDepth:12,frontPinInset:1.5,backPinInset:1.5,
+    pinCenterDrop:.25,pinHoleDiameter:.2};
+  const r=compute("shelf-spacing-calculator",a);
+  near(value(r,"Shared base clear gap"),8.5);
+  near(value(r,"Actual bottom clearance"),10.5);
+  near(value(r,"Actual top clearance"),9.5);
+  near(value(r,"Support drill holes (both side panels)"),12);
+  assert.equal(r.shelfPinEnabled,true);
+  assert.equal(r.shelfPinRows.length,12);
+  assert.equal(r.sidePanelHoles.length,6);
+  assert.equal(r.rows.length,3);
+  assert.deepEqual(r.rows.map(row=>row.shelfBottom),[10.5,20,29.5]);
+  assert.deepEqual(r.sidePanelHoles.map(h=>[h.position,h.x,h.y]),[
+    ["Front",1.5,10.25],["Back",10.5,10.25],
+    ["Front",1.5,19.75],["Back",10.5,19.75],
+    ["Front",1.5,29.25],["Back",10.5,29.25]
+  ]);
+  for(const row of r.shelfPinRows){
+    assert.ok(["Left","Right"].includes(row.panel));
+    assert.ok(["Front","Back"].includes(row.position));
+    near(row.holeDiameter,.2);
+    near(row.faceBackEdge-row.faceFrontEdge,.2);
+    near(row.faceTopEdge-row.faceBottomEdge,.2);
+    near(row.undersideClearance,.15);
+    assert.ok(row.faceFrontEdge>=0&&row.faceBackEdge<=12);
+    assert.ok(row.faceBottomEdge>=0&&row.faceTopEdge<=40);
+    const shelf=r.rows[row.shelfNumber-1];
+    near(shelf.shelfBottom-row.faceTopEdge,.15);
+    const previous=row.shelfNumber===1?0:r.rows[row.shelfNumber-2].shelfTop;
+    assert.ok(row.faceBottomEdge>=previous);
+  }
+  assert.deepEqual(r.shelfPinRows.slice(0,4).map(p=>[p.panel,p.position]),[
+    ["Left","Front"],["Right","Front"],["Left","Back"],["Right","Back"]
+  ]);
+  assert.deepEqual(r.marks.map(x=>x.x),r.rows.map(x=>x.shelfBottom));
+});
+test("Zero shelf pin hole diameter preserves the original shelf face plan exactly",()=>{
+  const a={height:40,shelves:3,thickness:1,top:1,bottom:2};
+  const r=compute("shelf-spacing-calculator",a);
+  const alternate=compute("shelf-spacing-calculator",{
+    ...a,caseDepth:15,frontPinInset:2,backPinInset:4,
+    pinCenterDrop:1,pinHoleDiameter:0
+  });
+  assert.deepEqual(r.rows,alternate.rows);
+  assert.deepEqual(r.marks,alternate.marks);
+  assert.deepEqual(r.metrics,alternate.metrics);
+  assert.equal(r.metrics.length,5);
+  assert.equal(r.shelfPinRows.length,0);
+  assert.equal(r.sidePanelHoles.length,0);
+  assert.equal(r.shelfPinEnabled,false);
+  assert.equal(alternate.shelfPinEnabled,false);
+});
+test("Measured shelf pin positions must fit side panel and stay in real shelf clear openings",()=>{
+  const a={height:40,shelves:3,thickness:1,top:1,bottom:2,
+    caseDepth:12,frontPinInset:1.5,backPinInset:1.5,
+    pinCenterDrop:.25,pinHoleDiameter:.2};
+  for(const x of [
+    {caseDepth:0},{caseDepth:2},{frontPinInset:-1},{backPinInset:-1},
+    {pinCenterDrop:-1},{pinHoleDiameter:-1},
+    {frontPinInset:.05},{backPinInset:.05},
+    {frontPinInset:10},{backPinInset:11.5},
+    {pinCenterDrop:.05},{pinCenterDrop:11},
+    {pinHoleDiameter:.6},{pinHoleDiameter:3.5},
+    {height:9,shelves:3,thickness:3,top:0,bottom:0},
+    {height:500,shelves:101,thickness:.75,top:0,bottom:0}
+  ]){
+    const r=safeCompute("shelf-spacing-calculator",{...a,...x});
+    assert.equal(r.ok,false,"bad measured support configuration "+JSON.stringify(x));
+  }
+  const touching=compute("shelf-spacing-calculator",{
+    ...a,pinHoleDiameter:.5,pinCenterDrop:.25,frontPinInset:1.5,backPinInset:1.5
+  });
+  near(touching.shelfPinRows[0].undersideClearance,0);
+  assert.equal(touching.shelfPinRows.length,12);
+  const almost=compute("shelf-spacing-calculator",{
+    ...a,frontPinInset:.1,backPinInset:.1,pinHoleDiameter:.2
+  });
+  near(almost.shelfPinRows[0].faceFrontEdge,0);
+  near(almost.shelfPinRows[3].faceBackEdge,12);
+});
+test("Shelf support drilling holes remain conserved over several valid interior sizes",()=>{
+  for(const [height,count,thickness] of [[40,3,1],[60,4,.75],[100,8,.5],[400,60,.625]]){
+    const a={height,shelves:count,thickness,top:1,bottom:2,
+      caseDepth:12,frontPinInset:1.5,backPinInset:1.5,
+      pinCenterDrop:.25,pinHoleDiameter:.2};
+    const r=compute("shelf-spacing-calculator",a);
+    assert.equal(r.shelfPinRows.length,count*4);
+    assert.equal(r.sidePanelHoles.length,count*2);
+    assert.equal(r.rows.length,count);
+    for(let i=0;i<count;i++){
+      const records=r.shelfPinRows.filter(x=>x.shelfNumber===i+1);
+      assert.equal(records.length,4);
+      const ys=new Set(records.map(x=>x.centerY));
+      assert.equal(ys.size,1);
+      near(records[0].centerY,r.rows[i].shelfBottom-a.pinCenterDrop,1e-7);
+      assert.equal(new Set(records.map(x=>x.panel)).size,2);
+      assert.equal(new Set(records.map(x=>x.position)).size,2);
+      assert.ok(records.every(x=>x.faceBottomEdge>=-1e-7));
+    }
+  }
+});
