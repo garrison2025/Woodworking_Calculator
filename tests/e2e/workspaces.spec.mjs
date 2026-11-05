@@ -547,7 +547,7 @@ test("hip roof small fixture uses six sheets unrotated and twelve rotated",async
 test("framing drawing, nominal cut schedule and metric export share member elevations",async({page})=>{
   await page.goto("/framing-calculator/");
   await expect(page.locator("#dimension-svg svg .framing-member")).toHaveCount(10);
-  await expect(page.locator("#cut-table tbody tr")).toHaveCount(10);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(13);
   await expect(page.locator("#result-cards .metric").filter({hasText:"Regular and king cut length"})).toContainText("91.5 in");
   await expect(page.locator('#dimension-svg svg .framing-member[data-cut-length="78.5"]')).toHaveCount(2);
   await page.locator("#f-bottomPlate").fill("2");
@@ -601,4 +601,61 @@ test("rake stud physical face polygons share short/long cuts with the exported r
   await page.locator("#f-pitch").fill("0");
   await expect(faces.first()).toHaveAttribute("data-left-cut","91.5");
   await expect(faces.first()).toHaveAttribute("data-right-cut","91.5");
+});
+
+test("framing headers, sills and cripple studs follow one browser drawing and CSV schedule",async({page})=>{
+  await page.goto("/framing-calculator/");
+  const svg=page.locator("#dimension-svg svg");
+  await expect(svg.locator(".framing-member")).toHaveCount(10);
+  await expect(svg.locator(".framing-header")).toHaveCount(1);
+  await expect(svg.locator(".framing-cripple")).toHaveCount(2);
+  await expect(svg.locator(".framing-sill")).toHaveCount(0);
+  await expect(svg.locator('.framing-header[data-cut-length="39"]')).toHaveCount(1);
+  await expect(svg.locator('.framing-cripple[data-cut-length="7.5"]')).toHaveCount(2);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(13);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total listed pieces"})).toContainText("13");
+  await page.locator("#f-opening2Start").fill("82");
+  await page.locator("#f-opening2Width").fill("18");
+  await page.locator("#f-opening2Height").fill("40");
+  await page.locator("#f-opening2Sill").fill("32");
+  await expect(svg.locator(".opening-cutout")).toHaveCount(2);
+  await expect(svg.locator(".framing-header")).toHaveCount(2);
+  await expect(svg.locator(".framing-sill")).toHaveCount(1);
+  await expect(svg.locator('.framing-sill[data-cut-length="18"]')).toHaveCount(1);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Window sills"})).toContainText("1");
+  await page.locator("#unit-select").selectOption("mm");
+  const wait=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await wait).path(),"utf8");
+  expect(csv).toContain('"Stock Depth (mm)"');
+  expect(csv).toContain('"Header"');
+  expect(csv).toContain('"Sill"');
+  expect(csv).toContain('"Upper cripple"');
+  expect(csv).toContain('"Lower cripple"');
+  await page.locator("#unit-select").selectOption("in");
+  await page.locator("#f-headerDepth").fill("30");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+  await page.locator("#f-headerDepth").fill("5.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(svg.locator(".framing-header")).toHaveCount(2);
+});
+
+test("framing horizontal elevation respects header depth and window sill thickness",async({page})=>{
+  await page.goto("/framing-calculator/");
+  const svg=page.locator("#dimension-svg svg");
+  const header=svg.locator(".framing-header");
+  await expect(header).toHaveAttribute("data-bottom","80");
+  await expect(header).toHaveAttribute("data-top","85.5");
+  await page.locator("#f-headerDepth").fill("7");
+  await expect(header).toHaveAttribute("data-top","87");
+  await expect(svg.locator('.framing-cripple[data-cut-length="6"]')).toHaveCount(2);
+  await page.locator("#f-openingSill").fill("24");
+  await page.locator("#f-openingHeight").fill("48");
+  await expect(svg.locator(".framing-sill")).toHaveAttribute("data-bottom","22.5");
+  await expect(svg.locator(".framing-sill")).toHaveAttribute("data-top","24");
+  await expect(svg.locator('.framing-cripple[data-cut-length="21"]')).toHaveCount(2);
+  await page.locator("#f-sillThickness").fill("2");
+  await expect(svg.locator(".framing-sill")).toHaveAttribute("data-bottom","22");
+  await expect(svg.locator('.framing-cripple[data-cut-length="20.5"]')).toHaveCount(2);
 });
