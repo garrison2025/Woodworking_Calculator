@@ -140,6 +140,25 @@ def tool_page(t):
         '<option value="BRL">BRL</option><option value="MXN">MXN</option>'
         '</select><small>No FX conversion: change prices yourself when changing currency.</small></div>'
     ) if t["slug"] in ("framing-calculator","deck-material-calculator") else ""
+    stringer_section=(
+        '<section class="content-block stringer-section" id="stringer-section">'
+        '<span class="eyebrow">NOMINAL CUT SECTION</span><h2>Modeled stringer profile and support datums</h2>'
+        '<p>This is a proportional mathematical side-section: nominal step-notch vertices are joined to a parallel lower stock edge at the entered board normal depth. The first and last vertical closing edges are artificial drawing clips, NOT measured or safe bearing cuts. No actual blank length, material grade, fastening or structural capacity is inferred.</p>'
+        '<p id="stringer-model-status" class="framing-price-status" role="status" aria-live="polite">Enter valid geometry to view a modeled section.</p>'
+        '<h3>Modeled section outline vertices</h3>'
+        '<div class="table-scroll"><table id="stringer-outline-table" aria-label="Modeled stringer side-section vertices">'
+        '<thead><tr><th>Vertex</th><th>Boundary</th><th>Horizontal reference X</th><th>Elevation Y</th></tr></thead><tbody></tbody></table></div>'
+        '<h3>Independent lower and upper support surface measurements</h3>'
+        '<p>Optional horizontal support references are drawn outside the notch span. They do not automatically determine timber end cuts, actual bearing contact, connection capacity or approval. Verify both ends on site.</p>'
+        '<div class="table-scroll"><table id="stringer-support-table" aria-label="Measured horizontal support surface references">'
+        '<thead><tr><th>Reference surface</th><th>Start X</th><th>End X</th><th>Elevation</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-actions">'
+        '<button id="download-stringer-section-csv" type="button" class="btn secondary">↓ Download modeled profile vertices CSV</button>'
+        '<button id="download-stringer-support-csv" type="button" class="btn secondary">↓ Download measured support references CSV</button>'
+        '</div>'
+        '<p class="caution">This model is NOT a full-size cutting template. Side-section area is a geometry cross-check, not a lumber board purchasing quantity or strength rating. Structural and end-bearing acceptance require independent measurements and professional review.</p>'
+        '</section>'
+    ) if t["slug"]=="stair-stringer-calculator" else ""
     body+=(f'<section class="workspace wrap" data-workspace><div class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
@@ -235,7 +254,7 @@ def tool_page(t):
            '<input id="schedule-page-input" type="number" min="1" step="1" value="1" inputmode="numeric">'
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
-           +framing_takeoff+deck_takeoff+
+           +framing_takeoff+deck_takeoff+stringer_section+
            '<div class="content-block proof"<span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
