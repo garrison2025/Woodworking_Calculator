@@ -101,3 +101,52 @@ test("Framing stock cut CSV tracks every geometrical piece and typed kerf column
   assert.equal(data.stockCuts.length,data.rows.length);
   assert.ok(csv.endsWith('"\r\n'));
 });
+
+
+test("Framing price estimate CSV keeps counts, money and units distinct",()=>{
+  const input={length:120,spacing:16,width:1.5,wallHeight:96,openingStart:32,
+    openingWidth:36,openingHeight:80,openingSill:0,studUnitPrice:5.5,
+    headerUnitPrice:14.25,stockWaste:10};
+  const result=compute("framing-calculator",input);
+  const rows=result.materialSummary.map(r=>({
+    stockGroup:r.stockGroup,pieces:r.pieces,stockLength:r.stockLength,
+    plannedSticks:r.plannedSticks,allowanceSticks:r.allowanceSticks,
+    purchaseSticks:r.purchaseSticks,unitPrice:r.unitPrice,
+    plannedCost:r.plannedCost,reserveCost:r.allowanceCost,
+    purchaseCost:r.purchaseCost,currency:"USD"
+  }));
+  const columns=scheduleColumns(rows,"mm");
+  for(const key of ["pieces","plannedSticks","allowanceSticks","purchaseSticks",
+    "unitPrice","plannedCost","reserveCost","purchaseCost"]){
+    const column=columns.find(c=>c.key===key);
+    assert.equal(column.kind,"plain",key);
+    assert.ok(!column.label.includes(" (mm)"),column.label);
+  }
+  assert.equal(columns.find(x=>x.key==="stockLength").label,"Stock Length (mm)");
+  const csv=buildScheduleCsv(rows,"mm","User-entered quote, no exchange conversion");
+  assert.ok(csv.includes('"Unit Price"'));
+  assert.ok(csv.includes('"Purchase Cost"'));
+  assert.ok(csv.includes('"Allowance Sticks"'));
+  assert.ok(csv.includes('"Currency"'));
+  assert.ok(csv.includes('"5.5"'));
+  assert.ok(csv.includes('"14.25"'));
+  assert.ok(csv.includes('"60.5"'),"Stud purchased sticks including allowance");
+  assert.ok(csv.includes('"28.5"'),"Header purchased sticks including allowance");
+  assert.ok(csv.includes('"USD"'));
+  assert.ok(!csv.includes('"Purchase Cost (mm)"'));
+  assert.ok(!csv.includes('"Unit Price (mm)"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,rows.length+2);
+});
+
+test("Missing price CSV cells remain empty, and cannot masquerade as zero-dollar quotes",()=>{
+  const result=compute("framing-calculator",{length:120,spacing:16,width:1.5,wallHeight:96,
+    openingStart:32,openingWidth:36,openingHeight:80});
+  const row=result.materialSummary[0];
+  assert.equal(row.unitPrice,null);
+  assert.equal(row.purchaseCost,null);
+  const csv=buildScheduleCsv([{
+    stockGroup:row.stockGroup,purchaseSticks:row.purchaseSticks,
+    unitPrice:row.unitPrice,purchaseCost:row.purchaseCost,currency:"USD"
+  }],"in","Price not provided");
+  assert.ok(csv.includes('"Stud","10","","","USD"'),csv);
+});
