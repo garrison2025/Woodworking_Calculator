@@ -99,8 +99,17 @@ if(slug){
         const yGross0=yHeight(data.grossStart),yGross1=yHeight(data.grossEnd);
         content+='<path class="gable-gross-reference" d="M'+left+' '+yGross0+' L'+right+' '+yGross1+'" fill="none" stroke="#89968d" stroke-width="1.5" stroke-dasharray="6 4"/>';
         content+='<path class="gable-net-cutline" d="M'+left+' '+yHeight(rows[0].length)+' L'+right+' '+yHeight(rows.at(-1).length)+'" fill="none" stroke="#1e6454" stroke-width="3"/>';
+        const rawX=v=>left+v/span*W;
         for(const [i,r] of rows.entries()){
-          content+='<line class="gable-cut-stud" data-index="'+(i+1)+'" data-position="'+r.position+'" data-cut-length="'+r.length+'" x1="'+x(r.position)+'" y1="'+base+'" x2="'+x(r.position)+'" y2="'+yHeight(r.length)+'" stroke="#b98c56" stroke-width="4"><title>'+esc(r.item+" · center "+fmt(r.position)+" · net cut "+fmt(r.length)+" · gross height "+fmt(r.grossHeight))+'</title></line>';
+          // Real left/right top edges instead of a fictitious square-ended
+          // vertical bar. The centerline is overlaid for clear measurement.
+          const profile=[
+            [rawX(r.faceLeft),base],[rawX(r.faceRight),base],
+            [rawX(r.faceRight),yHeight(r.rightEdgeCut)],
+            [rawX(r.faceLeft),yHeight(r.leftEdgeCut)]
+          ].map(p=>p.join(",")).join(" ");
+          content+='<polygon class="gable-cut-face" data-position="'+r.position+'" data-center-cut="'+r.length+'" data-left-cut="'+r.leftEdgeCut+'" data-right-cut="'+r.rightEdgeCut+'" points="'+profile+'" fill="#dbb88e" stroke="#9d7851" stroke-width=".6"><title>'+esc(r.item+" · left edge "+fmt(r.leftEdgeCut)+" · center "+fmt(r.length)+" · right edge "+fmt(r.rightEdgeCut))+'</title></polygon>';
+          content+='<line class="gable-cut-stud" data-index="'+(i+1)+'" data-position="'+r.position+'" data-cut-length="'+r.length+'" x1="'+x(r.position)+'" y1="'+base+'" x2="'+x(r.position)+'" y2="'+yHeight(r.length)+'" stroke="#b98c56" stroke-width="1"><title>'+esc(r.item+" · center "+fmt(r.position)+" · centerline cut "+fmt(r.length)+" · gross height "+fmt(r.grossHeight))+'</title></line>';
         }
         content+=svgText(left,34,"NET LEFT "+fmt(rows[0].length)+" · RIGHT "+fmt(rows.at(-1).length),"dim-label");
         content+=svgText(left,324,"DASHED = GROSS HEIGHT · SOLID = NET CUT AFTER PLATES","tick-label");
