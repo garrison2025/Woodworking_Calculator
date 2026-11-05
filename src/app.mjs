@@ -27,6 +27,11 @@ if(slug){
   const framingPriceStatus=document.querySelector("#framing-price-status");
   const framingTicket=document.querySelector("#framing-ticket-list");
   const framingTicketStatus=document.querySelector("#framing-ticket-status");
+  const stringerModelStatus=document.querySelector("#stringer-model-status");
+  const stringerOutlineTable=document.querySelector("#stringer-outline-table tbody");
+  const stringerSupportTable=document.querySelector("#stringer-support-table tbody");
+  const stringerSectionExport=document.querySelector("#download-stringer-section-csv");
+  const stringerSupportExport=document.querySelector("#download-stringer-support-csv");
   const deckCostStatus=document.querySelector("#deck-cost-status");
   const deckBudgetTable=document.querySelector("#deck-budget-table tbody");
   const deckFastenerTable=document.querySelector("#deck-fastener-table tbody");
@@ -672,6 +677,27 @@ if(slug){
       '</span><span>'+esc(r.purchaseCost===null?"QUOTE NEEDED":money(r.purchaseCost))+
       '</span></li>').join("");
   };
+  const renderStringerSection=()=>{
+    if(!stringerModelStatus||!stringerOutlineTable||!stringerSupportTable)return;
+    const outline=latest?.stringerEnvelopeRows||[],surfaces=latest?.supportReferences||[];
+    const enabled=outline.length>0;
+    stringerSectionExport.disabled=!enabled;
+    stringerSupportExport.disabled=!surfaces.length;
+    stringerModelStatus.textContent=!enabled?
+      "Correct measurements to view modeled geometry; no cut profile is available.":
+      "MODELED SIDE SECTION ONLY — "+outline.length+
+        " calculated vertices · minimum perpendicular throat "+
+        fmt(latest.minThroatFromVertices,"L")+
+        " · face area "+fmt(latest.envelopeAreaSqIn/144,"FT2")+
+        ". Vertical end clips and measured support surfaces are NOT physical bearing cuts.";
+    stringerOutlineTable.innerHTML=outline.map(r=>'<tr>'+
+      [r.index,r.boundary,fmt(r.x,"L"),fmt(r.elevation,"L")]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    stringerSupportTable.innerHTML=surfaces.length?surfaces.map(r=>'<tr>'+
+      [r.item,fmt(r.startX,"L"),fmt(r.endX,"L"),fmt(r.elevation,"L")]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
+      '<tr><td colspan="4">No measured support surface entered. End-bearing geometry is unverified.</td></tr>';
+  };
   function render(){
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
@@ -687,7 +713,7 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
-      renderFramingTakeoff();renderDeckTakeoff();
+      renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
@@ -708,7 +734,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
-      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();
+      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();
       status.textContent="Calculation requires correction.";
     }
   }
@@ -804,6 +830,20 @@ if(slug){
       "Each separate stock piece at a joist reference = one contact; butt seams count both pieces. Fastener rate is user-entered; actual structural bearing and manufacturer requirements NOT verified.");
     save(slug+"-"+unit+"-fastener-contacts.csv",body,"text/csv;charset=utf-8");
     status.textContent="Deck fastener contacts CSV saved locally.";
+  });
+  stringerSectionExport?.addEventListener("click",()=>{
+    if(!latest?.stringerEnvelopeRows?.length)return;
+    const csv=buildScheduleCsv(latest.stringerEnvelopeRows,unit,
+      "MODELED geometry only. Vertical first/last end clips and lower parallel stock edge are NOT finished bearing cuts; no 1:1 template, structural approval or raw stock purchase length.");
+    save(slug+"-"+unit+"-modeled-section.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Modeled side-section coordinate CSV saved locally.";
+  });
+  stringerSupportExport?.addEventListener("click",()=>{
+    if(!latest?.supportReferences?.length)return;
+    const csv=buildScheduleCsv(latest.supportReferences,unit,
+      "User-entered horizontal support surface references only. NOT structural bearing, fastener or timber end cuts; verify actual site support details.");
+    save(slug+"-"+unit+"-support-surfaces.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Support surface reference CSV saved locally.";
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
