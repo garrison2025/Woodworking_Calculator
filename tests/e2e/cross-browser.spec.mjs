@@ -83,3 +83,22 @@ test("Stringer 2D cut/support contact does not treat an X projection as rated be
   await page.locator("#unit-select").selectOption("mm");
   await expect(page.locator("#stringer-end-contact-table")).toContainText("0 mm");
 });
+
+test("Long schedule native print event expands all cuts and restores browsing page in other engines",async({page})=>{
+  await page.goto("/segmented-bowl-calculator/");
+  await page.locator("#f-segments").fill("180");
+  await page.locator("#f-rings").fill("2");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const rows=page.locator("#cut-table tbody tr");
+  await page.locator("#schedule-next").click();
+  await expect(rows).toHaveCount(160);
+  await expect(rows.first()).toContainText("Ring 1 / segment 161");
+  await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
+  await expect(rows).toHaveCount(360);
+  await expect(rows.last()).toContainText("Ring 2 / segment 180");
+  await expect(page.locator("#schedule-pager")).toBeHidden();
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+  await expect(rows).toHaveCount(160);
+  await expect(rows.first()).toContainText("Ring 1 / segment 161");
+  await expect(page.locator("#schedule-page-status")).toHaveText("Page 2 of 3");
+});
