@@ -493,12 +493,13 @@ if(slug){
         r.quoted?money(r.purchaseCost):"Quote needed",
         takeoffLength(r.offcutLength),r.selected?"SELECTED":"Alternative"]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
-    const meaning={proved:"Completed exact enumeration", "size-limit":"Heuristic (over 9 pieces)",
-      "node-limit":"Heuristic (40,000-state limit)", "quote-needed":"Quote required",
+    const meaning={proved:"Completed memoized exact search", "size-limit":"Heuristic (over 16 pieces)",
+      "node-limit":"Heuristic (40,000 distinct-state limit)", "quote-needed":"Quote required",
       "not-required":"No material required"};
     framingProof.innerHTML=checks.map(check=>'<tr>'+
       [check.stockGroup,check.pieceCount,meaning[check.status]||"Not verified",
        check.nodes?check.nodes.toLocaleString("en-US"):"—",
+       check.memoHits?check.memoHits.toLocaleString("en-US"):"—",
        check.certified?"PROVEN optimal in model":"Not proven"]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
     const required=checks.filter(s=>s.pieceCount>0);
