@@ -470,3 +470,22 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .shelf-pin-panel tr{break-inside:avoid}
   .shelf-pin-panel{break-inside:auto}
 }
+
+/* Printed calculation provenance: the editable sidebar is intentionally
+   hidden by the worksheet design. This snapshot captures EVERY actual form
+   value with its selected input unit instead of relying on rounded results. */
+.print-input-snapshot{display:none}
+@media print{
+  .print-input-snapshot:not([hidden]){display:block!important;
+    padding:12pt 0 5pt;margin:9pt auto 13pt;break-before:auto}
+  .print-input-snapshot h2{font-size:15pt;margin:0 0 5pt}
+  .print-input-snapshot p{font-size:8.5pt;line-height:1.4;
+    margin:0 0 8pt;color:#333}
+  #print-input-table{width:100%;border-collapse:collapse;
+    table-layout:fixed;font-size:8.5pt}
+  #print-input-table thead{display:table-header-group}
+  #print-input-table th,#print-input-table td{border:1px solid #aaa;
+    padding:4pt 6pt;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+  #print-input-table th{width:62%;text-align:left;font-weight:600}
+  #print-input-table tr{break-inside:avoid;page-break-inside:avoid}
+}
