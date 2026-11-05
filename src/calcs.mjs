@@ -799,10 +799,39 @@ export function compute(slug,a){
     const rise=ref.rise,line=ref.line,over=tail.line;
     const heel=a.seat*slope,notchNormal=a.seat*Math.sin(angle),remaining=a.depth-notchNormal;
     need(remaining>0,"The nominal seat-notch depth consumes the full rafter depth; reduce the seat or slope.");
+    // X: horizontal from ridge top, +x down roof toward tail.
+    // Y: vertical DROP from ridge top, +y toward the lower edge.
+    // Rafter depth D is NORMAL to slope; the lower edge therefore lies at
+    // y = slope*x + D*sqrt(1+slope^2) for each fixed horizontal x.
+    // The OUTSIDE wall-face plumb line is x=run, and the seat runs INWARD
+    // from x=run-seat to x=run. A 2-line, square-ended triangular cut is
+    // geometrically defined without inferring structure/fastening.
+    const verticalDepth=a.depth*Math.hypot(1,slope);
+    const lowerY=x=>slope*x+verticalDepth;
+    const seatStart={x:q(run-a.seat),y:q(lowerY(run-a.seat))};
+    const heelTop={x:q(run),y:seatStart.y};
+    const heelBottom={x:q(run),y:q(lowerY(run))};
+    const hap=verticalDepth-heel;
+    const notchArea=a.seat*heel/2;
+    need(hap>0&&Number.isFinite(hap),
+      "Birdsmouth seat leaves no positive top-to-seat height; reduce the notch.");
+    need(Math.abs((heelBottom.y-heelTop.y)-heel)<=Math.max(2e-8,heel*1e-8),
+      "Birdsmouth cut coordinates do not conserve the selected heel height.");
+    need(Math.abs((seatStart.x-heelTop.x)*heel/2)+1e-8>=notchArea,
+      "Birdsmouth triangle geometry failed the independent area check.");
+    const birdsmouthCutRows=(a.seat>0&&heel>1e-7)?[
+      {item:"Birdsmouth horizontal seat",cutType:"Horizontal seat",
+        startX:seatStart.x,startY:seatStart.y,endX:heelTop.x,endY:heelTop.y,
+        cutLength:q(a.seat),cutAngleDeg:0},
+      {item:"Birdsmouth plumb heel",cutType:"Vertical heel",
+        startX:heelTop.x,startY:heelTop.y,endX:heelBottom.x,endY:heelBottom.y,
+        cutLength:q(heel),cutAngleDeg:90}
+    ]:[];
     const schedule=[
       {item:"Ridge reference",horizontalRun:0,slopeDistance:0,verticalDrop:0},
       {item:"Bearing reference",horizontalRun:q(run),slopeDistance:q(line),verticalDrop:q(rise)},
-      {item:"Overhang end",horizontalRun:q(run+a.overhang),slopeDistance:q(line+over),verticalDrop:q(rise+a.overhang*slope)}
+      {item:"Overhang end",horizontalRun:q(run+a.overhang),slopeDistance:q(line+over),verticalDrop:q(rise+a.overhang*slope)},
+      ...birdsmouthCutRows
     ];
     return result([
       M("Adjusted run",run),M("Ridge centerline run before allowance",a.run),
@@ -811,12 +840,18 @@ export function compute(slug,a){
       M("Total horizontal run to tail",run+a.overhang),
       M("Plumb cut angle",ref.angle,"A"),M("Seat reference drop",heel),
       M("Seat notch (normal depth)",notchNormal),M("Remaining stock (normal)",remaining),
-      M("Notch / stock depth",100*notchNormal/a.depth,"D")
-    ],schedule.map(r=>P(r.horizontalRun,r.item)),run+a.overhang,schedule,"rafter",
+      M("Notch / stock depth",100*notchNormal/a.depth,"D"),
+      M("HAP (vertical top to seat at wall)",hap),
+      M("Birdsmouth horizontal seat length",a.seat),
+      M("Birdsmouth vertical heel length",heel),
+      M("Nominal removed triangular face area",notchArea/144,"FT2")
+    ],schedule.slice(0,3).map(r=>P(r.horizontalRun,r.item)),run+a.overhang,schedule,"rafter",
     {rise,run,seat:a.seat,overhang:a.overhang,stockDepth:a.depth,
       notchNormal,pitch:a.pitch,roofSlope:slope,
       totalHorizontalRun:run+a.overhang,totalRise:rise+tail.rise,
-      referencePoints:schedule});
+      referencePoints:schedule.slice(0,3),
+      verticalDepth,seatStart,heelTop,heelBottom,hap,
+      birdsmouthCutRows,notchAreaSqIn:notchArea});
   }
   case "crown-molding-calculator":{
     positive("spring","corner");need(a.spring<90&&a.corner<180&&a.corner>0,"Angles must be between 0 and their geometric limits.");whole("inside",0,1);whole("left",0,1);
