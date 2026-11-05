@@ -399,3 +399,21 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .btn:hover,.tool-card:hover{transform:none}
 }
 
+
+/* Deck estimator: optional supplier price and per-joist fastening audit. */
+.deck-purchase-plan{min-width:0}
+.deck-purchase-plan h3{font-size:17px;margin:22px 0 8px}
+.deck-purchase-plan .table-scroll{overflow:auto}
+#deck-budget-table{min-width:630px}
+#deck-fastener-table{min-width:740px}
+.deck-purchase-plan .framing-order-ticket{margin-top:22px}
+.deck-purchase-plan .takeoff-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}
+.deck-purchase-plan .takeoff-actions .btn{flex:1;min-width:min(230px,100%)}
+@media print{
+  .deck-purchase-plan .takeoff-actions{display:none!important}
+  .deck-purchase-plan .deck-fastener-scroll{max-height:none;overflow:visible}
+  .deck-purchase-plan #deck-budget-table,.deck-purchase-plan #deck-fastener-table{min-width:0;table-layout:auto;font-size:7pt}
+  .deck-purchase-plan td,.deck-purchase-plan th{padding:4pt 3pt}
+  .deck-purchase-plan{break-inside:auto}
+  .deck-purchase-plan tr{break-inside:avoid}
+}
