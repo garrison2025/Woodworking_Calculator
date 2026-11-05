@@ -484,7 +484,7 @@ test("Rafter: independent notch geometry and ridge allowance",()=>{
   near(value(r,"Seat notch (normal depth)"),expectedNotch,1e-8);
   near(value(r,"Remaining stock (normal)"),5.5-expectedNotch,1e-8);
   near(value(r,"Notch / stock depth"),100*expectedNotch/5.5,1e-8);
-  assert.equal(r.rows.length,3);
+  assert.equal(r.rows.length,5);
   assert.deepEqual(r.rows.map(p=>p.item),["Ridge reference","Bearing reference","Overhang end","Birdsmouth horizontal seat","Birdsmouth plumb heel"]);
   near(r.rows[1].horizontalRun,119.25,1e-8);
   near(r.rows[2].horizontalRun,131.25,1e-8);
