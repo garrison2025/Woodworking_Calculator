@@ -1737,3 +1737,113 @@ test("Stringer support surfaces are optional, bounded and never create hidden cu
   assert.equal(onlyBottom.supportReferences.length,1);
   assert.equal(onlyBottom.supportReferences[0].startX,-4);
 });
+
+
+test("Aligned three-row drilling grid conserves all circular X/Y centers and physical margins",()=>{
+  const mm=x=>x/25.4;
+  const a={length:mm(100),holes:4,edge:mm(5),diameter:mm(5),
+    boardWidth:mm(40),rowCount:3,crossSetback:mm(5)};
+  const r=compute("hole-spacing-calculator",a);
+  assert.equal(r.shape,"holes");
+  assert.equal(r.drillRows,3);
+  assert.equal(r.holesPerRow,4);
+  assert.equal(r.rows.length,12);
+  assert.equal(r.holeCenters.length,12);
+  assert.equal(r.marks.length,4);
+  assert.equal(r.crossCenters.length,3);
+  near(value(r,"Hole center pitch")*25.4,30,1e-7);
+  near(value(r,"Clear material between holes")*25.4,25,1e-7);
+  near(value(r,"Transverse center pitch")*25.4,15,1e-7);
+  near(value(r,"Clear material between rows")*25.4,10,1e-7);
+  near(value(r,"End material margin")*25.4,2.5,1e-7);
+  near(value(r,"Side material margin")*25.4,2.5,1e-7);
+  assert.equal(value(r,"Hole count"),12);
+  assert.equal(value(r,"Drilling rows"),3);
+  assert.deepEqual(r.crossCenters.map(y=>Math.round(y*25.4)),[5,20,35]);
+  for(let ri=0;ri<3;ri++)for(let ci=0;ci<4;ci++){
+    const row=r.rows[ri*4+ci],p=r.holeCenters[ri*4+ci];
+    assert.equal(row.rowNumber,ri+1);
+    assert.equal(row.columnNumber,ci+1);
+    assert.equal(p.row,ri+1);
+    assert.equal(p.column,ci+1);
+    near(row.center*25.4,5+30*ci,2e-7);
+    near(row.centerY*25.4,5+15*ri,2e-7);
+    near((row.holeRightEdge-row.holeLeftEdge)*25.4,5,2e-7);
+    near((row.holeTopEdge-row.holeBottomEdge)*25.4,5,2e-7);
+    near(p.x,row.center);
+    near(p.y,row.centerY);
+    if(ci===0)assert.equal(row.clearToPrevious,null);
+    else near(row.clearToPrevious*25.4,25,2e-7);
+    if(ri===0)assert.equal(row.clearToPreviousRow,null);
+    else near(row.clearToPreviousRow*25.4,10,2e-7);
+    assert.ok(row.holeLeftEdge>=0&&row.holeRightEdge<=a.length);
+    assert.ok(row.holeBottomEdge>=0&&row.holeTopEdge<=a.boardWidth);
+  }
+  near(r.rows[0].holeBottomEdge*25.4,2.5,2e-7);
+  near((a.boardWidth-r.rows.at(-1).holeTopEdge)*25.4,2.5,2e-7);
+});
+
+test("Single drilling row remains center-located and retains historical CSV columns",()=>{
+  const t=tools.find(t=>t.slug==="hole-spacing-calculator"),d=defaults(t);
+  const r=compute(t.slug,d);
+  assert.equal(r.rows.length,d.holes);
+  assert.equal(r.drillRows,1);
+  assert.equal(r.holeCenters.length,d.holes);
+  assert.ok(r.rows.every(x=>Object.keys(x).join(",")===
+    "item,center,holeLeftEdge,holeRightEdge,diameter,clearToPrevious"));
+  const half=d.boardWidth/2;
+  for(const p of r.holeCenters)near(p.y,half);
+  const movedCross=compute(t.slug,{...d,crossSetback:d.boardWidth});
+  assert.deepEqual(movedCross.rows,r.rows);
+  assert.deepEqual(movedCross.holeCenters,r.holeCenters);
+  near(value(movedCross,"Side material margin"),(d.boardWidth-d.diameter)/2);
+  assert.equal(r.metrics.some(x=>x.label==="Transverse center pitch"),false);
+  assert.equal(r.metrics.some(x=>x.label==="Clear material between rows"),false);
+});
+
+test("Two-dimensional drilling rows reject cross-edge escape, row overlap and massive layouts",()=>{
+  const mm=x=>x/25.4;
+  const base={length:mm(100),holes:4,edge:mm(5),diameter:mm(5),
+    boardWidth:mm(40),rowCount:3,crossSetback:mm(5)};
+  for(const override of [
+    {rowCount:0},{rowCount:21},{rowCount:1.5},
+    {boardWidth:0},{boardWidth:mm(4)},{boardWidth:mm(-40)},
+    {crossSetback:mm(2)},{crossSetback:mm(22)},
+    {rowCount:9},{rowCount:20},{holes:301,rowCount:3},
+    {holes:100,rowCount:20},{holes:0},{diameter:mm(45)},
+    {edge:mm(1)},{rowCount:4,crossSetback:mm(16)}
+  ]){
+    const r=safeCompute("hole-spacing-calculator",{...base,...override});
+    assert.equal(r.ok,false,"must reject "+JSON.stringify(override));
+  }
+  assert.equal(safeCompute("hole-spacing-calculator",
+    {...base,rowCount:20,holes:30,crossSetback:mm(2.5),boardWidth:mm(100)}).ok,false,
+    "20 rows are not usable when rows are closer than the drill diameter");
+  const touching=compute("hole-spacing-calculator",{
+    ...base,rowCount:3,boardWidth:mm(20),crossSetback:mm(5)
+  });
+  near(value(touching,"Clear material between rows")*25.4,0,1e-7);
+});
+
+test("Drill grid counts and center positions agree with independent evenly spaced references",()=>{
+  const mm=x=>x/25.4;
+  for(const [cols,rows] of [[2,2],[4,3],[6,5],[20,15]]){
+    const width=mm(30+rows*6),length=mm(100+cols*10),d=mm(3),
+      edge=mm(5),crossSetback=mm(5);
+    const r=compute("hole-spacing-calculator",{
+      length,holes:cols,rowCount:rows,edge,diameter:d,
+      boardWidth:width,crossSetback
+    });
+    assert.equal(r.rows.length,cols*rows);
+    const gp=(length-2*edge)/(cols-1),rp=(width-2*crossSetback)/(rows-1);
+    for(const p of r.holeCenters){
+      near(p.x,edge+(p.column-1)*gp,1e-7);
+      near(p.y,crossSetback+(p.row-1)*rp,1e-7);
+    }
+    near(r.holeCenters[0].x,edge);
+    near(r.holeCenters.at(-1).x,length-edge);
+    near(r.holeCenters.at(-1).y,width-crossSetback);
+    near(value(r,"Clear material between rows"),rp-d);
+    near(value(r,"Clear material between holes"),gp-d);
+  }
+});
