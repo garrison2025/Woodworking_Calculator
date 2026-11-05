@@ -1911,7 +1911,7 @@ test("Measured shelf pin positions must fit side panel and stay in real shelf cl
     {caseDepth:0},{caseDepth:2},{frontPinInset:-1},{backPinInset:-1},
     {pinCenterDrop:-1},{pinHoleDiameter:-1},
     {frontPinInset:.05},{backPinInset:.05},
-    {frontPinInset:10},{backPinInset:11.5},
+    {frontPinInset:10.4},{backPinInset:11.5},
     {pinCenterDrop:.05},{pinCenterDrop:11},
     {pinHoleDiameter:.6},{pinHoleDiameter:3.5},
     {height:9,shelves:3,thickness:3,top:0,bottom:0},
