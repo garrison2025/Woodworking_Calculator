@@ -2022,3 +2022,36 @@ test("P1 polygon ring trapezoids conserve total area across segment counts and r
     }
   }
 });
+
+test("P1 deck optional alternate seams stay on entered joist centers and conserve row stock",()=>{
+  const data={width:120,length:144,board:5.5,gap:.125,stock:100,joists:16,
+    waste:10,boardUnitPrice:8.75,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:22,seamMode:1};
+  const r=compute("deck-material-calculator",data);
+  assert.equal(r.deckRows.length,22);
+  assert.deepEqual(r.deckRows[0].seamCenters,[96]);
+  assert.deepEqual(r.deckRows[1].seamCenters,[48]);
+  assert.equal(r.staggeredRows,11);
+  assert.equal(r.distinctSeamPatterns,2);
+  assert.equal(r.rows.filter(x=>x.type==="Decking").length,44);
+  assert.equal(r.deckFastenerRows[0].firstSeamAt,96);
+  assert.equal(r.deckFastenerRows[1].firstSeamAt,48);
+  near(value(r,"Stock boards (no offcut reuse)"),44);
+  near(value(r,"Piece-joist fastening contacts"),242);
+  for(const row of r.deckRows){
+    const pieces=r.rows.filter(x=>x.type==="Decking"&&x.item.startsWith(row.item+" piece "));
+    near(pieces.reduce((s,p)=>s+p.cutLength,0),144,1e-7);
+    assert.ok(pieces.every(x=>x.cutLength<=100+1e-8&&x.cutLength>0));
+    assert.ok(row.seamCenters.every(seam=>r.joistGrid.includes(seam)));
+  }
+  const original=compute("deck-material-calculator",{...data,seamMode:0});
+  assert.ok(original.deckRows.every(x=>x.seamCenters.length===1&&x.seamCenters[0]===96));
+  assert.equal(original.staggeredRows,0);
+});
+test("P1 deck alternation reports zero staggering when the joist grid has no alternative seam",()=>{
+  const a={width:20,length:90,board:5,gap:0,stock:100,joists:15,waste:0,seamMode:1};
+  const r=compute("deck-material-calculator",a);
+  assert.equal(r.staggeredRows,0);
+  assert.equal(r.distinctSeamPatterns,1);
+  assert.ok(r.deckRows.every(x=>x.seamCenters.length===0));
+  assert.equal(safeCompute("deck-material-calculator",{...a,seamMode:2}).ok,false);
+});
