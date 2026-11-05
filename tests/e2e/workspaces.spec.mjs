@@ -1719,3 +1719,34 @@ test("P1 diagonal brace cut endpoints, proportional SVG and metric CSV share one
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(segment).toHaveCount(1);
 });
+
+test("P1 polygon bowl ring exports true straight chords and a distinct round turning limit",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/segmented-bowl-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const chords=page.locator("#dimension-svg svg .ring-segment-face");
+  await expect(chords).toHaveCount(12);
+  await expect(page.locator("#dimension-svg svg .ring-max-turn-circle")).toHaveCount(1);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Perpendicular stock-face depth"}))
+    .toContainText("1.9319 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Maximum circular outside diameter"}))
+    .toContainText("11.5911 in");
+  await expect(chords.first()).toHaveAttribute("data-perpendicular-depth",/1\.931/);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Perpendicular Face Depth (mm)");
+  const ready=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await ready).path(),"utf8");
+  expect(csv).toContain('"Perpendicular Face Depth (mm)","Segment Face Area (m²)"');
+  const svgReady=page.waitForEvent("download");
+  await page.locator("#download-svg").click();
+  const svg=readFileSync(await (await svgReady).path(),"utf8");
+  expect(svg).toContain('class="ring-segment-face"');
+  expect(svg).toContain('class="ring-max-turn-circle"');
+  await page.locator("#f-inner").fill("350");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(chords).toHaveCount(0);
+  await page.locator("#f-inner").fill("203.2");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(chords).toHaveCount(12);
+});
