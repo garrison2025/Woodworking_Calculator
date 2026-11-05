@@ -41,6 +41,11 @@ if(slug){
   const stringerSawExport=document.querySelector("#download-stringer-sawline-csv");
   const stringerEndTable=document.querySelector("#stringer-end-lines-table tbody");
   const stringerEndExport=document.querySelector("#download-stringer-end-lines-csv");
+  const roofReuseStatus=document.querySelector("#roof-reuse-status");
+  const roofReuseTable=document.querySelector("#roof-reuse-table tbody");
+  const roofReuseSvg=document.querySelector("#roof-reuse-svg");
+  const roofReuseExport=document.querySelector("#download-roof-reuse-csv");
+  const roofReuseSvgExport=document.querySelector("#download-roof-reuse-svg");
   const deckCostStatus=document.querySelector("#deck-cost-status");
   const deckBudgetTable=document.querySelector("#deck-budget-table tbody");
   const deckFastenerTable=document.querySelector("#deck-fastener-table tbody");
@@ -892,6 +897,55 @@ if(slug){
     if(stringerSawTable)stringerSawTable.innerHTML=sawlines.map(r=>'<tr>'+lineCells(r)+'</tr>').join("");
     if(stringerEndTable)stringerEndTable.innerHTML=ends.map(r=>'<tr>'+lineCells(r)+'</tr>').join("");
   };
+  const renderRoofReuse=()=>{
+    if(!roofReuseStatus||!roofReuseTable||!roofReuseSvg)return;
+    const plan=latest?.roofReusePlan;
+    roofReuseExport.disabled=!plan?.rows?.length;
+    roofReuseSvgExport.disabled=!plan?.rows?.length;
+    if(!plan){
+      roofReuseStatus.textContent="REUSE OFF — original estimate uses a fresh sheet at every occupied roof cut position.";
+      roofReuseTable.innerHTML="";
+      roofReuseSvg.innerHTML="";
+      return;
+    }
+    roofReuseStatus.textContent="BOUNDED STOCK PLAN — "+plan.stockCount+
+      " full stock sheets; "+plan.reusedCutCount+
+      " additional cuts on already-open sheets. Free area "+
+      fmt(plan.freeAreaSqIn/144,"FT2")+", split-line waste "+
+      fmt(plan.kerfAreaSqIn/144,"FT2")+
+      ". Polygon corner scraps are not reused. Not a minimum-purchase or engineered bearing certificate.";
+    roofReuseTable.innerHTML=plan.rows.slice(0,160).map(r=>'<tr>'+
+      [r.item,r.sourcePlane,r.stockId,fmt(r.stockX,"L"),fmt(r.stockY,"L"),
+       fmt(r.boxWidth,"L"),fmt(r.boxHeight,"L"),fmt(r.installedAreaFt2,"FT2")]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    const count=Math.min(plan.stockCount,6),sc=Math.min(
+      228/Math.max(1e-8,plan.stockWidth),126/Math.max(1e-8,plan.stockHeight));
+    const parts=[
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 395" role="img" aria-label="Proportional stock-local polygon cut preview">',
+      '<title>Stock-cut polygon preview; NOT a saw template</title>',
+      '<rect width="900" height="395" fill="#fcfbf8"/>'
+    ];
+    for(let i=0;i<count;i++){
+      const bx=40+i%3*280,by=48+Math.floor(i/3)*179,id="R"+(i+1);
+      parts.push('<text x="'+bx+'" y="'+(by-11)+'" font-size="13" fill="#244d40">'+id+'</text>');
+      parts.push('<rect class="roof-stock-full" data-stock="'+id+
+        '" x="'+bx+'" y="'+by+'" width="'+(plan.stockWidth*sc)+
+        '" height="'+(plan.stockHeight*sc)+'" fill="#e9eee7" stroke="#496b59" stroke-width="1.6"/>');
+      for(const [index,piece] of plan.rows.filter(r=>r.stockId===id).entries()){
+        const polygon=piece.stockCutVertices.map(pair=>
+          (bx+pair[0]*sc).toFixed(5)+","+(by+pair[1]*sc).toFixed(5)).join(" ");
+        parts.push('<polygon class="roof-stock-cut" data-item="'+esc(piece.item)+
+          '" data-stock="'+id+'" points="'+polygon+
+          '" fill="'+(index%2?"#dfc399":"#b9d5c4")+
+          '" stroke="#8a724d" stroke-width="1"><title>'+
+          esc(piece.item+" on "+id+"; stock X "+fmt(piece.stockX)+
+            " / Y "+fmt(piece.stockY)+"; NOT a cutting template")+'</title></polygon>');
+      }
+    }
+    parts.push('<text x="32" y="387" font-size="12" fill="#345e50">Preview first '+count+
+      " of "+plan.stockCount+" stock sheets. All cuts in CSV. NO 1:1 PRINT SCALE.</text></svg>");
+    roofReuseSvg.innerHTML=parts.join("");
+  };
   function render(){
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
@@ -907,7 +961,7 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
-      renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderShelfPins();
+      renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
@@ -928,7 +982,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
-      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderShelfPins();
+      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       status.textContent="Calculation requires correction.";
     }
   }
@@ -1044,6 +1098,19 @@ if(slug){
       "MODELED geometry only. Vertical first/last end clips and lower parallel stock edge are NOT finished bearing cuts; no 1:1 template, structural approval or raw stock purchase length.");
     save(slug+"-"+unit+"-modeled-section.csv",csv,"text/csv;charset=utf-8");
     status.textContent="Modeled side-section coordinate CSV saved locally.";
+  });
+  roofReuseExport?.addEventListener("click",()=>{
+    if(!latest?.roofReusePlan?.rows?.length)return;
+    const csv=buildScheduleCsv(latest.roofReusePlan.rows,unit,
+      "Bounded nonrotated stock box placements and stock-local cut polygons; not a certified saw path, optimal purchase count, usable angular kerf or engineered roof installation.");
+    save(slug+"-"+unit+"-stock-placement.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="Full stock-local cut placement CSV saved locally.";
+  });
+  roofReuseSvgExport?.addEventListener("click",()=>{
+    if(!latest?.roofReusePlan?.rows?.length||!roofReuseSvg?.firstElementChild)return;
+    save(slug+"-"+unit+"-stock-preview.svg",
+      roofReuseSvg.firstElementChild.outerHTML,"image/svg+xml");
+    status.textContent="Proportional roof stock layout preview saved locally.";
   });
   stringerSawExport?.addEventListener("click",()=>{
     if(!latest?.stringerCutLineRows?.length)return;
