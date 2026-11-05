@@ -339,3 +339,46 @@ test("Stringer measured supports export signed site datums without invented bear
   assert.ok(csv.includes('"Upper horizontal support surface reference","3302","3454.4","2667"'));
   assert.equal(csv.split("\r\n").filter(Boolean).length,4);
 });
+
+
+test("Two-dimensional drill layout CSV exports signed face Y coordinates and unitless row indices",()=>{
+  const mm=x=>x/25.4;
+  const r=compute("hole-spacing-calculator",{
+    length:mm(100),holes:4,edge:mm(5),diameter:mm(5),
+    boardWidth:mm(40),rowCount:3,crossSetback:mm(5)
+  });
+  const cols=scheduleColumns(r.rows,"mm");
+  for(const key of ["rowNumber","columnNumber"]){
+    const col=cols.find(x=>x.key===key);
+    assert.equal(col.kind,"plain",key);
+    assert.ok(!col.label.includes("(mm)"),col.label);
+  }
+  for(const key of ["centerY","holeBottomEdge","holeTopEdge","clearToPreviousRow"]){
+    const col=cols.find(x=>x.key===key);
+    assert.equal(col.kind,"length",key);
+    assert.ok(col.label.includes("(mm)"),col.label);
+  }
+  const csv=buildScheduleCsv(r.rows,"mm",
+    "X from left and Y from lower face; not a drill jig");
+  assert.ok(csv.includes('"Row Number","Column Number","Center Y (mm)"'));
+  assert.ok(csv.includes('"Hole Bottom Edge (mm)","Hole Top Edge (mm)"'));
+  assert.ok(csv.includes('"Row 1 hole 1","5","2.5","7.5","5","","1","1","5","2.5","7.5",""'));
+  assert.ok(csv.includes('"Row 2 hole 1","5","2.5","7.5","5","","2","1","20","17.5","22.5","10"'));
+  assert.ok(csv.includes('"Row 3 hole 4","95","92.5","97.5","5","25","3","4","35","32.5","37.5","10"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,14);
+});
+test("Single-row drilling still exports historical columns only",()=>{
+  const r=compute("hole-spacing-calculator",{
+    length:100/25.4,holes:4,edge:5/25.4,
+    diameter:5/25.4
+  });
+  const cols=scheduleColumns(r.rows,"mm");
+  assert.deepEqual(cols.map(x=>x.label),[
+    "Item","Center (mm)","Hole Left Edge (mm)","Hole Right Edge (mm)",
+    "Diameter (mm)","Clear To Previous (mm)"
+  ]);
+  const csv=buildScheduleCsv(r.rows,"mm","Original single row");
+  assert.ok(csv.includes('"Hole 1","5","2.5","7.5","5",""'));
+  assert.ok(!csv.includes('"Row Number"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,6);
+});
