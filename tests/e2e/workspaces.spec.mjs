@@ -2178,3 +2178,41 @@ test("Print/PDF includes every row of a paginated 540-piece cut list and restore
   await expect(entries).toHaveCount(0);
   await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
 });
+
+test("Printed input-provenance table captures every typed dimension, enum, currency and unit",async({page})=>{
+  await page.goto("/deck-material-calculator/");
+  const sheet=page.locator("#print-input-snapshot");
+  const row=key=>page.locator('#print-input-table tbody tr[data-print-field="'+key+'"]');
+  await expect(sheet).toBeHidden();
+  await expect(page.locator("#print-input-table tbody tr")).toHaveCount(17);
+  await page.locator("#f-width").fill("121.25");
+  await page.locator("#f-boardUnitPrice").fill("8.75");
+  await page.locator("#f-seamMode").selectOption("1");
+  await page.locator("#deck-currency").selectOption("EUR");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(row("width")).toContainText("3,079.75");
+  // Raw numeric input values are deliberately NOT locale-grouped.
+  await expect(row("width").locator("td")).toHaveText("3079.75 mm");
+  await expect(row("boardUnitPrice").locator("td")).toHaveText("EUR 8.75");
+  await expect(row("seamMode")).toContainText("Alternate forward/reverse joist-center seams");
+  await expect(row("joistStockLength").locator("td")).toHaveText("0 mm");
+  await expect(page.locator("#print-input-context")).toContainText("input units mm");
+  await expect(page.locator("#print-input-context")).toContainText("price currency EUR");
+  await page.emulateMedia({media:"print"});
+  await expect(sheet).toBeVisible();
+  const style=await sheet.evaluate(el=>getComputedStyle(el).display);
+  expect(style).toBe("block");
+  await expect(row("width").locator("td")).toHaveText("3079.75 mm");
+  await page.emulateMedia({media:"screen"});
+  await expect(sheet).toBeHidden();
+  await page.locator("#f-width").fill("0");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#print-input-table tbody tr")).toHaveCount(0);
+  await page.emulateMedia({media:"print"});
+  await expect(sheet).toBeHidden(); // never print a stale successful snapshot
+  await page.emulateMedia({media:"screen"});
+  await page.locator("#f-width").fill("3079.75");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(row("width").locator("td")).toHaveText("3079.75 mm");
+});
