@@ -2559,7 +2559,7 @@ test("sub-resolution physical kerf and butt-end gaps are rejected instead of exp
   const tinyKerf=safeCompute("framing-calculator",{...framing,stockKerf:0.000000001});
   assert.equal(tinyKerf.ok,false);
   assert.match(tinyKerf.error,/coordinate resolution/i);
-  const deck={width:120,length:144,board:5.5,gap:.125,stock:60,joists:16};
+  const deck={width:120,length:144,board:5.5,gap:.125,stock:60,joists:16,waste:0};
   const tinyButt=safeCompute("deck-material-calculator",{...deck,buttEndGap:0.000000001});
   assert.equal(tinyButt.ok,false);
   assert.match(tinyButt.error,/coordinate resolution/i);
