@@ -364,14 +364,30 @@ if(slug){
       // This is a nominal reference profile, NOT a certified stock outline.
       const verts=data.stepVertices,run=(data.risers-1)*data.tread,rise=data.totalRise;
       const nose=data.nosingProjection||0,landing=data.landingDepth||0;
-      const minX=Math.min(0,-nose,-(data.lowerSupportRun||0),-(data.lowerEndCutRun||0));
-      const maxX=run+Math.max(landing,data.upperSupportRun||0,data.upperEndCutRun||0);
+      const blank=data.stringerBlankVertices||[];
+      const minX=Math.min(0,-nose,-(data.lowerSupportRun||0),
+        -(data.lowerEndCutRun||0),...blank.map(p=>p.x));
+      const maxX=Math.max(run+Math.max(landing,data.upperSupportRun||0,
+        data.upperEndCutRun||0),...blank.map(p=>p.x));
       const minY=Math.min(0,data.lowerEdgeAtStart??0,
-        ...((data.measuredEndCuts||[]).map(ref=>ref.endY)));
-      const width=maxX-minX,height=rise-minY;
+        ...((data.measuredEndCuts||[]).map(ref=>ref.endY)),
+        ...blank.map(p=>p.y));
+      const maxY=Math.max(rise,...blank.map(p=>p.y));
+      const width=maxX-minX,height=maxY-minY;
       const sc=Math.min(650/Math.max(.001,width),185/Math.max(.001,height));
       const ox=(900-width*sc)/2-minX*sc,oy=274+minY*sc;
       const px=v=>ox+v.x*sc,py=v=>oy-v.y*sc;
+      if(blank.length===4){
+        content+='<polygon class="stringer-blank-reference" data-axis-length="'+
+          data.blankLengthShown+'" data-stock-fits="'+
+          (data.stockFitsModel===null?"not-entered":String(data.stockFitsModel))+
+          '" points="'+blank.map(v=>px(v)+","+py(v)).join(" ")+
+          '" fill="#9bb6b8" fill-opacity=".12" stroke="#6a8795" stroke-width="2" stroke-dasharray="7 4"><title>'+
+          esc("Pitch-aligned 2D rectangular raw stock REFERENCE "+fmt(data.blankLengthShown)+
+            " long × "+fmt(data.stockNormalDepth)+
+            " normal width. Not an actual purchased board or approved end bearing")+
+          '</title></polygon>';
+      }
       // This closed polygon is a reference SIDE SECTION, not the actual
       // uncut board blank or a verified top/bottom bearing cut shape.
       const envelope=data.stockEnvelopeVertices||[];
@@ -392,6 +408,16 @@ if(slug){
           '" x2="'+px(low0)+'" y2="'+py(low0)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a bottom bearing cut</title></line>';
         content+='<line class="stringer-upper-end-clip" x1="'+px(verts.at(-1))+'" y1="'+py(verts.at(-1))+
           '" x2="'+px(low1)+'" y2="'+py(low1)+'" stroke="#a26858" stroke-dasharray="5 4"><title>Reference clip only · NOT a top bearing cut</title></line>';
+      }
+      for(const check of data.endProjectionChecks||[]){
+        if(check.projectedOutsideSupport<=1e-7)continue;
+        const cx=px({x:check.projectedEndX});
+        const cy=py({y:check.item.startsWith("Lower")?0:rise});
+        content+='<circle class="stringer-support-projection-warning" cx="'+cx+
+          '" cy="'+cy+'" r="6" fill="none" stroke="#a54836" stroke-width="2"><title>'+
+          esc(check.item+": projected X is "+fmt(check.projectedOutsideSupport)+
+            " outside entered horizontal support reference; not structural bearing")+
+          '</title></circle>';
       }
       for(const ref of data.measuredEndCuts||[]){
         content+='<line class="stringer-field-end-line" data-start-x="'+ref.startX+
