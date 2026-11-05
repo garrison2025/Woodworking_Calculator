@@ -442,3 +442,14 @@ test("P1 straight trapezoid ring exports perpendicular depth and actual segment 
   assert.ok(inCsv.includes('"Radial Depth (in)","Perpendicular Face Depth (in)"'),inCsv.slice(0,650));
   assert.ok(inCsv.includes('"Segment Face Area (ft²)"'),inCsv.slice(0,650));
 });
+
+test("P1 tapered bowl exports every ring's distinct stock blank and elevation measurements",()=>{
+ const r=compute("segmented-bowl-calculator",{
+   outer:12,inner:8,segments:12,rings:3,outerStep:-1,innerStep:-.5,
+   ringHeight:.75,ringOversize:.125,ringKerf:.1});
+ const mm=buildScheduleCsv(r.rows,"mm","Rough blank allowances only.");
+ assert.ok(mm.includes('"Outer Corner Diameter (mm)","Inner Corner Diameter (mm)"'),mm.slice(0,500));
+ assert.ok(mm.includes('"Rough Blank Length (mm)","Rough Blank Width (mm)","Rough Blank Area (m²)"'),mm.slice(0,700));
+ assert.ok(mm.includes('"Stack Bottom (mm)","Stack Top (mm)"'),mm.slice(0,750));
+ assert.ok(mm.includes('"Ring 3 / segment 12"'),mm.slice(-1000));
+});
