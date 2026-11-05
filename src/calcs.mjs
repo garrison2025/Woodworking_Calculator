@@ -217,11 +217,113 @@ function layoutHipSheets(major,minor,factor,sheetAlong,sheetUphill){
   return panels;
 }
 
+
+/**
+ * Optional no-rotation guillotine stock layout. Every roof piece is placed
+ * by its entire axis-aligned bounding rectangle on ONE original full sheet.
+ * Polygon waste inside that rectangle is intentionally unavailable for reuse.
+ * This proves non-overlap in the *chosen* placements, not minimum stock.
+ * The one explicit kerf applies at split lines within each free rectangle.
+ */
+function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
+  need(parts.length>0&&parts.length<=400,
+    "Reuse plan is bounded to 400 roof cut pieces; use a larger sheet or disable reuse.");
+  need(stockWidth>0&&stockHeight>0&&kerf>=0&&kerf<Math.min(stockWidth,stockHeight),
+    "Saw kerf must be smaller than both stock sheet dimensions.");
+  const ordered=parts.map((p,index)=>({...p,originalOrder:index}))
+    .sort((a,b)=>b.width*b.height-a.width*a.height||a.originalOrder-b.originalOrder);
+  const boards=[],out=[];
+  let kerfLost=0,polygonWasted=0;
+  for(const item of ordered){
+    need(item.width>=1e-7&&item.height>=1e-7&&
+      item.width<=stockWidth+1e-7&&item.height<=stockHeight+1e-7,
+      "At least one roof cut bounding rectangle cannot fit the full stock sheet.");
+    need(item.actualArea>0&&item.actualArea<=item.width*item.height+
+      Math.max(1e-6,item.width*item.height*1e-8),
+      "Roof polygon area is inconsistent with its stock bounding rectangle.");
+    let winner=null;
+    for(const board of boards)for(const [j,free] of board.free.entries()){
+      if(item.width>free.width+1e-7||item.height>free.height+1e-7)continue;
+      const excess=free.width*free.height-item.width*item.height;
+      if(!winner||excess<winner.excess-1e-9)
+        winner={board,index:j,free,excess};
+    }
+    if(!winner){
+      const board={id:"R"+(boards.length+1),
+        free:[{x:0,y:0,width:stockWidth,height:stockHeight}],placements:[]};
+      boards.push(board);
+      winner={board,index:0,free:board.free[0],excess:stockWidth*stockHeight-item.width*item.height};
+    }
+    const {board,free}=winner;
+    board.free.splice(winner.index,1);
+    const dx=Math.max(0,free.width-item.width),
+      dy=Math.max(0,free.height-item.height);
+    const kerfX=dx>1e-8?Math.min(kerf,dx):0,
+      kerfY=dy>1e-8?Math.min(kerf,dy):0;
+    const rightWidth=Math.max(0,dx-kerfX);
+    const topHeight=Math.max(0,dy-kerfY);
+    if(rightWidth>=1e-7)board.free.push({
+      x:free.x+item.width+kerfX,y:free.y,width:rightWidth,height:free.height
+    });
+    if(topHeight>=1e-7)board.free.push({
+      x:free.x,y:free.y+item.height+kerfY,width:item.width,height:topHeight
+    });
+    // Even sub-resolution unrecoverable slivers are counted as non-reusable
+    // material, not inflated into a new perfectly usable free rectangle.
+    const oldArea=free.width*free.height;
+    const usableNewArea=(rightWidth>=1e-7?rightWidth*free.height:0)+
+      (topHeight>=1e-7?item.width*topHeight:0);
+    kerfLost+=Math.max(0,oldArea-item.width*item.height-usableNewArea);
+    polygonWasted+=Math.max(0,item.width*item.height-item.actualArea);
+    const row={
+      item:item.id,sourcePlane:item.plane||"Single roof plane",
+      row:item.row,column:item.column,stockId:board.id,
+      stockX:q(free.x),stockY:q(free.y),
+      boxWidth:q(item.width),boxHeight:q(item.height),
+      installedAreaFt2:q(item.actualArea/144),
+      rectangularBoxAreaFt2:q((item.width*item.height)/144),
+      stockCutVertices:item.vertices.map(([x,y])=>[q(free.x+x),q(free.y+y)])
+    };
+    board.placements.push(row);out.push(row);
+  }
+  // Put user-visible schedule back in original roof-position order.
+  const indexById=new Map(parts.map((part,i)=>[part.id,i]));
+  out.sort((a,b)=>indexById.get(a.item)-indexById.get(b.item));
+  const sheetArea=stockWidth*stockHeight;
+  const remainingFreeArea=boards.reduce((s,b)=>s+
+    b.free.reduce((t,rect)=>t+rect.width*rect.height,0),0);
+  const installedArea=parts.reduce((s,p)=>s+p.actualArea,0);
+  const stockArea=boards.length*sheetArea;
+  need(Math.abs(installedArea+polygonWasted+kerfLost+remainingFreeArea-stockArea)<=
+    Math.max(1e-5,stockArea*1e-8),
+    "Roof reuse plan violates full stock, used polygon and kerf conservation.");
+  for(const board of boards){
+    // Every cut has its own non-overlapping rectangular envelope.
+    for(let i=0;i<board.placements.length;i++)for(let j=i+1;j<board.placements.length;j++){
+      const a=board.placements[i],b=board.placements[j];
+      const overlapX=Math.min(a.stockX+a.boxWidth,b.stockX+b.boxWidth)-
+        Math.max(a.stockX,b.stockX);
+      const overlapY=Math.min(a.stockY+a.boxHeight,b.stockY+b.boxHeight)-
+        Math.max(a.stockY,b.stockY);
+      need(overlapX<=1e-7||overlapY<=1e-7,
+        "Roof reuse layout accidentally places overlapping stock bounding boxes.");
+    }
+  }
+  return {
+    stockCount:boards.length,rows:out,boards,
+    installedAreaSqIn:installedArea,stockAreaSqIn:stockArea,
+    kerfAreaSqIn:kerfLost,cornerScrapAreaSqIn:polygonWasted,
+    freeAreaSqIn:remainingFreeArea,
+    reusedCutCount:out.length-boards.length,
+    stockWidth,stockHeight,kerf
+  };
+}
+
 const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1181,7 +1283,7 @@ export function compute(slug,a){
     });
   }
   case "hip-roof-calculator":{
-    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","overhang");whole("orientation",0,1);
+    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","overhang","roofKerf");whole("orientation",0,1);whole("reuseMode",0,1);
     const W=a.width+2*a.overhang,L=a.length+2*a.overhang;
     const small=Math.min(W,L),large=Math.max(W,L),factor=Math.hypot(1,a.pitch/12),area=W*L*factor,ridge=large-small;
     const endArea=(small*small/4)*factor,sideArea=((large*small/2)-(small*small/4))*factor;
@@ -1202,6 +1304,20 @@ export function compute(slug,a){
     need(Math.abs(tiledArea+offcuts-stockArea)<=Math.max(1e-6,stockArea*1e-10),
       "Hip roof used and discarded sheet areas do not conserve consumed stock.");
     const uncut=panels.filter(p=>Math.abs(p.cutAreaSqIn-sheetArea)<=Math.max(1e-6,sheetArea*1e-8)).length;
+    // Exact clipped polygons are embedded into nonoverlapping rectangular
+    // bounding boxes on stock. Nonrectangular corner scraps are NOT reused.
+    const reuseParts=panels.map(p=>{
+      const xs=p.localVertices.map(v=>v[0]),ys=p.localVertices.map(v=>v[1]);
+      const left=Math.min(...xs),bottom=Math.min(...ys);
+      const width=Math.max(...xs)-left,height=Math.max(...ys)-bottom;
+      return {id:p.id,plane:p.plane,row:p.row,column:p.column,
+        width,height,actualArea:p.cutAreaSqIn,
+        vertices:p.localVertices.map(v=>[v[0]-left,v[1]-bottom])};
+    });
+    const roofReusePlan=a.reuseMode===1?
+      packRoofCutBoxes(reuseParts,sheetAlong,sheetUphill,a.roofKerf):null;
+    need(!roofReusePlan||roofReusePlan.stockCount<=panels.length,
+      "Roof reuse heuristic cannot require more sheets than the one-sheet-per-piece plan.");
     rows=panels.map(p=>({
       item:p.id,plane:p.plane,row:p.row,column:p.column,
       eaveOffset:p.eaveOffset,slopeOffset:p.slopeOffset,
@@ -1215,10 +1331,18 @@ export function compute(slug,a){
       M("Sheet positions (no offcut reuse)",panels.length,"N"),
       M("Full rectangular sheets",uncut,"N"),M("Edge-cut sheets",panels.length-uncut,"N"),
       M("Stock face area before allowance",stockArea/144,"FT2"),
-      M("Unreused stock area",offcuts/144,"FT2")
+      M("Unreused stock area",offcuts/144,"FT2"),
+      ...(roofReusePlan?[
+        M("Bounded reusable-box stock sheets",roofReusePlan.stockCount,"N"),
+        M("Cuts assigned to already opened stock",roofReusePlan.reusedCutCount,"N"),
+        M("Reuse-layout unallocated free stock",roofReusePlan.freeAreaSqIn/144,"FT2"),
+        M("Reuse-layout within-box polygon scrap",roofReusePlan.cornerScrapAreaSqIn/144,"FT2"),
+        M("Reuse-layout split-line loss",roofReusePlan.kerfAreaSqIn/144,"FT2")
+      ]:[])
     ],[],large,rows,"roof-panels",{
       roofMajor:large,roofMinor:small,roofFactor:factor,
       roofPanels:panels,sheetAlong,sheetUphill,
+      roofReusePlan,roofReuseMode:a.reuseMode,
       stockAreaSqIn:stockArea,coveredAreaSqIn:tiledArea,offcutAreaSqIn:offcuts
     });
   }
@@ -1654,7 +1778,7 @@ export function compute(slug,a){
       measuredBlankLength:a.measuredBlankLength,blankEndAllowance:a.blankEndAllowance});
   }
   case "roof-sheathing-calculator":{
-    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste");whole("orientation",0,1);
+    positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste","roofKerf");whole("orientation",0,1);whole("reuseMode",0,1);
     need(a.waste<=200,"Waste must be 0–200%.");
     // Single rectangular plane; eave = roof plan length, uphill run = roof plan width.
     // Project the uphill run onto the sloped surface before laying out stock sheets.
@@ -1690,6 +1814,13 @@ export function compute(slug,a){
     need(Math.abs(coverage+offcuts-stockArea)<=Math.max(1e-6,stockArea*1e-10),
       "Roof sheathing used area and discarded offcuts do not conserve the stock area.");
     const full=sheets.filter(s=>s.full).length;
+    const roofReusePlan=a.reuseMode===1?packRoofCutBoxes(
+      sheets.map(s=>({id:s.id,row:s.row,column:s.column,
+        width:s.cutAlong,height:s.cutUphill,actualArea:s.cutAreaSqIn,
+        vertices:[[0,0],[s.cutAlong,0],[s.cutAlong,s.cutUphill],[0,s.cutUphill]]
+      })),along,uphill,a.roofKerf):null;
+    need(!roofReusePlan||roofReusePlan.stockCount<=sheets.length,
+      "Rectangular roof reuse plan cannot exceed the original one-sheet-per-cut grid.");
     const cutRows=sheets.map(s=>({
       item:s.id,row:s.row,column:s.column,
       eaveStart:s.eaveStart,eaveEnd:s.eaveEnd,
@@ -1704,9 +1835,18 @@ export function compute(slug,a){
       M("Full sheets",full,"N"),M("Edge-cut sheets",sheets.length-full,"N"),
       M("Order sheets with allowance",ceilStable(sheets.length*(1+a.waste/100)),"N"),
       M("Stock face area before allowance",stockArea/144,"FT2"),
-      M("Unreused offcut area",offcuts/144,"FT2")
+      M("Unreused offcut area",offcuts/144,"FT2"),
+      ...(roofReusePlan?[
+        M("Bounded reusable-box stock sheets",roofReusePlan.stockCount,"N"),
+        M("Cuts assigned to already opened stock",roofReusePlan.reusedCutCount,"N"),
+        M("Reuse-layout unallocated free stock",roofReusePlan.freeAreaSqIn/144,"FT2"),
+        M("Reuse-layout split-line loss",roofReusePlan.kerfAreaSqIn/144,"FT2"),
+        M("Order sheets after reuse and allowance",
+          ceilStable(roofReusePlan.stockCount*(1+a.waste/100)),"N")
+      ]:[])
     ],[],eaveLength,cutRows,"sheathing-panels",
     {roofEave:eaveLength,roofSlope:uphillLength,roofSheets:sheets,
+      roofReusePlan,roofReuseMode:a.reuseMode,
       sheetAlong:along,sheetUphill:uphill,stockAreaSqIn:stockArea,
       coveredAreaSqIn:coverage,offcutAreaSqIn:offcuts});
   }
