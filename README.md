@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 305 geometry tests, 54 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 312 geometry tests, 56 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -31,6 +31,15 @@ A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes,
 - In inches, member cut lengths and printed worksheet show approximate 1/16 or 1/32 fractions alongside precise decimals; CSV exports retain numeric values and explicit unit headers. PDF/Print keeps physical calibration bars; SVG is never a 1:1 cutting template.
 - Default 120-in wall / 32–68-in door fixture: 13 member cuts (8 full-length at 91.5 in, 2 Jacks at 78.5 in, 2 upper cripples at 7.5 in, 1 reference header at 39 in). Under 96-in stock, 1/8-in kerf, zero reserve: **10 Stud sticks + 1 Header stick**, 112.75 in unused offcuts and 0.25 in kerf. Plates and multi-ply structural headers are excluded.
 - [CI #187](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41949353204) passed **305/305 Node tests**, **54/54 real Chromium tests**, 36 static pages / 26 tools / 5 P2 held / 152 mapped keyword rows. Preview retains `noindex`.
+
+## 2026-11-05 — Quote-based lumber purchasing cost & printable check ticket
+
+- `/framing-calculator/` now accepts **user-entered per-stick prices** for Stud, Header and Sill profiles. Each active stock family uses exactly the stock length and *purchase sticks including reserve* from its validated FFD plan. A zero price is treated as **missing quotation**, not free material. Inactive material profiles need no quote.
+- `materialSummary` includes `unitPrice`, quote state, planned cost, reserve cost and purchase cost per profile. `costSummary` reconciles the priced subtotal to planned plus reserve costs, tracks missing quotes and withholds the **total purchase amount** until every used profile is quoted. The engine never fabricates prices or converts between currencies.
+- Added selectable quote denominations **USD / EUR / GBP / CAD / AUD / BRL / MXN** (display/CSV label only, no exchange rate). Quote entries remain unchanged when the length unit or currency label changes.
+- A separate material budget table, compact printable **Purchase checklist** and numeric **Quoted materials CSV** provide per-profile purchased quantity, planned/reserve costs and currency code. Missing-price CSV cells remain blank; money and stock counts are never tagged as length measurements.
+- Example with the default 120-in door wall: 10 Stud stock sticks and 1 Header stick at 96 in, zero reserve. If the entered prices are Stud **USD 5.50** and Header **USD 14.25** per stick, the *user-quoted raw-material subtotal* is **USD 69.25**; at 10% extra purchase allowance, 11+2 purchased sticks give **USD 89.00**, including **USD 19.75** in reserve value. These are **illustrative inputs**, not observed retail prices.
+- [GitHub Actions #198](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41951188911) passed **312/312** Node tests, **56/56** Chromium tests and static checking across 36 HTML pages / 26 active tools / 152 mapped keyword rows. The Cloudflare preview still has `noindex,nofollow,noarchive`. Structural header design, plates, material grade, taxes, delivery, fasteners, labor and verified cutting remain excluded.
 
 ## Local development
 
