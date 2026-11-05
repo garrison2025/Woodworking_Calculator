@@ -1997,9 +1997,11 @@ test("Deck optional full-width joists give honest supplier budget and numeric st
   const budget=readFileSync(await (await budgetReady).path(),"utf8");
   expect(budget).toContain('"Optional full-width joist stock"');
   expect(budget).toContain('"99"');
+  // Current selected unit is MILLIMETERS after the export round-trip.
+  // 119 mm is invalid; restore the true 144-in stock as 3657.6 mm.
   await page.locator("#f-joistStockLength").fill("119");
   await expect(page.locator("#calc-error")).toContainText("cannot cover full deck width");
-  await page.locator("#f-joistStockLength").fill("144");
+  await page.locator("#f-joistStockLength").fill("3657.6");
   await expect(page.locator("#calc-error")).toBeHidden();
   await page.locator("#reset-values").click();
   await expect(page.locator("#f-joistStockLength")).toHaveValue("0");
