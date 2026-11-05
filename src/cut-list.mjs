@@ -30,6 +30,9 @@ const fieldType=(key,records)=>{
   // Ring/segment indexes are counts, never lengths. Angular sweeps are degrees.
   if(/(?:angle|degrees|deg)$/i.test(key))return "angle";
   if(/^(?:count|ring|rings|segment|segments|index|row|column|quantity|pieces|risers|treads|planeIndex)$/i.test(key))return "plain";
+  // Purchase quantities and user-quoted currency amounts are NOT dimensions.
+  // Their denomination appears in the separate currency column, never "(in)".
+  if(/(?:Sticks|Price|Cost)$/i.test(key))return "plain";
   return "length";
 };
 const unitLabel=(kind,unit)=>{
