@@ -150,11 +150,16 @@ export function compute(slug,a){
     xs=studCenters(a.length,a.spacing,a.studWidth);
     rows=xs.map((x,i)=>{
       const gross=a.start+x*a.pitch/12,cut=gross-a.plates;
+      // The reported 'length' is the vertical CENTERLINE cut reference.
+      // An inclined top crosses the two stock faces at different elevations.
+      const halfChange=(a.studWidth/2)*a.pitch/12;
       return {item:"Stud "+(i+1),position:q(x),length:q(cut),
         grossHeight:q(gross),bottomElevation:0,topElevation:q(cut),
-        faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2)};
+        faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2),
+        leftEdgeCut:q(cut-halfChange),rightEdgeCut:q(cut+halfChange)};
     });
-    need(rows.every(r=>r.length>0),"Plate deductions exceed a stud length.");
+    need(rows.every(r=>r.leftEdgeCut>0&&r.rightEdgeCut>0),
+      "Plate deductions or slope leave no positive length at a stud face.");
     return result([
       M("Stud positions",rows.length,"N"),
       M("First cut length",rows[0].length),
