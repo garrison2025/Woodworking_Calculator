@@ -439,6 +439,38 @@ if(slug){
       content+=svgText(500,82,"RISE "+fmt(rise)+" · ROOF FACE "+trim(data.facePitch,3)+":12","tick-label");
       content+=svgText(500,283,"TRUE HIP "+fmt(data.hipLength),"tick-label");
       content+=svgText(500,304,"HIP ELEVATION "+trim(data.elevationAngle,3)+"°","tick-label");
+    }else if(data.shape==="brace"){
+      // Show the COMPLETE measured rectangle, then the shortened brace
+      // centerline using the exact rounded endpoints exported in the CSV.
+      // Nothing here represents physical timber breadth or an end-cut face.
+      const run=data.braceRun,rise=data.braceRise;
+      const scale=Math.min(620/run,168/rise);
+      const x0=145,y0=267;
+      const X=v=>x0+v*scale,Y=v=>y0-v*scale;
+      const start=data.braceCutRows[0],finish=data.braceCutRows[1];
+      content+='<path class="brace-reference-triangle" d="M'+X(0)+' '+Y(0)+
+        ' L'+X(run)+' '+Y(0)+' L'+X(run)+' '+Y(rise)+
+        ' Z" fill="none" stroke="#a6b7ab" stroke-width="1.6" stroke-dasharray="5 4"/>';
+      content+='<line class="brace-full-reference" x1="'+X(0)+'" y1="'+Y(0)+
+        '" x2="'+X(run)+'" y2="'+Y(rise)+
+        '" stroke="#a6a6a0" stroke-dasharray="5 5" stroke-width="2"/>';
+      content+='<line class="brace-cut-centerline" data-start-x="'+start.horizontalX+
+        '" data-start-y="'+start.verticalY+'" data-end-x="'+finish.horizontalX+
+        '" data-end-y="'+finish.verticalY+
+        '" x1="'+X(start.horizontalX)+'" y1="'+Y(start.verticalY)+
+        '" x2="'+X(finish.horizontalX)+'" y2="'+Y(finish.verticalY)+
+        '" stroke="#1e6454" stroke-width="4" stroke-linecap="round"><title>'+
+        esc("Usable brace centerline "+fmt(data.braceCutLength)+
+        "; both setbacks measured ALONG original diagonal")+'</title></line>';
+      content+='<circle class="brace-cut-start" cx="'+X(start.horizontalX)+
+        '" cy="'+Y(start.verticalY)+'" r="4" fill="#b77a43"/>';
+      content+='<circle class="brace-cut-finish" cx="'+X(finish.horizontalX)+
+        '" cy="'+Y(finish.verticalY)+'" r="4" fill="#b77a43"/>';
+      content+=svgText(103,43,"BRACE CENTERLINE · X/Y DATUM (0,0)","dim-label");
+      content+=svgText(103,65,"GREEN = USABLE CENTERLINE · NO PHYSICAL END CUT","tick-label");
+      content+=svgText(112,296,"RUN "+fmt(run)+" / RISE "+fmt(rise),"dim-label");
+      content+=svgText(112,319,"FULL "+fmt(data.braceFullLength)+" / CUT "+fmt(data.braceCutLength),"dim-label");
+      content+=svgText(570,319,"SETBACK EACH "+fmt(data.braceSetback),"tick-label");
     }else if(data.shape==="triangle"){
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
       // previous height-exaggerated sketch which changed the shown pitch.
