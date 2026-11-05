@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 288 geometry tests, 47 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 295 geometry tests, 50 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -13,6 +13,7 @@ A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes,
 - Search-ready prerendered HTML explaining inputs, formulas, examples, caveats and related tools.
 - 152 keyword rows, with Semrush estimates and mapped URLs, saved in `research/woodworking-keyword-map-152.csv`. The owner-approved complete V3 specification is saved in `research/WOODWORKING_BUILD_SPEC_V3_20261104.md`.
 - Calculators written as pure JavaScript functions (`src/calcs.mjs`). No database, paid API, third-party font or runtime backend.
+- Framing/Wall Stud/Rake Stud now share explicit end-center and physical face assumptions. Door/window King/Jack cut rows are plate-referenced; the rake stud SVG also shows separate left/center/right top-cut lengths. See [CI #165](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41945560963) and `QA-EVIDENCE.md` for test cases and remaining physical sign-off requirements.
 - Safety policies: no unsupported structural span, official code compliance, physical 1:1 printing scale, or material springback guarantees.
 - Roof sheathing now supports a clipped **single-plane sheet grid** with eave/uphill cut coordinates and a conservative purchase count, separately from the four-plane hip roof layout. No offcut reuse or engineered fastening pattern is implied.
 
