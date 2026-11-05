@@ -2264,3 +2264,57 @@ test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrolla
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(page.locator("#action-status")).toContainText("Updated:");
 });
+
+test("Phone-width tables expose working left/right column navigation, sticky cut IDs and hide controls on invalid geometry or print",async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto("/stair-stringer-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const region=page.locator("#cut-table").locator("xpath=..");
+  const toolbar=region.locator("xpath=preceding-sibling::*[1]");
+  await expect(region).toHaveAttribute("data-horizontal-scroll","true");
+  await expect(toolbar).toHaveClass(/table-navigator/);
+  await expect(toolbar).toHaveAttribute("role","group");
+  await expect(toolbar).toHaveAttribute("aria-label",/Calculated cut and measurement schedule horizontal column controls/);
+  const back=toolbar.locator(".table-nav-prev");
+  const next=toolbar.locator(".table-nav-next");
+  await expect(back).toBeDisabled();
+  await expect(next).toBeEnabled();
+  await expect(toolbar.locator(".table-nav-position")).toContainText("0% across");
+  const cutId=page.locator("#cut-table tbody tr:first-child [role=rowheader]");
+  await expect(cutId).toBeVisible();
+  expect(await cutId.evaluate(el=>getComputedStyle(el).position)).toBe("sticky");
+  const labelBefore=await cutId.textContent();
+  await next.click();
+  await expect.poll(()=>region.evaluate(el=>el.scrollLeft)).toBeGreaterThan(10);
+  await expect(back).toBeEnabled();
+  await expect(cutId).toHaveText(labelBefore||"");
+  for(let i=0;i<20;i++){
+    if(!await next.isEnabled())break;
+    await next.click();
+  }
+  await expect(next).toBeDisabled();
+  await expect(toolbar.locator(".table-nav-position")).toContainText("100% across");
+  await expect(back).toBeEnabled();
+  for(let i=0;i<20;i++){
+    if(!await back.isEnabled())break;
+    await back.click();
+  }
+  await expect(back).toBeDisabled();
+  await expect(toolbar.locator(".table-nav-position")).toContainText("0% across");
+  await page.emulateMedia({media:"print"});
+  await expect(toolbar).toBeHidden();
+  expect(await cutId.evaluate(el=>getComputedStyle(el).position)).toBe("static");
+  await page.emulateMedia({media:"screen"});
+  await expect(toolbar).toBeVisible();
+  await page.locator("#f-rise").fill("0");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator(".table-navigator")).toHaveCount(0);
+  await page.locator("#f-rise").fill("105");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(region.locator("xpath=preceding-sibling::*[1]")).toHaveClass(/table-navigator/);
+  // On a resized wide workspace, visible cut labels remain available,
+  // whether or not the remaining numeric columns still need scrolling.
+  await page.setViewportSize({width:1440,height:900});
+  await expect(page.locator("#cut-table tbody tr:first-child [role=rowheader]")).toBeVisible();
+  expect(await cutId.evaluate(el=>getComputedStyle(el).position)).not.toBe("sticky");
+});
