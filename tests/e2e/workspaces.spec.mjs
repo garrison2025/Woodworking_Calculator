@@ -1923,3 +1923,48 @@ test("Deck measured butt-gap physical SVG, numeric CSV, print and invalid overla
   await expect(page.locator("#f-buttEndGap")).toHaveValue("0");
   await expect(gaps).toHaveCount(0);
 });
+
+test("Rafter birdsmouth sawline and heel endpoints match CSV, polygon, HAP and error recovery",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/rafter-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"HAP (vertical top to seat at wall)"})).toContainText("4.6492 in");
+  const seat=page.locator("#dimension-svg svg .rafter-seat-reference");
+  const heel=page.locator("#dimension-svg svg .rafter-heel-plumb-cut");
+  await expect(seat).toHaveCount(1);
+  await expect(heel).toHaveCount(1);
+  await expect(seat).toHaveAttribute("data-start-x","117");
+  await expect(seat).toHaveAttribute("data-end-x","120");
+  await expect(heel).toHaveAttribute("data-start-x","120");
+  await expect(heel).toHaveAttribute("data-end-x","120");
+  const h0=Number(await seat.getAttribute("y1"));
+  const h1=Number(await seat.getAttribute("y2"));
+  const verticalTop=Number(await heel.getAttribute("y1"));
+  const verticalEnd=Number(await heel.getAttribute("y2"));
+  const horizontalStart=Number(await seat.getAttribute("x1"));
+  const horizontalEnd=Number(await seat.getAttribute("x2"));
+  expect(h0).toBeCloseTo(h1,5);
+  expect(verticalTop).toBeCloseTo(h1,5);
+  expect((verticalEnd-verticalTop)/(horizontalEnd-horizontalStart)).toBeCloseTo(.5,5);
+  const section=page.locator("#dimension-svg svg .rafter-stock-section");
+  await expect(section).toHaveCount(1);
+  expect((await section.getAttribute("points")).trim().split(/\s+/).length).toBe(7);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Start X (mm)");
+  const ready=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const body=readFileSync(await (await ready).path(),"utf8");
+  expect(body).toContain('"Birdsmouth horizontal seat"');
+  expect(body).toContain('"Birdsmouth plumb heel"');
+  expect(body).toContain('"2971.8"');
+  expect(body).toContain('"3048"');
+  expect(body).toContain('"38.1"');
+  await page.locator("#f-pitch").fill("0");
+  await expect(heel).toHaveCount(0);
+  await page.locator("#f-pitch").fill("6");
+  await expect(heel).toHaveCount(1);
+  await page.locator("#f-depth").fill("0.5");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(heel).toHaveCount(0);
+});
