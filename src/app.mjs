@@ -828,7 +828,9 @@ if(slug){
     // the Print/PDF button cannot silently omit all nonvisible pages.
     const visible=printFullSchedule?latest.rows:latest.rows.slice(start,end);
     cut.innerHTML='<thead><tr>'+scheduleCols.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+
-      visible.map(row=>'<tr>'+scheduleCols.map(col=>'<td>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>').join("")+'</tr>').join("")+'</tbody>';
+      visible.map(row=>'<tr>'+scheduleCols.map((col,i)=>
+        '<td'+(i===0?' role="rowheader"':'')+'>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>'
+      ).join("")+'</tr>').join("")+'</tbody>';
     schedulePager.hidden=printFullSchedule||pages<=1;
     schedulePrev.disabled=schedulePage===0;
     scheduleNext.disabled=schedulePage===pages-1;
