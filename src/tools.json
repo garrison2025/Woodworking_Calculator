@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Compare multi-length lumber offers for studs, headers and sills with cutting, purchasing cost, diagrams and CSV exports.",
+      "desc": "Compare multiple lumber lengths for studs, headers and sills with cut layouts, quoted purchase costs, SVG diagrams and CSV exports.",
       "inputs": [
         {
           "key": "length",
