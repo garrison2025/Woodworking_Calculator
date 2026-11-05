@@ -1043,3 +1043,23 @@ test("invalid field is visually distinguished and reduced-motion preference remo
   await expect(c).toHaveCSS("transform","none");
   await expect(c).toHaveCSS("transition-duration",/^(?:0s)(?:, 0s)*$/);
 });
+
+
+test("numeric geometry-rule errors identify the responsible field without mislabeling others",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const length=page.locator("#f-length"),pitch=page.locator("#f-pitch");
+  await length.fill("-10");
+  await expect(page.locator("#calc-error")).toContainText("length must be greater than zero");
+  await expect(length).toHaveAttribute("aria-invalid","true");
+  await expect(length).toHaveAttribute("aria-describedby","field-note-length calc-error");
+  await expect(pitch).not.toHaveAttribute("aria-invalid","true");
+  await length.fill("144");
+  await expect(length).not.toHaveAttribute("aria-invalid","true");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await pitch.fill("-1");
+  await expect(page.locator("#calc-error")).toContainText("pitch cannot be negative");
+  await expect(pitch).toHaveAttribute("aria-invalid","true");
+  await pitch.fill("6");
+  await expect(pitch).not.toHaveAttribute("aria-invalid","true");
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+});
