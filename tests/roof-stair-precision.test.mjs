@@ -50,7 +50,7 @@ test("stairs and stringers refuse nonrepresentable positive riser or tread coord
     assert.equal(result.ok,false,JSON.stringify(changed));
     assert.match(result.error,/cut-coordinate resolution/);
   }
-  const stringer={rise:105,risers:14,tread:10,depth:11.25};
+  const stringer={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1,lowerFinish:0};
   for(const changed of [{rise:1e-7,risers:2},{tread:1e-9}]){
     const result=safeCompute("stair-stringer-calculator",{...stringer,...changed});
     assert.equal(result.ok,false,JSON.stringify(changed));
