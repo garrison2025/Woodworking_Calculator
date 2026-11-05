@@ -2244,7 +2244,10 @@ test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrolla
 
   await page.goto("/rafter-calculator/");
   const drawing=page.locator("#dimension-svg");
+  const originalWidth=await drawing.locator("svg").evaluate(el=>el.getBoundingClientRect().width);
   for(let i=0;i<5;i++)await page.locator("#zoom-in").click();
+  const expandedWidth=await drawing.locator("svg").evaluate(el=>el.getBoundingClientRect().width);
+  expect(expandedWidth).toBeGreaterThan(originalWidth*1.8); // zoom must enlarge in actual layout
   await expect(drawing).toHaveAttribute("tabindex","0");
   await expect(drawing).toHaveAttribute("role","region");
   await expect(drawing).toHaveAttribute("aria-label","Zoomed dimension drawing — arrow keys to scroll");
