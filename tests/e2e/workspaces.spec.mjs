@@ -1834,3 +1834,51 @@ test("P1 stringer nominal sawline and measured end-lines export actual named geo
  await page.locator("#f-upperEndCutRun").fill("152.4");
  await expect(page.locator("#calc-error")).toBeHidden();
 });
+
+test("P1 roof sheathing offcut reuse assigns actual three-sheet layout and numeric stock CSV",async({page})=>{
+ const {readFileSync}=await import("node:fs");
+ await page.goto("/roof-sheathing-calculator/");
+ await page.locator("#f-width").fill("70");
+ await page.locator("#f-length").fill("110");
+ await page.locator("#f-pitch").fill("0");
+ await page.locator("#f-waste").fill("0");
+ await page.locator("#f-reuseMode").selectOption("1");
+ await expect(page.locator("#calc-error")).toBeHidden();
+ await expect(page.locator("#result-cards .metric").filter({hasText:"Bounded reusable-box stock sheets"}))
+   .toContainText("3");
+ await expect(page.locator("#roof-reuse-table tbody tr")).toHaveCount(4);
+ await expect(page.locator("#roof-reuse-svg svg .roof-stock-full")).toHaveCount(3);
+ await expect(page.locator("#roof-reuse-svg svg .roof-stock-cut")).toHaveCount(4);
+ await page.locator("#unit-select").selectOption("mm");
+ let dl=page.waitForEvent("download");
+ await page.locator("#download-roof-reuse-csv").click();
+ const csv=readFileSync(await (await dl).path(),"utf8");
+ expect(csv).toContain('"Stock X (mm)","Stock Y (mm)"');
+ expect(csv).toContain('"Stock Cut Vertices (mm)"');
+ dl=page.waitForEvent("download");
+ await page.locator("#download-roof-reuse-svg").click();
+ const svg=readFileSync(await (await dl).path(),"utf8");
+ expect(svg).toContain('class="roof-stock-cut"');
+ await page.locator("#f-roofKerf").fill("1500");
+ await expect(page.locator("#calc-error")).toBeVisible();
+ await expect(page.locator("#roof-reuse-svg svg")).toHaveCount(0);
+ await expect(page.locator("#download-roof-reuse-csv")).toBeDisabled();
+ await page.locator("#f-roofKerf").fill("0");
+ await expect(page.locator("#calc-error")).toBeHidden();
+});
+test("P1 hip roof stock-local polygon placement remains distinct from roof plan diagram",async({page})=>{
+ await page.goto("/hip-roof-calculator/");
+ await page.locator("#f-reuseMode").selectOption("1");
+ await expect(page.locator("#calc-error")).toBeHidden();
+ await expect(page.locator("#roof-reuse-table tbody tr").first()).toBeVisible();
+ await expect(page.locator("#download-roof-reuse-csv")).toBeEnabled();
+ expect(await page.locator("#dimension-svg svg .roof-panel-cut").count()).toBeGreaterThan(0);
+ expect(await page.locator("#roof-reuse-svg svg .roof-stock-cut").count()).toBeGreaterThan(0);
+ await page.emulateMedia({media:"print"});
+ await expect(page.locator("#roof-reuse-table tbody tr").first()).toBeVisible();
+ await expect(page.locator("#download-roof-reuse-csv")).toBeHidden();
+ await page.emulateMedia({media:"screen"});
+ await page.locator("#f-reuseMode").selectOption("0");
+ await expect(page.locator("#roof-reuse-status")).toContainText("REUSE OFF");
+ await expect(page.locator("#roof-reuse-svg svg")).toHaveCount(0);
+});
