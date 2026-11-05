@@ -372,3 +372,20 @@ tbody tr:nth-child(2n){background:#fafbf8}
   #framing-offer-table .selected-plan{background:white}
   .takeoff-legend{font-size:7pt}
 }
+
+
+/* An optimality certificate is about this finite quotation model only. */
+.framing-optimizer-panel{margin:20px 0 8px;padding:18px 19px;border:1px solid #dce7dc;border-radius:10px;background:#fafcf9}
+.framing-optimizer-panel h3{margin:0 0 9px;font-size:17px}
+.framing-optimizer-panel>p{font-size:12px;line-height:1.65}
+#framing-optimizer-status{padding:10px 13px;background:#eaf1e9;color:#27513f;border-left:3px solid #55876e;font-weight:700;margin:12px 0}
+.framing-optimizer-panel .table-scroll{max-height:none}
+#framing-proof-table{min-width:610px;font-size:12px}
+.framing-optimizer-panel .optimizer-note{margin:12px 0 0;color:#526358}
+@media print{
+  .framing-optimizer-panel{background:white;padding:8pt;border:1px solid #aaa;break-inside:avoid}
+  #framing-optimizer-status{background:white;font-size:8pt;padding:5pt}
+  #framing-proof-table{table-layout:fixed;width:100%;min-width:0;font-size:7pt}
+  #framing-proof-table th,#framing-proof-table td{padding:4pt 3pt;overflow-wrap:anywhere}
+  .framing-optimizer-panel .optimizer-note{font-size:7pt}
+}
