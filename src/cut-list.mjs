@@ -24,7 +24,7 @@ const csvEscape=(value,isNumeric=false)=>{
 };
 const titleCase=(key)=>key.replace(/([A-Z])/g," $1").replace(/^./,ch=>ch.toUpperCase());
 const fieldType=(key,records)=>{
-  if(key==="cutAreaFt2")return "area";
+  if(/AreaFt2$/.test(key))return "area";
   if(key==="cutVertices")return "vertices";
   if(!records.some(r=>typeof r[key]==="number"))return "plain";
   // Ring/segment indexes are counts, never lengths. Angular sweeps are degrees.
@@ -43,7 +43,7 @@ export const scheduleColumns=(records,unit)=>{
   if(!Array.isArray(records))throw Error("Invalid schedule.");
   return [...new Set(records.flatMap(row=>Object.keys(row)))].map(key=>{
     const kind=fieldType(key,records);
-    const label=key==="cutAreaFt2"?"Cut Area":key==="cutVertices"?"Cut Vertices":titleCase(key);
+    const label=key==="cutAreaFt2"?"Cut Area":key==="offcutAreaFt2"?"Offcut Area":key==="cutVertices"?"Cut Vertices":titleCase(key);
     const suffix=unitLabel(kind,unit);
     return {key,kind,label:label+(suffix?" ("+suffix+")":"")};
   });

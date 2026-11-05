@@ -1391,7 +1391,7 @@
       "keyword": "roof sheathing calculator",
       "volume": 590,
       "kd": 3,
-      "desc": "Rectangular single-plane sheathing layout with true sloped depth, clipped edge sheets and a complete cut schedule",
+      "desc": "Rectangular single-slope roof sheathing grid with complete sheet start/end cuts, per-sheet scrap and independent stock-area conservation",
       "inputs": [
         {
           "key": "width",
@@ -1446,22 +1446,22 @@
           ]
         }
       ],
-      "formula": "True sloped depth = roof plan width × sqrt(1+(pitch/12)^2); clip a grid of stock sheets to the roof plane; purchase count = occupied sheet positions plus optional allowance.",
-      "example": "A flat 110 × 70 in roof plane with 96 × 48 in sheets needs four sheet positions, including three edge cuts, before allowance.",
-      "limit": "Single rectangular roof plane only; eave-origin grid without seam gaps, staggering, offcut reuse, fastening, bearing or structural compliance checks. SVG is a scaled schematic, not a certified 1:1 pattern.",
+      "formula": "True sloped uphill length = plan width×sqrt(1+(pitch/12)²). Grid sheet positions from the eave origin in stock face coordinates; for each position, cut end = min(sheet boundary, roof edge) on BOTH axes. Each consumed stock sheet area = used cut area+discarded offcut area, even if fully uncut. Total sheet stock area = used roof area+sum of all discarded offcuts; any purchasing allowance is applied separately to whole sheet count.",
+      "example": "Flat 110×70 in roof surface, 96×48 in stock oriented with 96 in along eave: four sheet positions cut to 96×48, 14×48, 96×22 and 14×22 in. 7,700 in² roof area + 10,732 in² discarded stock offcuts = 18,432 in² from four stock sheets. This is a one-sheet-per-position reference, not a reusable offcut nesting plan.",
+      "limit": "One rectangular roof plane with flat developed sloped-surface coordinates; sheet start/end coordinates, cut dimensions and scrap areas are geometry-only. Each occupied cut position consumes one NEW full stock sheet, even when a real offcut might be reused. No overlap allowance, seam joints, rafter bearing, fastening, panel expansion gaps, bracing, strength or building-code approvals are modelled. Very small edge remnants and exact real saw tolerances require review. SVG is not an actual 1:1 cutting template.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Understand eave and uphill dimensions",
-          "text": "Roof plan width measures the horizontal uphill run; plan length measures the eave. The pitched run is converted to its true sloped surface length before positioning each sheet."
+          "heading": "Read the roof axes and every cut boundary",
+          "text": "The roof plan width is the horizontal uphill run and the plan length follows the eave. The uphill distance is converted to its developed sloped length before laying the sheet grid. Each CSV row includes grid row and column, both eave start/end and uphill start/end coordinates, and the resulting stock cut dimensions."
         },
         {
-          "heading": "Review every sheet cut",
-          "text": "The diagram shows the single plane in flat sloped-surface coordinates. Eave start and slope start locate each sheet from the lower-left eave corner. Cut along and cut uphill are the cut dimensions, all exported in CSV."
+          "heading": "Audit stock and scrap independently",
+          "text": "For each occupied position, one whole stock sheet is consumed. The used cut rectangle plus its unreused stock offcut area must equal the original sheet area. The sum of used rectangles covers the developed roof area and the sum of offcuts is reported explicitly. Switching the stock orientation may change this per-sheet waste without changing the roof geometry."
         },
         {
-          "heading": "Conservative purchasing, not a fastening plan",
-          "text": "Every occupied position consumes one stock sheet without offcut reuse. Compare sheet orientations to reduce the conservative count. Allowance applies to occupied sheets, not the area lower bound; confirm real fastening, seam and support details separately."
+          "heading": "No nesting, waste reuse or engineered fastener layout",
+          "text": "Cut-off remnants from one sheet are deliberately NOT assigned to another position. The order count applies your separate waste allowance to the number of occupied positions. Verify any real seam support, panel fasteners, manufacturer instructions, material expansion and safe roof construction outside this trial-only geometry."
         }
       ]
     },

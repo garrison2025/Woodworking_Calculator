@@ -622,24 +622,45 @@ export function compute(slug,a){
       const cutAlong=Math.min(along,eaveLength-eaveStart);
       const cutUphill=Math.min(uphill,uphillLength-slopeStart);
       if(cutAlong<=1e-8||cutUphill<=1e-8)continue;
-      sheets.push({id:"S"+(sheets.length+1),eaveStart:q(eaveStart),slopeStart:q(slopeStart),
-        cutAlong:q(cutAlong),cutUphill:q(cutUphill),cutAreaSqIn:cutAlong*cutUphill,
-        full:Math.abs(cutAlong-along)<1e-7&&Math.abs(cutUphill-uphill)<1e-7});
+      // Keep absolute cut-box endpoints as well as nominal lengths:
+      // these can be independently cross-checked against adjacent sheets.
+      // Used and unused stock areas are evaluated BEFORE display rounding.
+      const cutAreaSqIn=cutAlong*cutUphill;
+      sheets.push({
+        id:"S"+(sheets.length+1),row:row+1,column:col+1,
+        eaveStart:q(eaveStart),eaveEnd:q(eaveStart+cutAlong),
+        slopeStart:q(slopeStart),slopeEnd:q(slopeStart+cutUphill),
+        cutAlong:q(cutAlong),cutUphill:q(cutUphill),cutAreaSqIn,
+        offcutAreaSqIn:Math.max(0,per-cutAreaSqIn),
+        full:Math.abs(cutAlong-along)<1e-8&&Math.abs(cutUphill-uphill)<1e-8
+      });
     }
     const coverage=sheets.reduce((sum,s)=>sum+s.cutAreaSqIn,0);
     need(Math.abs(coverage-area)<=Math.max(1e-6,area*1e-8),"Sheet positions do not conserve the sloped roof area.");
+    const offcuts=sheets.reduce((sum,s)=>sum+s.offcutAreaSqIn,0);
+    const stockArea=sheets.length*per;
+    need(Math.abs(coverage+offcuts-stockArea)<=Math.max(1e-6,stockArea*1e-10),
+      "Roof sheathing used area and discarded offcuts do not conserve the stock area.");
     const full=sheets.filter(s=>s.full).length;
-    const cutRows=sheets.map(s=>({item:s.id,eaveStart:s.eaveStart,slopeStart:s.slopeStart,
-      cutAlong:s.cutAlong,cutUphill:s.cutUphill,cutAreaFt2:s.cutAreaSqIn/144}));
+    const cutRows=sheets.map(s=>({
+      item:s.id,row:s.row,column:s.column,
+      eaveStart:s.eaveStart,eaveEnd:s.eaveEnd,
+      slopeStart:s.slopeStart,slopeEnd:s.slopeEnd,
+      cutAlong:s.cutAlong,cutUphill:s.cutUphill,
+      cutAreaFt2:s.cutAreaSqIn/144,offcutAreaFt2:s.offcutAreaSqIn/144
+    }));
     return result([
       M("Sloped roof surface",area/144,"FT2"),
       M("Sheet geometric lower bound",ceilStable(area/per),"N"),
       M("Sheet positions (no offcut reuse)",sheets.length,"N"),
       M("Full sheets",full,"N"),M("Edge-cut sheets",sheets.length-full,"N"),
       M("Order sheets with allowance",ceilStable(sheets.length*(1+a.waste/100)),"N"),
-      M("Unreused offcut area",Math.max(0,sheets.length*per-area)/144,"FT2")
+      M("Stock face area before allowance",stockArea/144,"FT2"),
+      M("Unreused offcut area",offcuts/144,"FT2")
     ],[],eaveLength,cutRows,"sheathing-panels",
-    {roofEave:eaveLength,roofSlope:uphillLength,roofSheets:sheets,sheetAlong:along,sheetUphill:uphill});
+    {roofEave:eaveLength,roofSlope:uphillLength,roofSheets:sheets,
+      sheetAlong:along,sheetUphill:uphill,stockAreaSqIn:stockArea,
+      coveredAreaSqIn:coverage,offcutAreaSqIn:offcuts});
   }
   case "fence-post-calculator":{
     positive("length","bay","post");
