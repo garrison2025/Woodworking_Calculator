@@ -1108,7 +1108,7 @@ if(slug){
     if(!latest?.deckPurchaseRows)return;
     const rows=latest.deckPurchaseRows.map(r=>({...r,currency:currencyCode()}));
     const body=buildScheduleCsv(rows,unit,
-      "Prices entered by user; zero means quote missing. No FX conversion, taxes, delivery, structural joists, blocking, labor or regulatory approval.");
+      "Prices entered by user; zero means quote missing. Optional full-width joist stock is nonstructural; no FX conversion, taxes, delivery, structural design, blocking, beams, footings, labor or regulatory approval.");
     save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-purchase-quote.csv",
       body,"text/csv;charset=utf-8");
     status.textContent="Deck material quote CSV saved locally.";
