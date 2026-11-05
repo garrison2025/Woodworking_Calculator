@@ -245,6 +245,14 @@ def tool_page(t):
            '<div class="export-stack"><button type="button" id="copy-result" class="btn primary">Copy results <span>↗</span></button>'
            '<button type="button" id="download-csv" class="btn secondary">↓ Download CSV cut list</button></div>'
            '<p class="action-status" id="action-status" role="status" aria-live="polite">Calculations will update instantly.</p></aside></section>')
+    body+=(
+        '<section class="wrap print-input-snapshot" id="print-input-snapshot" aria-labelledby="print-input-title" hidden>'
+        '<h2 id="print-input-title">Measurements used for this worksheet</h2>'
+        '<p id="print-input-context">Printed inputs are an exact snapshot of user-entered values. The schematic is NOT a 1:1 template.</p>'
+        '<table id="print-input-table" aria-label="All input settings used for the printed calculation">'
+        '<thead><tr><th scope="col">Input / setting</th><th scope="col">Value at print time</th></tr></thead>'
+        '<tbody></tbody></table></section>'
+    )
     framing_takeoff=(
         '<div class="content-block framing-takeoff" id="framing-takeoff">'
         '<span class="eyebrow">LUMBER PURCHASE PLAN</span><h2>Material & stock cutting estimate</h2>'
