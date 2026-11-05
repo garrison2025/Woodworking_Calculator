@@ -58,7 +58,9 @@ test("roof SVG rectangles use exactly the numeric cut positions exported to mm C
     expect(rect.width).toBeGreaterThan(0);
     expect(rect.height).toBeGreaterThan(0);
   }
-  // A tiny additional strip must not be silently excluded.
+  // The download above was in mm; switch the EDIT form back to inches
+  // before supplying the intentionally sub-resolution 48-inch edge strip.
+  await page.locator("#unit-select").selectOption("in");
   await page.locator("#f-width").fill("48.00000005");
   await expect(page.locator("#calc-error")).toContainText("cut-coordinate resolution");
   await expect(rectangles).toHaveCount(0);
