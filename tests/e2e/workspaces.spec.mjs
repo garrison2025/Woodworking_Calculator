@@ -1025,3 +1025,21 @@ test("all 26 calculator routes fit a 360px mobile viewport without page-wide hor
     expect(dimensions.body,tool.slug+" body overflow").toBeLessThanOrEqual(dimensions.client+1);
   }
 });
+
+
+test("invalid field is visually distinguished and reduced-motion preference removes hover shifts",async({page})=>{
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.goto("/stud-calculator/");
+  const field=page.locator("#f-length");
+  await field.fill("");
+  await expect(field).toHaveAttribute("aria-invalid","true");
+  await expect(field).toHaveCSS("border-top-color","rgb(168, 58, 51)");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await field.fill("144");
+  await expect(field).not.toHaveAttribute("aria-invalid","true");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const c=page.locator("#copy-result");
+  await c.hover();
+  await expect(c).toHaveCSS("transform","none");
+  await expect(c).toHaveCSS("transition-duration",/^(?:0s)(?:, 0s)*$/);
+});
