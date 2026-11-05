@@ -1133,7 +1133,7 @@
       "keyword": "equal spacing calculator",
       "volume": 480,
       "kd": 7,
-      "desc": "Calculate evenly spaced center positions, the exact center interval and usable run between adjustable left and right offsets.",
+      "desc": "Place evenly spaced center marks or full-width parts with measured face edges, clear gaps and safe end margins.",
       "inputs": [
         {
           "key": "length",
@@ -1158,24 +1158,34 @@
           "label": "Right center offset",
           "value": 0,
           "kind": "L"
+        },
+        {
+          "key": "itemWidth",
+          "label": "Physical part face width (0 = marks only)",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "pitch=(length−left−right)/(n−1); n=1 is centered",
-      "example": "1000 mm and 6 endpoint centers ⇒ 200 mm intervals",
-      "limit": "Offsets are to centers, not item edges",
+      "formula": "For n ≥ 2: center pitch = (total length − left center offset − right center offset)/(n − 1); center i = left offset + i×pitch. For n = 1, center = (left offset + total length − right offset)/2. When part width w > 0: face edges = center ± w/2, clear face gap = pitch − w, and first/last faces must stay inside the measured run.",
+      "example": "1000 mm total length, 6 equal parts, 50 mm left/right center offsets, 30 mm physical part width: centers 50, 230, 410, 590, 770, 950 mm; 180 mm center pitch, 150 mm clear face gaps and 35 mm end margins.",
+      "limit": "All offsets are measured to part centers, not faces. Zero part width means marking centers only, not an infinitely thin physical board. With a positive width, full part faces must fit inside the entered run and adjacent parts must not overlap. Exactly one center is placed midway between offset reference positions; gap is not defined. This does not certify spacing code, safe minimum fastener distances or material deformation.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
           "heading": "Offsets refer to centers, not object edges",
-          "text": "The left and right offsets locate the first and final center marks within the full measured length. The output is a centerline schedule, so include half the actual item width yourself when translating marks to face clearances. Both end offsets must leave a positive usable distance."
+          "text": "The left and right offsets locate the first and last center marks. A positive optional part width allows the calculator to show each physical face interval, actual clear gap between faces, and remaining end margins. Because the offsets still refer to centers, they must be at least half a part width when the outer faces are expected to stay inside the run."
         },
         {
           "heading": "How equal centers are distributed",
-          "text": "With two or more centers, the calculator divides the usable span (total length minus both offsets) into count minus one equal center intervals. If you request a single center, it places that center halfway between the two offset reference positions and reports zero interval."
+          "text": "For two or more centers, the calculator divides the usable run (total length minus both center offsets) into count minus one equal intervals. The optional physical width does not change these center coordinates; it only derives face edges and gaps. If you request one center, it is placed midway between the two reference offsets, and no between-part gap is reported."
         },
         {
           "heading": "Transfer the marks without accumulating rounding drift",
-          "text": "Use the exported coordinates measured from one reference end instead of repeatedly adding an approximate displayed pitch. Inch fractions on screen are rounded guides; the numeric CSV records the computed positions for the selected length unit. This tool does not include part face widths or minimum clearance rules."
+          "text": "Export face edges and center coordinates from the same measured datum rather than repeatedly adding a rounded displayed pitch. When physical part width is supplied, the SVG draws rectangles proportional to that width and rejects faces outside the run or overlapping neighbors. Inch fractions are visual guides; CSV exports numeric dimensions in the selected unit."
+        },
+        {
+          "heading": "Example: six equal-width parts over one meter",
+          "text": "For a 1000 mm run with six parts, centers inset 50 mm from both ends and part face widths of 30 mm, the correct pitch is 180 mm, clear gaps are 150 mm and outside clear margins are each 35 mm. This optional face-layout mode is different from the default zero-width center-only mark schedule; it does not design fasteners or structural connections."
         }
       ]
     },
