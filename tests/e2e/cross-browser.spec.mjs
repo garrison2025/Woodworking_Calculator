@@ -117,3 +117,21 @@ test("Printed rafter measurement snapshot preserves pitch ratio, exact typed uni
   await page.emulateMedia({media:"screen"});
   await expect(panel).toBeHidden();
 });
+
+test("Keyboard can focus and PageDown through large measurement tables in Firefox and WebKit",async({page})=>{
+  await page.goto("/segmented-bowl-calculator/");
+  await page.locator("#f-segments").fill("180");
+  await page.locator("#f-rings").fill("2");
+  const region=page.locator("#cut-table").locator("xpath=..");
+  await expect(region).toHaveAttribute("tabindex","0");
+  await expect(region).toHaveAttribute("role","region");
+  await expect(region).toHaveAttribute("aria-label",/Calculated cut and measurement schedule/);
+  await region.focus();
+  await page.keyboard.press("PageDown");
+  await expect.poll(()=>region.evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  await page.goto("/rafter-calculator/");
+  await page.locator("#zoom-in").click();
+  await page.locator("#zoom-in").click();
+  await expect(page.locator("#dimension-svg")).toHaveAttribute("tabindex","0");
+  await expect(page.locator("#action-status")).toContainText("Updated:");
+});
