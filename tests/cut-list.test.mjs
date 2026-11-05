@@ -482,3 +482,24 @@ test("P1 hip and sheathing roof reuse CSV converts independent stock coordinates
    assert.ok(!csv.includes("undefined"));
  }
 });
+
+test("P1 deck CSV distinguishes joint CENTER from actual physical cut face in millimeters",()=>{
+  const r=compute("deck-material-calculator",{
+    width:11.125,length:144,board:5.5,gap:.125,stock:100,joists:16,
+    waste:0,buttEndGap:.25,joistFaceWidth:3.5,minEndBearing:1.5
+  });
+  const rows=r.rows.filter(row=>row.type==="Decking");
+  const metric=buildScheduleCsv(rows,"mm","Unverified centered joist-face overlap, not rated bearing.");
+  assert.ok(metric.includes('"Along Start (mm)"'),metric.split("\r\n")[0]);
+  assert.ok(metric.includes('"Butt Joint At End (mm)"'),metric.split("\r\n")[0]);
+  assert.ok(metric.includes('"Actual Cut End (mm)"'),metric.split("\r\n")[0]);
+  assert.ok(metric.includes('"Geometric Face Overlap (mm)"'),metric.split("\r\n")[0]);
+  assert.ok(metric.includes('"2435.225"'),metric);
+  assert.ok(metric.includes('"2441.575"'),metric);
+  assert.ok(metric.includes('"2438.4"'),metric);
+  assert.ok(metric.includes('"41.275"'),metric);
+  const inch=buildScheduleCsv(rows,"in");
+  assert.ok(inch.includes('"95.875"'),inch);
+  assert.ok(inch.includes('"96.125"'),inch);
+  assert.ok(inch.includes('"1.625"'),inch);
+});
