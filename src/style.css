@@ -111,6 +111,12 @@ p{color:var(--body)}
 select,input{border:1px solid #dbe2d9;background:#fefefd;border-radius:8px;color:var(--ink);padding:10px 11px;min-height:42px;width:100%;outline-offset:2px;font-variant-numeric:tabular-nums}
 select:hover,input:hover{border-color:#b7cbbb}
 input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #e4eee7;outline:none}
+/* The pointer focus shadow is intentionally subdued; keyboards need an
+   independently visible 3px outline at >=3:1 contrast, including invalid
+   numeric inputs and option selects. Do not rely on color alone. */
+input:focus-visible,select:focus-visible{outline:3px solid #955b23;outline-offset:2px;
+  box-shadow:0 0 0 4px rgba(149,91,35,.12)}
+.field [aria-invalid="true"]:focus-visible{outline:3px solid var(--danger);outline-offset:2px}
 #calculator-form{padding:6px 19px 10px;display:grid;grid-template-columns:1fr;gap:14px}
 .field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}
 .field label span{color:#7d8e7f;font-weight:500}
@@ -488,4 +494,14 @@ tbody tr:nth-child(2n){background:#fafbf8}
     padding:4pt 6pt;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
   #print-input-table th{width:62%;text-align:left;font-weight:600}
   #print-input-table tr{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* Overflow tables and zoomed diagrams are focusable ONLY when they actually
+   overflow. The browser applies arrow/PageUp/PageDown natively once focused. */
+.table-scroll[data-keyboard-scroll="true"]:focus-visible,
+.drawing-grid[data-keyboard-scroll="true"]:focus-visible{
+  outline:3px solid #955b23;outline-offset:-3px;scroll-padding:12px
+}
+@media print{
+  .table-scroll:focus,.drawing-grid:focus{outline:none!important}
 }
