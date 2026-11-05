@@ -27,6 +27,11 @@ if(slug){
   const framingPriceStatus=document.querySelector("#framing-price-status");
   const framingTicket=document.querySelector("#framing-ticket-list");
   const framingTicketStatus=document.querySelector("#framing-ticket-status");
+  const shelfPinStatus=document.querySelector("#shelf-pin-status");
+  const shelfPinTable=document.querySelector("#shelf-pin-table tbody");
+  const shelfPinSvg=document.querySelector("#shelf-pin-svg");
+  const shelfPinCsvExport=document.querySelector("#download-shelf-pins-csv");
+  const shelfPinSvgExport=document.querySelector("#download-shelf-pin-svg");
   const stringerModelStatus=document.querySelector("#stringer-model-status");
   const stringerOutlineTable=document.querySelector("#stringer-outline-table tbody");
   const stringerSupportTable=document.querySelector("#stringer-support-table tbody");
@@ -703,6 +708,75 @@ if(slug){
       '</span><span>'+esc(r.purchaseCost===null?"QUOTE NEEDED":money(r.purchaseCost))+
       '</span></li>').join("");
   };
+  const renderShelfPins=()=>{
+    if(!shelfPinStatus||!shelfPinTable||!shelfPinSvg)return;
+    const rows=latest?.shelfPinRows||[];
+    const active=!!latest?.shelfPinEnabled&&rows.length>0;
+    shelfPinCsvExport.disabled=!active;
+    shelfPinSvgExport.disabled=!active;
+    shelfPinTable.innerHTML="";
+    shelfPinSvg.innerHTML="";
+    if(!latest){
+      shelfPinStatus.textContent="Correct measurements to view the optional drill grid.";
+      return;
+    }
+    if(!active){
+      shelfPinStatus.textContent="DRILL GRID OFF — enter a positive support pin hole diameter. Original shelf faces and spacing remain unchanged.";
+      return;
+    }
+    shelfPinStatus.textContent="MEASURED PATTERN: "+latest.shelfRows.length+
+      " shelves × 2 positions × 2 side panels = "+rows.length+
+      " circular holes. Left and Right panels both use X from the INSIDE FRONT and Y from the INSIDE BOTTOM. Check actual pin bearing height before drilling.";
+    shelfPinTable.innerHTML=rows.map(p=>'<tr>'+
+      [p.shelfNumber,p.panel,p.position,fmt(p.centerX),fmt(p.centerY),
+        fmt(p.holeDiameter),fmt(p.faceFrontEdge),fmt(p.faceBackEdge),
+        fmt(p.faceBottomEdge),fmt(p.faceTopEdge),fmt(p.undersideClearance)]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    // Each side view shares the SAME absolute physical length scale on X and
+    // Y: no imaginary visual minimum is added to the hole radius.
+    const depth=latest.caseDepth,height=latest.interiorHeight;
+    const scale=Math.min(245/depth,205/height);
+    const boardW=depth*scale,boardH=height*scale;
+    const top=57+(205-boardH)/2;
+    const bottom=top+boardH,centerX={Left:226,Right:674};
+    const pinRows=rows;
+    const svgParts=[
+      '<svg class="shelf-side-drill-svg" viewBox="0 0 900 345" role="img" aria-label="Scaled Left and Right cabinet side panel hole reference maps; X from inside front and Y from inside bottom">',
+      '<title>Proportional side-panel drill references — verify actual hardware, drilling and print scale</title>'
+    ];
+    for(const side of ["Left","Right"]){
+      const x0=centerX[side]-boardW/2;
+      svgParts.push('<text class="shelf-side-label" x="'+centerX[side]+'" y="25" text-anchor="middle">'+side.toUpperCase()+' INSIDE PANEL</text>');
+      svgParts.push('<rect class="shelf-pin-side-stock" data-panel="'+side+
+        '" data-depth="'+depth+'" data-height="'+height+
+        '" x="'+x0+'" y="'+top+'" width="'+boardW+'" height="'+boardH+
+        '" fill="#f2e2c7" stroke="#926d48" stroke-width="1.6"><title>'+
+        esc(side+" panel · measured inside depth "+fmt(depth)+
+          " · height "+fmt(height))+'</title></rect>');
+      for(const [index,shelf] of latest.shelfRows.entries()){
+        const y=bottom-shelf.shelfBottom*scale;
+        svgParts.push('<line class="shelf-pin-shelf-guide" data-panel="'+side+
+          '" data-shelf="'+(index+1)+'" x1="'+x0+'" y1="'+y+
+          '" x2="'+(x0+boardW)+'" y2="'+y+
+          '" stroke="#71927d" stroke-width="1" stroke-dasharray="4 3"/>');
+      }
+      for(const p of pinRows.filter(row=>row.panel===side)){
+        const x=x0+p.centerX*scale,y=bottom-p.centerY*scale;
+        const radius=p.holeDiameter*scale/2;
+        svgParts.push('<circle class="shelf-pin-hole" data-panel="'+side+
+          '" data-shelf="'+p.shelfNumber+'" data-position="'+p.position+
+          '" data-x="'+p.centerX+'" data-y="'+p.centerY+
+          '" cx="'+x+'" cy="'+y+'" r="'+radius+
+          '" fill="#fbfaf7" stroke="#1e6454" stroke-width="1.15"><title>'+
+          esc(side+" panel · shelf "+p.shelfNumber+" · "+p.position+
+            " hole center X "+fmt(p.centerX)+" / Y "+fmt(p.centerY)+
+            " · Ø "+fmt(p.holeDiameter))+'</title></circle>');
+      }
+      svgParts.push('<text class="shelf-side-foot" x="'+centerX[side]+'" y="289" text-anchor="middle">FRONT = LEFT · BOTTOM = Y 0</text>');
+    }
+    svgParts.push('<text class="shelf-side-note" x="450" y="329" text-anchor="middle">TWO INSIDE SIDE PANELS · SAME FRONT-REFERENCED X/Y · NOT A 1:1 DRILL JIG</text></svg>');
+    shelfPinSvg.innerHTML=svgParts.join("");
+  };
   const renderStringerSection=()=>{
     if(!stringerModelStatus||!stringerOutlineTable||!stringerSupportTable)return;
     const outline=latest?.stringerEnvelopeRows||[],surfaces=latest?.supportReferences||[];
@@ -739,7 +813,7 @@ if(slug){
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
-      renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();
+      renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderShelfPins();
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated from your measurements.";
@@ -760,7 +834,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
-      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();
+      schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderShelfPins();
       status.textContent="Calculation requires correction.";
     }
   }
@@ -856,6 +930,19 @@ if(slug){
       "Each separate stock piece at a joist reference = one contact; butt seams count both pieces. Fastener rate is user-entered; actual structural bearing and manufacturer requirements NOT verified.");
     save(slug+"-"+unit+"-fastener-contacts.csv",body,"text/csv;charset=utf-8");
     status.textContent="Deck fastener contacts CSV saved locally.";
+  });
+  shelfPinCsvExport?.addEventListener("click",()=>{
+    if(!latest?.shelfPinEnabled||!latest.shelfPinRows?.length)return;
+    const result=buildScheduleCsv(latest.shelfPinRows,unit,
+      "Side-panel coordinates: X from each INSIDE FRONT edge; Y from the INSIDE BOTTOM. Both left/right panels use the same front datum. Measured hole-center drop from shelf underside; NOT a physical drilling template or pin load approval.");
+    save(slug+"-"+unit+"-side-panel-support-holes.csv",result,"text/csv;charset=utf-8");
+    status.textContent="Left/right shelf support-hole CSV saved locally.";
+  });
+  shelfPinSvgExport?.addEventListener("click",()=>{
+    if(!latest?.shelfPinEnabled||!shelfPinSvg?.firstElementChild)return;
+    save(slug+"-"+unit+"-side-panel-reference.svg",
+      shelfPinSvg.firstElementChild.outerHTML,"image/svg+xml");
+    status.textContent="Proportional side-panel reference SVG saved locally.";
   });
   stringerSectionExport?.addEventListener("click",()=>{
     if(!latest?.stringerEnvelopeRows?.length)return;
