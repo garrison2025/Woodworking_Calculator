@@ -503,3 +503,24 @@ test("P1 deck CSV distinguishes joint CENTER from actual physical cut face in mi
   assert.ok(inch.includes('"96.125"'),inch);
   assert.ok(inch.includes('"1.625"'),inch);
 });
+
+test("Rafter birdsmouth CSV carries independent mm X/Y endpoints and angles, not slope distances",()=>{
+  const result=compute("rafter-calculator",{run:120,pitch:6,ridge:0,
+    overhang:12,depth:5.5,seat:3});
+  const csv=buildScheduleCsv(result.rows,"mm","Nominal reference only; verify physical bearing.");
+  assert.ok(csv.includes('"Start X (mm)"'),csv.split("\r\n")[0]);
+  assert.ok(csv.includes('"Start Y (mm)"'),csv.split("\r\n")[0]);
+  assert.ok(csv.includes('"End X (mm)"'),csv.split("\r\n")[0]);
+  assert.ok(csv.includes('"End Y (mm)"'),csv.split("\r\n")[0]);
+  assert.ok(csv.includes('"Cut Angle (°)"'),csv.split("\r\n")[0]);
+  assert.ok(csv.includes('"Birdsmouth horizontal seat"'),csv);
+  assert.ok(csv.includes('"Birdsmouth plumb heel"'),csv);
+  assert.ok(csv.includes('"2971.8"'),csv); // (120-3)*25.4
+  assert.ok(csv.includes('"3048"'),csv); // 120*25.4
+  assert.ok(csv.includes('"76.2"'),csv); // 3-in horizontal seat
+  assert.ok(csv.includes('"38.1"'),csv); // 1.5-in plumb heel
+  const flat=compute("rafter-calculator",{run:120,pitch:0,ridge:0,
+    overhang:0,depth:5.5,seat:3});
+  assert.equal(flat.rows.length,3);
+  assert.ok(!buildScheduleCsv(flat.rows,"in").includes("Birdsmouth plumb heel"));
+});
