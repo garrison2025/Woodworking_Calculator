@@ -18,9 +18,18 @@ if(slug){
   const framingMaterial=document.querySelector("#framing-material-table tbody");
   const framingStock=document.querySelector("#framing-stock-table tbody");
   const stockExport=document.querySelector("#download-stock-csv");
+  const pricingExport=document.querySelector("#download-price-csv");
+  const currency=document.querySelector("#framing-currency");
+  const framingPriceTable=document.querySelector("#framing-price-table tbody");
+  const framingPriceStatus=document.querySelector("#framing-price-status");
+  const framingTicket=document.querySelector("#framing-ticket-list");
+  const framingTicketStatus=document.querySelector("#framing-ticket-status");
+  const currencyCode=()=>currency?.value||"USD";
+  const money=x=>currencyCode()+" "+Number(x).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
   const fmt=(x,kind="L")=>{
     if(!Number.isFinite(x))return "—";
     if(kind==="N")return String(Math.round(x));
+    if(kind==="C")return money(x);
     if(kind==="D")return trim(x,3)+"%";
     if(kind==="A")return trim(x,3)+"°";
     if(kind==="P")return trim(x,3)+":12";
@@ -453,7 +462,7 @@ if(slug){
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
   const renderFramingTakeoff=()=>{
-    if(!framingMaterial||!framingStock)return;
+    if(!framingMaterial||!framingStock||!framingPriceTable||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
     const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[];
     framingMaterial.innerHTML=groups.map(r=>'<tr>'+
       [r.stockGroup,r.pieces,takeoffLength(r.cutLength),takeoffLength(r.stockLength),
@@ -463,6 +472,29 @@ if(slug){
       bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))).join("<br>")+
       '</td><td>'+esc(takeoffLength(bar.kerfLoss))+'</td><td>'+
       esc(takeoffLength(bar.offcutLength))+'</td></tr>').join("");
+    const summary=latest?.costSummary;
+    const costText=(r,key)=>r.purchaseSticks===0?"Not needed":r.quoted?money(r[key]):"Quote needed";
+    framingPriceTable.innerHTML=groups.map(r=>'<tr>'+
+      [r.stockGroup,r.purchaseSticks,r.unitPrice===null?"Quote needed":money(r.unitPrice),
+       costText(r,"plannedCost"),costText(r,"allowanceCost"),costText(r,"purchaseCost")]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    const missing=summary?.unpricedGroups||[];
+    framingPriceStatus.textContent=!summary?"Fix inputs to see supplier quote costs.":
+      !summary.allPricesEntered?
+        "Incomplete quote — prices required: "+missing.join(", ")+
+          (summary.pricedGroups?" · priced groups subtotal "+money(summary.quotedSubtotal):" · no groups priced yet")+
+          ". This is NOT a complete purchase total.":
+        "Estimated quoted lumber purchase: "+money(summary.quotedSubtotal)+
+        " (planned "+money(summary.quotedPlanned)+
+        " + reserve "+money(summary.quotedReserve)+"). Excludes tax, delivery, labor and fittings.";
+    framingTicketStatus.textContent=!summary?"No valid material plan.":
+      summary.allPricesEntered?"Total material quote: "+money(summary.quotedSubtotal)+" · tax and delivery excluded":
+        "PRICE INCOMPLETE — obtain quotes for "+missing.join(", ")+".";
+    framingTicket.innerHTML=groups.filter(r=>r.purchaseSticks>0).map(r=>
+      '<li><span class="ticket-check" aria-hidden="true">□</span><strong>'+esc(r.stockGroup)+
+      '</strong><span>'+esc(r.purchaseSticks+" sticks × "+takeoffLength(r.stockLength))+
+      ' (planned '+r.plannedSticks+' + reserve '+r.allowanceSticks+')</span><span>'+
+      esc(r.quoted?money(r.purchaseCost):"QUOTE NEEDED")+'</span></li>').join("");
   };
   function render(){
     try{
@@ -512,6 +544,7 @@ if(slug){
   });
   form.addEventListener("input",()=>{schedulePage=0;render();});
   fraction.addEventListener("change",render);
+  currency?.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
   for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");});
   zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");});
@@ -533,6 +566,21 @@ if(slug){
       "FFD stock cutting estimate; groups cannot mix; kerf charged between cuts; extra reserve sticks omitted from plan; not a structural or optimality guarantee.");
     save(slug+"-"+unit+"-stock-cut-plan.csv",text,"text/csv;charset=utf-8");
     status.textContent="Stock cut plan CSV saved locally.";
+  });
+  pricingExport?.addEventListener("click",()=>{
+    if(!latest||!latest.materialSummary)return;
+    const rows=latest.materialSummary.map(r=>({
+      stockGroup:r.stockGroup,pieces:r.pieces,stockLength:r.stockLength,
+      plannedSticks:r.plannedSticks,allowanceSticks:r.allowanceSticks,
+      purchaseSticks:r.purchaseSticks,unitPrice:r.unitPrice,
+      plannedCost:r.plannedCost,reserveCost:r.allowanceCost,
+      purchaseCost:r.purchaseCost,currency:currencyCode()
+    }));
+    const text=buildScheduleCsv(rows,unit,
+      "Material-only user quotes; blank prices mean not quoted, not free. Currency labels do not exchange-convert. No tax, delivery, hardware, plates or labor.");
+    save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-material-quote.csv",
+      text,"text/csv;charset=utf-8");
+    status.textContent="Quoted materials CSV saved locally.";
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
