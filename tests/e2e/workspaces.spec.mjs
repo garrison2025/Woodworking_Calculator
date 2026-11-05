@@ -852,7 +852,7 @@ test("framing reserve allowance switches lowest quoted plan and print ticket",as
   await page.locator("#f-stockWaste").fill("10");
   await expect(page.locator("#framing-price-status")).toContainText("USD 100.50");
   await expect(page.locator("#framing-price-status")).toContainText("reserve USD 20.50");
-  await expect(page.locator("#framing-offer-table .selected-plan").first()).toContainText("Single length · Alternative 2");
+  await expect(page.locator("#framing-offer-table .selected-plan").first()).toContainText("Exhaustive small-layout plan · Alternative 2");
   const ticket=page.locator("#framing-ticket-list");
   await expect(ticket.locator("li")).toHaveCount(2);
   await expect(ticket).toContainText("9 sticks × 144 in");
