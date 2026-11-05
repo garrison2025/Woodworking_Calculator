@@ -1559,3 +1559,123 @@ test("multirow drilling rejects transverse overlaps and returns to exact single-
   await page.setViewportSize({width:360,height:760});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
 });
+
+
+test("shelf support-hole guide renders exact left/right drill coordinates, same-scale SVG and metric exports",async({page})=>{
+  await page.goto("/shelf-spacing-calculator/");
+  await expect(page.locator("#shelf-pin-status")).toContainText("DRILL GRID OFF");
+  await expect(page.locator("#shelf-pin-table tbody tr")).toHaveCount(0);
+  await expect(page.locator("#shelf-pin-svg svg")).toHaveCount(0);
+  await expect(page.locator("#download-shelf-pins-csv")).toBeDisabled();
+  await expect(page.locator("#download-shelf-pin-svg")).toBeDisabled();
+  await page.locator("#f-height").fill("40");
+  await page.locator("#f-thickness").fill("1");
+  await page.locator("#f-top").fill("1");
+  await page.locator("#f-bottom").fill("2");
+  await page.locator("#f-caseDepth").fill("12");
+  await page.locator("#f-frontPinInset").fill("1.5");
+  await page.locator("#f-backPinInset").fill("1.5");
+  await page.locator("#f-pinCenterDrop").fill("0.25");
+  await page.locator("#f-pinHoleDiameter").fill("0.2");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#shelf-pin-status")).toContainText("12 circular holes");
+  const metric=label=>page.locator("#result-cards .metric").filter({hasText:label});
+  await expect(metric("Support drill holes (both side panels)")).toContainText("12");
+  await expect(metric("Front support-hole center X")).toContainText("1.5 in");
+  await expect(metric("Back support-hole center X")).toContainText("10.5 in");
+  const holes=page.locator("#shelf-pin-svg svg .shelf-pin-hole");
+  const stocks=page.locator("#shelf-pin-svg svg .shelf-pin-side-stock");
+  await expect(holes).toHaveCount(12);
+  await expect(stocks).toHaveCount(2);
+  await expect(page.locator("#shelf-pin-svg svg .shelf-pin-shelf-guide")).toHaveCount(6);
+  await expect(holes.first()).toHaveAttribute("data-panel","Left");
+  await expect(holes.first()).toHaveAttribute("data-shelf","1");
+  await expect(holes.first()).toHaveAttribute("data-position","Front");
+  await expect(page.locator("#shelf-pin-table tbody tr")).toHaveCount(12);
+  await expect(page.locator("#shelf-pin-table tbody tr").first()).toContainText("10.25 in");
+  await expect(page.locator("#shelf-pin-table tbody tr").last()).toContainText("29.25 in");
+  const proof=await page.locator("#shelf-pin-svg svg").evaluate(svg=>{
+    const stock=svg.querySelector(".shelf-pin-side-stock");
+    const l=[...svg.querySelectorAll('.shelf-pin-hole[data-panel="Left"]')];
+    const r=[...svg.querySelectorAll('.shelf-pin-hole[data-panel="Right"]')];
+    return {
+      aspect:Number(stock.getAttribute("width"))/Number(stock.getAttribute("height")),
+      frontX:Number(l[0].dataset.x),frontY:Number(l[0].dataset.y),
+      backX:Number(l[3].dataset.x),backY:Number(l[3].dataset.y),
+      countLeft:l.length,countRight:r.length,
+      dx:Number(l[3].getAttribute("cx"))-Number(l[0].getAttribute("cx")),
+      dy:Math.abs(Number(l[2].getAttribute("cy"))-Number(l[0].getAttribute("cy"))),
+      diameter:2*Number(l[0].getAttribute("r")),
+      rFirstX:Number(r[0].dataset.x),rFirstY:Number(r[0].dataset.y)
+    };
+  });
+  expect(proof.aspect).toBeCloseTo(12/40,5);
+  expect(proof.countLeft).toBe(6);
+  expect(proof.countRight).toBe(6);
+  expect(proof.frontX).toBe(1.5);
+  expect(proof.frontY).toBe(10.25);
+  expect(proof.backX).toBe(10.5);
+  expect(proof.backY).toBe(19.75);
+  expect(proof.rFirstX).toBe(proof.frontX);
+  expect(proof.rFirstY).toBe(proof.frontY);
+  expect(proof.dx/proof.diameter).toBeCloseTo(9/.2,4);
+  expect(proof.dy/proof.diameter).toBeCloseTo(9.5/.2,4);
+  const svgDl=page.waitForEvent("download");
+  await page.locator("#download-shelf-pin-svg").click();
+  const image=readFileSync(await(await svgDl).path(),"utf8");
+  expect(image.match(/class="shelf-pin-hole"/g)).toHaveLength(12);
+  expect(image).toContain("NOT A 1:1 DRILL JIG");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#f-pinHoleDiameter")).toHaveValue("5.08");
+  await expect(page.locator("#f-pinCenterDrop")).toHaveValue("6.35");
+  await expect(page.locator("#shelf-pin-table tbody tr").first()).toContainText("260.35 mm");
+  const csvDl=page.waitForEvent("download");
+  await page.locator("#download-shelf-pins-csv").click();
+  const csv=readFileSync(await(await csvDl).path(),"utf8");
+  expect(csv).toContain('"Shelf Number","Panel","Position","Center X (mm)","Center Y (mm)"');
+  expect(csv).toContain('"1","Left","Front","38.1","260.35","5.08"');
+  expect(csv).toContain('"3","Right","Back","266.7","742.95","5.08"');
+  expect(csv.split("\r\n").filter(Boolean)).toHaveLength(14);
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#shelf-pin-panel")).toBeVisible();
+  await expect(page.locator("#shelf-pin-svg svg")).toBeVisible();
+  await expect(page.locator("#shelf-pin-table tbody tr")).toHaveCount(12);
+  await expect(page.locator("#download-shelf-pins-csv")).toBeHidden();
+  await expect(page.locator("#download-shelf-pin-svg")).toBeHidden();
+});
+
+test("shelf support-hole validation clears stale diagram and zero diameter restores original worksheet",async({page})=>{
+  await page.goto("/shelf-spacing-calculator/");
+  await page.locator("#f-pinHoleDiameter").fill("0.2");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#shelf-pin-svg svg .shelf-pin-hole")).toHaveCount(12);
+  await page.locator("#f-pinCenterDrop").fill("0.05");
+  await expect(page.locator("#calc-error")).toContainText("Pin-hole center drop");
+  await expect(page.locator("#shelf-pin-svg svg")).toHaveCount(0);
+  await expect(page.locator("#shelf-pin-table tbody tr")).toHaveCount(0);
+  await expect(page.locator("#download-shelf-pins-csv")).toBeDisabled();
+  await page.locator("#f-pinCenterDrop").fill("0.25");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#shelf-pin-svg svg .shelf-pin-hole")).toHaveCount(12);
+  await page.locator("#f-frontPinInset").fill("0.05");
+  await expect(page.locator("#calc-error")).toContainText("Support pin circles extend");
+  await page.locator("#f-frontPinInset").fill("1.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.locator("#f-pinHoleDiameter").fill("0");
+  await expect(page.locator("#shelf-pin-status")).toContainText("DRILL GRID OFF");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#shelf-pin-svg svg")).toHaveCount(0);
+  await expect(page.locator("#shelf-pin-table tbody tr")).toHaveCount(0);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(3);
+  await expect(page.locator("#cut-table thead")).toContainText("Shelf Bottom (in)");
+  await expect(page.locator("#download-shelf-pin-svg")).toBeDisabled();
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-pinHoleDiameter")).toHaveValue("0");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await page.setViewportSize({width:360,height:760});
+  const dimensions=await page.evaluate(()=>({
+    client:document.documentElement.clientWidth,
+    scroll:document.documentElement.scrollWidth
+  }));
+  expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
+});
