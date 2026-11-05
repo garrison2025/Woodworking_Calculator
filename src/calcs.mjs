@@ -17,6 +17,17 @@ const positions=(length,spacing)=>{
   return xs;
 };
 const q=(x)=>Math.round(x*1e8)/1e8;
+// End positions are reference CENTERS, not the outside faces of a finished wall.
+// Drop a penultimate nominal OC mark when it would physically overlap the
+// mandatory end member. Other layout tools retain their own center policies.
+const studCenters=(length,spacing,faceWidth)=>{
+  need(faceWidth>0&&length>=faceWidth&&spacing>=faceWidth,
+    "Stud face width must fit the wall and cannot exceed the OC interval.");
+  const centers=positions(length,spacing);
+  while(centers.length>1&&centers.at(-1)-centers.at(-2)<faceWidth-1e-8)
+    centers.splice(-2,1);
+  return centers;
+};
 // One pitch convention across common rafter, pitched roof and hip rafter:
 // pitch means rise per 12 horizontal (never per 12 along the sloping line).
 const roofRunGeometry=(run,pitch)=>{
@@ -126,7 +137,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={wallHeight:96,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -135,15 +146,36 @@ export function compute(slug,a){
   let xs,rows,g,n,span;
   switch(slug){
   case "stud-calculator":{
-    positive("length","start","spacing");nonnegative("pitch","plates");
-    xs=positions(a.length,a.spacing);
-    rows=xs.map((x,i)=>({item:"Stud "+(i+1),position:q(x),length:q(a.start+x*a.pitch/12-a.plates)}));
+    positive("length","start","spacing","studWidth");nonnegative("pitch","plates");
+    xs=studCenters(a.length,a.spacing,a.studWidth);
+    rows=xs.map((x,i)=>{
+      const gross=a.start+x*a.pitch/12,cut=gross-a.plates;
+      return {item:"Stud "+(i+1),position:q(x),length:q(cut),
+        grossHeight:q(gross),bottomElevation:0,topElevation:q(cut),
+        faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2)};
+    });
     need(rows.every(r=>r.length>0),"Plate deductions exceed a stud length.");
-    return result([M("Stud positions",rows.length,"N"),M("First cut length",rows[0].length),M("Last cut length",rows.at(-1).length),M("Top cut angle",deg(Math.atan(a.pitch/12)),"A")],xs.map((x,i)=>P(x,String(i+1))),a.length,rows,"slope",{rise:a.length*a.pitch/12,start:a.start,boardHeight:a.start+a.length*a.pitch/12});
+    return result([
+      M("Stud positions",rows.length,"N"),
+      M("First cut length",rows[0].length),
+      M("Last cut length",rows.at(-1).length),
+      M("Gross height at right end",rows.at(-1).grossHeight),
+      M("Plate deduction",a.plates),
+      M("Top cut angle",deg(Math.atan(a.pitch/12)),"A")
+    ],rows.map((r,i)=>({...P(r.position,String(i+1)),topHeight:r.length,cutLength:r.length})),
+    a.length,rows,"slope",{
+      rise:a.length*a.pitch/12,start:rows[0].length,
+      boardHeight:rows.at(-1).length,grossStart:a.start,
+      grossEnd:rows.at(-1).grossHeight,studWidth:a.studWidth,
+      studRows:rows
+    });
   }
   case "framing-calculator":{
     positive("length","spacing","width","wallHeight","openingWidth","openingHeight");
-    nonnegative("openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill");
+    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill");
+    need(a.spacing>=a.width&&a.length>=a.width,"Stud face width must fit the wall and OC interval.");
+    const fullCut=a.wallHeight-a.bottomPlate-a.topPlate;
+    need(fullCut>0,"Bottom and top plates leave no full-height stud cut length.");
     const openings=[
       {start:a.openingStart,width:a.openingWidth,height:a.openingHeight,sill:a.openingSill,label:"Opening 1"},
       {start:a.opening2Start,width:a.opening2Width,height:a.opening2Height,sill:a.opening2Sill,label:"Opening 2"},
@@ -151,31 +183,65 @@ export function compute(slug,a){
     ].filter(o=>o.width>0).map(o=>({...o,end:o.start+o.width,top:o.sill+o.height})).sort((u,v)=>u.start-v.start);
     for(let i=0;i<openings.length;i++){
       const o=openings[i];
-      need(o.start>2.5*a.width&&o.end<a.length-2.5*a.width,"Opening margins must accommodate king/jack reference studs and wall endpoints.");
-      need(o.height>0&&o.sill>=0&&o.top<a.wallHeight,"Opening sill and height must fit below the wall top.");
-      if(i>0)need(o.start-openings[i-1].end>=4*a.width,"Adjacent openings need room for both side-member packs.");
+      need(o.start>2.5*a.width&&o.end<a.length-2.5*a.width,
+        "Opening margins must accommodate king/jack reference studs and wall endpoints.");
+      need(o.height>0&&o.sill>=0&&o.top<a.wallHeight,
+        "Opening sill and height must fit below the wall top.");
+      need(o.top>a.bottomPlate,
+        "Jack stud cut length must be positive above the bottom plate.");
+      if(i>0)need(o.start-openings[i-1].end>=4*a.width,
+        "Adjacent openings need room for both side-member packs.");
     }
-    // Reference coordinates denote stud centers, not material-cut lengths.
-    xs=positions(a.length,a.spacing).filter(x=>!openings.some(o=>x>=o.start-2*a.width-1e-8&&x<=o.end+2*a.width+1e-8));
-    const studRows=xs.map((x,i)=>({item:"Regular "+(i+1),position:q(x),referenceTop:q(a.wallHeight)}));
+    // Each mark and CSV line shares ONE center, physical face interval and
+    // actual vertical segment. Jack tops use rough-opening top elevation;
+    // regular/king tops stop at the underside of the top-plate assembly.
+    const makeMember=(item,type,x,referenceTop,topElevation)=>({
+      item,type,position:q(x),referenceTop:q(referenceTop),
+      faceLeft:q(x-a.width/2),faceRight:q(x+a.width/2),
+      bottomElevation:q(a.bottomPlate),topElevation:q(topElevation),
+      cutLength:q(topElevation-a.bottomPlate)
+    });
+    const sideRows=[];
     for(const o of openings){
-      for(const [name,x,topHeight] of [
-        ["King left",o.start-1.5*a.width,a.wallHeight],
-        ["Jack left",o.start-.5*a.width,o.top],
-        ["Jack right",o.end+.5*a.width,o.top],
-        ["King right",o.end+1.5*a.width,a.wallHeight]
-      ])studRows.push({item:o.label+" "+name,position:q(x),referenceTop:q(topHeight)});
+      sideRows.push(
+        makeMember(o.label+" King left","King",o.start-1.5*a.width,a.wallHeight,a.wallHeight-a.topPlate),
+        makeMember(o.label+" Jack left","Jack",o.start-.5*a.width,o.top,o.top),
+        makeMember(o.label+" Jack right","Jack",o.end+.5*a.width,o.top,o.top),
+        makeMember(o.label+" King right","King",o.end+1.5*a.width,a.wallHeight,a.wallHeight-a.topPlate)
+      );
     }
-    studRows.sort((u,v)=>u.position-v.position);
+    xs=studCenters(a.length,a.spacing,a.width).filter(x=>{
+      const left=x-a.width/2,right=x+a.width/2;
+      return !openings.some(o=>right>o.start+1e-8&&left<o.end-1e-8)
+        && !sideRows.some(r=>right>r.faceLeft+1e-8&&left<r.faceRight-1e-8);
+    });
+    const studRows=[
+      ...xs.map((x,i)=>makeMember("Regular "+(i+1),"Regular",x,a.wallHeight,a.wallHeight-a.topPlate)),
+      ...sideRows
+    ].sort((u,v)=>u.position-v.position);
+    need(studRows.every(r=>r.cutLength>0),"A stud cut length is not positive.");
+    for(let i=1;i<studRows.length;i++)
+      need(studRows[i].faceLeft>=studRows[i-1].faceRight-1e-7,
+        "Stud faces overlap; adjust opening intervals or spacing.");
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     return result([
       M("Regular studs",xs.length,"N"),M("Opening intervals",openings.length,"N"),
-      M("Opening-side reference members",openings.length*4,"N"),
+      M("Opening-side reference members",sideRows.length,"N"),
       M("Total listed pieces",studRows.length,"N"),
-      M("Wall reference height",a.wallHeight),M("Rough opening face area",roughArea,"FT2"),
+      M("Wall reference height",a.wallHeight),
+      M("Regular and king cut length",fullCut),
+      M("Bottom plate thickness",a.bottomPlate),
+      M("Top plate thickness",a.topPlate),
+      M("Rough opening face area",roughArea,"FT2"),
       ...openings.map(o=>M(o.label+" top elevation",o.top))
-    ],studRows.map(r=>({...P(r.position,r.item,r.item.includes("King")?"king":r.item.includes("Jack")?"jack":"mark"),topHeight:r.referenceTop})),
-    a.length,studRows,"opening",{openings,wallHeight:a.wallHeight});
+    ],studRows.map(r=>({
+      ...P(r.position,r.item,r.type==="King"?"king":r.type==="Jack"?"jack":"mark"),
+      topHeight:r.topElevation,bottomHeight:r.bottomElevation,
+      cutLength:r.cutLength,faceLeft:r.faceLeft,faceRight:r.faceRight
+    })),a.length,studRows,"opening",{
+      openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,
+      topPlate:a.topPlate,studWidth:a.width,studRows
+    });
   }
   case "deck-board-calculator":{
     positive("width","length","board","stock");nonnegative("gap","waste");
@@ -567,9 +633,21 @@ export function compute(slug,a){
     });
   }
   case "wall-stud-calculator":{
-    positive("length","spacing","height");nonnegative("plates");need(a.height>a.plates,"Plate deduction leaves no cut length.");
-    xs=positions(a.length,a.spacing);rows=xs.map((x,i)=>({item:"Stud "+(i+1),position:q(x),cutLength:q(a.height-a.plates)}));
-    return result([M("Stud count",xs.length,"N"),M("Cut length",a.height-a.plates),M("Final bay size",xs.at(-1)-xs.at(-2))],xs.map(x=>P(x)),a.length,rows);
+    positive("length","spacing","height","studWidth");nonnegative("plates");
+    need(a.height>a.plates,"Plate deduction leaves no cut length.");
+    xs=studCenters(a.length,a.spacing,a.studWidth);
+    rows=xs.map((x,i)=>({
+      item:"Stud "+(i+1),position:q(x),cutLength:q(a.height-a.plates),
+      grossHeight:q(a.height),bottomElevation:0,topElevation:q(a.height-a.plates),
+      faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2)
+    }));
+    return result([
+      M("Stud count",xs.length,"N"),M("Cut length",a.height-a.plates),
+      M("Plate deduction",a.plates),M("Final bay size",xs.at(-1)-xs.at(-2))
+    ],rows.map(r=>({...P(r.position,r.item),topHeight:r.cutLength,cutLength:r.cutLength})),
+    a.length,rows,"wall-studs",{
+      studRows:rows,wallHeight:a.height,studWidth:a.studWidth
+    });
   }
   case "shelf-spacing-calculator":{
     positive("height","thickness");nonnegative("top","bottom");whole("shelves");
