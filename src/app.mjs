@@ -21,6 +21,7 @@ if(slug){
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
+  const framingComparisons=document.querySelector("#framing-offer-table tbody");
   const framingPriceStatus=document.querySelector("#framing-price-status");
   const framingTicket=document.querySelector("#framing-ticket-list");
   const framingTicketStatus=document.querySelector("#framing-ticket-status");
@@ -462,21 +463,32 @@ if(slug){
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
   const renderFramingTakeoff=()=>{
-    if(!framingMaterial||!framingStock||!framingPriceTable||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
-    const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[];
+    if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
+    const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[],
+      variants=latest?.purchaseVariants||[],comparisons=latest?.stockComparisons||[];
     framingMaterial.innerHTML=groups.map(r=>'<tr>'+
-      [r.stockGroup,r.pieces,takeoffLength(r.cutLength),takeoffLength(r.stockLength),
+      [r.stockGroup,r.pieces,takeoffLength(r.cutLength),r.mixedLengths?"Mixed lengths":takeoffLength(r.stockLength),
        r.plannedSticks,r.allowanceSticks,r.purchaseSticks,takeoffLength(r.offcutLength)]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
-    framingStock.innerHTML=bars.map(bar=>'<tr><td>'+esc(bar.stockId)+'</td><td>'+
+    framingStock.innerHTML=bars.map(bar=>'<tr><td>'+esc(bar.stockId+' · '+bar.offerLabel+' · '+takeoffLength(bar.stockLength))+'</td><td>'+
       bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))).join("<br>")+
       '</td><td>'+esc(takeoffLength(bar.kerfLoss))+'</td><td>'+
       esc(takeoffLength(bar.offcutLength))+'</td></tr>').join("");
     const summary=latest?.costSummary;
-    const costText=(r,key)=>r.purchaseSticks===0?"Not needed":r.quoted?money(r[key]):"Quote needed";
-    framingPriceTable.innerHTML=groups.map(r=>'<tr>'+
-      [r.stockGroup,r.purchaseSticks,r.unitPrice===null?"Quote needed":money(r.unitPrice),
-       costText(r,"plannedCost"),costText(r,"allowanceCost"),costText(r,"purchaseCost")]
+    const costText=(r,key)=>r.purchaseSticks===0?"Not needed":
+      r.unitPrice!==null?money(r[key]):"Quote needed";
+    framingPriceTable.innerHTML=variants.map(r=>'<tr>'+
+      [r.stockGroup,r.offerLabel+" · "+takeoffLength(r.stockLength),r.purchaseSticks,
+       r.unitPrice===null?(r.purchaseSticks?"Quote needed":"Not needed"):money(r.unitPrice),
+       costText(r,"plannedCost"),costText(r,"reserveCost"),costText(r,"purchaseCost")]
+        .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+    framingComparisons.innerHTML=comparisons.filter(r=>r.plannedSticks>0).map(r=>
+      '<tr'+(r.selected?' class="selected-plan"':'')+'>'+
+      [r.stockGroup,r.planLabel+" · "+r.stockSizes.map(v=>
+        v.offerLabel+" "+takeoffLength(v.stockLength)+" × "+v.purchaseSticks).join("; "),
+        r.plannedSticks,r.purchaseSticks,
+        r.quoted?money(r.purchaseCost):"Quote needed",
+        takeoffLength(r.offcutLength),r.selected?"SELECTED":"Alternative"]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
     const missing=summary?.unpricedGroups||[];
     framingPriceStatus.textContent=!summary?"Fix inputs to see supplier quote costs.":
@@ -490,11 +502,12 @@ if(slug){
     framingTicketStatus.textContent=!summary?"No valid material plan.":
       summary.allPricesEntered?"Total material quote: "+money(summary.quotedSubtotal)+" · tax and delivery excluded":
         "PRICE INCOMPLETE — obtain quotes for "+missing.join(", ")+".";
-    framingTicket.innerHTML=groups.filter(r=>r.purchaseSticks>0).map(r=>
+    framingTicket.innerHTML=variants.filter(r=>r.purchaseSticks>0).map(r=>
       '<li><span class="ticket-check" aria-hidden="true">□</span><strong>'+esc(r.stockGroup)+
-      '</strong><span>'+esc(r.purchaseSticks+" sticks × "+takeoffLength(r.stockLength))+
+      '</strong><span>'+esc(r.purchaseSticks+" sticks × "+takeoffLength(r.stockLength)+
+      " · "+r.offerLabel)+
       ' (planned '+r.plannedSticks+' + reserve '+r.allowanceSticks+')</span><span>'+
-      esc(r.quoted?money(r.purchaseCost):"QUOTE NEEDED")+'</span></li>').join("");
+      esc(r.unitPrice!==null?money(r.purchaseCost):"QUOTE NEEDED")+'</span></li>').join("");
   };
   function render(){
     try{
@@ -569,11 +582,11 @@ if(slug){
   });
   pricingExport?.addEventListener("click",()=>{
     if(!latest||!latest.materialSummary)return;
-    const rows=latest.materialSummary.map(r=>({
-      stockGroup:r.stockGroup,pieces:r.pieces,stockLength:r.stockLength,
+    const rows=latest.purchaseVariants.map(r=>({
+      stockGroup:r.stockGroup,offerLabel:r.offerLabel,stockLength:r.stockLength,
       plannedSticks:r.plannedSticks,allowanceSticks:r.allowanceSticks,
       purchaseSticks:r.purchaseSticks,unitPrice:r.unitPrice,
-      plannedCost:r.plannedCost,reserveCost:r.allowanceCost,
+      plannedCost:r.plannedCost,reserveCost:r.reserveCost,
       purchaseCost:r.purchaseCost,currency:currencyCode()
     }));
     const text=buildScheduleCsv(rows,unit,
