@@ -543,3 +543,45 @@ test("hip roof small fixture uses six sheets unrotated and twelve rotated",async
   await expect(sheetCount).toContainText("12");
   await expect(page.locator("#dimension-svg svg .roof-panel-cut")).toHaveCount(12);
 });
+
+test("framing drawing, nominal cut schedule and metric export share member elevations",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await expect(page.locator("#dimension-svg svg .framing-member")).toHaveCount(10);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(10);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Regular and king cut length"})).toContainText("91.5 in");
+  await expect(page.locator('#dimension-svg svg .framing-member[data-cut-length="78.5"]')).toHaveCount(2);
+  await page.locator("#f-bottomPlate").fill("2");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Regular and king cut length"})).toContainText("91 in");
+  await expect(page.locator('#dimension-svg svg .framing-member[data-cut-length="78"]')).toHaveCount(2);
+  await page.locator("#unit-select").selectOption("mm");
+  const ready=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await (await ready).path(),"utf8");
+  expect(csv).toContain('"Cut Length (mm)"');
+  expect(csv).toContain('"Bottom Elevation (mm)"');
+  expect(csv).toContain('"Top Elevation (mm)"');
+  expect(csv).toContain('"1981.2"'); // 78-in jack after bottom plate change
+  await page.locator("#unit-select").selectOption("in");
+  await page.locator("#f-topPlate").fill("120");
+  await expect(page.locator("#calc-error")).toBeVisible();
+});
+
+test("flat and sloped stud drawings expose exactly the exported center-cut pairs",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const gable=page.locator("#dimension-svg svg .gable-cut-stud");
+  await expect(gable).toHaveCount(10);
+  await expect(gable.last()).toHaveAttribute("data-position","144");
+  await expect(gable.last()).toHaveAttribute("data-cut-length","163.5");
+  await expect(page.locator("#dimension-svg svg .gable-gross-reference")).toHaveCount(1);
+  await page.locator("#f-plates").fill("5.5");
+  await expect(gable.last()).toHaveAttribute("data-cut-length","162.5");
+  await page.goto("/wall-stud-calculator/");
+  const wall=page.locator("#dimension-svg svg .wall-cut-stud");
+  await expect(wall).toHaveCount(9);
+  await expect(wall.last()).toHaveAttribute("data-position","120");
+  await expect(wall.last()).toHaveAttribute("data-cut-length","91.5");
+  await page.locator("#f-length").fill("113");
+  await expect(wall).toHaveCount(8);
+  await expect(wall.last()).toHaveAttribute("data-position","113");
+  await expect(page.locator('#dimension-svg svg .wall-cut-stud[data-position="112"]')).toHaveCount(0);
+});
