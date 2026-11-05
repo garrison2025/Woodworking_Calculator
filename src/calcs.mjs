@@ -351,7 +351,7 @@ export function compute(slug,a){
       M("Installed member linear length",totalCutLength/12,"FT"),
       M("Planned stock sticks (FFD estimate)",fullStockCount,"N"),
       M("Purchase sticks incl. allowance",purchaseCount,"N"),
-      M("Planned reusable offcut length",totalOffcut/12,"FT"),
+      M("Planned stock offcut length",totalOffcut/12,"FT"),
       M("Planned saw kerf loss",totalKerf),
       M("Wall reference height",a.wallHeight),M("Regular and king cut length",fullCut),
       M("Bottom plate thickness",a.bottomPlate),M("Top plate thickness",a.topPlate),
