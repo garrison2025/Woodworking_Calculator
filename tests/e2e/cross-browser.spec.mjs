@@ -102,3 +102,18 @@ test("Long schedule native print event expands all cuts and restores browsing pa
   await expect(rows.first()).toContainText("Ring 1 / segment 161");
   await expect(page.locator("#schedule-page-status")).toHaveText("Page 2 of 3");
 });
+
+test("Printed rafter measurement snapshot preserves pitch ratio, exact typed units and field values",async({page})=>{
+  await page.goto("/rafter-calculator/");
+  const panel=page.locator("#print-input-snapshot");
+  await expect(panel).toBeHidden();
+  await expect(page.locator("#print-input-table tbody tr")).toHaveCount(6);
+  await expect(page.locator('[data-print-field="pitch"] td')).toHaveText("6 rise per 12 run");
+  await page.locator("#unit-select").selectOption("mm");
+  await page.emulateMedia({media:"print"});
+  await expect(panel).toBeVisible();
+  await expect(page.locator('[data-print-field="run"] td')).toHaveText("3048 mm");
+  await expect(page.locator('[data-print-field="pitch"] td')).toHaveText("6 rise per 12 run");
+  await page.emulateMedia({media:"screen"});
+  await expect(panel).toBeHidden();
+});
