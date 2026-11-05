@@ -345,3 +345,30 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .framing-order-ticket .ticket-caveat{font-size:7pt}
   .framing-takeoff #framing-price-table{min-width:0}
 }
+
+
+/* Optional multi-length offers stay secondary to the core wall geometry. */
+.framing-stock-options{grid-column:1/-1;border:1px solid #d6e2d6;border-radius:11px;background:#f6f8f3;margin-top:9px;overflow:hidden}
+.framing-stock-options>summary{cursor:pointer;list-style:none;padding:17px 19px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:750;font-size:13px;color:#235441}
+.framing-stock-options>summary::-webkit-details-marker{display:none}
+.framing-stock-options>summary::after{content:"+";display:inline-grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#e5ece5;color:#2f624a;font-size:17px}
+.framing-stock-options[open]>summary::after{content:"−"}
+.framing-stock-options>p{padding:0 19px 12px;margin:0;font-size:12px;line-height:1.65;color:#64736c}
+.stock-offer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;padding:14px 18px 20px;border-top:1px solid #dfe7dd}
+.stock-offer-grid .field{min-width:0}
+.framing-takeoff #framing-offer-table{min-width:720px}
+.framing-takeoff #framing-price-table{min-width:720px}
+#framing-offer-table tbody tr.selected-plan{background:#e9f2e9}
+#framing-offer-table tbody tr.selected-plan td:first-child{box-shadow:inset 4px 0 0 #438269}
+.takeoff-legend{font-size:12px;color:#64736c;line-height:1.6;margin:10px 0 15px}
+@media(max-width:620px){
+  .stock-offer-grid{grid-template-columns:1fr;gap:8px;padding:10px 13px}
+  .framing-stock-options>summary{padding:13px}
+  .framing-stock-options>p{padding:0 13px 10px}
+}
+@media print{
+  .framing-stock-options{display:none!important}
+  .framing-takeoff #framing-offer-table{min-width:0}
+  #framing-offer-table .selected-plan{background:white}
+  .takeoff-legend{font-size:7pt}
+}
