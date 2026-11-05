@@ -1841,9 +1841,66 @@ export function compute(slug,a){
       requiredBlankAxis=stockAxisSpan+2*a.blankEndAllowance;
     const stockFitsModel=a.measuredBlankLength>0?
       a.measuredBlankLength+1e-8>=requiredBlankAxis:null;
-    // This is only the projected length needed to contain the drawn 2-D
-    // profile at the chosen pitch. Actual board length requires end-bearing
-    // design, defects, overcut allowances and chosen stock.
+    // Use a true PITCH-ALIGNED coordinate basis for an idealized rectangular
+    // raw blank: longitudinal u=(x,y-h)·(cos,sin); normal
+    // v=(x,y-h)·(-sin,cos), so upper uncut stock edge is v=0 and its
+    // parallel lower edge is v=-stock normal depth.
+    // This does NOT imply any actual supplier board or safe bearing cut.
+    const normalStations=stockAxisProfile.map(p=>-p.x*sn+(p.y-h)*cs);
+    const minNormalStation=Math.min(...normalStations),
+      maxNormalStation=Math.max(...normalStations);
+    need(minNormalStation>=-a.depth-1e-6&&maxNormalStation<=1e-6,
+      "Selected step/end geometry exceeds the modeled normal stock depth.");
+    const blankLengthShown=a.measuredBlankLength>0?
+      a.measuredBlankLength:requiredBlankAxis;
+    const axisMid=(minStockAxis+maxStockAxis)/2;
+    const blankStartAxis=axisMid-blankLengthShown/2,
+      blankEndAxis=axisMid+blankLengthShown/2;
+    const blankCorner=(u,v)=>({
+      x:q(u*cs-v*sn),
+      y:q(h+u*sn+v*cs)
+    });
+    const blankCornerAxes=[
+      [blankStartAxis,0],[blankEndAxis,0],
+      [blankEndAxis,-a.depth],[blankStartAxis,-a.depth]
+    ];
+    const stringerBlankVertices=blankCornerAxes.map(([u,v])=>blankCorner(u,v));
+    const stringerBlankRows=stringerBlankVertices.map((p,i)=>({
+      item:"Reference stock corner "+(i+1),
+      axisStation:q(blankCornerAxes[i][0]),
+      normalOffset:q(blankCornerAxes[i][1]),
+      x:p.x,elevation:p.y
+    }));
+    const rectangleArea=Math.abs(stringerBlankVertices.reduce((sum,p,i)=>{
+      const b=stringerBlankVertices[(i+1)%stringerBlankVertices.length];
+      return sum+p.x*b.y-b.x*p.y;
+    },0))/2;
+    need(Math.abs(rectangleArea-a.depth*blankLengthShown)<=
+      Math.max(1e-5,rectangleArea*1e-8),
+      "Pitch-aligned raw stock rectangle does not conserve its measured area.");
+    // Independent user-measured horizontal SITE SUPPORT REFERENCES are
+    // merely checked against projected end X stations. Neither a pass
+    // nor fail establishes actual contact on any slope or load capacity.
+    const endProjectionChecks=selectedEnds.filter(end=>
+      end.extension>0&&(end.role==="Lower"?a.lowerSupportRun:a.upperSupportRun)>0
+    ).map(end=>{
+      const supportRun=end.role==="Lower"?a.lowerSupportRun:a.upperSupportRun;
+      const projectedOutside=q(Math.max(0,end.extension-supportRun));
+      return {
+        item:end.role+" projected end / surface",
+        chosenHorizontalExtension:q(end.extension),
+        measuredSupportReferenceRun:q(supportRun),
+        projectedEndX:q(end.x),
+        projectedOutsideSupport:projectedOutside,
+        projectionStatus:projectedOutside>1e-7?"Outside reference":"Inside reference",
+        note:"X projection only; NOT bearing, fit or fastener approval"
+      };
+    });
+    const outOfSupport=endProjectionChecks.filter(row=>
+      row.projectedOutsideSupport>1e-7).length;
+    // This is only a projected length AND normal-width fit of a 2D
+    // schematic. A real raw blank must be independently positioned,
+    // inspected and accepted by an appropriate construction professional.
     return result([
       M("Uniform riser height",h),M("Treads",a.risers-1,"N"),
       M("Total horizontal run",run),
@@ -1862,6 +1919,12 @@ export function compute(slug,a){
       M("Nominal sawline segments",stringerCutLineRows.length,"N"),
       M("Modeled stock-axis length envelope",stockAxisSpan),
       M("Axis envelope plus chosen trim allowances",requiredBlankAxis),
+      M("Reference blank rectangle normal width",a.depth),
+      M("Reference blank rectangle longitudinal length",blankLengthShown),
+      M("Reference blank rectangle area",rectangleArea/144,"FT2"),
+      ...(endProjectionChecks.length?[
+        M("Measured end projections outside support references",outOfSupport,"N")
+      ]:[]),
       ...(a.measuredBlankLength>0?[
         M("Measured raw stock length",a.measuredBlankLength),
         M("Raw stock meets geometric length envelope",stockFitsModel?1:0,"N")
@@ -1880,7 +1943,10 @@ export function compute(slug,a){
       lowerEndCutRun:a.lowerEndCutRun,upperEndCutRun:a.upperEndCutRun,
       measuredEndCuts,stringerCutLineRows,stockAxisProfile,
       stockAxisSpan,requiredBlankAxis,stockFitsModel,
-      measuredBlankLength:a.measuredBlankLength,blankEndAllowance:a.blankEndAllowance});
+      measuredBlankLength:a.measuredBlankLength,blankEndAllowance:a.blankEndAllowance,
+      stringerBlankRows,stringerBlankVertices,blankLengthShown,
+      blankStartAxis,blankEndAxis,minNormalStation,maxNormalStation,
+      endProjectionChecks,outOfSupport});
   }
   case "roof-sheathing-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","waste","roofKerf");whole("orientation",0,1);whole("reuseMode",0,1);
