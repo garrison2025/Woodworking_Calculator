@@ -992,8 +992,27 @@ export function compute(slug,a){
     need(a.inner<a.outer,"Inner diameter must be less than outer diameter.");
     // These are finished ring diameters, not raw board dimensions: chord
     // lengths do NOT include saw kerf, oversize blanks, or glue-line allowance.
+    // Input diameters locate POLYGON CORNERS (the circle through the
+    // vertices). Straight cut faces are CHORDS, not circular arcs.
+    // A turned circle fits inside the outer polygon's apothem, not its
+    // corner-to-corner diameter: maximum theoretical round OD = D cos(theta).
     const theta=PI/a.segments,outerChord=a.outer*Math.sin(theta),innerChord=a.inner*Math.sin(theta);
-    const radial=(a.outer-a.inner)/2,miter=180/a.segments,sector=360/a.segments;
+    const radial=(a.outer-a.inner)/2,faceDepth=radial*Math.cos(theta);
+    const miter=180/a.segments,sector=360/a.segments;
+    const turningLimit=a.outer*Math.cos(theta);
+    const trapezoidAreaSqIn=(outerChord+innerChord)*faceDepth/2;
+    // An independently derived polygon-ring area must equal the sum of
+    // trapezoid face areas, up to rounding at machine export precision.
+    const ringAreaSqIn=a.segments*Math.sin(2*theta)*(a.outer*a.outer-a.inner*a.inner)/8;
+    need(faceDepth>0&&Math.abs(a.segments*trapezoidAreaSqIn-ringAreaSqIn)<=
+      Math.max(1e-7,ringAreaSqIn*1e-10),
+      "Segment chord profile failed polygon area conservation.");
+    const template=[
+      [q(0),q(0)],
+      [q(outerChord),q(0)],
+      [q((outerChord+innerChord)/2),q(faceDepth)],
+      [q((outerChord-innerChord)/2),q(faceDepth)]
+    ];
     rows=[];
     for(let ring=1;ring<=a.rings;ring++)for(let segment=1;segment<=a.segments;segment++){
       rows.push({
@@ -1001,15 +1020,25 @@ export function compute(slug,a){
         ring,segment,
         startAngle:q((segment-1)*sector),endAngle:q(segment*sector),
         miterAngle:q(miter),
-        outerChord:q(outerChord),innerChord:q(innerChord),radialDepth:q(radial)
+        outerChord:q(outerChord),innerChord:q(innerChord),
+        radialDepth:q(radial),perpendicularFaceDepth:q(faceDepth),
+        segmentFaceAreaFt2:q(trapezoidAreaSqIn/144)
       });
     }
     return result([
       M("Segment half-miter",miter,"A"),M("Outer chord",outerChord),
       M("Inner chord",innerChord),M("Segment radial depth",radial),
+      M("Perpendicular stock-face depth",faceDepth),
+      M("Maximum circular outside diameter (ideal)",turningLimit),
+      M("One segment face area",trapezoidAreaSqIn/144,"FT2"),
+      M("One complete polygon-ring face area",ringAreaSqIn/144,"FT2"),
       M("Total segments",a.segments*a.rings,"N"),
       M("Segment sweep",sector,"A")
-    ],[],a.outer,rows,"ring",{segments:a.segments,inner:a.inner,outer:a.outer});
+    ],[],a.outer,rows,"ring",{
+      segments:a.segments,inner:a.inner,outer:a.outer,
+      segmentTemplateVertices:template,faceDepth,turningLimit,
+      trapezoidAreaSqIn,ringAreaSqIn
+    });
   }
   case "roof-pitch-calculator":{
     nonnegative("pitch");positive("run");
