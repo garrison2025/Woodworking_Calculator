@@ -166,7 +166,7 @@ test("Multi-size supplier quote CSV exports every chosen stock length with money
     plannedCost:v.plannedCost,reserveCost:v.reserveCost,
     purchaseCost:v.purchaseCost,currency:"USD"
   }));
-  assert.equal(rows.length,5); // 3 stud variants, 1 header, 1 inactive sill
+  assert.equal(rows.length,4); // Exact plan uses 2 stud lengths, 1 header and 1 inactive sill
   const csv=buildScheduleCsv(rows,"mm","Quoted multi-size plan");
   const cols=scheduleColumns(rows,"mm");
   assert.equal(cols.find(x=>x.key==="stockLength").kind,"length");
@@ -176,7 +176,7 @@ test("Multi-size supplier quote CSV exports every chosen stock length with money
   assert.ok(csv.includes('"Offer Label"'));
   assert.ok(csv.includes('"Stock Length (mm)"'));
   assert.ok(csv.includes('"2438.4"'));
-  assert.ok(csv.includes('"3048"'));
+  assert.ok(!csv.includes('"3048"'),"Exact purchase does not require the 120-inch offer");
   assert.ok(csv.includes('"3657.6"'));
   assert.ok(csv.includes('"Alternative 2"'));
   assert.ok(csv.includes('"8.5"'));
@@ -195,9 +195,9 @@ test("Mixed-length stock cutting CSV keeps individual stick length and offer for
   const csv=buildScheduleCsv(r.stockCuts,"in","Never cross-profile splice or trim");
   assert.ok(csv.includes('"Offer Label"'));
   assert.ok(csv.includes('"Stock Length (in)"'));
-  assert.ok(csv.includes('"Alternative 1"'));
+  assert.ok(!csv.includes('"Alternative 1"'));
   assert.ok(csv.includes('"Alternative 2"'));
-  assert.ok(csv.includes('"120"'));
+  assert.ok(!csv.includes('"120"'));
   assert.ok(csv.includes('"144"'));
   assert.equal(csv.split("\r\n").filter(Boolean).length,r.rows.length+2);
   const byId=new Map(r.stockPlan.map(bar=>[bar.stockId,bar]));
