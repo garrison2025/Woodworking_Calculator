@@ -134,7 +134,7 @@ test("Drilled hole centers, circular extents and longitudinal clearances agree i
 });
 test("Drill interval properties conserve stock margin and forbid negative hole gaps",()=>{
   for(const n of [2,3,4,8,20])for(const d of [1,2.5,5])for(const e of [d/2,d,2*d]){
-    const a={length:120,holes:n,edge:e,diameter:d};
+    const a={length:120,holes:n,edge:e,diameter:d,boardWidth:d*1.2};
     const pitch=(a.length-2*e)/(n-1);
     const r=safeCompute("hole-spacing-calculator",a);
     if(pitch<d){
@@ -150,7 +150,7 @@ test("Drill interval properties conserve stock margin and forbid negative hole g
       near(data.rows[i].holeLeftEdge-data.rows[i-1].holeRightEdge,pitch-d,1e-7);
     }
   }
-  const touching=compute("hole-spacing-calculator",{length:30,holes:3,edge:5,diameter:10});
+  const touching=compute("hole-spacing-calculator",{length:30,holes:3,edge:5,diameter:10,boardWidth:12});
   near(value(touching,"Clear material between holes"),0,1e-9);
   assert.equal(safeCompute("hole-spacing-calculator",{length:20,holes:2,edge:4,diameter:10}).ok,false);
   assert.equal(safeCompute("hole-spacing-calculator",{length:25,holes:4,edge:5,diameter:7}).ok,false);
