@@ -35,7 +35,7 @@
       "keyword": "stud calculator",
       "volume": 3600,
       "kd": 1,
-      "desc": "Gable/rake stud center positions and plate-adjusted net cut lengths, with gross-height datum shown separately.",
+      "desc": "Gable/rake stud centerline cuts and left/right face lengths under a sloping top plate, with gross-height datum shown separately.",
       "inputs": [
         {
           "key": "length",
@@ -74,9 +74,9 @@
           "kind": "L"
         }
       ],
-      "formula": "gross height(x) = left gross height + x × pitch/12; net cut = gross height − total plate deduction; centers at nominal OC plus far end.",
+      "formula": "Gross height(x) = left gross height + x × pitch/12; net CENTER cut = gross height − total vertical plate deduction; left/right edge cuts = center cut ± stud face width × pitch / 24.",
       "example": "144 in wall, 96 in start height, 6:12 gives end height 168 in before plates",
-      "limit": "Reference geometry, not structural/cutting certification. Plate deduction is a single total. Wall run is between end stud centers, not outside faces.",
+      "limit": "Reference vertical centerline and two edge cuts, not structural/cutting certification. Total plate deduction is assumed vertical and applied once; wall run is between end centers, not outside faces. Confirm actual plate geometry.",
       "status": "BETA_NO_INDEX"
     },
     {
