@@ -208,3 +208,27 @@ test("Mixed-length stock cutting CSV keeps individual stick length and offer for
     assert.equal(cut.offerLabel,bar.offerLabel);
   }
 });
+
+
+test("Physical equal spacing CSV preserves center and face edges in metric units",()=>{
+  const r=compute("equal-spacing-calculator",{
+    length:1000/25.4,count:6,left:50/25.4,
+    right:50/25.4,itemWidth:30/25.4
+  });
+  const cols=scheduleColumns(r.rows,"mm");
+  assert.deepEqual(cols.map(c=>c.label),[
+    "Item","Position (mm)","Face Left Edge (mm)",
+    "Face Right Edge (mm)","Clear To Previous (mm)"
+  ]);
+  const csv=buildScheduleCsv(r.rows,"mm","Physical faces are measured from one end");
+  assert.ok(csv.includes('"Center 1","50","35","65",""'));
+  assert.ok(csv.includes('"Center 2","230","215","245","150"'));
+  assert.ok(csv.includes('"Center 6","950","935","965","150"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,8);
+  const marks=compute("equal-spacing-calculator",{
+    length:1000/25.4,count:6,left:0,right:0,itemWidth:0
+  });
+  const markers=buildScheduleCsv(marks.rows,"mm","Centers only");
+  assert.ok(markers.includes('"Center 1","0","","",""'));
+  assert.ok(!markers.includes('"Clear To Previous (mm)","150"'));
+});
