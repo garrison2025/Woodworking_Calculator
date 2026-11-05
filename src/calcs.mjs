@@ -321,7 +321,7 @@ export function compute(slug,a){
         need(Math.abs(cutsLength+b.kerf+remaining-group.stockLength)<1e-6,
           "Stock bar cut and offcut dimensions do not conserve original length.");
       }
-      const purchaseSticks=Math.ceil(bins.length*(1+a.stockWaste/100)-1e-10);
+      const purchaseSticks=bins.length?Math.ceil(bins.length*(1+a.stockWaste/100)-1e-10):0;
       materialSummary.push({stockGroup:group.name,pieces:group.items.length,
         cutLength:q(sumCut),stockLength:q(group.stockLength),
         plannedSticks:bins.length,purchaseSticks,
