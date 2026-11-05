@@ -2086,7 +2086,7 @@ test("Stringer optional measured support elevations classify 2D corner, interior
   await expect(page.locator("#result-cards .metric")
     .filter({hasText:"End/support pairs touching at one point only"})).toContainText("2");
   await page.locator("#unit-select").selectOption("mm");
-  await expect(table).toContainText("3378.2 mm");
+  await expect(table).toContainText("3,378.2 mm"); // visible locale grouping; CSV stays numeric
   let d=page.waitForEvent("download");
   await page.locator("#download-stringer-end-contact-csv").click();
   let csv=readFileSync(await (await d).path(),"utf8");
