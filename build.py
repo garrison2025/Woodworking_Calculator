@@ -228,7 +228,7 @@ def tool_page(t):
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally.</p></div>'
            '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
            '<div class="zoom-controls"><button type="button" id="zoom-out" aria-label="Zoom out">−</button><button type="button" id="zoom-reset" aria-label="Reset zoom">100%</button><button type="button" id="zoom-in" aria-label="Zoom in">+</button></div></div>'
-           '<div class="drawing-grid" id="dimension-svg" aria-label="Zoomed dimension drawing; use arrow keys to pan when the drawing overflows"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
+           '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
            '<div class="drawing-caption"><span><i></i> SCALED SCHEMATIC</span><span>NOT A VERIFIED 1:1 TEMPLATE</span></div>'
            '<div class="diagram-tools"><button type="button" class="btn subtle" id="download-svg">↓ Save SVG</button><button type="button" class="btn subtle" id="print-sheet">⎙ Print / PDF</button></div>'
            '<p class="print-advice">Print / PDF includes the complete measurement schedule, including rows on other screen pages, plus two physical calibration rulers. Use 100% / Actual size and check both with a real ruler; the geometry diagram itself is NOT a 1:1 template. Printed schedules may span many sheets.</p>'
