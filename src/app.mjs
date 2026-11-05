@@ -84,7 +84,7 @@ if(slug){
     let content='<line class="axis" x1="'+left+'" y1="'+base+'" x2="'+right+'" y2="'+base+'"/>';
     let marks=data.marks||[];
     const tick=marks.length>60?Math.ceil(marks.length/60):1;
-    if(["ruler","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening","wall-studs"].includes(data.shape)){
+    if(["ruler","spacing-faces","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening","wall-studs"].includes(data.shape)){
       // A single isotropic scale prevents wide drilled holes from becoming
       // distorted: shrink the board horizontally if the diameter would not
       // fit the fixed vertical diagram viewport.
@@ -94,7 +94,21 @@ if(slug){
       // remain proportionate to the entered flat stock dimensions.
       const kerfScale=data.shape==="kerfs"?Math.min(W/span,128/data.stockThickness):null;
       const kerfStart=kerfScale===null?left:(900-data.kerfArcLength*kerfScale)/2;
-      if(data.shape==="boards"){
+      if(data.shape==="spacing-faces"){
+        // The exported face edges are the only source for the rectangles.
+        // Do not draw a minimum apparent width: a tiny physical width must
+        // stay proportionate to the whole measured layout.
+        content+='<rect class="equal-stock-outline" x="'+left+'" y="99" width="'+W+'" height="148" fill="#f6f4ed" stroke="#8ba38f" stroke-width="1.1"/>';
+        for(const [i,row] of (data.faceRows||[]).entries()){
+          const x1=x(row.faceLeftEdge),x2=x(row.faceRightEdge),middle=x(row.position);
+          content+='<rect class="equal-part-face" data-index="'+(i+1)+'" data-left="'+row.faceLeftEdge+'" data-right="'+row.faceRightEdge+'" data-center="'+row.position+'" x="'+x1+'" y="106" width="'+(x2-x1)+'" height="134" fill="#d7b68d" stroke="#866748" stroke-width=".8"><title>'+
+            esc(row.item+" · face "+fmt(row.faceLeftEdge)+" to "+fmt(row.faceRightEdge)+" · center "+fmt(row.position))+'</title></rect>';
+          content+='<line class="equal-part-center" data-index="'+(i+1)+'" x1="'+middle+'" y1="98" x2="'+middle+'" y2="246" stroke="#1e6454" stroke-width="1" stroke-dasharray="5 3"/>';
+        }
+        content+=svgText(left,71,"PART FACE WIDTH "+fmt(data.partFaceWidth),"dim-label");
+        content+=svgText(left,90,data.clearFaceGap===null?"SINGLE CENTER · NO BETWEEN-PART GAP":
+          "CLEAR BETWEEN FACES "+fmt(data.clearFaceGap),"tick-label");
+      }else if(data.shape==="boards"){
         // Exactly the cut-list faces: no fake minimum width and no silently
         // omitted rows beyond the former 180-face drawing cap.
         content+='<rect class="deck-face-outline" x="'+left+'" y="123" width="'+W+'" height="108" fill="#f3f0e8" stroke="#ac9f8c" stroke-width="1"/>';
