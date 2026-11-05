@@ -2254,6 +2254,8 @@ test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrolla
   await drawing.focus();
   await page.keyboard.press("ArrowRight");
   await expect.poll(()=>drawing.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+  await page.locator("#zoom-reset").click();
+  await expect.poll(()=>drawing.getAttribute("tabindex")).toBe(null); // no extra Tab stop after transition
   await page.locator("#f-depth").fill("0.2");
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(page.locator("#result-cards .metric")).toHaveCount(0);
