@@ -544,3 +544,27 @@ test("Optional deck joist stock cut CSV preserves center stations and millimeter
   assert.ok(budget.includes('"11"'));
   assert.ok(budget.includes('"99"'));
 });
+
+test("P1 stringer blank and 1D end projection diagnostics export exact selected metric geometry",()=>{
+  const a={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4,
+    blankEndAllowance:1,measuredBlankLength:200};
+  const r=compute("stair-stringer-calculator",a);
+  const metric=buildScheduleCsv(r.stringerBlankRows,"mm",
+    "Pitch-aligned 2D reference, NOT actual purchased timber placement");
+  assert.ok(metric.includes('"Axis Station (mm)"'),metric);
+  assert.ok(metric.includes('"Normal Offset (mm)"'),metric);
+  assert.ok(metric.includes('"Elevation (mm)"'),metric);
+  assert.ok(metric.includes('"Reference stock corner 1"'),metric);
+  assert.ok(metric.includes('"Reference stock corner 4"'),metric);
+  for(const row of r.stringerBlankRows)
+    assert.ok(metric.includes('"'+String(Number((row.x*25.4).toFixed(6)))+'"'),
+      "Missing numeric x reference "+row.x);
+  const projection=buildScheduleCsv(r.endProjectionChecks,"mm",
+    "X-coordinates only, NOT structural bearing");
+  assert.ok(projection.includes('"Projected Outside Support (mm)"'),projection);
+  assert.ok(projection.includes('"50.8"'),projection);
+  assert.ok(projection.includes('"Inside reference"'),projection);
+  assert.ok(projection.includes('"Outside reference"'),projection);
+});
