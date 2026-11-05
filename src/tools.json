@@ -1073,17 +1073,17 @@
       "keyword": "segmented bowl calculator",
       "volume": 260,
       "kd": 17,
-      "desc": "Finished ring chord and half-miter dimensions with a per-piece segment schedule for all rings",
+      "desc": "Straight-chord polygon ring pieces: miter and inner/outer chords, true perpendicular trapezoid depth, conservative circular turning envelope, and complete segment CSV.",
       "inputs": [
         {
           "key": "outer",
-          "label": "Outer ring diameter",
+          "label": "Outer polygon corner diameter",
           "value": 12,
           "kind": "L"
         },
         {
           "key": "inner",
-          "label": "Inner ring diameter",
+          "label": "Inner polygon corner diameter",
           "value": 8,
           "kind": "L"
         },
@@ -1100,22 +1100,22 @@
           "kind": "N"
         }
       ],
-      "formula": "Half-miter = 180°/segments; chordOuter = outsideDiameter×sin(π/segments); chordInner = insideDiameter×sin(π/segments); radialDepth = (outsideDiameter−insideDiameter)/2. Every segment of every ring is listed.",
-      "example": "A 12 in outside diameter, 8 in inside diameter, 12-piece ring needs 15° miters, 3.10583 in outer chords, 2.07055 in inner chords, and 2 in radial depth. Three identical rings yield 36 listed pieces.",
-      "limit": "All rings are treated as identical, with finished diameters and trapezoid wedges. Chords do not include blade kerf, joint allowance, stock-blank oversize, grain orientation, ring staggering or glue/lathing waste. Validate real stock and saw setup with a scrap test.",
+      "formula": "Half-miter=180°/n; outer/inner chord=D×sin(π/n). Radial end-face length=(outerD−innerD)/2, but perpendicular trapezoid face depth=radial length×cos(π/n). The largest ideal turned circular OD fitting the OUTER polygon is outer corner diameter×cos(π/n); chord faces are straight.",
+      "example": "12 in outer CORNER diameter, 8 in inner CORNER diameter, 12 segments: 15° half-miter, 3.10583 in outer and 2.07055 in inner chords, 2 in radial end face, 1.93185 in perpendicular face depth. Ideal round OD limit is 11.59111 in, not 12 in.",
+      "limit": "Inputs are corner-to-corner polygon envelope diameters, NOT guaranteed finished turned diameters. Face geometry omits saw kerf, joint loss, glue oversize, stock thickness, wood grain, ring staggering, lathe holding and physical allowances. Finished circular outside diameter should stay BELOW the ideal polygon inradius with a real margin.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Chord length versus segment stock",
-          "text": "Outer and inner chords are straight edge-to-edge distances on the finished ring circumference. A full segment has two radial end faces. These finished dimensions are not the minimum raw stock length once kerf and saw setup are considered."
+          "heading": "Polygon corners are not finished turning diameters",
+          "text": "This model measures the outer and inner diameter through polygon VERTICES. The outer edges of every segment are straight chords. The ideal largest round outside surface that fits the outer polygon is corner diameter×cos(180°/segments), before any real trimming or glue and turning allowances."
         },
         {
-          "heading": "Review the full segment schedule",
-          "text": "Every ring and segment has an individual row containing its angular interval, miter angle, outer chord, inner chord and radial depth. CSV angles are exported as degrees; lengths follow the selected measurement unit."
+          "heading": "Distinguish radial end length and perpendicular board-face depth",
+          "text": "The distance along a radial mitered end equals (outer diameter−inner diameter)/2. The perpendicular face depth from the outer straight chord to the inner straight chord is shorter: radial end length×cos(180°/segments). A 12/8 in, 12-piece ring uses a 2 in radial end length but only 1.93185 in chord-to-chord depth; neither includes stock oversize or saw kerf."
         },
         {
-          "heading": "Important lathe and assembly exclusions",
-          "text": "This calculator does not optimize waste or design glue joints. Repeating identical rings is a geometric convention, not a verified bowl profile or recommended build plan; confirm blank dimensions, material grain, glue and safe lathe methods independently."
+          "heading": "Physical segment schedule and drawing consistency",
+          "text": "The SVG uses straight trapezoid polygons, not curved arc pieces. It shows the ideal maximum circular outside diameter as a separate dashed circle. Per-piece CSV exports chord lengths, radial and perpendicular face depths, and geometric face area with typed units. Repeat rings are identical; this does not design a tapered multi-ring bowl profile."
         }
       ]
     },
