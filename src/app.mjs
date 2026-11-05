@@ -100,7 +100,7 @@ if(slug){
       // A single isotropic scale prevents wide drilled holes from becoming
       // distorted: shrink the board horizontally if the diameter would not
       // fit the fixed vertical diagram viewport.
-      const holeScale=data.shape==="holes"?Math.min(W/span,100/data.holeDiameter):null;
+      const holeScale=data.shape==="holes"?Math.min(W/span,124/data.boardWidth):null;
       const holeStart=holeScale===null?left:(900-span*holeScale)/2;
       // Shared scale on both axes: kerf mouth and retained-web thickness
       // remain proportionate to the entered flat stock dimensions.
@@ -205,16 +205,42 @@ if(slug){
         content+=svgText(left,64,"NET STUD CUT "+fmt(rows[0].cutLength)+" · "+rows.length+" STUD CENTERS","dim-label");
         content+=svgText(left,323,"DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
       }else if(data.shape==="holes"){
-        const boardWidth=span*holeScale;
-        content+='<rect class="drilling-stock" x="'+holeStart+'" y="110" width="'+boardWidth+'" height="128" fill="#ead4b2" stroke="#8e6b43" stroke-width="2"><title>Length reference only; stock face width and cross-grain clearance not supplied</title></rect>';
-        content+='<line x1="'+holeStart+'" y1="174" x2="'+(holeStart+boardWidth)+'" y2="174" stroke="#866845" stroke-width="1.2" stroke-dasharray="5 4"/>';
-        for(const [i,p] of marks.entries()){
-          const cx=holeStart+p.x*holeScale,r=Math.max(.15,data.holeDiameter*holeScale/2);
-          content+='<circle class="drill-hole" cx="'+cx+'" cy="174" r="'+r+'" fill="#fcfbf8" stroke="#1e6454" stroke-width="1.4"><title>'+esc("Hole "+(i+1)+": center "+fmt(p.x)+", diameter "+fmt(data.holeDiameter))+'</title></circle>';
+        // One physical X/Y scale for the entire flat board FACE, including
+        // every circular hole. No minimum visual radius: it would fabricate
+        // larger holes in a dense grid and break measured clearances.
+        const boardLength=span*holeScale;
+        const faceHeight=data.boardWidth*holeScale;
+        const top=174-faceHeight/2,bottom=174+faceHeight/2;
+        content+='<rect class="drilling-stock" data-board-width="'+data.boardWidth+
+          '" x="'+holeStart+'" y="'+top+'" width="'+boardLength+'" height="'+faceHeight+
+          '" fill="#ead4b2" stroke="#8e6b43" stroke-width="2"><title>'+
+          esc("Flat board "+fmt(span)+" by "+fmt(data.boardWidth)+
+          " · horizontal X from left, vertical Y from lower side")+'</title></rect>';
+        const Y=y=>bottom-y*holeScale;
+        for(const [ri,y] of (data.crossCenters||[]).entries()){
+          const yy=Y(y);
+          content+='<line class="drill-row-guide" data-row="'+(ri+1)+
+            '" data-cross-center="'+y+'" x1="'+holeStart+'" y1="'+yy+
+            '" x2="'+(holeStart+boardLength)+'" y2="'+yy+
+            '" stroke="#866845" stroke-width="1.1" stroke-dasharray="5 4"/>';
         }
-        content+=svgText(holeStart,70,"HOLE Ø "+fmt(data.holeDiameter),"dim-label");
-        content+=svgText(holeStart,90,"EDGE CLEAR "+fmt(data.endMaterialMargin),"tick-label");
-        content+=svgText(holeStart,330,"CLEAR BETWEEN "+fmt(data.holeClearance),"dim-label");
+        for(const p of data.holeCenters||[]){
+          const cx=holeStart+p.x*holeScale,cy=Y(p.y);
+          const r=data.holeDiameter*holeScale/2;
+          content+='<circle class="drill-hole" data-row="'+p.row+
+            '" data-column="'+p.column+'" data-x="'+p.x+'" data-y="'+p.y+
+            '" cx="'+cx+'" cy="'+cy+'" r="'+r+
+            '" fill="#fcfbf8" stroke="#1e6454" stroke-width="1.4"><title>'+
+            esc(p.item+" · X "+fmt(p.x)+" · Y "+fmt(p.y)+
+            " · diameter "+fmt(data.holeDiameter))+'</title></circle>';
+        }
+        content+=svgText(holeStart,70,"HOLE Ø "+fmt(data.holeDiameter)+
+          " · "+data.drillRows+" ROW"+(data.drillRows===1?"":"S"),"dim-label");
+        content+=svgText(holeStart,90,"END CLEAR "+fmt(data.endMaterialMargin)+
+          " · SIDE CLEAR "+fmt(data.sideMaterialMargin),"tick-label");
+        content+=svgText(holeStart,330,data.drillRows===1?
+          "LONGITUDINAL GAP "+fmt(data.holeClearance):
+          "GAP X "+fmt(data.holeClearance)+" / Y "+fmt(data.transverseClearance),"dim-label");
       }else if(data.shape==="kerfs"){
         const y0=98,woodWidth=data.kerfArcLength*kerfScale;
         const stockH=data.stockThickness*kerfScale,depthH=data.cutDepth*kerfScale,webH=data.retainedWeb*kerfScale;
