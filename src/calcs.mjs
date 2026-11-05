@@ -380,7 +380,7 @@ export function compute(slug,a){
       const available=quoted.length?quoted:[offers[0]];
       const ordered=[...group.items].sort((u,v)=>
         v.cutLength-u.cutLength||u.item.localeCompare(v.item));
-      const fitting=available.filter(o=>ordered.every(p=>p.cutLength<=o.stockLength+1e-8));
+      const fitting=ordered.length?available.filter(o=>ordered.every(p=>p.cutLength<=o.stockLength+1e-8)):[];
       const candidates=[];
       const makeBar=(source,cuts)=>({
         offer:source,used:q(cuts.reduce((sum,p,i)=>sum+p.cutLength+(i?a.stockKerf:0),0)),
