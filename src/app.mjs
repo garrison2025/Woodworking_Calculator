@@ -606,6 +606,23 @@ if(slug){
       content+=svgText(85,64,"DASHED CIRCLE = MAX IDEAL TURNED OUTER DIAMETER","tick-label");
       content+=svgText(74,312,"CORNER DIAMETER "+fmt(data.outer),"dim-label");
       content+=svgText(515,312,"ROUND OD LIMIT "+fmt(data.turningLimit),"dim-label");
+      // Separate side-elevation view of corner-to-corner polygon ring
+      // envelopes. This is a stack profile, not a lathe-ready section.
+      const stack=data.ringProfiles||[],maxD=Math.max(...stack.map(r=>r.outer));
+      const height=stack.length*data.ringHeight;
+      const sideScale=Math.min(175/Math.max(1e-7,maxD),165/Math.max(1e-7,height));
+      const centerX=744,bottomY=269;
+      for(const item of stack){
+        const ww=item.outer*sideScale,hh=(item.stackTop-item.stackBottom)*sideScale;
+        content+='<rect class="ring-stack-outline" data-ring="'+item.ring+
+          '" data-outer-diameter="'+item.outer+'" data-inner-diameter="'+item.inner+
+          '" x="'+(centerX-ww/2)+'" y="'+(bottomY-item.stackTop*sideScale)+
+          '" width="'+ww+'" height="'+hh+'" fill="none" stroke="#346a56" stroke-width="1.4"><title>'+
+          esc("Ring "+item.ring+" corner diameter "+fmt(item.outer)+
+              " · stack height "+fmt(item.stackTop))+'</title></rect>';
+      }
+      content+=svgText(650,49,"STACK ENVELOPE · CORNER DIAMETERS","tick-label");
+      content+=svgText(655,290,"TOTAL STACK "+fmt(height),"tick-label");
     }else if(data.shape==="angles"){
       // Two independent angle illustrations. The inside/left choices affect
       // the PLAN reference orientation only, NEVER a real saw hand setting.
