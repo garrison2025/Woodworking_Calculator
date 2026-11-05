@@ -1063,3 +1063,91 @@ test("numeric geometry-rule errors identify the responsible field without mislab
   await expect(pitch).not.toHaveAttribute("aria-invalid","true");
   await expect(page.locator("#result-cards .metric").first()).toBeVisible();
 });
+
+
+test("straight stairs show physically proportional riser/tread coordinates and measured landing",async({page})=>{
+  await page.goto("/stair-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Risers"})).toContainText("14");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Treads"})).toContainText("13");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Horizontal run"})).toContainText("130 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("130 in");
+  await expect(page.locator("#dimension-svg svg .stair-riser")).toHaveCount(14);
+  await expect(page.locator("#dimension-svg svg .stair-tread")).toHaveCount(13);
+  await expect(page.locator("#dimension-svg svg .stair-landing")).toHaveCount(0);
+  const plot=page.locator("#dimension-svg svg");
+  const actual=await plot.evaluate(svg=>{
+    const first=svg.querySelector(".stair-riser");
+    const second=svg.querySelector('.stair-riser[data-index="2"]');
+    const firstTread=svg.querySelector(".stair-tread");
+    return {
+      firstX:Number(first.getAttribute("x1")),
+      firstTopRise:Number(first.dataset.topRise),
+      secondX:Number(second.getAttribute("x1")),
+      firstHeight:Math.abs(Number(first.getAttribute("y1"))-Number(first.getAttribute("y2"))),
+      firstTreadPixels:Math.abs(Number(firstTread.getAttribute("x2"))-Number(firstTread.getAttribute("x1")))
+    };
+  });
+  expect(actual.firstTopRise).toBe(7.5);
+  expect(actual.firstX).toBeGreaterThan(0);
+  expect((actual.secondX-actual.firstX)/actual.firstHeight).toBeCloseTo(10/7.5,3);
+  expect(actual.firstTreadPixels).toBeCloseTo(actual.secondX-actual.firstX,3);
+  await page.locator("#f-landing").fill("36");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("166 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Horizontal run"})).toContainText("130 in");
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(14);
+  await expect(page.locator("#cut-table tbody tr").last()).toContainText("Upper landing");
+  await expect(plot.locator(".stair-landing")).toHaveCount(1);
+  await expect(plot.locator(".stair-landing")).toHaveAttribute("data-depth","36");
+  const landingPixels=await plot.locator(".stair-landing").evaluate(el=>
+    Number(el.getAttribute("x2"))-Number(el.getAttribute("x1")));
+  const treadPixels=await plot.locator(".stair-tread").first().evaluate(el=>
+    Number(el.getAttribute("x2"))-Number(el.getAttribute("x1")));
+  expect(landingPixels/treadPixels).toBeCloseTo(36/10,3);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#f-landing")).toHaveValue("914.4");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("4,216.4 mm");
+  const dl=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await(await dl).path(),"utf8");
+  expect(csv).toContain('"Riser Height (mm)"');
+  expect(csv).toContain('"Tread Start (mm)"');
+  expect(csv).toContain('"Tread End (mm)"');
+  expect(csv).toContain('"Walking Surface"');
+  expect(csv).toContain('"Upper landing"');
+  expect(csv).toContain('"4216.4"');
+  expect(csv.split("\r\n").filter(Boolean)).toHaveLength(16);
+  await page.locator("#f-landing").fill("-1");
+  await expect(page.locator("#calc-error")).toContainText("landing cannot be negative");
+  await expect(page.locator("#f-landing")).toHaveAttribute("aria-invalid","true");
+  await expect(plot.locator(".stair-riser")).toHaveCount(0);
+  await page.locator("#f-landing").fill("914.4");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(plot.locator(".stair-riser")).toHaveCount(14);
+});
+
+test("straight stair last walking surface is the upper landing with no phantom 14th tread",async({page})=>{
+  await page.goto("/stair-calculator/");
+  await page.locator("#f-rise").fill("95");
+  await page.locator("#f-desired").fill("7");
+  await page.locator("#f-tread").fill("11");
+  await page.locator("#f-landing").fill("28");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Risers"})).toContainText("14");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Treads"})).toContainText("13");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Horizontal run"})).toContainText("143 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("171 in");
+  await expect(page.locator("#dimension-svg svg .stair-tread")).toHaveCount(13);
+  await expect(page.locator("#dimension-svg svg .stair-landing")).toHaveCount(1);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(14);
+  const bottom=page.locator("#cut-table tbody tr").last();
+  await expect(bottom).toContainText("Riser 14");
+  await expect(bottom).toContainText("95 in");
+  await expect(bottom).toContainText("143 in");
+  await expect(bottom).toContainText("Upper landing");
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-landing")).toHaveValue("0");
+  await expect(page.locator("#dimension-svg svg .stair-landing")).toHaveCount(0);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("130 in");
+});
