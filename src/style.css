@@ -506,3 +506,57 @@ tbody tr:nth-child(2n){background:#fafbf8}
 @media print{
   .table-scroll:focus,.drawing-grid:focus{outline:none!important}
 }
+
+/* Horizontal table navigator is created in JS only for genuine overflow.
+   Touch swipes, native trackpads and keyboard scrolling still work without it. */
+.table-navigator{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;margin-top:16px;padding:9px 11px;
+  border:1px solid #d7e1d6;border-radius:9px;background:#f4f8f3;
+  color:#365b49;font-size:12px;line-height:1.35
+}
+.table-navigator + .table-scroll{margin-top:7px}
+.table-navigator button{
+  width:auto;min-height:40px;min-width:85px;padding:8px 11px;
+  border:1px solid #aec5b5;border-radius:7px;background:#fffefd;
+  color:#245a44;font-size:12px;font-weight:750;white-space:nowrap
+}
+.table-navigator button:hover:not(:disabled){background:#e7f2e9;border-color:#739984}
+.table-navigator button:focus-visible{outline:3px solid #955b23;outline-offset:2px}
+.table-navigator button:disabled{opacity:.45}
+.table-nav-position{flex:1;text-align:center;min-width:125px;
+  font-weight:650;font-variant-numeric:tabular-nums}
+@media(max-width:520px){
+  .table-navigator{gap:7px;padding:8px}
+  .table-navigator button{min-width:82px;padding:7px 9px;min-height:44px}
+  .table-nav-position{font-size:11px;min-width:105px}
+}
+/* Preserve identifying cuts while horizontal columns move on narrow screens.
+   Only the general cut schedule gets a sticky identifier; other tables keep
+   their original layout. The first column is constrained to leave room for
+   a useful portion of the next field on a 320–390px phone viewport. */
+@media(max-width:720px){
+  .table-scroll[data-horizontal-scroll="true"] #cut-table thead th:first-child,
+  .table-scroll[data-horizontal-scroll="true"] #cut-table tbody td:first-child{
+    position:sticky;left:0;z-index:2;min-width:128px;max-width:148px;
+    white-space:normal;overflow-wrap:anywhere;box-shadow:3px 0 5px rgba(22,51,35,.1)
+  }
+  .table-scroll[data-horizontal-scroll="true"] #cut-table thead th:first-child{
+    z-index:4;background:#edf2ec
+  }
+  .table-scroll[data-horizontal-scroll="true"] #cut-table tbody td:first-child{
+    background:#fffefd
+  }
+  .table-scroll[data-horizontal-scroll="true"] #cut-table tbody tr:nth-child(2n) td:first-child{
+    background:#fafbf8
+  }
+}
+@media print{
+  .table-navigator{display:none!important}
+  .table-navigator + .table-scroll{margin-top:18px}
+  #cut-table thead th:first-child,
+  #cut-table tbody td:first-child{
+    position:static!important;box-shadow:none!important;
+    min-width:0!important;max-width:none!important
+  }
+}
