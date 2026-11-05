@@ -323,7 +323,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -973,6 +973,7 @@ export function compute(slug,a){
   case "deck-material-calculator":{
     positive("width","length","board","joists","stock");nonnegative("gap","waste","boardUnitPrice","fastenerPackPrice");
     whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);whole("seamMode",0,1);
+    nonnegative("buttEndGap","minEndBearing");positive("joistFaceWidth");
     need(a.waste<=200,"Waste must be 0–200%.");
     need(a.boardUnitPrice<=1e6&&a.fastenerPackPrice<=1e6,
       "Supplier unit prices cannot exceed one million in the selected currency.");
@@ -1019,12 +1020,25 @@ export function compute(slug,a){
     }
     reverse.unshift(0);
     const rowEnds=index=>a.seamMode===1&&index%2===1?reverse:cutEnds;
+    // Joinery datums: all seams stay at a measured JOIST CENTER. Actual
+    // square-cut end faces are +/- half of the entered clear joint gap.
+    // Each supported end overlaps (joist face - joint gap)/2 horizontally.
+    const hasSeams=cutEnds.length>2||reverse.length>2;
+    const faceOverlap=(a.joistFaceWidth-a.buttEndGap)/2;
+    if(hasSeams){
+      need(faceOverlap>1e-8,
+        "Butt-end gap leaves no positive joist-face overlap per board end.");
+      need(faceOverlap+1e-8>=a.minEndBearing,
+        "Butt-end joint falls short of your entered minimum face overlap per end.");
+    }
     const deckRows=Array.from({length:boards},(_,i)=>{
       const ends=rowEnds(i);
       return {item:"Row "+(i+1),acrossStart:q(i*(a.board+a.gap)),
         ripWidth:q(i===boards-1?finalRip:a.board),
         seamCenters:ends.slice(1,-1),pieceCount:ends.length-1,
-        layoutDirection:a.seamMode===1&&i%2===1?"Reverse":"Forward"};
+        layoutDirection:a.seamMode===1&&i%2===1?"Reverse":"Forward",
+        seamGap:a.buttEndGap,
+        geometricFaceOverlap:ends.length>2?q(faceOverlap):null};
     });
     const baseStock=deckRows.reduce((sum,row)=>sum+row.pieceCount,0);
     need(baseStock<=900,"Over 900 supported stock pieces are required; choose longer stock or a smaller footprint.");
@@ -1032,15 +1046,24 @@ export function compute(slug,a){
     for(const [index,row] of deckRows.entries()){
       const ends=rowEnds(index);
       for(let j=0;j<ends.length-1;j++){
-        const start=ends[j],end=ends[j+1],segment=end-start;
+        const referenceStart=ends[j],referenceEnd=ends[j+1];
+        const start=referenceStart+(j>0?a.buttEndGap/2:0);
+        const end=referenceEnd-(j<ends.length-2?a.buttEndGap/2:0);
+        const segment=end-start;
         need(segment>1e-8&&segment<=a.stock+1e-7,
-          "Supported stock segment exceeds purchased board length.");
+          "Butt-end gaps consume a board cut or a cut exceeds purchased stock length.");
         need(j===ends.length-2||joistGrid.some(x=>Math.abs(x-end)<1e-7),
           "Butt seam is not on the measured joist-center reference.");
         schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
           acrossStart:row.acrossStart,alongStart:q(start),
           cutLength:q(segment),ripWidth:row.ripWidth,
-          buttJointAtEnd:j<ends.length-2?q(end):null,joistCenter:null});
+          buttJointAtEnd:j<ends.length-2?q(referenceEnd):null,joistCenter:null,
+          ...(a.buttEndGap>0?{
+            actualCutEnd:q(end),
+            buttGapAtStart:j>0?q(a.buttEndGap):null,
+            buttGapAtEnd:j<ends.length-2?q(a.buttEndGap):null,
+            geometricFaceOverlap:ends.length>2?q(faceOverlap):null
+          }:{})});
       }
     }
     for(const [i,x] of joistGrid.entries())schedule.push({
@@ -1100,17 +1123,27 @@ export function compute(slug,a){
     const staggeredRows=deckRows.filter(row=>row.seamCenters.join(",")!==
       deckRows[0].seamCenters.join(",")).length;
     // No promise of stagger where geometry admits only one viable seam pattern.
-    need(schedule.filter(row=>row.type==="Decking").reduce((s,row)=>s+row.cutLength,0)>=
-      boards*a.length-1e-5,"Deck seams do not close the requested board lengths.");
+    const seamCount=deckRows.reduce((sum,row)=>sum+row.seamCenters.length,0);
+    const installedCutLength=schedule.filter(row=>row.type==="Decking")
+      .reduce((sum,row)=>sum+row.cutLength,0);
+    need(Math.abs(installedCutLength+seamCount*a.buttEndGap-boards*a.length)<=
+      Math.max(1e-5,boards*a.length*1e-9),
+      "Physical cut lengths and between-piece gaps do not conserve the deck length.");
     return result([
       M("Deck area",a.width*a.length/144,"FT2"),M("Deck rows",boards,"N"),
       M("Last rip width",finalRip),M("Joist reference lines",joistGrid.length,"N"),
       M("Final joist bay",joistGrid.at(-1)-joistGrid.at(-2)),
-      M("Installed linear decking",boards*a.length/12,"FT"),
+      M("Installed linear decking",installedCutLength/12,"FT"),
       M("Stock boards (no offcut reuse)",baseStock,"N"),
       M("Stock boards with allowance",ceilStable(baseStock*(1+a.waste/100)),"N"),
       M("Butt joints on joist center references",deckRows.reduce((s,row)=>s+row.seamCenters.length,0),"N"),
       M("Rows with different seam stations",staggeredRows,"N"),
+      ...(seamCount?[
+        M("Butt-end clear gap",a.buttEndGap),
+        M("Measured joist support face",a.joistFaceWidth),
+        M("Geometric face overlap per joined end",faceOverlap),
+        M("Installed physical board cut length",installedCutLength)
+      ]:[]),
       M("Board-joist intersections",boards*joistGrid.length,"N"),
       M("Piece-joist fastening contacts",fastenerContacts,"N"),
       M("Fasteners requested",fastenerPieces,"N"),
@@ -1121,6 +1154,8 @@ export function compute(slug,a){
     ],deckRows.map(row=>P(row.acrossStart,row.item)),a.width,schedule,"deck-plan",
     {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,seamCenters,stockLength:a.stock,
       deckSeamMode:a.seamMode,staggeredRows,distinctSeamPatterns:seamSet.length,
+      deckButtEndGap:a.buttEndGap,deckJoistFaceWidth:a.joistFaceWidth,
+      deckFaceOverlap:hasSeams?faceOverlap:null,
       deckFastenerRows,deckPurchaseRows,deckCostSummary});
   }
   case "segmented-bowl-calculator":{
