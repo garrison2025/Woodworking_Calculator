@@ -2126,6 +2126,7 @@ test("Print/PDF includes every row of a paginated 540-piece cut list and restore
   await expect(entries.last()).toContainText("Ring 3 / segment 180");
   await expect(page.locator("#schedule-count")).toContainText(
     "Print / PDF includes ALL 540 rows");
+  await expect(page.locator("#schedule-count")).toContainText("Use CSV for bulk jobs");
   // Exact native before/after print contract, independent of browser's
   // print-preview timing. This is also used by the Print/PDF button.
   await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));

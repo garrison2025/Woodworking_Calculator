@@ -25,7 +25,10 @@ def audit(filename: str, paper: str, segments: int, rings: int, groups: int):
         box = page.mediabox
         assert abs(float(box.width) - expected_width) < 1.5, (path, i, "paper width", box)
         assert abs(float(box.height) - expected_height) < 1.5, (path, i, "paper height", box)
-        text = re.sub(r"\s+", " ", page.extract_text() or "")
+        # Layout extraction preserves whitespace between adjacent PDF columns.
+        # Plain extraction concatenates three-digit IDs with the next cell:
+        # "segment 1001", falsely reporting the physical PDF row as missing.
+        text = re.sub(r"\s+", " ", page.extract_text(extraction_mode="layout") or "")
         assert text, f"{path}: blank PDF page {i}"
         if re.search(r"Ring \d+ / segment \d+", text):
             print_pages += 1

@@ -15,6 +15,12 @@ test("real A4 and Letter PDFs contain the complete 540-cut multigroup worksheet"
   await expect(page.locator("#print-schedule-readable")).toBeVisible();
   const groups=page.locator("#print-schedule-readable .print-schedule-part");
   await expect(groups).toHaveCount(5);
+  await expect(page.locator("#print-schedule-readable")).toHaveClass(/print-schedule-long/);
+  await expect(page.locator("#schedule-count")).toContainText("Use CSV for bulk jobs");
+  const font=await groups.first().locator("table").evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  expect(font).toBeGreaterThanOrEqual(12);
+  const pad=await groups.first().locator("tbody td").first().evaluate(el=>parseFloat(getComputedStyle(el).paddingTop));
+  expect(pad).toBeLessThanOrEqual(4);
   for(const group of await groups.all()){
     await expect(group.locator("tbody tr")).toHaveCount(540);
     await expect(group.locator("tbody tr").first()).toContainText("Ring 1 / segment 1");

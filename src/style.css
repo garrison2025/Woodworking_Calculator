@@ -648,3 +648,11 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .proof>.caution{display:none!important}
  .print-schedule-part h3{break-after:avoid-page;page-break-after:avoid}
 }
+
+/* Long measurement lists can multiply hundreds of cuts across five labelled
+   column groups. Keep 9pt type readable but economize physical line spacing. */
+@media print{
+ .print-schedule-long .print-schedule-part table{font-size:9pt;line-height:1.22}
+ .print-schedule-long .print-schedule-part th,
+ .print-schedule-long .print-schedule-part td{padding:2.4pt 4pt;line-height:1.22}
+}

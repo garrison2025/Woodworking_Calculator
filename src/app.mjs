@@ -884,6 +884,9 @@ if(slug){
       return;
     }
     const count=latest.rows.length,pages=Math.ceil(count/schedulePageSize);
+    const printableGroups=scheduleCols.length>5?Math.ceil((scheduleCols.length-1)/4):1;
+    const bulkAdvice=count>=160?" Large worksheet: "+count+" cuts in "+printableGroups+
+      " printed measurement groups. Use CSV for bulk jobs to avoid a very long printout.":"";
     schedulePage=Math.min(Math.max(0,schedulePage),pages-1);
     const start=schedulePage*schedulePageSize,end=Math.min(count,start+schedulePageSize);
     // Screen DOM stays capped at 160 rows. The browser's beforeprint hook
@@ -901,10 +904,10 @@ if(slug){
     schedulePageInput.value=String(schedulePage+1);
     schedulePageStatus.textContent="Page "+(schedulePage+1)+" of "+pages;
     scheduleCount.textContent=printFullSchedule?
-      "PRINT WORKSHEET — all "+count+" calculated rows included; CSV contains the same "+count+" rows.":
+      "PRINT WORKSHEET — all "+count+" calculated rows included; CSV contains the same "+count+" rows."+bulkAdvice:
       count>schedulePageSize?
         "Showing rows "+(start+1)+"–"+end+" of "+count+
-          ". Print / PDF includes ALL "+count+" rows; CSV also includes all rows.":
+          ". Print / PDF includes ALL "+count+" rows; CSV also includes all rows."+bulkAdvice:
         "Showing "+count+" computed rows.";
   };
   const renderReadablePrintSchedule=()=>{
@@ -913,6 +916,7 @@ if(slug){
     if(!printFullSchedule||!latest?.rows?.length||scheduleCols.length<=5){
       printReadableSchedule.hidden=true;
       printReadableSchedule.innerHTML="";
+      printReadableSchedule.classList.remove("print-schedule-long");
       tableRegion?.classList.remove("print-original-schedule-hidden");
       return;
     }
@@ -936,6 +940,7 @@ if(slug){
         '"><thead><tr>'+header+'</tr></thead><tbody>'+rows+'</tbody></table></section>');
     }
     printReadableSchedule.innerHTML=parts.join("");
+    printReadableSchedule.classList.toggle("print-schedule-long",latest.rows.length>=160);
     printReadableSchedule.hidden=false;
     tableRegion?.classList.add("print-original-schedule-hidden");
   };
