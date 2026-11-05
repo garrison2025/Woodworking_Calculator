@@ -26,7 +26,7 @@ jobs:
       - name: Build the preview with no index
         run: python3 build.py
       - name: Validate browser module and test syntax
-        run: node --check src/app.mjs && node --check src/calcs.mjs && node --check src/cut-list.mjs && node --check tests/e2e/workspaces.spec.mjs && node --check tests/cut-list.test.mjs
+        run: node --check src/app.mjs && node --check src/calcs.mjs && node --check src/cut-list.mjs && node --check playwright.config.mjs && node --check tests/e2e/workspaces.spec.mjs && node --check tests/e2e/cross-browser.spec.mjs && node --check tests/cut-list.test.mjs
       - name: Run geometry checks
         run: node --test tests/*.test.mjs
       - name: Validate prerendered routes and noindex policy
@@ -35,8 +35,12 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install headless Chromium
         run: npx playwright install --with-deps chromium --only-shell
-      - name: Test real browser calculations, exports and responsive layouts
-        run: npx playwright test
+      - name: Test real Chromium calculations, exports and responsive layouts
+        run: npx playwright test --project=chromium
+      - name: Install cross-engine Firefox and WebKit browsers
+        run: npx playwright install --with-deps firefox webkit
+      - name: Smoke-test actual Firefox and Linux WebKit DOM, geometry and export
+        run: npx playwright test tests/e2e/cross-browser.spec.mjs --project=firefox --project=webkit
       - name: Upload desktop and mobile design snapshots
         if: success()
         uses: actions/upload-artifact@v4
