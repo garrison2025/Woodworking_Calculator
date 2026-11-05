@@ -532,9 +532,9 @@ test("Framing centers do not duplicate king or jack packs",()=>{
   const r=compute("framing-calculator",{length:120,spacing:16,width:1.5,wallHeight:96,openingStart:32,openingWidth:36,openingHeight:80,openingSill:0});
   near(value(r,"Regular studs"),6);near(value(r,"Opening-side reference members"),4);
   near(value(r,"Opening 1 top elevation"),80);
-  assert.deepEqual(r.rows.filter(x=>x.item.includes("Opening 1")).map(x=>x.position),[29.75,31.25,68.75,70.25]);
+  assert.deepEqual(r.rows.filter(x=>x.type==="King"||x.type==="Jack").map(x=>x.position),[29.75,31.25,68.75,70.25]);
   assert.equal(r.rows.filter(x=>x.item.startsWith("Regular")).some(x=>x.position>=29&&x.position<=71),false);
-  assert.equal(new Set(r.rows.map(x=>x.position)).size,r.rows.length);
+  assert.equal(new Set(r.rows.filter(x=>x.type==="King"||x.type==="Jack"||x.type==="Regular").map(x=>x.position)).size,value(r,"Regular studs")+value(r,"Opening-side reference members"));
   near(value(r,"Rough opening face area"),36*80/144);
 });
 test("Framing supports a second independently elevated window",()=>{
@@ -670,21 +670,29 @@ test("Opening frame counts, center faces and plate-referenced cut rows match dra
   const a={length:120,spacing:16,width:1.5,wallHeight:96,bottomPlate:1.5,
     topPlate:3,openingStart:32,openingWidth:36,openingHeight:80,openingSill:0};
   const r=compute("framing-calculator",a);
-  assert.equal(r.rows.length,10);
+  assert.equal(r.rows.length,13);
   assert.equal(r.rows.length,r.marks.length);
+  near(value(r,"Header pieces (geometry only)"),1);
+  near(value(r,"Window sills"),0);
+  near(value(r,"Upper cripples"),2);
+  near(value(r,"Lower cripples"),0);
+  near(value(r,"Total listed pieces"),13);
   near(value(r,"Regular studs"),6);
   near(value(r,"Opening-side reference members"),4);
   near(value(r,"Regular and king cut length"),91.5);
   for(let i=0;i<r.rows.length;i++){
     const row=r.rows[i],mark=r.marks[i];
-    near(row.faceRight-row.faceLeft,1.5,1e-7);
     near(row.position,(row.faceLeft+row.faceRight)/2,1e-7);
-    near(row.topElevation-row.bottomElevation,row.cutLength,1e-7);
+    if(row.orientation==="vertical")near(row.faceRight-row.faceLeft,1.5,1e-7);
+    else near(row.faceRight-row.faceLeft,row.cutLength,1e-7);
+    if(row.orientation==="vertical")near(row.topElevation-row.bottomElevation,row.cutLength,1e-7);
+    else near(row.topElevation-row.bottomElevation,row.stockDepth,1e-7);
     near(row.position,mark.x,1e-7);
     near(row.cutLength,mark.cutLength,1e-7);
     near(row.topElevation,mark.topHeight,1e-7);
     near(row.bottomElevation,mark.bottomHeight,1e-7);
-    near(row.cutLength,row.type==="Jack"?78.5:91.5,1e-7);
+    if(row.type==="Jack")near(row.cutLength,78.5,1e-7);
+    if(row.type==="Regular"||row.type==="King")near(row.cutLength,91.5,1e-7);
   }
   const plain=compute("wall-stud-calculator",{length:120,spacing:16,height:96,plates:4.5,studWidth:1.5});
   for(const row of r.rows.filter(x=>x.type==="Regular")){
@@ -698,9 +706,10 @@ test("Framing excludes nominal studs that partially overlap side-member faces",(
   const r=compute("framing-calculator",{length:120,spacing:14,width:1.5,wallHeight:96,
     bottomPlate:1.5,topPlate:3,openingStart:31.2,openingWidth:28,openingHeight:80,openingSill:0});
   assert.equal(r.rows.some(row=>row.type==="Regular"&&row.position===28),false);
-  for(let i=1;i<r.rows.length;i++)
-    assert.ok(r.rows[i].faceLeft>=r.rows[i-1].faceRight-1e-7,
-      "Overlapping faces at "+r.rows[i-1].item+" / "+r.rows[i].item);
+  const base=r.rows.filter(row=>["Regular","King","Jack"].includes(row.type));
+  for(let i=1;i<base.length;i++)
+    assert.ok(base[i].faceLeft>=base[i-1].faceRight-1e-7,
+      "Overlapping full-height faces at "+base[i-1].item+" / "+base[i].item);
 });
 
 test("Mandatory far-end stud center cannot overlap last OC member",()=>{
@@ -742,4 +751,83 @@ test("Rake-wall stud profile conserves left/center/right top-cut elevations",()=
   assert.ok(flat.rows.every(row=>row.leftEdgeCut===row.length&&row.rightEdgeCut===row.length));
   const shallow={...a,length:16,start:2,pitch:12,plates:1,studWidth:4};
   assert.equal(safeCompute("stud-calculator",shallow).ok,false);
+});
+
+test("Framing header and cripple positions close exactly to opening and plate datums",()=>{
+  const a={length:120,spacing:16,width:1.5,wallHeight:96,bottomPlate:1.5,topPlate:3,
+    headerDepth:5.5,sillThickness:1.5,openingStart:32,openingWidth:36,
+    openingHeight:80,openingSill:0};
+  const r=compute("framing-calculator",a);
+  const header=r.rows.filter(x=>x.type==="Header");
+  const upper=r.rows.filter(x=>x.type==="Upper cripple");
+  assert.equal(header.length,1);
+  assert.equal(upper.length,2);
+  assert.deepEqual(upper.map(x=>x.position),[48,64]);
+  assert.deepEqual([header[0].faceLeft,header[0].faceRight],[30.5,69.5]);
+  near(header[0].cutLength,39);
+  near(header[0].bottomElevation,80);
+  near(header[0].topElevation,85.5);
+  for(const member of upper){
+    near(member.bottomElevation,header[0].topElevation);
+    near(member.topElevation,a.wallHeight-a.topPlate);
+    near(member.cutLength,7.5);
+    assert.ok(member.faceLeft>=a.openingStart&&member.faceRight<=a.openingStart+a.openingWidth);
+  }
+  assert.equal(r.rows.filter(x=>x.type==="Sill").length,0);
+  assert.equal(value(r,"Total listed pieces"),r.rows.length);
+  assert.deepEqual(r.rows.map(x=>x.item),r.marks.map(x=>x.label));
+});
+
+test("Windows generate sill, lower and upper cripples with no overlap into clear opening",()=>{
+  const a={length:160,spacing:16,width:1.5,wallHeight:108,
+    bottomPlate:1.5,topPlate:3,headerDepth:5.5,sillThickness:1.5,
+    openingStart:24,openingWidth:24,openingHeight:80,openingSill:0,
+    opening2Start:88,opening2Width:24,opening2Height:42,opening2Sill:34};
+  const r=compute("framing-calculator",a);
+  const windowRows=r.rows.filter(x=>x.item.startsWith("Opening 2"));
+  const h=windowRows.find(x=>x.type==="Header"),s=windowRows.find(x=>x.type==="Sill");
+  const upper=windowRows.filter(x=>x.type==="Upper cripple"),
+    lower=windowRows.filter(x=>x.type==="Lower cripple");
+  assert.ok(h&&s);
+  assert.deepEqual([h.faceLeft,h.faceRight,h.bottomElevation,h.topElevation],[86.5,113.5,76,81.5]);
+  assert.deepEqual([s.faceLeft,s.faceRight,s.bottomElevation,s.topElevation],[88,112,32.5,34]);
+  near(h.cutLength,27);near(s.cutLength,24);
+  assert.deepEqual(upper.map(x=>x.position),[96]);
+  assert.deepEqual(lower.map(x=>x.position),[96]);
+  near(upper[0].cutLength,23.5);
+  near(lower[0].cutLength,31);
+  for(const member of lower){
+    near(member.topElevation,s.bottomElevation);
+    assert.ok(member.faceLeft>=88&&member.faceRight<=112);
+  }
+  for(const member of upper)near(member.bottomElevation,h.topElevation);
+  near(value(r,"Header pieces (geometry only)"),2);
+  near(value(r,"Window sills"),1);
+  near(value(r,"Lower cripples"),1);
+  assert.equal(value(r,"Total listed pieces"),r.rows.length);
+});
+
+test("Framing header and sill invalid reference geometry is rejected safely",()=>{
+  const a={length:120,spacing:16,width:1.5,wallHeight:96,
+    openingStart:32,openingWidth:36,openingHeight:80,openingSill:0};
+  for(const override of [
+    {headerDepth:14},
+    {headerDepth:0},
+    {sillThickness:0},
+    {openingSill:3,openingHeight:40,sillThickness:2},
+    {openingSill:20,openingHeight:73},
+    {opening2Start:82,opening2Width:20,opening2Height:40,opening2Sill:2}
+  ])assert.equal(safeCompute("framing-calculator",{...a,...override}).ok,false,
+    "Unexpectedly allowed "+JSON.stringify(override));
+});
+
+test("Header and cripple geometry conserves vertical free space under zero-height zones",()=>{
+  const a={length:120,spacing:16,width:1.5,wallHeight:96,topPlate:3,
+    bottomPlate:1.5,headerDepth:5.5,sillThickness:1.5,
+    openingStart:32,openingWidth:36,openingSill:0,openingHeight:87.5};
+  const r=compute("framing-calculator",a);
+  assert.equal(r.rows.filter(x=>x.type==="Upper cripple").length,0);
+  near(r.rows.find(x=>x.type==="Header").topElevation,93);
+  assert.equal(value(r,"Upper cripples"),0);
+  assert.ok(r.rows.every(x=>x.cutLength>0));
 });
