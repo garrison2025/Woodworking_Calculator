@@ -20,6 +20,7 @@ def audit(filename: str, paper: str, segments: int, rings: int, groups: int):
     assert len(reader.pages) >= 4, f"{path}: unexpectedly few pages"
 
     texts = []
+    plain_texts = []
     print_pages = 0
     for i, page in enumerate(reader.pages, 1):
         box = page.mediabox
@@ -36,10 +37,14 @@ def audit(filename: str, paper: str, segments: int, rings: int, groups: int):
             # page where cut rows appear, including continued pages.
             assert re.search(r"\bItem\b", text), f"{path}: page {i} lost the table header"
         texts.append(text)
+        # Preserve normal reading order for metadata; layout extraction may
+        # insert visual spaces *inside* ordinary words (e.g. "r ows").
+        plain_texts.append(re.sub(r"\s+", " ", page.extract_text() or ""))
     combined = " ".join(texts)
+    combined_plain = " ".join(plain_texts)
 
     expected_total = segments * rings
-    assert f"all {expected_total} calculated rows included" in combined, (
+    assert f"all {expected_total} calculated rows included" in combined_plain, (
         path, "missing complete print-schedule statement"
     )
     assert "Physical print scale check" in combined, (path, "missing physical rulers")
