@@ -317,7 +317,7 @@
       "keyword": "rafter calculator",
       "volume": 4400,
       "kd": 7,
-      "desc": "Ridge-adjusted rafter line, overhang and birdsmouth seat-notch depth reference",
+      "desc": "Common rafter ridge-deducted slope, eave extension and seat reference with physically proportionate side-view stock",
       "inputs": [
         {
           "key": "run",
@@ -356,26 +356,26 @@
           "kind": "L"
         }
       ],
-      "formula": "adjustedRun=run−ridge/2; slope=pitch/12; slopeLength=run×√(1+slope²); notchNormalDepth=seat×sin(atan(slope)); remainingDepth=stockDepth−notchNormalDepth",
-      "example": "120 in run at 6:12 yields rise 60 in and reference line 134.164 in",
-      "limit": "Seat length is a horizontal cut-reference, not a certified birdsmouth or heel. Notch thickness is measured normal to the rafter's long edges; stock grade, bearing width, local code and roof loads must be checked independently. Diagram is a schematic, never a 1:1 saw template.",
+      "formula": "Adjusted horizontal run = entered ridge-centerline run−ridge thickness/2; face slope=pitch/12; rise=adjusted run×slope; rafter reference line=hypot(adjusted run,rise); slope tail=hypot(horizontal overhang,horizontal overhang×slope). Total slope to tail=sum. Horizontal birdsmouth seat span has nominal vertical rise=seat×slope and perpendicular notch depth=seat×sin(atan(slope)); remaining normal stock depth=stock depth−notch depth.",
+      "example": "At 6:12 and horizontal ridge-centerline run 120 in with no ridge board, the common rafter to bearing is 134.16408 in with 60 in rise, matching Roof Pitch for 120 in. With 1.5 in ridge thickness, run reduces to 119.25 in, rise to 59.625 in and ridge-to-bearing length≈133.3256 in. A 12-in horizontal overhang adds 13.4164 in of slope line. Actual plumb/seat cuts are not certified.",
+      "limit": "The geometry labels ridge and bearing references and a horizontal birdsmouth seat line, NOT a physical verified notch profile or saw-setting pattern. Stock thickness is shown normal to the slope at the actual proportional angle; reference cutting and remaining stock are geometric only. No rafter bearing capacity, joist/roof structural verification, plumb-cut calibration, fasteners, code, stock defects or physical printed-scale certification.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
-          "heading": "Measure the run and ridge reference",
-          "text": "Measure the horizontal run to the ridge centerline, then enter the actual ridge board thickness. The tool subtracts half that thickness before computing the bearing-to-ridge line length. Roof pitch is the vertical rise over 12 inches of horizontal run, not the angle of the saw blade."
+          "heading": "Use one roof-face pitch datum across the calculators",
+          "text": "A common rafter rises p inches for each 12 inches of horizontal plan run, the same convention as Roof Pitch. The actual adjusted run to the ridge-board face is the original centerline run less half the ridge thickness. Zero ridge allowance gives the same reference run, rise and slope length as Roof Pitch."
         },
         {
-          "heading": "Differentiate seat length and notch depth",
-          "text": "The seat input is a horizontal projection along the bearing line. The vertical rise across that span is seat × pitch/12. The depth of that wedge measured perpendicular to the long rafter edges is seat × sin(arctan(pitch/12)). It is NOT the same as the full rafter stock depth or a bearing-capacity verification."
+          "heading": "Do not confuse the slope tail with bearing-to-ridge length",
+          "text": "The overhang is a horizontal eave projection; it adds its own rise and sloping line to the rafter. The bearing point is kept separate from the tail point in the coordinate schedule, and an independent total horizontal-to-tail dimension is shown."
         },
         {
-          "heading": "Check the support and eave separately",
-          "text": "The wall bearing point and overhang tail are listed separately in the measurement schedule. The line from ridge to bearing excludes the eave extension; the total slope distance includes it. Ridge-to-bearing and ridge-to-eave dimensions use the same pitch but must not be confused."
+          "heading": "Treat birdsmouth measurements as references, not a saw template",
+          "text": "The seat is a horizontal reference span. Its vertical change is seat×slope, while its perpendicular stock-depth penetration is seat×sin(arctan(slope)). At zero roof pitch, both reference changes are zero and the side-view marker is flat. The diagram deliberately does not pretend to be a certified notch silhouette."
         },
         {
-          "heading": "Do not cut from this SVG at paper scale",
-          "text": "Confirm the actual plumb/seat layout using a framing square and reference faces on scrap lumber. Ridge connection, roof loads, seat bearing, notch limits and local requirements are outside this geometry model. The diagram is deliberately not a certified full-size template."
+          "heading": "Verify real lumber and roofing requirements",
+          "text": "Real plumb cut, ridge connection, bearing, stock depth, permissible notch area, uplift and gravity loads require actual site and code verification. The diagram is proportional within the SVG but is NOT a 1:1 saw/cutting template."
         }
       ]
     },
@@ -845,7 +845,7 @@
       "keyword": "pitch calculator",
       "volume": 1300,
       "kd": 15,
-      "desc": "Convert 12-inch roof pitch to angles and rise",
+      "desc": "Convert rise per 12 horizontal run into roof-face degrees, grade, vertical rise and true slope-line length",
       "inputs": [
         {
           "key": "pitch",
@@ -860,10 +860,24 @@
           "kind": "L"
         }
       ],
-      "formula": "angle=atan(pitch/12); grade=100×pitch/12; rise=run×pitch/12",
-      "example": "6:12 = 26.565° and 50% grade",
-      "limit": "Roof geometry only",
-      "status": "BETA_NO_INDEX"
+      "formula": "Given pitch p: slope=p/12; angle=atan(slope); percentage grade=100×slope; rise=horizontal run×slope; sloping length=hypot(horizontal run,rise). The 12 is horizontal, not measured along a sloped roof face.",
+      "example": "At 6:12 with 120 in horizontal face run, rise=60 in, slope-line length≈134.16408 in, angle≈26.56505° and grade=50%. The same rise and line apply to a common rafter with zero ridge deduction and zero overhang; a diagonal hip rafter is different.",
+      "limit": "Ideal straight roof-face triangle only. No hip-azimuth correction, ridge thickness adjustment, bearing, plumb/saw calibration, roofing code, structure or actual site grade. The SVG is a correctly proportioned geometric reference within its viewport, not a scale-to-print cutting template.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Pitch is rise over horizontal run",
+          "text": "For 6:12, each 12 inches of HORIZONTAL run rises 6 inches. The conversion to angle is atan(6/12), not arcsin(6/12). Grade is 50 percent, but the sloped line length is longer than the run."
+        },
+        {
+          "heading": "Compare identical datums across tools",
+          "text": "Roof Pitch and Common Rafter agree only when Common Rafter's run matches this horizontal reference and ridge thickness and overhang are both set to zero. A ridge board reduces the adjusted common-rafter run by half its actual thickness."
+        },
+        {
+          "heading": "Hip pitch uses a different horizontal reference",
+          "text": "Hip Rafter's face pitch input is still this same common roof-face 6:12. Its elevation angle is based on the hip's PLAN DIAGONAL, which is longer than its across-face run. Do not substitute 26.565° as the hip-line elevation angle."
+        }
+      ]
     },
     {
       "slug": "equal-spacing-calculator",
@@ -913,7 +927,7 @@
       "keyword": "hip rafter calculator",
       "volume": 170,
       "kd": 8,
-      "desc": "Plan diagonal, roof rise and three-dimensional hip line",
+      "desc": "Hip-rafter three-dimensional line from actual plan X/Y runs, roof-face pitch, and separate hip-elevation pitch",
       "inputs": [
         {
           "key": "runX",
@@ -934,10 +948,28 @@
           "kind": "P"
         }
       ],
-      "formula": "plan=hypot(x,y); rise=y×pitch/12; line=hypot(plan,rise)",
-      "example": "120 by 120 in plan and 6:12 rise gives plan 169.706 in",
-      "limit": "No load or compound-cut structural sizing",
-      "status": "BETA_NO_INDEX"
+      "formula": "Common roof-face slope = (rise-per-12)/12; vertical rise = across-roof plan run × slope. Plan diagonal = hypot(along-roof run, across-roof run). True hip line = hypot(plan diagonal, vertical rise). Plan angle = atan2(across,along); HIP elevation angle = atan2(vertical rise,plan diagonal). Effective HIP rise-per-12 = 12×vertical rise/plan diagonal, which is NOT generally the original roof-face pitch.",
+      "example": "At common 6:12 roof pitch with 120 in of along-roof and 120 in across-roof run, the plan hip is 169.70563 in, rise is 60 in, true 3D hip length is 180 in, plan angle is 45°, hip elevation angle is about 19.4712° and effective HIP pitch is 4.24264:12. A 6:12 common roof face itself rises at 26.5651°.",
+      "limit": "Geometry of a line between an eave reference and ridge/hip reference only. Across-run controls rise, NOT plan-diagonal distance; hip elevation angle is different from face pitch. This does not calculate real hip lumber back bevel, side cuts, ridge-width deduction, plumb-cut setting, material thickness, overhang, drop hip, bearing capacity or roof-framing code. SVG gives separate plan and elevation reference triangles at proportionate within-view scales, not a 1:1 cutting jig.",
+      "status": "BETA_NO_INDEX",
+      "guidance": [
+        {
+          "heading": "Keep across-roof pitch separate from the hip diagonal",
+          "text": "The 6:12 value is vertical rise for every 12 inches measured ACROSS the common roof face in plan. The hip runs diagonally, so its 3D elevation angle and effective pitch per 12 diagonal-run are shallower, even though the roof face pitch is unchanged."
+        },
+        {
+          "heading": "Compare the projected and true hip runs",
+          "text": "The plan view uses the along-roof and across-roof runs; the projected hypotenuse is the 2D plan diagonal. The elevation view instead uses that diagonal as its horizontal run and the same vertical rise from across-run pitch. These are different triangles with consistent 3D endpoints."
+        },
+        {
+          "heading": "Read the export as a geometric line reference",
+          "text": "The single-row CSV exports along/cross plan runs, roof rise, plan diagonal, true 3D length, plan azimuth and hip elevation angle. It does not provide a bevel/cut schedule. Changing feet, inches, centimeters, millimeters or meters changes lengths but never degrees."
+        },
+        {
+          "heading": "Check structural/cut geometry separately",
+          "text": "An actual hip rafter needs roof-specific ridge/back-bevel, plumb cuts, supports, framing layout and structural sizing. Do not use this diagram as a saw-setting chart, structural approval or printed full-scale template."
+        }
+      ]
     },
     {
       "slug": "hip-roof-calculator",

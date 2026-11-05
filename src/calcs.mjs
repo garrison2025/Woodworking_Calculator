@@ -17,6 +17,12 @@ const positions=(length,spacing)=>{
   return xs;
 };
 const q=(x)=>Math.round(x*1e8)/1e8;
+// One pitch convention across common rafter, pitched roof and hip rafter:
+// pitch means rise per 12 horizontal (never per 12 along the sloping line).
+const roofRunGeometry=(run,pitch)=>{
+  const slope=pitch/12,rise=run*slope;
+  return {slope,rise,line:Math.hypot(run,rise),angle:deg(Math.atan(slope))};
+};
 // Eliminate floating-point false extra rows at exact dimension ratios (e.g. 105/7.5 after unit conversion).
 const ceilStable=(x)=>Math.abs(x-Math.round(x))<=1e-10?Math.round(x):Math.ceil(x);
 
@@ -239,8 +245,10 @@ export function compute(slug,a){
     positive("run","depth");nonnegative("pitch","ridge","overhang","seat");
     need(a.ridge<2*a.run,"Ridge thickness must be less than the full span.");
     need(a.seat<a.run-a.ridge/2,"Seat reference must fit inside the ridge-adjusted horizontal run.");
-    const run=a.run-a.ridge/2,slope=a.pitch/12,angle=Math.atan(slope);
-    const rise=run*slope,line=Math.hypot(run,rise),over=Math.hypot(a.overhang,a.overhang*slope);
+    const run=a.run-a.ridge/2;
+    const ref=roofRunGeometry(run,a.pitch),tail=roofRunGeometry(a.overhang,a.pitch);
+    const slope=ref.slope,angle=rad(ref.angle);
+    const rise=ref.rise,line=ref.line,over=tail.line;
     const heel=a.seat*slope,notchNormal=a.seat*Math.sin(angle),remaining=a.depth-notchNormal;
     need(remaining>0,"The nominal seat-notch depth consumes the full rafter depth; reduce the seat or slope.");
     const schedule=[
@@ -249,13 +257,18 @@ export function compute(slug,a){
       {item:"Overhang end",horizontalRun:q(run+a.overhang),slopeDistance:q(line+over),verticalDrop:q(rise+a.overhang*slope)}
     ];
     return result([
-      M("Adjusted run",run),M("Rise",rise),M("Rafter reference length",line),
+      M("Adjusted run",run),M("Ridge centerline run before allowance",a.run),
+      M("Rise",rise),M("Rafter reference length",line),
       M("Overhang slope length",over),M("Total slope to tail",line+over),
-      M("Plumb cut angle",deg(angle),"A"),M("Seat reference drop",heel),
+      M("Total horizontal run to tail",run+a.overhang),
+      M("Plumb cut angle",ref.angle,"A"),M("Seat reference drop",heel),
       M("Seat notch (normal depth)",notchNormal),M("Remaining stock (normal)",remaining),
       M("Notch / stock depth",100*notchNormal/a.depth,"D")
     ],schedule.map(r=>P(r.horizontalRun,r.item)),run+a.overhang,schedule,"rafter",
-    {rise,run,seat:a.seat,overhang:a.overhang,stockDepth:a.depth,notchNormal,pitch:a.pitch});
+    {rise,run,seat:a.seat,overhang:a.overhang,stockDepth:a.depth,
+      notchNormal,pitch:a.pitch,roofSlope:slope,
+      totalHorizontalRun:run+a.overhang,totalRise:rise+tail.rise,
+      referencePoints:schedule});
   }
   case "crown-molding-calculator":{
     positive("spring","corner");need(a.spring<90&&a.corner<180&&a.corner>0,"Angles must be between 0 and their geometric limits.");whole("inside",0,1);whole("left",0,1);
@@ -467,8 +480,14 @@ export function compute(slug,a){
     ],[],a.outer,rows,"ring",{segments:a.segments,inner:a.inner,outer:a.outer});
   }
   case "roof-pitch-calculator":{
-    nonnegative("pitch");positive("run");const rise=a.run*a.pitch/12,angle=deg(Math.atan(a.pitch/12));
-    return result([M("Roof angle",angle,"A"),M("Percentage grade",a.pitch/12*100,"D"),M("Rise over reference run",rise),M("Slope line",Math.hypot(a.run,rise))],[],a.run,[],"triangle",{rise,run:a.run});
+    nonnegative("pitch");positive("run");
+    const ref=roofRunGeometry(a.run,a.pitch);
+    return result([
+      M("Roof angle",ref.angle,"A"),M("Percentage grade",ref.slope*100,"D"),
+      M("Rise over reference run",ref.rise),M("Slope line",ref.line)
+    ],[],a.run,[],"triangle",{
+      rise:ref.rise,run:a.run,pitch:a.pitch,roofLine:ref.line
+    });
   }
   case "equal-spacing-calculator":{
     positive("length");nonnegative("left","right");whole("count");
@@ -480,8 +499,30 @@ export function compute(slug,a){
   }
   case "hip-rafter-calculator":{
     positive("runX","runY");nonnegative("pitch");
-    const plan=Math.hypot(a.runX,a.runY),rise=a.runY*a.pitch/12;
-    return result([M("Plan diagonal",plan),M("Vertical rise",rise),M("Hip line length",Math.hypot(plan,rise)),M("Plan hip angle",deg(Math.atan2(a.runY,a.runX)),"A")],[],plan,[],"triangle",{rise,run:plan});
+    // The ridge rise is across-roof runY × common-face pitch, NOT
+    // the diagonal plan run × common-face pitch.
+    const roof=roofRunGeometry(a.runY,a.pitch),plan=Math.hypot(a.runX,a.runY);
+    const rise=roof.rise,hipLength=Math.hypot(plan,rise);
+    const planAngle=deg(Math.atan2(a.runY,a.runX));
+    const elevationAngle=deg(Math.atan2(rise,plan));
+    const effectivePitch=12*rise/plan;
+    rows=[{
+      item:"Hip line reference",alongPlanRun:q(a.runX),acrossPlanRun:q(a.runY),
+      verticalRise:q(rise),planDiagonal:q(plan),trueHipLength:q(hipLength),
+      planAngleDeg:q(planAngle),hipElevationAngleDeg:q(elevationAngle)
+    }];
+    return result([
+      M("Plan diagonal",plan),M("Vertical rise",rise),
+      M("Hip line length",hipLength),M("Plan hip angle",planAngle,"A"),
+      M("Hip elevation angle",elevationAngle,"A"),
+      M("Effective hip pitch per 12 plan run",effectivePitch,"D"),
+      M("Common roof-face slope angle",roof.angle,"A")
+    ],[],plan,rows,"hip-line",{
+      run:plan,rise,hipRunX:a.runX,hipRunY:a.runY,
+      hipLength,planAngle,elevationAngle,
+      facePitch:a.pitch,effectiveHipPitch:effectivePitch,
+      referencePoints:[{x:0,y:0,z:0},{x:a.runX,y:a.runY,z:rise}]
+    });
   }
   case "hip-roof-calculator":{
     positive("width","length","sheetWidth","sheetLength");nonnegative("pitch","overhang");whole("orientation",0,1);
