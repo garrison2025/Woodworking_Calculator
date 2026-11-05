@@ -724,3 +724,22 @@ test("Framing plate thickness and impossible jack net lengths fail visibly",()=>
   near(value(r,"Regular and king cut length"),92);
   near(r.rows.find(row=>row.type==="Jack").cutLength,78);
 });
+
+test("Rake-wall stud profile conserves left/center/right top-cut elevations",()=>{
+  const a={length:144,start:96,pitch:6,spacing:16,studWidth:1.5,plates:4.5};
+  const r=compute("stud-calculator",a);
+  near(r.rows[0].leftEdgeCut,91.125,1e-7);
+  near(r.rows[0].rightEdgeCut,91.875,1e-7);
+  near(r.rows.at(-1).leftEdgeCut,163.125,1e-7);
+  near(r.rows.at(-1).rightEdgeCut,163.875,1e-7);
+  for(const row of r.rows){
+    near((row.leftEdgeCut+row.rightEdgeCut)/2,row.length,1e-7);
+    near(row.rightEdgeCut-row.leftEdgeCut,a.studWidth*a.pitch/12,1e-7);
+    near(row.leftEdgeCut,a.start+row.faceLeft*a.pitch/12-a.plates,1e-7);
+    near(row.rightEdgeCut,a.start+row.faceRight*a.pitch/12-a.plates,1e-7);
+  }
+  const flat=compute("stud-calculator",{...a,pitch:0});
+  assert.ok(flat.rows.every(row=>row.leftEdgeCut===row.length&&row.rightEdgeCut===row.length));
+  const shallow={...a,length:16,start:2,pitch:12,plates:1,studWidth:4};
+  assert.equal(safeCompute("stud-calculator",shallow).ok,false);
+});
