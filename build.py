@@ -113,7 +113,15 @@ def tool_page(t):
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = "Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"
         return f'<div class="field"><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
-    fields = ''.join(field_markup(f) for f in t["inputs"])
+    fields = ''.join(field_markup(f) for f in t["inputs"] if not f.get("advanced"))
+    advanced_fields = ''.join(field_markup(f) for f in t["inputs"] if f.get("advanced"))
+    advanced_options = (
+        '<details class="framing-stock-options" id="framing-stock-options">'
+        '<summary>Compare other lumber lengths (10 ft / 12 ft)</summary>'
+        '<p>Optional supplier quotes for each profile. Prices of 0 disable that length; keep base stock untouched for the original estimate. All prices use the selected currency.</p>'
+        f'<div class="stock-offer-grid">{advanced_fields}</div>'
+        '</details>'
+    ) if advanced_fields else ""
     guidance = ''.join(f'<h3>{esc(g["heading"])}</h3><p>{esc(g["text"])}</p>' for g in t.get("guidance",[]))
     related = [p for p in TOOLS if p["category"]==t["category"] and p["slug"]!=t["slug"]][:4]
     others = [p for p in TOOLS if p["category"]!=t["category"]][:2]
@@ -136,7 +144,7 @@ def tool_page(t):
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
            '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
            +currency_picker+
-           f'<form id="calculator-form" novalidate>{fields}</form>'
+           f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally.</p></div>'
            '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
@@ -163,12 +171,17 @@ def tool_page(t):
         '<span class="eyebrow">LUMBER PURCHASE PLAN</span><h2>Material & stock cutting estimate</h2>'
         '<p>Groups studs, headers and window sills by separate stock profiles. First-fit decreasing (FFD) is a reproducible packing estimate, NOT proof of minimum waste. No joined pieces or cross-profile reuse. Saw kerf is charged between cuts on each stock stick; added reserve sticks are not counted as placed cuts.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-material-table" aria-label="Material summary by stock profile">'
-        '<thead><tr><th>Profile</th><th>Pieces</th><th>Cut length</th><th>Stock length</th><th>Planned sticks</th><th>Reserve</th><th>Buy</th><th>Offcut</th></tr></thead><tbody></tbody></table></div>'
+        '<thead><tr><th>Profile</th><th>Pieces</th><th>Cut length</th><th>Stock length(s)</th><th>Planned sticks</th><th>Reserve</th><th>Buy</th><th>Offcut</th></tr></thead><tbody></tbody></table></div>'
         '<h3>Supplier quote & material budget</h3>'
         '<p>Enter an actual price per purchased stick for each needed material group. Zero means quote needed, not free material. A complete estimated purchase amount appears only when all used groups are quoted. Tax, delivery, fittings and labor are excluded.</p>'
         '<p class="framing-price-status" id="framing-price-status" role="status" aria-live="polite">Enter supplier prices to calculate material costs.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-price-table" aria-label="Purchase costs by material profile">'
-        '<thead><tr><th>Profile</th><th>Buy</th><th>Per stick</th><th>Planned cost</th><th>Reserve cost</th><th>Purchase cost</th></tr></thead><tbody></tbody></table></div>'
+        '<thead><tr><th>Profile</th><th>Length offer</th><th>Buy</th><th>Per stick</th><th>Planned cost</th><th>Reserve cost</th><th>Purchase cost</th></tr></thead><tbody></tbody></table></div>'
+        '<h3>Compared purchase plans</h3>'
+        '<p>Each material profile compares every fully fitting single-length FFD plan and one heuristic mixed-length plan when alternatives are quoted. The highlighted choice has the lowest quoted purchase cost among evaluated candidates, not a proven global optimum. Stock totals include purchase allowance.</p>'
+        '<div class="table-scroll framing-table-scroll"><table id="framing-offer-table" aria-label="Single and mixed length stock comparisons">'
+        '<thead><tr><th>Profile</th><th>Candidate</th><th>Planned sticks</th><th>Buy</th><th>Estimated purchase</th><th>Unallocated offcut</th><th>Decision</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-legend">Quoted supplier offers only · Unquoted base length excluded from price comparisons · No offcut carryover between material families</div>'
         '<section class="framing-order-ticket" id="framing-order-ticket" aria-label="Printable purchasing checklist">'
         '<h3>Purchase checklist</h3><p id="framing-ticket-status">Enter supplier quotes.</p>'
         '<ul id="framing-ticket-list"></ul>'
