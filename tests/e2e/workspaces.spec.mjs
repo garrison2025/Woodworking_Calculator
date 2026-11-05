@@ -804,7 +804,7 @@ test("framing quoted 8/10/12ft supplier offers select and export a mixed stock p
   await expect(page.locator("#framing-price-status")).toContainText("USD 77.20");
   await expect(page.locator("#framing-material-table tbody tr").first()).toContainText("Mixed lengths");
   const plans=page.locator("#framing-offer-table tbody");
-  await expect(plans.locator("tr")).toHaveCount(5);
+  await expect(plans.locator("tr")).toHaveCount(6); // One extra independently certified header candidate
   await expect(plans.locator("tr.selected-plan").first()).toContainText("Greedy mixed lengths");
   await expect(plans.locator("tr.selected-plan").first()).toContainText("USD 65.20");
   await expect(plans).toContainText("Single length · Base");
@@ -886,4 +886,53 @@ test("invalid alternative supplier quote clears stale results and restores compa
   await expect(page.locator("#f-studAltUnitPrice")).toHaveValue("0");
   await expect(page.locator("#framing-price-status")).toContainText("prices required: Stud, Header");
   await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
+});
+
+
+test("small quoted framing wall displays earned exact optimality proof on-screen and in print",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await page.locator("#f-length").fill("64");
+  await page.locator("#f-openingStart").fill("16");
+  await page.locator("#f-openingWidth").fill("24");
+  await page.locator("#f-wallHeight").fill("80");
+  await page.locator("#f-openingHeight").fill("60");
+  await page.locator("#f-studUnitPrice").fill("8");
+  await page.locator("#f-headerUnitPrice").fill("12");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const status=page.locator("#framing-optimizer-status");
+  await expect(status).toContainText("CERTIFIED: lowest purchase cost");
+  await expect(status).toContainText("all 2 required material families");
+  const proof=page.locator("#framing-proof-table tbody");
+  await expect(proof.locator("tr")).toHaveCount(3);
+  await expect(proof.locator("tr").nth(0)).toContainText("Completed exact enumeration");
+  await expect(proof.locator("tr").nth(0)).toContainText("PROVEN optimal in model");
+  await expect(proof.locator("tr").nth(1)).toContainText("PROVEN optimal in model");
+  await expect(proof.locator("tr").nth(2)).toContainText("No material required");
+  await expect(page.locator("#framing-offer-table tr.selected-plan")).toHaveCount(2);
+  await expect(page.locator("#framing-offer-table tr.selected-plan").first()).toContainText("Exhaustive small-layout plan");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Proven optimal material families"})).toContainText("2");
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#framing-optimizer-panel")).toBeVisible();
+  await expect(page.locator("#framing-proof-table")).toBeVisible();
+  await expect(status).toContainText("CERTIFIED");
+  await expect(page.locator("#framing-stock-options")).toBeHidden();
+  await expect(page.locator("#framing-ticket-list li")).toHaveCount(2);
+});
+test("over-limit framing still computes purchases but never claims global optimum",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await page.locator("#f-studUnitPrice").fill("5.5");
+  await page.locator("#f-headerUnitPrice").fill("14.25");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#framing-price-status")).toContainText("USD 69.25");
+  await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
+  await expect(page.locator("#framing-optimizer-status")).toContainText("1 of 2");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("Heuristic (over 9 pieces)");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(1)).toContainText("Completed exact enumeration");
+  await page.locator("#f-headerUnitPrice").fill("0");
+  await expect(page.locator("#framing-optimizer-status")).toContainText("Missing supplier quotes");
+  await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(1)).toContainText("Quote required");
+  await page.locator("#f-headerUnitPrice").fill("14.25");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
 });
