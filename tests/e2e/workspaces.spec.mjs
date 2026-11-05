@@ -2215,3 +2215,44 @@ test("Printed input-provenance table captures every typed dimension, enum, curre
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(row("width").locator("td")).toHaveText("3079.75 mm");
 });
+
+test("Keyboard-only worksheet tables and zoomed drawings expose labeled, scrollable focus regions",async({page})=>{
+  await page.goto("/segmented-bowl-calculator/");
+  await page.locator("#f-segments").fill("180");
+  await page.locator("#f-rings").fill("3");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const region=page.locator("#cut-table").locator("xpath=..");
+  await expect(region).toHaveAttribute("tabindex","0");
+  await expect(region).toHaveAttribute("role","region");
+  await expect(region).toHaveAttribute("aria-label","Calculated cut and measurement schedule — arrow keys to scroll");
+  await region.focus();
+  await page.keyboard.press("PageDown");
+  await expect.poll(()=>region.evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  await expect(page.locator("#schedule-count")).toContainText("Print / PDF includes ALL 540 rows");
+  await expect(page.locator("#result-cards")).toHaveAttribute("aria-live","off");
+  await expect(page.locator("#action-status")).toHaveAttribute("aria-live","polite");
+  await expect(page.locator("#action-status")).toContainText("Updated:");
+  await page.locator("#f-segments").focus();
+  const focus=await page.locator("#f-segments").evaluate(el=>{
+    const s=getComputedStyle(el);
+    return {outline:s.outlineStyle,width:parseFloat(s.outlineWidth)};
+  });
+  expect(focus.outline).not.toBe("none");
+  expect(focus.width).toBeGreaterThanOrEqual(3);
+
+  await page.goto("/rafter-calculator/");
+  const drawing=page.locator("#dimension-svg");
+  for(let i=0;i<5;i++)await page.locator("#zoom-in").click();
+  await expect(drawing).toHaveAttribute("tabindex","0");
+  await expect(drawing).toHaveAttribute("role","region");
+  await drawing.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(()=>drawing.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+  await page.locator("#f-depth").fill("0.2");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(page.locator("#result-cards .metric")).toHaveCount(0);
+  await expect(page.locator("#action-status")).toContainText("Calculation requires correction");
+  await page.locator("#f-depth").fill("5.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#action-status")).toContainText("Updated:");
+});
