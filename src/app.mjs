@@ -45,6 +45,8 @@ if(slug){
   const stringerEndProjectionTable=document.querySelector("#stringer-end-projection-table tbody");
   const stringerBlankExport=document.querySelector("#download-stringer-blank-csv");
   const stringerProjectionExport=document.querySelector("#download-stringer-projections-csv");
+  const stringerEndContactTable=document.querySelector("#stringer-end-contact-table tbody");
+  const stringerEndContactExport=document.querySelector("#download-stringer-end-contact-csv");
   const roofReuseStatus=document.querySelector("#roof-reuse-status");
   const roofReuseTable=document.querySelector("#roof-reuse-table tbody");
   const roofReuseSvg=document.querySelector("#roof-reuse-svg");
@@ -373,10 +375,11 @@ if(slug){
         -(data.lowerEndCutRun||0),...blank.map(p=>p.x));
       const maxX=Math.max(run+Math.max(landing,data.upperSupportRun||0,
         data.upperEndCutRun||0),...blank.map(p=>p.x));
+      const supportY=(data.supportReferences||[]).map(ref=>ref.elevation);
       const minY=Math.min(0,data.lowerEdgeAtStart??0,
         ...((data.measuredEndCuts||[]).map(ref=>ref.endY)),
-        ...blank.map(p=>p.y));
-      const maxY=Math.max(rise,...blank.map(p=>p.y));
+        ...blank.map(p=>p.y),...supportY);
+      const maxY=Math.max(rise,...blank.map(p=>p.y),...supportY);
       const width=maxX-minX,height=maxY-minY;
       const sc=Math.min(650/Math.max(.001,width),185/Math.max(.001,height));
       const ox=(900-width*sc)/2-minX*sc,oy=274+minY*sc;
@@ -416,7 +419,9 @@ if(slug){
       for(const check of data.endProjectionChecks||[]){
         if(check.projectedOutsideSupport<=1e-7)continue;
         const cx=px({x:check.projectedEndX});
-        const cy=py({y:check.item.startsWith("Lower")?0:rise});
+        const support=(data.supportReferences||[]).find(ref=>
+          ref.item.startsWith(check.item.startsWith("Lower")?"Lower":"Upper"));
+        const cy=py({y:support?.elevation??(check.item.startsWith("Lower")?0:rise)});
         content+='<circle class="stringer-support-projection-warning" cx="'+cx+
           '" cy="'+cy+'" r="6" fill="none" stroke="#a54836" stroke-width="2"><title>'+
           esc(check.item+": projected X is "+fmt(check.projectedOutsideSupport)+
@@ -443,6 +448,34 @@ if(slug){
           '" stroke="#875d8e" stroke-width="3.2" stroke-dasharray="6 3"><title>'+
           esc(ref.item+" · measured horizontal surface only; NOT a bearing cut or strength certification")+
           '</title></line>';
+      }
+      for(const contact of data.endContactChecks||[]){
+        const lower=contact.item.startsWith("Lower");
+        if(contact.intersectionX!==null){
+          const cx=px({x:contact.intersectionX}),
+            cy=py({y:contact.intersectionElevation});
+          content+='<circle class="stringer-end-support-point" data-side="'+
+            (lower?"lower":"upper")+'" data-geometry="'+
+            esc(contact.contactGeometry)+'" data-x="'+contact.intersectionX+
+            '" data-y="'+contact.intersectionElevation+
+            '" data-shared-length="0" cx="'+cx+'" cy="'+cy+
+            '" r="5.5" fill="#fff1da" stroke="#9a552d" stroke-width="2.2"><title>'+
+            esc(contact.item+" · "+contact.contactGeometry+
+              "; zero common line length; NOT bearing area or approved connection")+
+            '</title></circle>';
+        }else{
+          const x=px({x:(contact.supportStartX+contact.supportEndX)/2}),
+            y=py({y:contact.supportElevation});
+          content+='<g class="stringer-end-support-noncontact" data-side="'+
+            (lower?"lower":"upper")+'" data-geometry="No 2D intersection">'+
+            '<line x1="'+(x-5)+'" y1="'+(y-5)+'" x2="'+(x+5)+
+            '" y2="'+(y+5)+'" stroke="#ae4133" stroke-width="2.2"/>'+
+            '<line x1="'+(x-5)+'" y1="'+(y+5)+'" x2="'+(x+5)+
+            '" y2="'+(y-5)+'" stroke="#ae4133" stroke-width="2.2"/>'+
+            '<title>'+esc(contact.item+
+              " · the modeled sawline and measured support segment do NOT intersect in 2D")+
+            '</title></g>';
+        }
       }
       const points=verts.map(v=>px(v)+","+py(v)).join(" ");
       content+='<polyline class="stringer-step-profile" points="'+points+'" data-vertices="'+verts.length+'" fill="none" stroke="#246a58" stroke-width="2.7" stroke-linejoin="round"><title>Nominal riser and tread cut reference; vertices follow the exported riser elevations and horizontal runs</title></polyline>';
@@ -943,7 +976,9 @@ if(slug){
     const outline=latest?.stringerEnvelopeRows||[],surfaces=latest?.supportReferences||[];
     const sawlines=latest?.stringerCutLineRows||[],ends=latest?.measuredEndCuts||[];
     const blankRows=latest?.stringerBlankRows||[],
-      endChecks=latest?.endProjectionChecks||[];
+      endChecks=latest?.endProjectionChecks||[],
+      contacts=latest?.endContactChecks||[];
+    if(stringerEndContactExport)stringerEndContactExport.disabled=!contacts.length;
     if(stringerBlankExport)stringerBlankExport.disabled=!blankRows.length;
     if(stringerProjectionExport)stringerProjectionExport.disabled=!endChecks.length;
     const enabled=outline.length>0;
@@ -961,6 +996,8 @@ if(slug){
         " × "+fmt(latest.stockNormalDepth,"L")+
         (latest.stockFitsModel===false?" · MEASURED STOCK SHORTER THAN MODEL":latest.stockFitsModel===true?" · measured 2D stock envelope fits":" · reference minimum only")+
         (latest.outOfSupport>0?" · "+latest.outOfSupport+" endpoint X projections outside entered supports":"")+
+        (contacts.length?" · 2D lines: "+latest.unsupported2D+" no intersections, "+
+          latest.pointOnly2D+" single-point-only intersections (ZERO bearing length)":"")+
         ". End surfaces and material strength are NOT bearing-approved.";
     stringerOutlineTable.innerHTML=outline.map(r=>'<tr>'+
       [r.index,r.boundary,fmt(r.x,"L"),fmt(r.elevation,"L")]
@@ -982,6 +1019,16 @@ if(slug){
         fmt(r.projectedOutsideSupport,"L"),r.projectionStatus
       ].map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
       '<tr><td colspan="6">Enter both end-line and support-reference measurements for a 1D projection check.</td></tr>';
+    if(stringerEndContactTable)stringerEndContactTable.innerHTML=contacts.length?
+      contacts.map(r=>'<tr>'+[
+        r.item,fmt(r.supportElevation,"L"),r.contactGeometry,
+        r.intersectionX===null?"—":fmt(r.intersectionX,"L"),
+        r.intersectionElevation===null?"—":fmt(r.intersectionElevation,"L"),
+        r.cutParameter===null?"—":trim(r.cutParameter,5),
+        r.crossingHorizontalMiss===null?"—":fmt(r.crossingHorizontalMiss,"L"),
+        fmt(r.sharedLineLength,"L")
+      ].map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
+      '<tr><td colspan="8">Enter a selected end line AND its measured horizontal support reference.</td></tr>';
     const lineCells=r=>[r.item,r.cutType,
       fmt(r.startX,"L"),fmt(r.startY,"L"),fmt(r.endX,"L"),fmt(r.endY,"L"),
       fmt(r.cutLength,"L"),fmt(r.cutAngleDeg,"A")]
@@ -1231,6 +1278,13 @@ if(slug){
       "X projection only; a within-reference result does NOT establish actual bearing or structural acceptance.");
     save(slug+"-"+unit+"-end-reference-projections.csv",csv,"text/csv;charset=utf-8");
     status.textContent="Nonstructural end X-projection diagnostics CSV saved locally.";
+  });
+  stringerEndContactExport?.addEventListener("click",()=>{
+    if(!latest?.endContactChecks?.length)return;
+    const csv=buildScheduleCsv(latest.endContactChecks,unit,
+      "Mathematical 2D CUT LINE vs SUPPORT LINE only. One point has ZERO common length and NO verified bearing area; no structural approval.");
+    save(slug+"-"+unit+"-end-to-support-2d-intersections.csv",csv,"text/csv;charset=utf-8");
+    status.textContent="2D nonstructural cut/support intersection CSV saved locally.";
   });
   stringerSupportExport?.addEventListener("click",()=>{
     if(!latest?.supportReferences?.length)return;
