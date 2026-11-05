@@ -2055,3 +2055,37 @@ test("P1 deck alternation reports zero staggering when the joist grid has no alt
   assert.ok(r.deckRows.every(x=>x.seamCenters.length===0));
   assert.equal(safeCompute("deck-material-calculator",{...a,seamMode:2}).ok,false);
 });
+
+test("P1 tapered segmented rings calculate independent physical piece dimensions and stack levels",()=>{
+  const a={outer:12,inner:8,segments:12,rings:3,
+    outerStep:-1,innerStep:-.5,ringHeight:.75,ringOversize:.125,ringKerf:.1};
+  const r=compute("segmented-bowl-calculator",a);
+  assert.equal(r.rows.length,36);
+  assert.deepEqual(r.ringProfiles.map(x=>x.outer),[12,11,10]);
+  assert.deepEqual(r.ringProfiles.map(x=>x.inner),[8,7.5,7]);
+  assert.deepEqual(r.ringProfiles.map(x=>x.stackTop),[.75,1.5,2.25]);
+  const theta=Math.PI/12;
+  for(const [i,ring] of r.ringProfiles.entries()){
+    const outer=a.outer+i*a.outerStep,inner=a.inner+i*a.innerStep;
+    near(ring.outerChord,outer*Math.sin(theta),1e-7);
+    near(ring.innerChord,inner*Math.sin(theta),1e-7);
+    near(ring.blankLength,outer*Math.sin(theta)+.35,1e-7);
+    near(ring.blankWidth,(outer-inner)/2*Math.cos(theta)+.35,1e-7);
+    near(ring.turningLimit,outer*Math.cos(theta),1e-7);
+    near(ring.trapezoidAreaSqIn*12,ring.ringAreaSqIn,1e-7);
+    assert.ok(r.rows.filter(row=>row.ring===i+1)
+      .every(row=>row.outerCornerDiameter===ring.outer&&row.roughBlankLength===ring.blankLength));
+  }
+  near(r.totalRingFaceAreaSqIn,r.ringProfiles.reduce((s,x)=>s+x.ringAreaSqIn,0),1e-7);
+});
+test("P1 tapered ring validates all derived inner/outer dimensions and physical blank entries",()=>{
+ const basic={outer:12,inner:8,segments:12,rings:3,ringHeight:.75};
+ for(const overrides of [
+   {outerStep:-6},{innerStep:3},{ringHeight:0},{ringOversize:-1},{ringKerf:-.1}
+ ]){
+   const r=safeCompute("segmented-bowl-calculator",{...basic,...overrides});
+   assert.equal(r.ok,false,JSON.stringify(overrides));
+ }
+ const original=compute("segmented-bowl-calculator",basic);
+ assert.ok(original.ringProfiles.every(x=>x.outer===12&&x.inner===8));
+});
