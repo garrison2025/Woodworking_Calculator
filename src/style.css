@@ -283,3 +283,29 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .schedule-pager input{max-width:65px;min-width:55px;padding:7px 8px;border:1px solid #cbdace;border-radius:7px;background:white;color:var(--ink);font-size:12px}
 #schedule-page-status{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green);white-space:nowrap}
 @media print{.schedule-pager{display:none!important}}
+
+
+/* Framing stock plan: print-safe takeoff with compact mobile scrolling. */
+.framing-takeoff h3{font-size:17px;margin-top:24px}
+.framing-takeoff .framing-table-scroll{max-height:none}
+.framing-takeoff table{min-width:630px;font-size:12px}
+.framing-takeoff th{white-space:normal;line-height:1.4}
+.framing-takeoff td{vertical-align:top;line-height:1.65}
+.framing-takeoff td:first-child{font-weight:700;color:var(--green)}
+.framing-takeoff #framing-stock-table td:nth-child(2){min-width:240px}
+.takeoff-actions{display:flex;justify-content:flex-start;margin-top:19px}
+@media(max-width:620px){
+  .framing-takeoff table{min-width:700px}
+  .framing-takeoff .framing-table-scroll{max-width:100%}
+}
+@media print{
+  .takeoff-actions{display:none!important}
+  .framing-takeoff{break-before:page}
+  .framing-takeoff .framing-table-scroll{overflow:visible;max-height:none;border:1px solid #888}
+  .framing-takeoff table{table-layout:fixed;min-width:0;width:100%;font-size:7pt;word-break:break-word}
+  .framing-takeoff th,.framing-takeoff td{padding:5pt 3pt;vertical-align:top}
+  .framing-takeoff #framing-stock-table td:nth-child(2){min-width:0}
+  .framing-takeoff tr{break-inside:avoid}
+  .framing-takeoff h2{break-after:avoid}
+  .framing-takeoff .caution{font-size:8pt}
+}
