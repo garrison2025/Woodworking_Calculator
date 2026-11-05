@@ -1253,6 +1253,12 @@ if(slug){
   fraction.addEventListener("change",render);
   currency?.addEventListener("change",render);
   reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
+  diagram.addEventListener("transitionend",event=>{
+    // Width animates for 180ms; one rAF after click is too early to reliably
+    // remove the keyboard tab stop when a drawing zooms back down to 100%.
+    if(event.target===diagram.querySelector("svg")&&event.propertyName==="width")
+      syncKeyboardScrollRegions();
+  });
   for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");requestAnimationFrame(syncKeyboardScrollRegions);});
   zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");requestAnimationFrame(syncKeyboardScrollRegions);});
   copy.addEventListener("click",async()=>{
