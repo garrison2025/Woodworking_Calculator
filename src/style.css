@@ -617,17 +617,31 @@ tbody tr:nth-child(2n){background:#fafbf8}
 @media print{
  .print-original-schedule-hidden{display:none!important}
  .print-schedule-readable:not([hidden]){display:block!important;margin:10pt 0 14pt}
- .print-schedule-part{break-inside:avoid-page;page-break-inside:avoid}
- .print-schedule-part+.print-schedule-part{margin-top:12pt;break-before:auto;page-break-before:auto}
+ .print-schedule-part{break-inside:auto;page-break-inside:auto}
+ .print-schedule-part+.print-schedule-part{margin-top:9pt;break-before:auto;page-break-before:auto}
  .print-schedule-part h3{font-size:12pt;line-height:1.25;margin:0 0 5pt;break-after:avoid}
- .print-schedule-part p{font-size:9pt;line-height:1.4;margin:0 0 8pt;color:#222}
- .print-schedule-part table{min-width:0!important;width:100%;max-width:100%;table-layout:fixed;font-size:9pt;line-height:1.4;border-collapse:collapse}
+ .print-schedule-part p{font-size:9pt;line-height:1.35;margin:0 0 5pt;color:#222;break-after:avoid-page}
+ .print-schedule-part table{min-width:0!important;width:100%;max-width:100%;table-layout:fixed;font-size:9pt;line-height:1.4;border-collapse:collapse;break-inside:auto;page-break-inside:auto}
  .print-schedule-part th,.print-schedule-part td{padding:5pt 6pt;white-space:normal;overflow-wrap:anywhere;word-break:normal;vertical-align:top;border-bottom:.5pt solid #aaa;color:#111}
  .print-schedule-part th{font-size:9pt;background:#eee;color:#111;position:static}
- .print-schedule-part th:first-child{width:33%}
+ .print-schedule-part th:first-child{width:28%}
  .print-schedule-part tbody tr{break-inside:avoid;page-break-inside:avoid}
  .print-schedule-part thead{display:table-header-group}
  .print-schedule-part tbody tr:nth-child(even){background:#f6f6f6}
  #print-input-table{font-size:9pt}
  #print-input-table th,#print-input-table td{padding:5pt 6pt;line-height:1.4}
+}
+
+/* Printable worksheet: preserve facts and safety, not search-oriented article text.
+   Allow grouped tables to flow onto the same sheet and continue across sheets;
+   row integrity and repeated column headers are maintained separately above. */
+.print-only-heading{display:none}
+@media print{
+ .tool-heading h1{font-size:18pt;line-height:1.18}
+ .worksheet-schedule>p:not(.schedule-count){display:none!important}
+ .print-only-heading{display:block;font-size:11pt!important;margin:0 0 4pt;break-after:avoid}
+ .proof{border-top:.75pt solid #777;padding:8pt 0 0;margin-top:12pt;break-inside:auto}
+ .proof>:not(#print-assumptions):not(.caution):not(.print-only-heading){display:none!important}
+ .proof #print-assumptions,.proof>.caution{font-size:9pt;line-height:1.4;margin:4pt 0 7pt;color:#111}
+ .print-schedule-part h3{break-after:avoid-page;page-break-after:avoid}
 }

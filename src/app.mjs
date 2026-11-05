@@ -917,10 +917,13 @@ if(slug){
       return;
     }
     const first=scheduleCols[0],parts=[];
-    const total=Math.ceil((scheduleCols.length-1)/3);
-    for(let i=1;i<scheduleCols.length;i+=3){
-      const cols=[first,...scheduleCols.slice(i,i+3)];
-      const part=1+Math.floor((i-1)/3);
+    // One identifier plus four numeric measurement fields fits A4 and Letter
+    // at 9pt while reducing redundant group headers and repeated row IDs.
+    const metricsPerGroup=4;
+    const total=Math.ceil((scheduleCols.length-1)/metricsPerGroup);
+    for(let i=1;i<scheduleCols.length;i+=metricsPerGroup){
+      const cols=[first,...scheduleCols.slice(i,i+metricsPerGroup)];
+      const part=1+Math.floor((i-1)/metricsPerGroup);
       const header=cols.map(c=>'<th scope="col">'+esc(c.label)+'</th>').join("");
       const rows=latest.rows.map(row=>'<tr>'+cols.map((c,j)=>
         '<td'+(j===0?' role="rowheader"':'')+'>'+esc(scheduleValue(c.kind,row[c.key],c.key))+'</td>'

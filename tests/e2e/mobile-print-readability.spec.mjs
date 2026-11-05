@@ -55,13 +55,18 @@ test("full print schedule splits wide columns into readable labelled groups",asy
   await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
   const printed=page.locator("#print-schedule-readable"),parts=printed.locator(".print-schedule-part");
   expect(await parts.count()).toBeGreaterThanOrEqual(2);
+  expect(await parts.count()).toBeLessThanOrEqual(5);
   await page.emulateMedia({media:"print"});
   await expect(printed).toBeVisible();
   await expect(page.locator("#cut-table").locator("xpath=..")).toBeHidden();
   await expect(page.locator("#print-calibration")).toBeVisible();
+  await expect(page.locator(".proof #print-assumptions")).toBeVisible();
+  await expect(page.locator(".proof .print-only-heading")).toBeVisible();
+  await expect(page.locator(".proof > .formula")).toBeHidden();
+  expect(await parts.first().evaluate(e=>getComputedStyle(e).breakInside)).toBe("auto");
   for(const part of await parts.all()){
     await expect(part.locator("tbody tr")).toHaveCount(360);
-    expect(await part.locator("thead th").count()).toBeLessThanOrEqual(4);
+    expect(await part.locator("thead th").count()).toBeLessThanOrEqual(5);
     expect(await part.locator("thead th").count()).toBeGreaterThanOrEqual(2);
     expect(await part.locator("table").evaluate(e=>parseFloat(getComputedStyle(e).fontSize)))
       .toBeGreaterThanOrEqual(12);

@@ -310,7 +310,7 @@ def tool_page(t):
         '<button id="download-deck-fastener-csv" type="button" class="btn secondary">↓ Download fastener rows CSV</button>'
         '</div></section>'
     ) if t["slug"]=="deck-material-calculator" else ""
-    body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
+    body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block worksheet-schedule"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
            '<p>Items below are generated from the same numbers used for the drawing. The screen may show only 160 rows per page, but Print / PDF expands the entire schedule before printing and restores your screen page afterwards; CSV always includes all rows. Numeric CSV cells use the selected units in column headers for spreadsheet import. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table" aria-label="Calculated cut and measurement schedule"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
            '<p class="schedule-count" id="schedule-count" aria-live="polite"></p>'
@@ -328,6 +328,7 @@ def tool_page(t):
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
             '<h3>Assumptions and limits</h3>'
+           '<h3 class="print-only-heading">Worksheet assumptions &amp; safety limits</h3>'
            f'<p id="print-assumptions">{esc(t["limit"])}</p>'
            '<p class="caution">This tool describes dimensional geometry. It does not certify building-code compliance, structural capacity, fastening, material quality or safe cutting techniques.</p>'
            '<h3>Printing and precision</h3><p>Use Print / PDF to save the worksheet as a PDF. The SVG is a proportional diagram, not a one-to-one cutting template. Before transferring marks to wood, verify units, stock dimensions, kerf, reference faces and printer scaling.</p>'
