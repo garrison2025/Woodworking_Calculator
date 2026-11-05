@@ -64,3 +64,22 @@ test("Stringer 2D stock envelope and X-projection warnings survive Firefox/WebKi
   await page.locator("#f-measuredBlankLength").fill("2500");
   await expect(blank).toHaveAttribute("data-stock-fits","false");
 });
+
+test("Stringer 2D cut/support contact does not treat an X projection as rated bearing",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  await page.locator("#f-lowerEndCutRun").fill("3");
+  await page.locator("#f-upperEndCutRun").fill("6");
+  await page.locator("#f-lowerSupportRun").fill("5");
+  await page.locator("#f-upperSupportRun").fill("4");
+  const contact=page.locator("#dimension-svg svg .stringer-end-support-point");
+  await expect(contact).toHaveCount(2);
+  await expect(page.locator("#stringer-end-contact-table")).toContainText("Shared corner only");
+  await page.locator("#f-upperSupportVerticalOffset").fill("-4.78125");
+  await expect(contact.last()).toHaveAttribute("data-x","133");
+  await expect(page.locator("#stringer-end-contact-table")).toContainText("Single point only");
+  await page.locator("#f-upperSupportVerticalOffset").fill("-8");
+  await expect(page.locator("#dimension-svg svg .stringer-end-support-noncontact")).toHaveCount(1);
+  await expect(page.locator("#stringer-end-contact-table")).toContainText("No 2D intersection");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#stringer-end-contact-table")).toContainText("0 mm");
+});
