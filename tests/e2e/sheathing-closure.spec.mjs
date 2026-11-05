@@ -12,7 +12,7 @@ test("roof sheathing displays physical eave/uphill end cuts and conserves offcut
   await expect(sheets).toHaveCount(4);
   await expect(page.locator("#result-cards .metric").filter({hasText:"Stock face area before allowance"})).toContainText("128 ft²");
   await expect(page.locator("#result-cards .metric").filter({hasText:"Sloped roof surface"})).toContainText("53.472");
-  await expect(page.locator("#result-cards .metric").filter({hasText:"Unreused offcut area"})).toContainText("74.527");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Unreused offcut area"})).toContainText("74.528");
   await expect(page.locator("#cut-table thead")).toContainText("Eave End (in)");
   await expect(page.locator("#cut-table thead")).toContainText("Slope End (in)");
   await expect(page.locator("#cut-table thead")).toContainText("Offcut Area (ft²)");
@@ -51,7 +51,7 @@ test("roof sheathing displays physical eave/uphill end cuts and conserves offcut
   await expect(sheets).toHaveCount(0);
   await page.locator("#f-sheetWidth").fill("1219.2");
   await expect(page.locator("#calc-error")).toBeHidden();
-  await expect(sheets).toHaveCount(2);
+  await expect(sheets).toHaveCount(4);
 });
 test("roof sheathing sheet rotation updates source cut bounds without changing roof area",async({page})=>{
   await page.goto("/roof-sheathing-calculator/");
