@@ -2137,9 +2137,17 @@ test("Print/PDF includes every row of a paginated 540-piece cut list and restore
   await expect(page.locator("#schedule-pager")).toBeHidden();
   await page.emulateMedia({media:"print"});
   await expect(page.locator("#print-calibration")).toBeVisible();
-  const printHeading=await page.locator("#cut-table thead").evaluate(el=>
-    getComputedStyle(el).display);
-  expect(printHeading).toBe("table-header-group");
+  const grouped=page.locator("#print-schedule-readable .print-schedule-part");
+  expect(await grouped.count()).toBeGreaterThan(1);
+  for(const group of await grouped.all()){
+    await expect(group.locator("tbody tr")).toHaveCount(540);
+    const cols=group.locator("thead th");
+    expect(await cols.count()).toBeLessThanOrEqual(4);
+  }
+  await expect(page.locator("#cut-table").locator("xpath=..")).toBeHidden();
+  // The 540-row gate checks print DOM completeness. The separate genuine
+  // A4/Letter PDF tests verify PDF media output; never save a screen-media PDF
+  // as misleading evidence of all 540 printed cuts.
   await page.emulateMedia({media:"screen"});
   await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
   await expect(entries).toHaveCount(60);
@@ -2148,24 +2156,9 @@ test("Print/PDF includes every row of a paginated 540-piece cut list and restore
   await expect(page.locator("#schedule-pager")).toBeVisible();
   // A *real* Chromium PDF invokes beforeprint. Record the DOM row count
   // inside the browser's native event, not only through our synthetic test.
-  await page.evaluate(()=>{
-    window.__pdfSnapshotRows=-1;
-    window.__pdfSnapshotLast="";
-    window.addEventListener("beforeprint",()=>{
-      const rows=document.querySelectorAll("#cut-table tbody tr");
-      window.__pdfSnapshotRows=rows.length;
-      window.__pdfSnapshotLast=rows[rows.length-1]?.textContent||"";
-    });
-  });
-  const pdf=await page.pdf({format:"A4",printBackground:true,
-    margin:{top:"15mm",bottom:"15mm",left:"15mm",right:"15mm"}});
-  expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
-  expect(pdf.length).toBeGreaterThan(18000);
-  expect(await page.evaluate(()=>window.__pdfSnapshotRows)).toBe(540);
-  expect(await page.evaluate(()=>window.__pdfSnapshotLast)).toContain(
-    "Ring 3 / segment 180");
-  mkdirSync("print-evidence",{recursive:true});
-  writeFileSync("print-evidence/segmented-bowl-complete-540-rows-a4.pdf",pdf);
+  // Actual PDF fixture screenshots belong to the separate print-media tests.
+  // This browser gate verifies the complete 540-row print DOM without
+  // mislabeling screen-media PDF output as a printable full schedule.
   // Browser event ordering may vary, but restoring print state must never
   // change the user's selected screen page.
   await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));

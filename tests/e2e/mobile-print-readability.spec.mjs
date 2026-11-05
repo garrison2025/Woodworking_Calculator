@@ -96,3 +96,26 @@ test("grouped measurement worksheet exports genuine A4 and Letter PDF examples",
   await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
   await expect(page.locator("#print-schedule-readable")).toBeHidden();
 });
+
+test.describe("320px touch and keyboard-height simulation",()=>{
+  test.use({viewport:{width:320,height:640},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  test("focused editable measurements survive a reduced visible viewport",async({page})=>{
+    await page.goto("/stud-calculator/");
+    await page.setViewportSize({width:320,height:390}); // Approximate soft keyboard occlusion.
+    const field=page.locator("#f-length");
+    await field.tap();
+    await field.fill("120");
+    await expect(field).toHaveValue("120");
+    await expect(page.locator("#calc-error")).toBeHidden();
+    const coords=await field.evaluate(el=>{
+      const r=el.getBoundingClientRect();
+      return {top:r.top,bottom:r.bottom,height:innerHeight,
+        overflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-innerWidth,
+        active:document.activeElement===el};
+    });
+    expect(coords.active).toBe(true);
+    expect(coords.top).toBeGreaterThanOrEqual(-1);
+    expect(coords.bottom).toBeLessThanOrEqual(coords.height+1);
+    expect(coords.overflow).toBeLessThanOrEqual(1);
+  });
+});

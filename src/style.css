@@ -617,8 +617,8 @@ tbody tr:nth-child(2n){background:#fafbf8}
 @media print{
  .print-original-schedule-hidden{display:none!important}
  .print-schedule-readable:not([hidden]){display:block!important;margin:10pt 0 14pt}
- .print-schedule-part{break-inside:auto}
- .print-schedule-part+.print-schedule-part{break-before:page;page-break-before:always}
+ .print-schedule-part{break-inside:avoid-page;page-break-inside:avoid}
+ .print-schedule-part+.print-schedule-part{margin-top:12pt;break-before:auto;page-break-before:auto}
  .print-schedule-part h3{font-size:12pt;line-height:1.25;margin:0 0 5pt;break-after:avoid}
  .print-schedule-part p{font-size:9pt;line-height:1.4;margin:0 0 8pt;color:#222}
  .print-schedule-part table{min-width:0!important;width:100%;max-width:100%;table-layout:fixed;font-size:9pt;line-height:1.4;border-collapse:collapse}
