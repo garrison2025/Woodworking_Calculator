@@ -284,7 +284,17 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .schedule-pager label{font-weight:600}
 .schedule-pager input{max-width:65px;min-width:55px;padding:7px 8px;border:1px solid #cbdace;border-radius:7px;background:white;color:var(--ink);font-size:12px}
 #schedule-page-status{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green);white-space:nowrap}
-@media print{.schedule-pager{display:none!important}}
+@media print{
+  .schedule-pager{display:none!important}
+  /* Repeat headings and preserve each measured cut across page boundaries.
+     Long lists are expanded only for the print snapshot, not the screen DOM. */
+  #cut-table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.5pt}
+  #cut-table thead{display:table-header-group}
+  #cut-table tr{break-inside:avoid;page-break-inside:avoid}
+  #cut-table th,#cut-table td{white-space:normal;overflow-wrap:anywhere;word-break:normal;
+    padding:4pt 3pt;line-height:1.24;vertical-align:top}
+  #schedule-count{font-size:9pt;break-after:avoid}
+}
 
 
 /* Framing stock plan: print-safe takeoff with compact mobile scrolling. */
