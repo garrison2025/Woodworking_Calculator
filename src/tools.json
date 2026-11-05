@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Wall framing calculator for door and window openings, with King/Jack studs, headers, sills, cripple positions, SVG plan and CSV cut list.",
+      "desc": "Wall framing calculator for King/Jack studs, headers, sills and cripples, plus grouped lumber takeoff, stock cutting plans, SVG and CSV.",
       "inputs": [
         {
           "key": "length",
@@ -136,6 +136,36 @@
           "label": "Window sill stock thickness",
           "kind": "L",
           "value": 1.5
+        },
+        {
+          "key": "studStockLength",
+          "label": "Purchased stud stock length",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "headerStockLength",
+          "label": "Purchased header stock length",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "sillStockLength",
+          "label": "Purchased sill stock length",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "stockKerf",
+          "label": "Saw kerf between consecutive cuts",
+          "value": 0.125,
+          "kind": "L"
+        },
+        {
+          "key": "stockWaste",
+          "label": "Extra purchase sticks allowance (%)",
+          "value": 0,
+          "kind": "D"
         },
         {
           "key": "openingStart",
@@ -210,9 +240,9 @@
           "kind": "L"
         }
       ],
-      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces.",
+      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces. Nominal first-fit decreasing groups cut pieces by Stud, Header or Sill stock type, packs full pieces without splices, charges kerf between consecutive cuts on a stick, and reports planned sticks/offcuts and separately rounded purchase allowance per stock group. It is an estimate, not proven minimum waste.",
       "example": "120 in between end centers, 96 in gross wall, 16 in OC, 1.5 in studs, 1.5 in bottom plate, 3 in top plates, 32–68 in door opening top 80 in, 5.5 in header depth: six regular studs, four King/Jack, one 39 in header and two 7.5 in upper cripples; 13 listed pieces (plates not in cut list).",
-      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts.",
+      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts. Stock cutting is a deterministic first-fit estimate, not a certified globally optimal nesting algorithm. Profiles are deliberately separate (Stud/Header/Sill); do not combine them without verifying cross sections. No splices, trimming loss, defective boards, or cost/pricing assumptions. Rounding of fractions is display-only: CSV retains numeric dimensions.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -226,6 +256,14 @@
         {
           "heading": "Unified center, face and cut-list coordinates",
           "text": "The wall length is measured from one end-stud center to the other. Regular studs that intersect rough openings or King/Jack faces are removed. Each output row stores horizontal extent, elevation and cut length and is reused directly for the schematic SVG and CSV. The diagram is NOT a 1:1 construction cutting template."
+        },
+        {
+          "heading": "Three stock families and conservative purchase allowance",
+          "text": "Choose real purchased lengths for Stud, Header and Sill material separately. The cutting plan fits member cut lengths into each category using first-fit decreasing, charging one entered saw kerf between consecutive cuts; it never joins short offcuts into a longer board. The optional percentage adds whole reserve sticks to each used family, not to each individual cut. Purchase lengths should account for any additional trimming or defects not modeled."
+        },
+        {
+          "heading": "Fractional-inch worksheet vs numeric CSV",
+          "text": "For inches, the measurement table shows approximate 1/16 or 1/32 inch fractions beside the precise decimal cut length. Print/PDF includes the same fractions; downloadable CSV cut lists and stock plan retain precise numeric lengths in the selected unit. Always measure actual lumber and recheck saw kerf."
         }
       ]
     },
