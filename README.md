@@ -4,7 +4,7 @@
 
 A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
 
-> **Release status: engineering beta, not a production launch.** 299 geometry tests, 52 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 305 geometry tests, 54 Chromium browser tests and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
 
 ## What is implemented
 
@@ -22,6 +22,15 @@ A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes,
 - `/framing-calculator/` now derives optional window sills, user-depth header references, and upper/lower cripple pieces from one wall center/elevation model, then exports the exact same coordinates to SVG and CSV. Headers are nonstructural reference pieces; user-specified vertical header depth is not a load/span recommendation. A door uses sill elevation zero.
 - Example: a 120-in wall, 16-in OC, 32–68-in door, 96-in overall height, 5.5-in header depth gives 6 regular, 2 king, 2 jack, 1 header (39-in cut) and 2 upper cripples (7.5-in cut): 13 listed reference pieces, excluding plates.
 - [GitHub Actions #173](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41947661501): **299/299 Node tests**, **52/52 real Chromium tests**, plus 36-page static/noindex/152-keyword validation. Physical timber and loading approval remains NOT VERIFIED.
+
+## 2026-11-05 — Framing grouped lumber takeoff and stock cut estimate
+
+- Added editable Stud, Header and Sill stock lengths (each defaults to 96 in), saw kerf and purchase allowance inputs; *different stock profiles do not intermix*. Non-fit cuts reject stock allocation with an explicit longer-stock error rather than silently splicing timber.
+- Deterministic **first-fit decreasing (FFD)** packs whole member cuts by material profile and charges one saw kerf **between cuts on the same stock bar**. It reports piece counts, installed linear length, planned sticks, separately rounded reserve sticks, kerf and offcuts; this is not proof of a minimum-waste solution.
+- A new summary and stock-by-stock plan derive directly from the engine's `materialSummary` and `stockPlan`. A separate numeric, unit-aware **Stock cut plan CSV** exports `stockCuts` with member, stock ID, sequence number, cut length, consumed kerf and remaining length. The original member CSV stays intact.
+- In inches, member cut lengths and printed worksheet show approximate 1/16 or 1/32 fractions alongside precise decimals; CSV exports retain numeric values and explicit unit headers. PDF/Print keeps physical calibration bars; SVG is never a 1:1 cutting template.
+- Default 120-in wall / 32–68-in door fixture: 13 member cuts (8 full-length at 91.5 in, 2 Jacks at 78.5 in, 2 upper cripples at 7.5 in, 1 reference header at 39 in). Under 96-in stock, 1/8-in kerf, zero reserve: **10 Stud sticks + 1 Header stick**, 112.75 in unused offcuts and 0.25 in kerf. Plates and multi-ply structural headers are excluded.
+- [CI #187](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41949353204) passed **305/305 Node tests**, **54/54 real Chromium tests**, 36 static pages / 26 tools / 5 P2 held / 152 mapped keyword rows. Preview retains `noindex`.
 
 ## Local development
 
@@ -85,7 +94,7 @@ DESIGN.md, QA-EVIDENCE.md, UI-RELEASE-EVIDENCE.md, SEO-GEO-RELEASE-EVIDENCE.md
 
 ## Engineering caveats
 
-Rafter normal-notch depth and stair-stringer flooring correction now have independently derived regression tests; both still require physical construction approval. Some professional tasks are intentionally **not claimed production complete**: framing king/jack illustrations are schematic (no headers/cripples); rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof includes four-plane clipped sheet coordinates but does not reuse offcuts, stagger sheets or certify an installation plan; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
+Rafter normal-notch depth and stair-stringer flooring correction now have independently derived regression tests; both still require physical construction approval. Some professional tasks are intentionally **not claimed production complete**: framing headers, sills and cripples are geometric cut references without structural header sizing; rafter birdsmouth is a reference geometry, not a verified structural cut pattern; hip roof includes four-plane clipped sheet coordinates but does not reuse offcuts, stagger sheets or certify an installation plan; kerf bending is a trial estimate; compound crown orientations require a scrap cut. The route exists because it performs a useful bounded geometry calculation, **not** because its whole V3 physical workflow has passed acceptance.
 
 ## SEO research discipline
 
