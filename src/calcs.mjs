@@ -221,7 +221,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,nosing:0,upperLandingDepth:0,seamMode:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -870,7 +870,7 @@ export function compute(slug,a){
   }
   case "deck-material-calculator":{
     positive("width","length","board","joists","stock");nonnegative("gap","waste","boardUnitPrice","fastenerPackPrice");
-    whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);
+    whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);whole("seamMode",0,1);
     need(a.waste<=200,"Waste must be 0–200%.");
     need(a.boardUnitPrice<=1e6&&a.fastenerPackPrice<=1e6,
       "Supplier unit prices cannot exceed one million in the selected currency.");
@@ -902,33 +902,56 @@ export function compute(slug,a){
       need(cutEnds.length<=900,"Too many supported deck segments; use longer stock or a shorter deck.");
     }
     cutEnds.push(a.length);
-    const piecesPerRow=cutEnds.length-1;
-    need(boards*piecesPerRow<=900,"Over 900 supported stock pieces are required; choose longer stock or a smaller footprint.");
-    const deckRows=Array.from({length:boards},(_,i)=>({
-      item:"Row "+(i+1),acrossStart:q(i*(a.board+a.gap)),
-      ripWidth:q(i===boards-1?finalRip:a.board)
-    }));
+    // A second complete seam solution is obtained by walking from the
+    // opposite deck end. It uses exactly the same entered joist centers,
+    // never an unsupported arbitrary joint location. Alternate rows use
+    // the reverse solution only when the user explicitly opts in.
+    const reverse=[a.length];
+    let right=a.length;
+    while(right>a.stock+1e-8){
+      const center=joistGrid.find(x=>x>1e-8&&x<right-1e-8&&x>=right-a.stock-1e-8);
+      need(center!==undefined,
+        "Reverse seam layout cannot reach a support center with the entered stock.");
+      reverse.unshift(q(center));right=center;
+      need(reverse.length<=900,"Too many reverse seam pieces.");
+    }
+    reverse.unshift(0);
+    const rowEnds=index=>a.seamMode===1&&index%2===1?reverse:cutEnds;
+    const deckRows=Array.from({length:boards},(_,i)=>{
+      const ends=rowEnds(i);
+      return {item:"Row "+(i+1),acrossStart:q(i*(a.board+a.gap)),
+        ripWidth:q(i===boards-1?finalRip:a.board),
+        seamCenters:ends.slice(1,-1),pieceCount:ends.length-1,
+        layoutDirection:a.seamMode===1&&i%2===1?"Reverse":"Forward"};
+    });
+    const baseStock=deckRows.reduce((sum,row)=>sum+row.pieceCount,0);
+    need(baseStock<=900,"Over 900 supported stock pieces are required; choose longer stock or a smaller footprint.");
     const schedule=[];
-    for(const row of deckRows)for(let j=0;j<piecesPerRow;j++){
-      const start=cutEnds[j],end=cutEnds[j+1],segment=end-start;
-      need(segment>1e-8&&segment<=a.stock+1e-7,"Supported stock segment exceeds purchased board length.");
-      schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
-        acrossStart:row.acrossStart,alongStart:q(start),
-        cutLength:q(segment),ripWidth:row.ripWidth,
-        buttJointAtEnd:j<piecesPerRow-1?q(end):null,joistCenter:null});
+    for(const [index,row] of deckRows.entries()){
+      const ends=rowEnds(index);
+      for(let j=0;j<ends.length-1;j++){
+        const start=ends[j],end=ends[j+1],segment=end-start;
+        need(segment>1e-8&&segment<=a.stock+1e-7,
+          "Supported stock segment exceeds purchased board length.");
+        need(j===ends.length-2||joistGrid.some(x=>Math.abs(x-end)<1e-7),
+          "Butt seam is not on the measured joist-center reference.");
+        schedule.push({item:row.item+" piece "+(j+1),type:"Decking",
+          acrossStart:row.acrossStart,alongStart:q(start),
+          cutLength:q(segment),ripWidth:row.ripWidth,
+          buttJointAtEnd:j<ends.length-2?q(end):null,joistCenter:null});
+      }
     }
     for(const [i,x] of joistGrid.entries())schedule.push({
       item:"Joist reference "+(i+1),type:"Joist center",acrossStart:null,alongStart:null,
       cutLength:null,ripWidth:null,buttJointAtEnd:null,joistCenter:q(x)
     });
-    const baseStock=boards*piecesPerRow;
     const buyBoards=ceilStable(baseStock*(1+a.waste/100));
     // A butt join touches one joist grid line with TWO independently
     // purchased pieces, rather than one continuous board. Thus every
     // seam adds one additional fastener CONTACT on the same reference line.
     // We do not infer real joist width, bearing or manufacturer fastening.
-    const contactsPerRow=joistGrid.length+seamCenters.length;
-    const fastenerContacts=boards*contactsPerRow;
+    const fastenerContacts=deckRows.reduce((sum,row)=>
+      sum+joistGrid.length+row.seamCenters.length,0);
     const fastenerPieces=fastenerContacts*a.fastenersPerContact;
     const fastenerPacks=fastenerPieces?
       ceilStable(fastenerPieces/a.fastenerPackSize):0;
@@ -960,14 +983,23 @@ export function compute(slug,a){
     ];
     const deckFastenerRows=deckRows.map((row,i)=>({
       item:row.item,rowNumber:i+1,joistReferences:joistGrid.length,
-      buttSeams:seamCenters.length,fasteningContacts:contactsPerRow,
+      buttSeams:row.seamCenters.length,
+      fasteningContacts:joistGrid.length+row.seamCenters.length,
       fastenersPerContact:a.fastenersPerContact,
-      fastenerPiecesPerRow:contactsPerRow*a.fastenersPerContact,
-      firstSeamAt:seamCenters.length?seamCenters[0]:null,
-      lastSeamAt:seamCenters.length?seamCenters.at(-1):null
+      fastenerPiecesPerRow:(joistGrid.length+row.seamCenters.length)*a.fastenersPerContact,
+      firstSeamAt:row.seamCenters.length?row.seamCenters[0]:null,
+      lastSeamAt:row.seamCenters.length?row.seamCenters.at(-1):null,
+      seamStations:row.seamCenters.join("; "),
+      layoutDirection:row.layoutDirection
     }));
     need(deckFastenerRows.reduce((s,row)=>s+row.fasteningContacts,0)===fastenerContacts,
       "Deck fastener reference contacts do not conserve grouped row counts.");
+    const seamSet=[...new Set(deckRows.map(row=>row.seamCenters.join(",")))];
+    const staggeredRows=deckRows.filter(row=>row.seamCenters.join(",")!==
+      deckRows[0].seamCenters.join(",")).length;
+    // No promise of stagger where geometry admits only one viable seam pattern.
+    need(schedule.filter(row=>row.type==="Decking").reduce((s,row)=>s+row.cutLength,0)>=
+      boards*a.length-1e-5,"Deck seams do not close the requested board lengths.");
     return result([
       M("Deck area",a.width*a.length/144,"FT2"),M("Deck rows",boards,"N"),
       M("Last rip width",finalRip),M("Joist reference lines",joistGrid.length,"N"),
@@ -975,7 +1007,8 @@ export function compute(slug,a){
       M("Installed linear decking",boards*a.length/12,"FT"),
       M("Stock boards (no offcut reuse)",baseStock,"N"),
       M("Stock boards with allowance",ceilStable(baseStock*(1+a.waste/100)),"N"),
-      M("Butt joints on joist center references",boards*seamCenters.length,"N"),
+      M("Butt joints on joist center references",deckRows.reduce((s,row)=>s+row.seamCenters.length,0),"N"),
+      M("Rows with different seam stations",staggeredRows,"N"),
       M("Board-joist intersections",boards*joistGrid.length,"N"),
       M("Piece-joist fastening contacts",fastenerContacts,"N"),
       M("Fasteners requested",fastenerPieces,"N"),
@@ -985,6 +1018,7 @@ export function compute(slug,a){
         [M("Quoted deck materials total",deckCostSummary.quotedSubtotal,"C")]:[])
     ],deckRows.map(row=>P(row.acrossStart,row.item)),a.width,schedule,"deck-plan",
     {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,seamCenters,stockLength:a.stock,
+      deckSeamMode:a.seamMode,staggeredRows,distinctSeamPatterns:seamSet.length,
       deckFastenerRows,deckPurchaseRows,deckCostSummary});
   }
   case "segmented-bowl-calculator":{
