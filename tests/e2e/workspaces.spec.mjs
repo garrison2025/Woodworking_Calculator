@@ -1303,3 +1303,56 @@ test("deck material disabling fasteners and quote validation clear stale purchas
   await expect(page.locator("#f-fastenersPerContact")).toHaveValue("2");
   await expect(page.locator("#deck-cost-status")).toContainText("INCOMPLETE QUOTE");
 });
+
+
+test("stringer nosing and landing draw separate true-ratio overlays without modifying notch cutline",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  const plot=page.locator("#dimension-svg svg");
+  await expect(plot.locator(".stringer-step-profile")).toHaveCount(1);
+  const startProfile=await plot.locator(".stringer-step-profile").getAttribute("points");
+  await expect(plot.locator(".stringer-nosing-reference")).toHaveCount(0);
+  await expect(plot.locator(".stringer-landing-reference")).toHaveCount(0);
+  await page.locator("#f-nosing").fill("1.25");
+  await page.locator("#f-upperLandingDepth").fill("36");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total horizontal planning reach"})).toContainText("166 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Total horizontal run"})).toContainText("130 in");
+  await expect(plot.locator(".stringer-nosing-reference")).toHaveCount(13);
+  await expect(plot.locator(".stringer-landing-reference")).toHaveCount(1);
+  const landing=plot.locator(".stringer-landing-reference");
+  await expect(landing).toHaveAttribute("data-start","130");
+  await expect(landing).toHaveAttribute("data-end","166");
+  const nose=plot.locator(".stringer-nosing-reference").first();
+  await expect(nose).toHaveAttribute("data-start","-1.25");
+  await expect(nose).toHaveAttribute("data-end","0");
+  const measured=await plot.evaluate(svg=>{
+    const n=svg.querySelector(".stringer-nosing-reference"),
+      l=svg.querySelector(".stringer-landing-reference");
+    return {
+      nose:Number(n.getAttribute("x2"))-Number(n.getAttribute("x1")),
+      landing:Number(l.getAttribute("x2"))-Number(l.getAttribute("x1")),
+      profile:svg.querySelector(".stringer-step-profile").getAttribute("points")
+    };
+  });
+  expect(measured.nose/measured.landing).toBeCloseTo(1.25/36,4);
+  expect(measured.profile).not.toEqual(startProfile); // same physical geometry, newly centered in wider viewport
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(14);
+  await page.locator("#unit-select").selectOption("mm");
+  const csvDl=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await(await csvDl).path(),"utf8");
+  expect(csv).toContain('"Nose Start (mm)"');
+  expect(csv).toContain('"Landing Reference End (mm)"');
+  expect(csv).toContain('"-31.75"');
+  expect(csv).toContain('"4216.4"');
+  await page.locator("#f-nosing").fill("254");
+  await expect(page.locator("#calc-error")).toContainText("Tread nose projection must be smaller");
+  await expect(plot.locator(".stringer-nosing-reference")).toHaveCount(0);
+  await page.locator("#f-nosing").fill("31.75");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(plot.locator(".stringer-nosing-reference")).toHaveCount(13);
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-nosing")).toHaveValue("0");
+  await expect(page.locator("#f-upperLandingDepth")).toHaveValue("0");
+  await expect(plot.locator(".stringer-landing-reference")).toHaveCount(0);
+});
