@@ -1356,3 +1356,101 @@ test("stringer nosing and landing draw separate true-ratio overlays without modi
   await expect(page.locator("#f-upperLandingDepth")).toHaveValue("0");
   await expect(plot.locator(".stringer-landing-reference")).toHaveCount(0);
 });
+
+
+test("modeled stair stringer section polygon is proportional, conserved and not a certified bearing cut",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const section=page.locator("#stringer-section");
+  await expect(section).toBeVisible();
+  await expect(page.locator("#stringer-model-status")).toContainText("MODELED SIDE SECTION ONLY");
+  await expect(page.locator("#stringer-model-status")).toContainText("30 calculated vertices");
+  await expect(page.locator("#stringer-model-status")).toContainText("5.25 in");
+  const model=page.locator("#dimension-svg .stringer-modeled-section");
+  await expect(model).toHaveCount(1);
+  await expect(model).toHaveAttribute("data-area-sqin","1340.625");
+  await expect(model).toHaveAttribute("data-min-throat","5.25");
+  const plot=page.locator("#dimension-svg svg");
+  await expect(plot.locator(".stringer-lower-stock-edge")).toHaveCount(1);
+  await expect(plot.locator(".stringer-lower-end-clip")).toHaveCount(1);
+  await expect(plot.locator(".stringer-upper-end-clip")).toHaveCount(1);
+  await expect(plot.locator(".stringer-support-surface")).toHaveCount(0);
+  await expect(page.locator("#stringer-outline-table tbody tr")).toHaveCount(30);
+  await expect(page.locator("#stringer-outline-table tbody tr").last()).toContainText("-6.5625 in");
+  await expect(page.locator("#stringer-support-table tbody")).toContainText("No measured support surface entered");
+  await expect(page.locator("#download-stringer-support-csv")).toBeDisabled();
+  const ref=await plot.evaluate(svg=>{
+    const board=svg.querySelector(".stringer-lower-stock-edge");
+    return {
+      x0:Number(board.getAttribute("x1")),x1:Number(board.getAttribute("x2")),
+      y0:Number(board.getAttribute("y1")),y1:Number(board.getAttribute("y2"))
+    };
+  });
+  expect((ref.y0-ref.y1)/(ref.x1-ref.x0)).toBeCloseTo(.75,6);
+  await page.locator("#f-lowerSupportRun").fill("3");
+  await page.locator("#f-upperSupportRun").fill("6");
+  await expect(plot.locator(".stringer-support-lower")).toHaveAttribute("data-start","-3");
+  await expect(plot.locator(".stringer-support-lower")).toHaveAttribute("data-end","0");
+  await expect(plot.locator(".stringer-support-upper")).toHaveAttribute("data-start","130");
+  await expect(plot.locator(".stringer-support-upper")).toHaveAttribute("data-end","136");
+  await expect(page.locator("#stringer-support-table tbody tr")).toHaveCount(2);
+  const runs=await plot.evaluate(svg=>{
+    const length=selector=>{
+      const n=svg.querySelector(selector);
+      return Number(n.getAttribute("x2"))-Number(n.getAttribute("x1"));
+    };
+    return [length(".stringer-support-lower"),length(".stringer-support-upper")];
+  });
+  expect(runs[1]/runs[0]).toBeCloseTo(2,5);
+  await expect(page.locator("#download-stringer-support-csv")).toBeEnabled();
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#f-lowerSupportRun")).toHaveValue("76.2");
+  await expect(page.locator("#f-upperSupportRun")).toHaveValue("152.4");
+  const download1=page.waitForEvent("download");
+  await page.locator("#download-stringer-section-csv").click();
+  const outline=readFileSync(await(await download1).path(),"utf8");
+  expect(outline).toContain('"Index","Boundary","X (mm)","Elevation (mm)"');
+  expect(outline).toContain('"29","Parallel lower reference edge","3302","2309.8125"');
+  expect(outline).toContain('"30","Parallel lower reference edge","0","-166.6875"');
+  expect(outline.split("\r\n").filter(Boolean)).toHaveLength(32);
+  const download2=page.waitForEvent("download");
+  await page.locator("#download-stringer-support-csv").click();
+  const supports=readFileSync(await(await download2).path(),"utf8");
+  expect(supports).toContain('"Lower horizontal support surface reference","-76.2","0","0"');
+  expect(supports).toContain('"Upper horizontal support surface reference","3302","3454.4","2667"');
+  await page.emulateMedia({media:"print"});
+  await expect(section).toBeVisible();
+  await expect(page.locator("#stringer-outline-table tbody tr")).toHaveCount(30);
+  await expect(page.locator("#download-stringer-section-csv")).toBeHidden();
+  await expect(page.locator("#download-stringer-support-csv")).toBeHidden();
+});
+
+test("stringer section errors clear stale modeled vertices and reset support references safely",async({page})=>{
+  await page.goto("/stair-stringer-calculator/");
+  await page.locator("#f-lowerSupportRun").fill("3");
+  await page.locator("#f-upperSupportRun").fill("6");
+  await expect(page.locator("#stringer-support-table tbody tr")).toHaveCount(2);
+  await page.locator("#f-lowerSupportRun").fill("-1");
+  await expect(page.locator("#calc-error")).toContainText("lowerSupportRun cannot be negative");
+  await expect(page.locator("#f-lowerSupportRun")).toHaveAttribute("aria-invalid","true");
+  await expect(page.locator("#stringer-outline-table tbody tr")).toHaveCount(0);
+  await expect(page.locator("#dimension-svg .stringer-modeled-section")).toHaveCount(0);
+  await expect(page.locator("#download-stringer-section-csv")).toBeDisabled();
+  await expect(page.locator("#download-stringer-support-csv")).toBeDisabled();
+  await page.locator("#f-lowerSupportRun").fill("3");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#stringer-outline-table tbody tr")).toHaveCount(30);
+  await expect(page.locator("#download-stringer-section-csv")).toBeEnabled();
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-lowerSupportRun")).toHaveValue("0");
+  await expect(page.locator("#f-upperSupportRun")).toHaveValue("0");
+  await expect(page.locator("#stringer-support-table tbody")).toContainText("No measured support");
+  await expect(page.locator("#download-stringer-support-csv")).toBeDisabled();
+  await expect(page.locator("#dimension-svg .stringer-modeled-section")).toHaveCount(1);
+  await page.setViewportSize({width:360,height:760});
+  const size=await page.evaluate(()=>({
+    width:document.documentElement.clientWidth,
+    scrollWidth:document.documentElement.scrollWidth
+  }));
+  expect(size.scrollWidth).toBeLessThanOrEqual(size.width+1);
+});
