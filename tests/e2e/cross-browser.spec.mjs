@@ -138,3 +138,21 @@ test("Keyboard can focus and PageDown through large measurement tables in Firefo
   await expect(page.locator("#dimension-svg")).toHaveAttribute("tabindex","0");
   await expect(page.locator("#action-status")).toContainText("Updated:");
 });
+
+test("Firefox and WebKit 390px wide cutting tables give keyboard-accessible column controls",async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto("/stair-stringer-calculator/");
+  const region=page.locator("#cut-table").locator("xpath=..");
+  const toolbar=region.locator("xpath=preceding-sibling::*[1]");
+  await expect(toolbar).toHaveClass(/table-navigator/);
+  await expect(toolbar.locator(".table-nav-prev")).toBeDisabled();
+  await toolbar.locator(".table-nav-next").click();
+  await expect.poll(()=>region.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+  await expect(toolbar.locator(".table-nav-prev")).toBeEnabled();
+  await toolbar.locator(".table-nav-prev").click();
+  await expect(toolbar.locator(".table-nav-prev")).toBeDisabled();
+  await page.emulateMedia({media:"print"});
+  await expect(toolbar).toBeHidden();
+  await page.emulateMedia({media:"screen"});
+  await expect(toolbar).toBeVisible();
+});
