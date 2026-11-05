@@ -32,7 +32,9 @@ test("center marks do not claim to describe sub-resolution physical part faces",
   });
   assert.ok(centers.rows.every(x=>x.faceLeftEdge===null&&x.clearToPrevious===null));
   const csv=buildScheduleCsv(centers.rows,"mm","Center-only marks");
-  assert.ok(csv.includes('"Face Left Edge (mm)"'));
+  // A center-only schedule contains no physical faces. Null-only columns
+  // remain unitless and empty; do not invent a measured physical edge.
+  assert.ok(csv.includes('"Face Left Edge"'));
   assert.ok(csv.includes('"Center 1","254","","",""'));
 });
 
