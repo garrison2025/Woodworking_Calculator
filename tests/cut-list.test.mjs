@@ -420,3 +420,14 @@ test("Disabled shelf pin grid retains the former five-column shelf CSV without a
   assert.ok(csv.includes('"Shelf 1","266.7","292.1","266.7","215.9"'));
   assert.equal(csv.split("\r\n").filter(Boolean).length,5);
 });
+
+test("P1 brace CSV exports physical X/Y cut points in typed units",()=>{
+  const r=compute("diagonal-brace-calculator",{width:36,height:48,setback:5});
+  const mm=buildScheduleCsv(r.rows,"mm","Centerline reference only; no timber end-cut faces.");
+  assert.ok(mm.includes('"Station Along Full Line (mm)","Horizontal X (mm)","Vertical Y (mm)"'),mm);
+  assert.ok(mm.includes('"Cut start","127","76.2","101.6"'),mm);
+  assert.ok(mm.includes('"Cut finish","1397","838.2","1117.6"'),mm);
+  const inch=buildScheduleCsv(r.rows,"in");
+  assert.ok(inch.includes('"Cut start","5","3","4"'),inch);
+  assert.ok(inch.includes('"Cut finish","55","33","44"'),inch);
+});
