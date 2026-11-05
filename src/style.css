@@ -435,3 +435,28 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .stringer-section th,.stringer-section td{padding:4pt 3pt}
  .stringer-section{break-inside:auto}
 }
+
+
+/* Optional shelf-pin layout: independent cabinet side-panel reference planes. */
+.shelf-pin-panel{min-width:0}
+.shelf-pin-panel h3{font-size:17px;margin:20px 0 10px}
+.shelf-pin-drawing{background:var(--surface,#f8f7f3);border:1px solid #cddbd0;border-radius:12px;margin:16px 0;overflow:hidden}
+.shelf-pin-drawing:empty{display:none}
+.shelf-side-drill-svg{display:block;width:100%;height:auto}
+.shelf-side-label{font-size:17px;font-weight:700;fill:#2b5749;letter-spacing:.4px}
+.shelf-side-foot{font-size:11px;fill:#5c685e;letter-spacing:.25px}
+.shelf-side-note{font-size:11px;fill:#6b695d;letter-spacing:.2px}
+.shelf-pin-panel .shelf-pin-scroll{max-height:420px;overflow:auto}
+#shelf-pin-table{min-width:990px}
+.shelf-pin-panel .takeoff-actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.shelf-pin-panel .takeoff-actions button{flex:1;min-width:min(245px,100%)}
+.shelf-pin-panel .takeoff-actions button:disabled{opacity:.47;cursor:not-allowed}
+@media print{
+  .shelf-pin-drawing{overflow:visible;break-inside:avoid}
+  .shelf-pin-panel .shelf-pin-scroll{max-height:none;overflow:visible}
+  .shelf-pin-panel .takeoff-actions{display:none!important}
+  #shelf-pin-table{min-width:0;table-layout:auto;font-size:7pt}
+  #shelf-pin-table th,#shelf-pin-table td{padding:4pt 3pt}
+  .shelf-pin-panel tr{break-inside:avoid}
+  .shelf-pin-panel{break-inside:auto}
+}
