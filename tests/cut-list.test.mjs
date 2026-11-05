@@ -232,3 +232,51 @@ test("Physical equal spacing CSV preserves center and face edges in metric units
   assert.ok(markers.includes('"Center 1","0","","",""'));
   assert.ok(!markers.includes('"Clear To Previous (mm)","150"'));
 });
+
+
+test("Deck material purchase CSV keeps board and fastener pack counts unitless",()=>{
+  const r=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,stock:100,joists:16,waste:10,
+    boardUnitPrice:8.75,fastenersPerContact:2,fastenerPackSize:100,
+    fastenerPackPrice:22
+  });
+  const rows=r.deckPurchaseRows.map(x=>({...x,currency:"USD"}));
+  const cols=scheduleColumns(rows,"mm");
+  for(const key of ["plannedQuantity","purchaseQuantity","unitPrice","purchaseCost"]){
+    assert.equal(cols.find(c=>c.key===key).kind,"plain",key);
+  }
+  const csv=buildScheduleCsv(rows,"mm","User-supplied purchasing quotes");
+  assert.ok(csv.includes('"Planned Quantity"'));
+  assert.ok(csv.includes('"Purchase Quantity"'));
+  assert.ok(csv.includes('"Unit Price"'));
+  assert.ok(!csv.includes('"Purchase Cost (mm)"'));
+  assert.ok(csv.includes('"Decking stock boards","44","49","boards","8.75","428.75","USD"'));
+  assert.ok(csv.includes('"Fastener packs","5","5","packs","22","110","USD"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,4);
+});
+test("Deck fastening contact CSV converts seam coordinates but not pack or contact quantities",()=>{
+  const r=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,stock:100,joists:16,waste:10,
+    boardUnitPrice:8.75,fastenersPerContact:2,fastenerPackSize:100,
+    fastenerPackPrice:22
+  });
+  const cols=scheduleColumns(r.deckFastenerRows,"mm");
+  for(const key of ["rowNumber","joistReferences","buttSeams","fasteningContacts",
+      "fastenersPerContact","fastenerPiecesPerRow"]){
+    assert.equal(cols.find(c=>c.key===key).kind,"plain",key);
+  }
+  assert.equal(cols.find(c=>c.key==="firstSeamAt").kind,"length");
+  assert.equal(cols.find(c=>c.key==="lastSeamAt").kind,"length");
+  const csv=buildScheduleCsv(r.deckFastenerRows,"mm","Two contacts on every shared seam");
+  assert.ok(csv.includes('"Fasteners Per Contact"'));
+  assert.ok(csv.includes('"First Seam At (mm)"'));
+  assert.ok(csv.includes('"Last Seam At (mm)"'));
+  assert.ok(csv.includes('"2438.4"'));
+  assert.ok(csv.includes('"Row 1","1","10","1","11","2","22"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,24);
+  const noSeam=compute("deck-material-calculator",{
+    width:120,length:144,board:5.5,gap:.125,stock:144,joists:16,waste:10
+  });
+  const noSeamCsv=buildScheduleCsv(noSeam.deckFastenerRows,"mm","No seam");
+  assert.ok(noSeamCsv.includes('"Row 1","1","10","0","10","2","20","",""'));
+});
