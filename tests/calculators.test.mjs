@@ -2497,3 +2497,69 @@ test("P1 stringer level miss and X miss are different zero-contact cases",()=>{
   assert.equal(noSupport.metrics.some(x=>
     x.label==="End/support pairs touching at one point only"),false);
 });
+
+test("stock cut rows independently conserve cut lengths, kerf, offcuts and quoted purchase cents",()=>{
+  const input={length:120,spacing:16,width:1.5,wallHeight:96,
+    openingStart:32,openingWidth:36,openingHeight:80,
+    studUnitPrice:5.5,headerUnitPrice:14.25};
+  for(const [kerf,waste] of [[0,0],[0.125,0],[0.125,10],[0.0625,25]]){
+    const r=compute("framing-calculator",{
+      ...input,stockKerf:kerf,stockWaste:waste
+    });
+    const allCutRows=new Set();
+    for(const stock of r.stockPlan){
+      const cuts=r.stockCuts.filter(c=>c.stockId===stock.stockId);
+      assert.equal(cuts.length,stock.cutCount);
+      let running=0;
+      for(const [i,cut] of cuts.entries()){
+        assert.equal(cut.index,i+1);
+        assert.equal(cut.kerfBefore,i?kerf:0);
+        assert.equal(cut.stockLength,stock.stockLength);
+        running+=cut.cutLength+(i?kerf:0);
+        assert.ok(Math.abs(cut.runningUsedLength-running)<=1e-6,
+          "running physical cut length must include every prior kerf");
+        assert.ok(Math.abs(cut.remainingLength-(stock.stockLength-running))<=1e-6,
+          "exported remaining source stock does not reconcile");
+        const key=stock.stockId+":"+cut.index;
+        assert.ok(!allCutRows.has(key));
+        allCutRows.add(key);
+      }
+      assert.ok(Math.abs(stock.usedLength-running)<=1e-6);
+      assert.ok(Math.abs(stock.piecesLength+stock.kerfLoss+stock.offcutLength-stock.stockLength)<=1e-6);
+      assert.ok(Math.abs(stock.kerfLoss-Math.max(0,cuts.length-1)*kerf)<=1e-6);
+    }
+    assert.equal(allCutRows.size,r.rows.length);
+    let costCents=0;
+    for(const item of r.purchaseVariants){
+      assert.equal(item.purchaseSticks,item.plannedSticks+item.allowanceSticks);
+      if(item.unitPrice===null){
+        assert.equal(item.purchaseCost,item.purchaseSticks===0?0:null);
+        continue;
+      }
+      const unitCents=Math.round(item.unitPrice*100);
+      assert.equal(item.purchaseCost*100,item.purchaseSticks*unitCents);
+      assert.equal(item.plannedCost*100,item.plannedSticks*unitCents);
+      assert.equal(item.reserveCost*100,item.allowanceSticks*unitCents);
+      costCents+=item.purchaseSticks*unitCents;
+    }
+    assert.equal(r.costSummary.allPricesEntered,true);
+    assert.equal(Math.round(r.costSummary.quotedSubtotal*100),costCents);
+    const mmCsv=buildScheduleCsv(r.stockCuts,"mm","Independent stock conservation");
+    assert.ok(mmCsv.includes('"Kerf Before (mm)"'));
+    assert.ok(mmCsv.includes('"Remaining Length (mm)"'));
+    assert.equal(mmCsv.split("\r\n").filter(Boolean).length,r.stockCuts.length+2);
+  }
+});
+
+test("sub-resolution physical kerf and butt-end gaps are rejected instead of exported as fake zero",()=>{
+  const framing={length:120,spacing:16,width:1.5,wallHeight:96,
+    openingStart:32,openingWidth:36,openingHeight:80};
+  
+  const tinyKerf=safeCompute("framing-calculator",{...framing,stockKerf:0.000000001});
+  assert.equal(tinyKerf.ok,false);
+  assert.match(tinyKerf.error,/coordinate resolution/i);
+  const deck={width:120,length:144,board:5.5,gap:.125,stock:60,joists:16};
+  const tinyButt=safeCompute("deck-material-calculator",{...deck,buttEndGap:0.000000001});
+  assert.equal(tinyButt.ok,false);
+  assert.match(tinyButt.error,/coordinate resolution/i);
+});

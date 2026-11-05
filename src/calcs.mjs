@@ -395,6 +395,10 @@ export function compute(slug,a){
           family+" "+suffix+" stock option needs a positive purchased length.");
     }
     need(a.stockWaste<=100,"Purchase allowance must be 0–100 percent.");
+    // Physical cut coordinates and saw-loss fields use 1e-8 inch increments.
+    // A positive kerf below this precision would silently export as zero.
+    need(a.stockKerf===0||a.stockKerf>=1e-8,
+      "stockKerf is below cut-coordinate resolution; enter zero or at least 0.00000001 in.");
     need(a.stockKerf<Math.min(a.studStockLength,a.headerStockLength,a.sillStockLength),"Kerf must be shorter than every stock stick.");
     need(a.spacing>=a.width&&a.length>=a.width,"Stud face width must fit the wall and OC interval.");
     const fullCut=a.wallHeight-a.bottomPlate-a.topPlate;
@@ -1029,6 +1033,10 @@ export function compute(slug,a){
       "joistStockLength","joistUnitPrice");
     whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);whole("seamMode",0,1);
     nonnegative("buttEndGap","minEndBearing");positive("joistFaceWidth");
+    // Each butt joint uses half of the entered gap on each adjoining end.
+    // Less than two 1e-8 inch steps cannot survive coordinate quantization.
+    need(a.buttEndGap===0||a.buttEndGap>=2e-8,
+      "buttEndGap is below cut-coordinate resolution; enter zero or at least 0.00000002 in.");
     need(a.waste<=200,"Waste must be 0–200%.");
     need(a.boardUnitPrice<=1e6&&a.fastenerPackPrice<=1e6&&a.joistUnitPrice<=1e6,
       "Supplier unit prices cannot exceed one million in the selected currency.");
