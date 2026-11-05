@@ -186,8 +186,8 @@ def tool_page(t):
         '<h3>Optimality verification</h3>'
         '<p id="framing-optimizer-status" role="status" aria-live="polite">Check prices to see exact and heuristic verification.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-proof-table" aria-label="Optimization proof by material">'
-        '<thead><tr><th>Material</th><th>Pieces</th><th>Search status</th><th>Visited states</th><th>Certificate</th></tr></thead><tbody></tbody></table></div>'
-        '<p class="optimizer-note">Exact mode exhaustively explores whole-member allocations for up to nine pieces per material, with at most 40,000 visited states. A certificate is issued only when search completes with every required supplier price provided. It is valid only for offered lengths, between-cut kerf, independent material profiles and separately rounded purchase allowances. Other results are heuristic estimates, not proven optima.</p>'
+        '<thead><tr><th>Material</th><th>Pieces</th><th>Search status</th><th>Distinct states</th><th>Merged repeats</th><th>Certificate</th></tr></thead><tbody></tbody></table></div>'
+        '<p class="optimizer-note">Exact mode memoizes equivalent cutting states and can prove the modeled lowest quote cost for up to 16 pieces per material when all distinct search states fit within a 40,000-state limit. A certificate is issued only when search completes with every required supplier price provided. It is valid only for offered lengths, between-cut kerf, independent material profiles and separately rounded purchase allowances. Other results are heuristic estimates, not proven optima.</p>'
         '</section>'
 
         '<section class="framing-order-ticket" id="framing-order-ticket" aria-label="Printable purchasing checklist">'
