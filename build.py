@@ -149,6 +149,20 @@ def tool_page(t):
            '<div class="export-stack"><button type="button" id="copy-result" class="btn primary">Copy results <span>↗</span></button>'
            '<button type="button" id="download-csv" class="btn secondary">↓ Download CSV cut list</button></div>'
            '<p class="action-status" id="action-status" role="status" aria-live="polite">Calculations will update instantly.</p></aside></section>')
+    framing_takeoff=(
+        '<div class="content-block framing-takeoff" id="framing-takeoff">'
+        '<span class="eyebrow">LUMBER PURCHASE PLAN</span><h2>Material & stock cutting estimate</h2>'
+        '<p>Groups studs, headers and window sills by separate stock profiles. First-fit decreasing (FFD) is a reproducible packing estimate, NOT proof of minimum waste. No joined pieces or cross-profile reuse. Saw kerf is charged between cuts on each stock stick; added reserve sticks are not counted as placed cuts.</p>'
+        '<div class="table-scroll framing-table-scroll"><table id="framing-material-table" aria-label="Material summary by stock profile">'
+        '<thead><tr><th>Profile</th><th>Pieces</th><th>Cut length</th><th>Stock length</th><th>Planned sticks</th><th>Reserve</th><th>Buy</th><th>Offcut</th></tr></thead><tbody></tbody></table></div>'
+        '<h3>Stock-by-stock cut plan</h3>'
+        '<p>Piece lengths and offcut for each stick share the calculated framing cut list. The browser worksheet shows approximate inch fractions; CSV exports keep numeric precision.</p>'
+        '<div class="table-scroll framing-table-scroll"><table id="framing-stock-table" aria-label="Suggested stock cuts">'
+        '<thead><tr><th>Stock ID</th><th>Cut sequence (reference lengths)</th><th>Kerf</th><th>Offcut</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-actions"><button id="download-stock-csv" type="button" class="btn secondary">↓ Download stock cut plan CSV</button></div>'
+        '<p class="caution">Reference lengths only. No material grade, structural header sizing, defects, end trimming, splices or real-world optimizer certification. Verify each purchase and cut before working.</p>'
+        '</div>'
+    ) if t["slug"]=="framing-calculator" else ""
     body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
            '<p>Items below are generated from the same numbers used for the drawing. The downloadable CSV uses plain numeric cells and puts the selected units in column headers for Excel or other spreadsheets. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
@@ -160,6 +174,7 @@ def tool_page(t):
            '<input id="schedule-page-input" type="number" min="1" step="1" value="1" inputmode="numeric">'
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
+           +framing_takeoff+
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
            f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
