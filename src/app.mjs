@@ -542,8 +542,23 @@ if(slug){
         const yy=y0+row.acrossStart*scale,sh=row.ripWidth*scale;
         content+='<rect class="deck-plan-board" x="'+x0+'" y="'+yy+'" width="'+ww+'" height="'+Math.max(.1,sh)+'" fill="'+(i%2?"#d2b18b":"#e2c8a5")+'" stroke="#957452" stroke-width=".45"><title>'+esc(row.item+" · "+fmt(row.ripWidth)+" rip")+'</title></rect>';
         for(const seam of row.seamCenters||[]){
-          const xx=x0+seam*scale;
-          content+='<line class="deck-plan-seam" x1="'+xx+'" y1="'+yy+'" x2="'+xx+'" y2="'+(yy+sh)+'" stroke="#9b4e34" stroke-width="2.2"><title>'+esc(row.item+" butt joint at "+fmt(seam)+" on a joist center reference; support, fasteners and staggering are NOT verified")+'</title></line>';
+          const xx=x0+seam*scale,jointWidth=(row.seamGap||0)*scale;
+          if(jointWidth>0){
+            content+='<rect class="deck-plan-butt-gap" data-center="'+seam+
+              '" data-gap="'+row.seamGap+'" x="'+(xx-jointWidth/2)+
+              '" y="'+yy+'" width="'+jointWidth+'" height="'+sh+
+              '" fill="#fcfbf8"><title>'+esc(
+                row.item+" clear butt joint "+fmt(row.seamGap)+
+                "; nominal geometric joist-face overlap per end "+fmt(row.geometricFaceOverlap)+
+                "; NOT a structural bearing approval")+'</title></rect>';
+          }
+          content+='<line class="deck-plan-seam" x1="'+xx+'" y1="'+yy+
+            '" x2="'+xx+'" y2="'+(yy+sh)+
+            '" stroke="#9b4e34" stroke-width="'+(jointWidth>0?1.1:2.2)+
+            '" stroke-dasharray="'+(jointWidth>0?"3 2":"none")+
+            '"><title>'+esc(row.item+" centerline seam station "+fmt(seam)+
+              "; actual board ends "+fmt(seam-(row.seamGap||0)/2)+
+              " and "+fmt(seam+(row.seamGap||0)/2))+'</title></line>';
         }
       }
       // Dashed centerlines are user-selected layout references, not certified spans.
