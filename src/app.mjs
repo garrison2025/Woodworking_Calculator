@@ -501,7 +501,6 @@ if(slug){
        check.nodes?check.nodes.toLocaleString("en-US"):"—",
        check.certified?"PROVEN optimal in model":"Not proven"]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
-    const summary=latest?.costSummary;
     const required=checks.filter(s=>s.pieceCount>0);
     framingProofStatus.textContent=!summary?"Correct inputs to see validation.":
       summary.allGroupsCertified?
