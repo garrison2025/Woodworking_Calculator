@@ -1882,3 +1882,44 @@ test("P1 hip roof stock-local polygon placement remains distinct from roof plan 
  await expect(page.locator("#roof-reuse-status")).toContainText("REUSE OFF");
  await expect(page.locator("#roof-reuse-svg svg")).toHaveCount(0);
 });
+
+test("Deck measured butt-gap physical SVG, numeric CSV, print and invalid overlap recovery",async({page})=>{
+  const {readFileSync}=await import("node:fs");
+  await page.goto("/deck-material-calculator/");
+  await page.locator("#f-stock").fill("100");
+  await page.locator("#f-joistFaceWidth").fill("3.5");
+  await page.locator("#f-buttEndGap").fill(".25");
+  await page.locator("#f-minEndBearing").fill("1.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric")
+    .filter({hasText:"Geometric face overlap per joined end"})).toContainText("1.625 in");
+  const gaps=page.locator("#dimension-svg svg .deck-plan-butt-gap");
+  await expect(gaps).toHaveCount(22);
+  const gap=gaps.first(),seam=page.locator("#dimension-svg svg .deck-plan-seam").first();
+  await expect(gap).toHaveAttribute("data-gap","0.25");
+  await expect(gap).toHaveAttribute("data-center","96");
+  const gx=Number(await gap.getAttribute("x")),gw=Number(await gap.getAttribute("width"));
+  const seamX=Number(await seam.getAttribute("x1"));
+  expect(gw).toBeGreaterThan(0);
+  expect(gx+gw/2).toBeCloseTo(seamX,5);
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Actual Cut End (mm)");
+  const download=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const data=readFileSync(await (await download).path(),"utf8");
+  expect(data).toContain('"2435.225"');
+  expect(data).toContain('"2441.575"');
+  expect(data).toContain('"41.275"');
+  await page.emulateMedia({media:"print"});
+  await expect(gaps).toHaveCount(22);
+  await page.emulateMedia({media:"screen"});
+  await page.locator("#f-minEndBearing").fill("43");
+  await expect(page.locator("#calc-error")).toContainText("minimum face overlap");
+  await expect(gaps).toHaveCount(0);
+  await page.locator("#f-minEndBearing").fill("38.1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(gaps).toHaveCount(22);
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-buttEndGap")).toHaveValue("0");
+  await expect(gaps).toHaveCount(0);
+});
