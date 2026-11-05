@@ -126,16 +126,26 @@ if(slug){
           content+=svgText(x(o.start)+4,Math.max(48,yTop-5),o.label+" · "+fmt(o.height),"tick-label");
           if(o.sill>0)content+='<line x1="'+x(o.start)+'" y1="'+ySill+'" x2="'+x(o.end)+'" y2="'+ySill+'" stroke="#ad744e" stroke-width="3"/>';
         }
-        // Real bar faces and vertical ends are taken directly from rows.
-        // The reference wall endpoints are CENTER datums; outside bar faces
-        // may extend beyond that center-to-center dimension.
-        for(const p of marks){
+        // Every member is drawn from exactly the row/mark geometry exported
+        // in the typed cut list. Horizontal spans use left/right face bounds,
+        // while crib studs use the same centers as the nominal OC grid.
+        for(const p of marks.filter(p=>p.orientation==="horizontal")){
           const yTop=yLevel(p.topHeight),yBottom=yLevel(p.bottomHeight);
-          const fill=p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":"#426b5b";
-          content+='<rect class="framing-member" data-position="'+p.x+'" data-cut-length="'+p.cutLength+'" x="'+rawX(p.faceLeft)+'" y="'+yTop+'" width="'+(rawX(p.faceRight)-rawX(p.faceLeft))+'" height="'+(yBottom-yTop)+'" fill="'+fill+'" opacity=".9"><title>'+esc(p.label+" · center "+fmt(p.x)+" · cut "+fmt(p.cutLength)+" · bottom "+fmt(p.bottomHeight)+" · top "+fmt(p.topHeight))+'</title></rect>';
+          const isHeader=p.role==="header";
+          content+='<rect class="'+(isHeader?"framing-header":"framing-sill")+'" data-position="'+p.x+'" data-cut-length="'+p.cutLength+'" data-bottom="'+p.bottomHeight+'" data-top="'+p.topHeight+'" x="'+rawX(p.faceLeft)+'" y="'+yTop+'" width="'+(rawX(p.faceRight)-rawX(p.faceLeft))+'" height="'+(yBottom-yTop)+'" fill="'+(isHeader?"#9d7c53":"#b6a285")+'" stroke="#694e32" stroke-width=".6"><title>'+esc(p.label+" · horizontal cut "+fmt(p.cutLength)+" · depth "+fmt(p.topHeight-p.bottomHeight)+" · left "+fmt(p.faceLeft)+" · right "+fmt(p.faceRight))+'</title></rect>';
         }
+        for(const p of marks.filter(p=>p.orientation==="vertical")){
+          const yTop=yLevel(p.topHeight),yBottom=yLevel(p.bottomHeight);
+          const isCripple=p.role==="cripple";
+          const fill=p.role==="king"?"#1e6454":p.role==="jack"?"#c58c54":
+            isCripple?"#6d91a3":"#426b5b";
+          content+='<rect class="'+(isCripple?"framing-cripple":"framing-member")+'" data-position="'+p.x+'" data-cut-length="'+p.cutLength+'" data-bottom="'+p.bottomHeight+'" data-top="'+p.topHeight+'" x="'+rawX(p.faceLeft)+'" y="'+yTop+'" width="'+(rawX(p.faceRight)-rawX(p.faceLeft))+'" height="'+(yBottom-yTop)+'" fill="'+fill+'" opacity=".92"><title>'+esc(p.label+" · center "+fmt(p.x)+" · cut "+fmt(p.cutLength)+" · bottom "+fmt(p.bottomHeight)+" · top "+fmt(p.topHeight))+'</title></rect>';
+        }
+        const headerCount=marks.filter(p=>p.role==="header").length;
+        const sillCount=marks.filter(p=>p.role==="sill").length;
+        const crippleCount=marks.filter(p=>p.role==="cripple").length;
         content+=svgText(left+5,64,"WALL "+fmt(wallHeight)+" · BOTTOM "+fmt(data.bottomPlate)+" · TOP "+fmt(data.topPlate),"dim-label");
-        content+=svgText(left,322,"FULL STUD CUT "+fmt(wallHeight-data.bottomPlate-data.topPlate)+" · NO HEADER / CRIPPLE TAKEOFF","tick-label");
+        content+=svgText(left,322,"HEADERS "+headerCount+" · SILLS "+sillCount+" · CRIPPLES "+crippleCount+" · GEOMETRY ONLY","tick-label");
       }else if(data.shape==="wall-studs"){
         const rows=data.studRows||[],height=data.wallHeight;
         const rawX=v=>left+v/span*W, yHeight=v=>base-179*v/height;
