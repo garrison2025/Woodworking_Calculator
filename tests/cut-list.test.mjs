@@ -614,7 +614,7 @@ test("metric-only calculator exports machine-readable numeric values and their p
   assert.ok(text.includes('"Horizontal run","3048","mm"'));
   assert.ok(text.includes('"Rise per 12","6","rise per 12 run"'));
   assert.ok(text.includes('"Estimated pieces","13","count"'));
-  assert.ok(text.includes('"Gross area","1.14735296","m²"')===false,"area should not use arbitrary fixed sample rounding"); 
+  assert.ok(text.includes('"Gross area","1.14695110067","m²"'),"area must use native sq-ft-to-sq-m conversion");
   assert.ok(text.includes('"Material quote","83.75","EUR"'));
   assert.ok(!text.includes('"3,048 mm"'));
   assert.ok(text.endsWith('"Source note","No 1:1 scale",""\r\n'));
