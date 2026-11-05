@@ -92,3 +92,8 @@ All implementation is browser-local and keeps the preview noindex. No claim of f
 - Each sheet rectangle now renders directly from saved eave-start/end and uphill-start/end coordinates; SVG carries the grid row/column and a cut-boundary title with discarded offcut area, and these same values appear in the typed cut schedule.
 - Independent browser checks confirm the four-sheet 110×70-in fixture has touching adjacent cut edges, expected 14/96 and 22/48 edge ratios, correct stock-area total, unit-aware CSV area headers and invalid input clearing.
 - [CI #143](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41938897190): 43 Chromium E2E checks passed. Diagram and print remain schematic and NOT full-size certified cutting plans.
+
+## Hip-roof cut polygons and 6-decimal SVG/CSV geometry — CI #148
+- SVG roof cut shapes are rendered from the same global **plan projection vertices** exported in the schedule, not a separately approximated polygon; screen coordinates preserve six decimal places instead of two. The local developed-slope **Cut Vertices** remain a distinct machine-readable column for physical layout references.
+- Repeated and redundant collinear cut points at exact hip/sheet intersections are cleaned before rendering/export. 144-in pitched square roof with rotated stock checked for zero-length edges; real browser checks map all six small-fixture CSV plan polygons to the SVG, including projected area.
+- [CI #148](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/41940443336) passed 45 real Chromium cases. Cut layouts remain reference geometry and are not certified physical-scale printing or engineering drawings.
