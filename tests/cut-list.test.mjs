@@ -301,3 +301,41 @@ test("Stair stringer optional nose and landing references export unit-aware coor
   assert.ok(csv.includes('"Top landing vertical"'));
   assert.equal(csv.split("\r\n").filter(Boolean).length,16);
 });
+
+
+test("Stringer modeled profile export keeps vertex index unitless and converts negative elevations",()=>{
+  const r=compute("stair-stringer-calculator",{
+    rise:105,risers:14,tread:10,depth:11.25,
+    treadThickness:1.5,lowerFinish:0,nosing:1.25,upperLandingDepth:36,
+    lowerSupportRun:3,upperSupportRun:6
+  });
+  const columns=scheduleColumns(r.stringerEnvelopeRows,"mm");
+  assert.deepEqual(columns.map(x=>x.label),[
+    "Index","Boundary","X (mm)","Elevation (mm)"
+  ]);
+  assert.equal(columns[0].kind,"plain");
+  assert.equal(columns[2].kind,"length");
+  assert.equal(columns[3].kind,"length");
+  const csv=buildScheduleCsv(r.stringerEnvelopeRows,"mm",
+    "Only the modeled section, not a final cut template");
+  assert.ok(csv.includes('"30","Parallel lower reference edge","0","-166.6875"'));
+  assert.ok(csv.includes('"29","Parallel lower reference edge","3302","2309.8125"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,32);
+  assert.ok(!csv.includes('"Index (mm)"'));
+});
+test("Stringer measured supports export signed site datums without invented bearing cuts",()=>{
+  const r=compute("stair-stringer-calculator",{
+    rise:105,risers:14,tread:10,depth:11.25,
+    treadThickness:1.5,lowerFinish:0,nosing:0,upperLandingDepth:0,
+    lowerSupportRun:3,upperSupportRun:6
+  });
+  const cols=scheduleColumns(r.supportReferences,"mm");
+  assert.deepEqual(cols.map(c=>c.label),[
+    "Item","Start X (mm)","End X (mm)","Elevation (mm)"
+  ]);
+  const csv=buildScheduleCsv(r.supportReferences,"mm",
+    "Reference positions only, not physical bearing cuts");
+  assert.ok(csv.includes('"Lower horizontal support surface reference","-76.2","0","0"'));
+  assert.ok(csv.includes('"Upper horizontal support surface reference","3302","3454.4","2667"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,4);
+});
