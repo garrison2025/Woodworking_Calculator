@@ -417,3 +417,21 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .deck-purchase-plan{break-inside:auto}
   .deck-purchase-plan tr{break-inside:avoid}
 }
+
+/* Stair stringer nominal side-section and explicitly non-structural ends. */
+.stringer-section{min-width:0}
+.stringer-section .table-scroll{max-height:360px;overflow:auto}
+#stringer-outline-table{min-width:540px}
+#stringer-support-table{min-width:595px}
+.stringer-section h3{margin:22px 0 10px;font-size:17px}
+.stringer-section .takeoff-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.stringer-section .takeoff-actions button{flex:1;min-width:min(205px,100%)}
+.stringer-section .takeoff-actions button:disabled{opacity:.47;cursor:not-allowed}
+@media print{
+ .stringer-section .table-scroll{max-height:none;overflow:visible}
+ .stringer-section .takeoff-actions{display:none!important}
+ .stringer-section table{min-width:0!important;font-size:7pt}
+ .stringer-section table tr{break-inside:avoid}
+ .stringer-section th,.stringer-section td{padding:4pt 3pt}
+ .stringer-section{break-inside:auto}
+}
