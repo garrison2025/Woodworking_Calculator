@@ -382,3 +382,41 @@ test("Single-row drilling still exports historical columns only",()=>{
   assert.ok(!csv.includes('"Row Number"'));
   assert.equal(csv.split("\r\n").filter(Boolean).length,6);
 });
+
+
+test("Shelf pin CSV keeps shelf index unitless and converts the two side panels in millimeters",()=>{
+  const r=compute("shelf-spacing-calculator",{
+    height:40,shelves:3,thickness:1,top:1,bottom:2,
+    caseDepth:12,frontPinInset:1.5,backPinInset:1.5,
+    pinCenterDrop:.25,pinHoleDiameter:.2
+  });
+  const cols=scheduleColumns(r.shelfPinRows,"mm");
+  assert.deepEqual(cols.map(x=>x.label),[
+    "Shelf Number","Panel","Position","Center X (mm)","Center Y (mm)",
+    "Hole Diameter (mm)","Face Front Edge (mm)","Face Back Edge (mm)",
+    "Face Bottom Edge (mm)","Face Top Edge (mm)","Underside Clearance (mm)"
+  ]);
+  assert.equal(cols[0].kind,"plain");
+  assert.ok(cols.slice(3).every(x=>x.kind==="length"));
+  const csv=buildScheduleCsv(r.shelfPinRows,"mm",
+    "Both left/right panels use X from inside FRONT and Y from inside floor");
+  assert.ok(csv.includes('"1","Left","Front","38.1","260.35","5.08","35.56","40.64","257.81","262.89","3.81"'));
+  assert.ok(csv.includes('"1","Right","Back","266.7","260.35","5.08","264.16","269.24","257.81","262.89","3.81"'));
+  assert.ok(csv.includes('"3","Right","Back","266.7","742.95","5.08","264.16","269.24","740.41","745.49","3.81"'));
+  assert.ok(!csv.includes('"Shelf Number (mm)"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,14);
+});
+test("Disabled shelf pin grid retains the former five-column shelf CSV without additional rows",()=>{
+  const r=compute("shelf-spacing-calculator",{
+    height:40,shelves:3,thickness:1,top:1,bottom:2
+  });
+  assert.equal(r.shelfPinRows.length,0);
+  const cols=scheduleColumns(r.rows,"mm");
+  assert.deepEqual(cols.map(x=>x.label),[
+    "Item","Shelf Bottom (mm)","Shelf Top (mm)",
+    "Clear Below (mm)","Clear Above (mm)"
+  ]);
+  const csv=buildScheduleCsv(r.rows,"mm","Original shelf face schedule");
+  assert.ok(csv.includes('"Shelf 1","266.7","292.1","266.7","215.9"'));
+  assert.equal(csv.split("\r\n").filter(Boolean).length,5);
+});
