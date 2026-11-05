@@ -37,6 +37,71 @@ const roofRunGeometry=(run,pitch)=>{
 // Eliminate floating-point false extra rows at exact dimension ratios (e.g. 105/7.5 after unit conversion).
 const ceilStable=(x)=>Math.abs(x-Math.round(x))<=1e-10?Math.round(x):Math.ceil(x);
 
+// Exhaustive branch-and-bound search over WHOLE cut pieces and quoted
+// stock offers. This is a conditional mathematical certificate only if
+// the entire search finishes, all required materials have positive quotes,
+// and the problem follows these simplified cut/kerf/reserve assumptions.
+// Restrict both pieces and nodes to protect the browser's main thread.
+function exactFramingStock(ordered,offers,kerf,allowance,seed){
+  const maxPieces=9,nodeLimit=40000;
+  if(!ordered.length)return {status:"not-required",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
+  if(!offers.length)return {status:"quote-needed",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
+  if(ordered.length>maxPieces)return {status:"size-limit",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
+  const priceCents=offers.map(o=>Math.round(o.unitPrice*100));
+  const groups=new Array(offers.length).fill(0);
+  const bins=[];
+  let nodes=0,capped=false;
+  const purchase=n=>n?Math.ceil(n*(1+allowance/100)-1e-10):0;
+  const countsCost=()=>groups.reduce((sum,n,i)=>sum+purchase(n)*priceCents[i],0);
+  const getOffcut=bars=>q(bars.reduce((sum,b)=>sum+b.offer.stockLength-b.used,0));
+  const getPurchases=()=>groups.reduce((s,n)=>s+purchase(n),0);
+  const cloneBars=bars=>bars.map(b=>({offer:b.offer,used:b.used,cuts:[...b.cuts]}));
+  let winner=cloneBars(seed.bars);
+  let bestCost=Math.round(seed.purchaseCost*100);
+  let bestOffcut=getOffcut(seed.bars),bestPurchases=seed.purchaseCount;
+  // We take the first remaining piece, trying each feasible used bar
+  // (symmetrical identical bars are equivalent), then every new offer.
+  const visit=index=>{
+    if(capped)return;
+    if(++nodes>nodeLimit){capped=true;return;}
+    const cost=countsCost();
+    if(cost>bestCost)return; // Purchase cost cannot decrease as bars are added.
+    if(index===ordered.length){
+      const off=getOffcut(bins),purchases=getPurchases();
+      if(cost<bestCost||(cost===bestCost&&
+        (off<bestOffcut-1e-7||(Math.abs(off-bestOffcut)<=1e-7&&purchases<bestPurchases)))){
+        bestCost=cost;bestOffcut=off;bestPurchases=purchases;winner=cloneBars(bins);
+      }
+      return;
+    }
+    const piece=ordered[index],seen=new Set();
+    for(const bar of bins){
+      const fingerprint=bar.offer.code+":"+bar.used;
+      if(seen.has(fingerprint))continue;
+      seen.add(fingerprint);
+      const increase=piece.cutLength+(bar.cuts.length?kerf:0);
+      if(bar.used+increase>bar.offer.stockLength+1e-8)continue;
+      const previous=bar.used;
+      bar.used=q(previous+increase);bar.cuts.push(piece);
+      visit(index+1);
+      bar.cuts.pop();bar.used=previous;
+      if(capped)return;
+    }
+    for(let k=0;k<offers.length;k++){
+      const offer=offers[k];
+      if(piece.cutLength>offer.stockLength+1e-8)continue;
+      groups[k]++;
+      bins.push({offer,used:q(piece.cutLength),cuts:[piece]});
+      visit(index+1);
+      bins.pop();groups[k]--;
+      if(capped)return;
+    }
+  };
+  visit(0);
+  return {status:capped?"node-limit":"proved",nodes,certified:!capped,
+    candidate:{kind:"exact",bars:winner},maxPieces,nodeLimit};
+}
+
 function roofPolygonArea(poly){
   if(poly.length<3)return 0;
   return Math.abs(poly.reduce((sum,p,i)=>{
@@ -302,7 +367,7 @@ export function compute(slug,a){
       {name:"Header",prefix:"header",items:framingRows.filter(r=>r.type==="Header")},
       {name:"Sill",prefix:"sill",items:framingRows.filter(r=>r.type==="Sill")}
     ];
-    const stockPlan=[],stockCuts=[],materialSummary=[],purchaseVariants=[],stockComparisons=[];
+    const stockPlan=[],stockCuts=[],materialSummary=[],purchaseVariants=[],stockComparisons=[],optimizerStatus=[];
     const moneyRound=n=>Math.round((n+Number.EPSILON)*100)/100;
     for(const group of groups){
       const prefix=group.prefix;
@@ -369,7 +434,7 @@ export function compute(slug,a){
       if(ordered.length&&!candidates.length)
         need(false,group.name+" cut exceeds all quoted stock lengths; longer stock required (no splices).");
       if(!ordered.length)candidates.push({kind:"empty",bars:[]});
-      const rated=candidates.map(candidate=>{
+      const rateCandidate=candidate=>{
         const counts=new Map();
         for(const b of candidate.bars)counts.set(b.offer.code,
           {offer:b.offer,planned:(counts.get(b.offer.code)?.planned||0)+1});
@@ -390,11 +455,25 @@ export function compute(slug,a){
           plannedCost:quotedCost?moneyRound(plannedCost):null,
           reserveCost:quotedCost?moneyRound(reserveCost):null,
           offcut:q(offcut),purchaseCount};
-      });
+      };
+      const rated=candidates.map(rateCandidate);
       rated.sort((x,y)=>(x.purchaseCost??Infinity)-(y.purchaseCost??Infinity)||
         x.offcut-y.offcut||x.purchaseCount-y.purchaseCount||
         (x.kind==="single"?-1:1));
-      const best=rated[0],bins=best.bars;
+      const exact=exactFramingStock(ordered,quoted,a.stockKerf,a.stockWaste,
+        rated[0]);
+      if(exact.candidate){
+        rated.push(rateCandidate(exact.candidate));
+        rated.sort((x,y)=>(x.purchaseCost??Infinity)-(y.purchaseCost??Infinity)||
+          x.offcut-y.offcut||x.purchaseCount-y.purchaseCount||
+          (x.kind==="exact"?-1:y.kind==="exact"?1:0));
+      }
+      const best=exact.certified?rated.find(x=>x.kind==="exact"):rated[0],
+        bins=best.bars;
+      optimizerStatus.push({stockGroup:group.name,status:exact.status,
+        nodes:exact.nodes,limit:exact.nodeLimit,maxPieces:exact.maxPieces,
+        pieceCount:ordered.length,quotedOfferCount:quoted.length,
+        certified:exact.certified});
       for(const candidate of rated){
         const sizes=[...candidate.counts.values()].map(v=>({
           stockLength:q(v.offer.stockLength),offerLabel:v.offer.label,
@@ -402,6 +481,7 @@ export function compute(slug,a){
         }));
         stockComparisons.push({stockGroup:group.name,
           planLabel:candidate.kind==="mixed"?"Greedy mixed lengths":
+            candidate.kind==="exact"?"Exhaustive small-layout plan":
             candidate.kind==="empty"?"No material required":
             "Single length · "+sizes[0]?.offerLabel,
           selected:candidate===best,quoted:candidate.purchaseCost!==null,
@@ -515,7 +595,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,costSummary
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,optimizerStatus,costSummary
     });
   }
   case "deck-board-calculator":{
