@@ -127,7 +127,7 @@ test("CSV cut sheets preserve numeric millimeters, typed area and polygon vertic
   const hipReady=page.waitForEvent("download");
   await page.locator("#download-csv").click();
   const hipCsv=readFileSync(await (await hipReady).path(),"utf8");
-  expect(hipCsv).toContain('"Cut Area (m²)","Cut Vertices (mm)"');
+  expect(hipCsv).toContain('"Cut Area (m²)","Offcut Area (m²)","Cut Vertices (mm)","Plan Projection Vertices (mm)"');
   expect(hipCsv).toContain('"Source note"');
   await page.goto("/roof-pitch-calculator/");
   const fallback=page.waitForEvent("download");
