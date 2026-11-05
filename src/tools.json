@@ -865,7 +865,7 @@
       "keyword": "stair treads calculator",
       "volume": 1600,
       "kd": 18,
-      "desc": "Calculate straight stair risers, actual riser height, tread count, horizontal run and the incline from a chosen tread depth.",
+      "desc": "Calculate straight stair riser heights, tread layout, proportional elevation and total footprint including optional upper landing depth.",
       "inputs": [
         {
           "key": "rise",
@@ -884,11 +884,17 @@
           "label": "Tread run",
           "value": 10,
           "kind": "L"
+        },
+        {
+          "key": "landing",
+          "label": "Upper landing reference depth",
+          "value": 0,
+          "kind": "L"
         }
       ],
-      "formula": "risers=ceil(rise/desired); actual rise=rise/risers; treads=risers−1",
-      "example": "105 in / 7.5 in ⇒ 14 risers and 13 treads",
-      "limit": "Geometry, not a stair-code certificate",
+      "formula": "risers = ceil(total rise / desired maximum riser); actual riser height = total rise / risers; treads = risers − 1 because upper finished landing is the last walking surface; flight run = treads × tread run; total horizontal footprint = flight run + optional upper landing reference depth.",
+      "example": "105 in total rise with 7.5 in desired maximum and 10 in tread run gives 14 equal 7.5 in risers, 13 treads, 130 in flight run. Add a separately measured 36 in upper landing for a 166 in reference footprint.",
+      "limit": "Straight-flight geometry only: measured total rise is between finished floor walking elevations; treads = risers − 1 assumes the upper landing is the last walking surface. Optional landing depth extends the horizontal footprint beyond the last riser but is NOT an extra tread. This does not verify code minima, headroom, handrails, stair widths, tread nosing, actual landing dimensions, structural capacity or stringer cuts. Verify site geometry and local regulations.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -897,11 +903,15 @@
         },
         {
           "heading": "Why tread count is one less than riser count",
-          "text": "For this simple straight-flight model, the upper finished landing is the final walking surface. A flight with 14 risers therefore has 13 separately counted treads; multiplying that count by the entered tread run gives the horizontal flight distance. Platform size, nosing and turning steps are not included."
+          "text": "For this straight-flight convention, the upper finished floor is the final walking surface, so 14 risers correspond to 13 distinct horizontal treads. The flight's horizontal run is those 13 tread runs. The independently entered optional upper landing depth begins at the final rise and adds to the total reference footprint; it does not change riser or tread count."
         },
         {
           "heading": "When to use the more detailed stringer tool",
           "text": "This is a layout arithmetic check, not an approval of stair geometry, handrails or building-code limits. Use the separate Stair Stringer Calculator for a reference cutting schedule that considers tread thickness and lower-floor correction. Verify finished heights and local requirements before construction."
+        },
+        {
+          "heading": "Use the individual tread and riser coordinate schedule",
+          "text": "The schedule lists each riser elevation, its horizontal position, the next tread's start/end coordinates and which surface is the upper landing. Zero is the first riser's horizontal datum; all positions increase toward the upper landing. Export in inches or switch to millimeters without changing the measured geometry. The SVG uses the same coordinates and scale, but is not a full-size cutting template."
         }
       ]
     },
