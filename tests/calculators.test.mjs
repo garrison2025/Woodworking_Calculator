@@ -1654,3 +1654,86 @@ test("Stringer reference options reject nonsensical nosing and preserve original
   assert.equal(legacy.stepVertices.length,28);
   near(value(legacy,"Total horizontal run"),130);
 });
+
+
+test("Stringer modeled side-section has 30 real coordinates and conserves perpendicular throat and area",()=>{
+  const t=tools.find(t=>t.slug==="stair-stringer-calculator");
+  const r=compute(t.slug,{...defaults(t),nosing:1.25,upperLandingDepth:36,
+    lowerSupportRun:3,upperSupportRun:6});
+  assert.equal(r.stockEnvelopeVertices.length,30);
+  assert.equal(r.stringerEnvelopeRows.length,30);
+  assert.deepEqual(r.stockEnvelopeVertices.slice(0,28),r.stepVertices);
+  assert.deepEqual(r.stockEnvelopeVertices.at(-2),{x:130,y:90.9375});
+  assert.deepEqual(r.stockEnvelopeVertices.at(-1),{x:0,y:-6.5625});
+  near(r.stockNormalDepth,11.25);
+  near(r.lowerEdgeAtStart,-6.5625);
+  near(r.lowerEdgeAtTop,90.9375);
+  near(r.minThroatFromVertices,5.25);
+  near(value(r,"Modeled section minimum throat"),5.25);
+  near(r.envelopeAreaSqIn,1340.625);
+  near(value(r,"Modeled section face area")*144,1340.625);
+  assert.deepEqual(r.supportReferences,[
+    {item:"Lower horizontal support surface reference",startX:-3,endX:0,elevation:0},
+    {item:"Upper horizontal support surface reference",startX:130,endX:136,elevation:105}
+  ]);
+  near(value(r,"Lower support surface reference run"),3);
+  near(value(r,"Upper support surface reference run"),6);
+  assert.deepEqual(r.stepVertices,compute(t.slug,defaults(t)).stepVertices);
+  near(value(r,"Uncut throat (nominal)"),5.25);
+});
+
+test("Stringer side-profile polygon matches independent shoelace and integrated area for multiple pitches",()=>{
+  const t=tools.find(t=>t.slug==="stair-stringer-calculator");
+  for(const [rise,risers,tread,depth] of [
+    [105,14,10,11.25],[95,14,11,13.5],[42,6,8,10],[15,2,14,8]
+  ]){
+    const a={...defaults(t),rise,risers,tread,depth,treadThickness:1};
+    const r=compute(t.slug,a);
+    const h=rise/risers,run=(risers-1)*tread,m=h/tread,
+      lineFactor=Math.sqrt(1+m*m),lower=y=>h+m*y-depth*lineFactor;
+    const verts=r.stockEnvelopeVertices;
+    assert.equal(verts.length,2*risers+2);
+    assert.equal(verts[verts.length-1].x,0);
+    assert.equal(verts[verts.length-2].x,run);
+    near(verts.at(-1).y,lower(0),3e-7);
+    near(verts.at(-2).y,lower(run),3e-7);
+    const manualArea=Math.abs(verts.reduce((acc,v,i)=>{
+      const n=verts[(i+1)%verts.length];
+      return acc+v.x*n.y-n.x*v.y;
+    },0))/2;
+    const analytic=run*(depth*lineFactor-h/2);
+    near(manualArea,analytic,Math.max(1e-6,analytic*1e-9));
+    near(r.envelopeAreaSqIn,analytic,Math.max(1e-6,analytic*1e-9));
+    const notchMin=Math.min(...r.stepVertices.filter((_,i)=>i%2===0)
+      .map(v=>(v.y-lower(v.x))/lineFactor));
+    near(r.minThroatFromVertices,notchMin,1e-7);
+    near(r.minThroatFromVertices,depth-h/lineFactor,1e-7);
+    assert.ok(r.minThroatFromVertices>0);
+    // The upper/left and lower/right edges are explicit drawing closures,
+    // never misrepresented as an engineered physical bearing cut.
+    assert.equal(r.stringerEnvelopeRows.at(-1).boundary,"Parallel lower reference edge");
+  }
+});
+
+test("Stringer support surfaces are optional, bounded and never create hidden cut shapes",()=>{
+  const t=tools.find(t=>t.slug==="stair-stringer-calculator");
+  const a=defaults(t),base=compute(t.slug,a);
+  assert.equal(base.supportReferences.length,0);
+  assert.equal(base.stringerEnvelopeRows.length,30);
+  assert.equal(base.stepVertices.length,28);
+  assert.equal(base.envelopeAreaSqIn>0,true);
+  for(const bad of [
+    {lowerSupportRun:-1},{upperSupportRun:-1},
+    {lowerSupportRun:131},{upperSupportRun:130.01}
+  ]){
+    assert.equal(safeCompute(t.slug,{...a,...bad}).ok,false,JSON.stringify(bad));
+  }
+  const measured=compute(t.slug,{...a,lowerSupportRun:3,upperSupportRun:6});
+  near(measured.envelopeAreaSqIn,base.envelopeAreaSqIn);
+  assert.deepEqual(measured.stepVertices,base.stepVertices);
+  assert.deepEqual(measured.stockEnvelopeVertices,base.stockEnvelopeVertices);
+  assert.equal(measured.supportReferences.length,2);
+  const onlyBottom=compute(t.slug,{...a,lowerSupportRun:4});
+  assert.equal(onlyBottom.supportReferences.length,1);
+  assert.equal(onlyBottom.supportReferences[0].startX,-4);
+});
