@@ -2089,3 +2089,36 @@ test("P1 tapered ring validates all derived inner/outer dimensions and physical 
  const original=compute("segmented-bowl-calculator",basic);
  assert.ok(original.ringProfiles.every(x=>x.outer===12&&x.inner===8));
 });
+
+test("P1 stringer exports 27 exact notch sawline segments at consistent vertex datums",()=>{
+ const a={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,lowerFinish:0};
+ const r=compute("stair-stringer-calculator",a);
+ assert.equal(r.stringerCutLineRows.length,27);
+ assert.equal(r.measuredEndCuts.length,0);
+ assert.equal(r.stringerCutLineRows.filter(x=>x.cutType==="Riser").length,14);
+ assert.equal(r.stringerCutLineRows.filter(x=>x.cutType==="Tread").length,13);
+ for(let i=0;i<r.stringerCutLineRows.length;i++){
+   const row=r.stringerCutLineRows[i],start=r.stepVertices[i],end=r.stepVertices[i+1];
+   assert.deepEqual([row.startX,row.startY,row.endX,row.endY],[start.x,start.y,end.x,end.y]);
+   near(row.cutLength,Math.hypot(end.x-start.x,end.y-start.y),1e-7);
+   near(row.cutAngleDeg,Math.atan2(end.y-start.y,end.x-start.x)*180/Math.PI,1e-7);
+ }
+ near(r.stockAxisSpan,170.9375,1e-7);
+});
+test("P1 measured stringer end intersections remain distinct from support surfaces and constrain raw stock",()=>{
+ const a={rise:105,risers:14,tread:10,depth:11.25,
+    treadThickness:1.5,lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:8,blankEndAllowance:1,
+    measuredBlankLength:200};
+ const r=compute("stair-stringer-calculator",a);
+ assert.equal(r.measuredEndCuts.length,2);
+ assert.equal(r.supportReferences.length,2);
+ assert.deepEqual(r.measuredEndCuts.map(x=>x.endX),[-3,136]);
+ near(r.measuredEndCuts[0].endY,-8.8125,1e-7);
+ near(r.measuredEndCuts[1].endY,95.4375,1e-7);
+ assert.equal(r.stockFitsModel,true);
+ const small=compute("stair-stringer-calculator",{...a,measuredBlankLength:100});
+ assert.equal(small.stockFitsModel,false);
+ assert.ok(small.requiredBlankAxis>100);
+ assert.equal(safeCompute("stair-stringer-calculator",{...a,upperEndCutRun:40}).ok,false);
+});
