@@ -37,20 +37,34 @@ const roofRunGeometry=(run,pitch)=>{
 // Eliminate floating-point false extra rows at exact dimension ratios (e.g. 105/7.5 after unit conversion).
 const ceilStable=(x)=>Math.abs(x-Math.round(x))<=1e-10?Math.round(x):Math.ceil(x);
 
-// Exhaustive branch-and-bound search over WHOLE cut pieces and quoted
-// stock offers. This is a conditional mathematical certificate only if
-// the entire search finishes, all required materials have positive quotes,
-// and the problem follows these simplified cut/kerf/reserve assumptions.
-// Restrict both pieces and nodes to protect the browser's main thread.
+// State-compressed exact branch-and-bound over WHOLE cut pieces and
+// quoted stock offers. Equal canonical states (same next piece and the
+// same per-offer sorted used lengths) have identical future feasible cuts,
+// purchase costs, reserve counts and unallocated offcut, regardless of which
+// physical member is in which bar. Reusing their solved subtree is exact.
+// Only a complete search can certify the modeled optimal purchase cost.
+// Bound both piece count and UNIQUE explored states for browser responsiveness.
 export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}){
-  const maxPieces=9,nodeLimit=Math.max(1,Math.min(40000,Math.floor(settings.nodeLimit??40000)));
+  const maxPieces=16,nodeLimit=Math.max(1,Math.min(40000,Math.floor(settings.nodeLimit??40000)));
   if(!ordered.length)return {status:"not-required",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
   if(!offers.length)return {status:"quote-needed",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
   if(ordered.length>maxPieces)return {status:"size-limit",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
   const priceCents=offers.map(o=>Math.round(o.unitPrice*100));
   const groups=new Array(offers.length).fill(0);
   const bins=[];
-  let nodes=0,capped=false;
+  const offerIndex=new Map(offers.map((offer,i)=>[offer.code,i]));
+  const seenStates=new Set();
+  let nodes=0,capped=false,memoHits=0,costPrunes=0;
+  // A canonical state is sufficient because every opened stock bar is
+  // nonempty. Its future cut incurs the same kerf regardless of cut order.
+  // A sorted per-offer list of USED stock lengths also determines the
+  // final offcut sum and current per-offer purchase quantity exactly.
+  const stateKey=index=>{
+    const groups=Array.from({length:offers.length},()=>[]);
+    for(const bar of bins)groups[offerIndex.get(bar.offer.code)].push(bar.used);
+    return index+"|"+groups.map(values=>
+      values.sort((x,y)=>x-y).join(",")).join("|");
+  };
   const purchase=n=>n?Math.ceil(n*(1+allowance/100)-1e-10):0;
   const countsCost=()=>groups.reduce((sum,n,i)=>sum+purchase(n)*priceCents[i],0);
   const getOffcut=bars=>q(bars.reduce((sum,b)=>sum+b.offer.stockLength-b.used,0));
@@ -63,9 +77,14 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
   // (symmetrical identical bars are equivalent), then every new offer.
   const visit=index=>{
     if(capped)return;
-    if(++nodes>nodeLimit){capped=true;return;}
+    const key=stateKey(index);
+    if(seenStates.has(key)){memoHits++;return;}
+    // Budget is on actual distinct states rather than repeated permutations.
+    // Once exhausted, even a feasible incumbent is explicitly NOT proven.
+    if(nodes>=nodeLimit){capped=true;return;}
+    seenStates.add(key);nodes++;
     const cost=countsCost();
-    if(cost>bestCost)return; // Purchase cost cannot decrease as bars are added.
+    if(cost>bestCost){costPrunes++;return;} // Existing bars' purchase cost cannot decrease.
     if(index===ordered.length){
       const off=getOffcut(bins),purchases=getPurchases();
       if(cost<bestCost||(cost===bestCost&&
@@ -99,7 +118,7 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
   };
   visit(0);
   return {status:capped?"node-limit":"proved",nodes,certified:!capped,
-    candidate:{kind:"exact",bars:winner},maxPieces,nodeLimit};
+    memoHits,costPrunes,candidate:{kind:"exact",bars:winner},maxPieces,nodeLimit};
 }
 
 function roofPolygonArea(poly){
@@ -471,7 +490,8 @@ export function compute(slug,a){
       const best=exact.certified?rated.find(x=>x.kind==="exact"):rated[0],
         bins=best.bars;
       optimizerStatus.push({stockGroup:group.name,status:exact.status,
-        nodes:exact.nodes,limit:exact.nodeLimit,maxPieces:exact.maxPieces,
+        nodes:exact.nodes,memoHits:exact.memoHits||0,costPrunes:exact.costPrunes||0,
+        limit:exact.nodeLimit,maxPieces:exact.maxPieces,
         pieceCount:ordered.length,quotedOfferCount:quoted.length,
         certified:exact.certified});
       for(const candidate of rated){
