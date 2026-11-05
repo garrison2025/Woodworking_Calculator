@@ -904,7 +904,7 @@ test("small quoted framing wall displays earned exact optimality proof on-screen
   await expect(status).toContainText("all 2 required material families");
   const proof=page.locator("#framing-proof-table tbody");
   await expect(proof.locator("tr")).toHaveCount(3);
-  await expect(proof.locator("tr").nth(0)).toContainText("Completed exact enumeration");
+  await expect(proof.locator("tr").nth(0)).toContainText("Completed memoized exact search");
   await expect(proof.locator("tr").nth(0)).toContainText("PROVEN optimal in model");
   await expect(proof.locator("tr").nth(1)).toContainText("PROVEN optimal in model");
   await expect(proof.locator("tr").nth(2)).toContainText("No material required");
@@ -920,14 +920,15 @@ test("small quoted framing wall displays earned exact optimality proof on-screen
 });
 test("over-limit framing still computes purchases but never claims global optimum",async({page})=>{
   await page.goto("/framing-calculator/");
+  await page.locator("#f-length").fill("240");
   await page.locator("#f-studUnitPrice").fill("5.5");
   await page.locator("#f-headerUnitPrice").fill("14.25");
   await expect(page.locator("#calc-error")).toBeHidden();
-  await expect(page.locator("#framing-price-status")).toContainText("USD 69.25");
+  await expect(page.locator("#framing-price-status")).toContainText("Estimated quoted lumber purchase: USD");
   await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
   await expect(page.locator("#framing-optimizer-status")).toContainText("1 of 2");
-  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("Heuristic (over 9 pieces)");
-  await expect(page.locator("#framing-proof-table tbody tr").nth(1)).toContainText("Completed exact enumeration");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("Heuristic (over 16 pieces)");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(1)).toContainText("Completed memoized exact search");
   await page.locator("#f-headerUnitPrice").fill("0");
   await expect(page.locator("#framing-optimizer-status")).toContainText("Missing supplier quotes");
   await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
@@ -935,4 +936,25 @@ test("over-limit framing still computes purchases but never claims global optimu
   await page.locator("#f-headerUnitPrice").fill("14.25");
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(page.locator("#framing-optimizer-status")).toContainText("NOT CERTIFIED");
+});
+
+
+test("memoization certifies default twelve-cut Framing wall and shows reused states",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await page.locator("#f-studUnitPrice").fill("5.5");
+  await page.locator("#f-headerUnitPrice").fill("14.25");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#framing-price-status")).toContainText("USD 69.25");
+  await expect(page.locator("#framing-optimizer-status")).toContainText("CERTIFIED: lowest purchase cost");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("Completed memoized exact search");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("12");
+  await expect(page.locator("#framing-proof-table tbody tr").nth(0)).toContainText("PROVEN optimal in model");
+  await expect(page.locator("#framing-proof-table thead")).toContainText("Distinct states");
+  await expect(page.locator("#framing-proof-table thead")).toContainText("Merged repeats");
+  await expect(page.locator("#framing-material-table tbody tr")).toHaveCount(3);
+  await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
+  const download=page.waitForEvent("download");
+  await page.locator("#download-stock-csv").click();
+  const csv=readFileSync(await(await download).path(),"utf8");
+  expect(csv.split("\r\n").filter(Boolean).length).toBe(15);
 });
