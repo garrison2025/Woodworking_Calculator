@@ -42,8 +42,8 @@ const ceilStable=(x)=>Math.abs(x-Math.round(x))<=1e-10?Math.round(x):Math.ceil(x
 // the entire search finishes, all required materials have positive quotes,
 // and the problem follows these simplified cut/kerf/reserve assumptions.
 // Restrict both pieces and nodes to protect the browser's main thread.
-function exactFramingStock(ordered,offers,kerf,allowance,seed){
-  const maxPieces=9,nodeLimit=40000;
+export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}){
+  const maxPieces=9,nodeLimit=Math.max(1,Math.min(40000,Math.floor(settings.nodeLimit??40000)));
   if(!ordered.length)return {status:"not-required",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
   if(!offers.length)return {status:"quote-needed",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
   if(ordered.length>maxPieces)return {status:"size-limit",nodes:0,certified:false,candidate:null,maxPieces,nodeLimit};
