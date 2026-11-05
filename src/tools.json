@@ -87,7 +87,7 @@
       "keyword": "framing calculator",
       "volume": 2400,
       "kd": 3,
-      "desc": "Plan framing studs, headers, sills and cripples with SVG layout, cut list, lumber purchasing estimate and editable quote-based cost.",
+      "desc": "Compare multi-length lumber offers for studs, headers and sills with cutting, purchasing cost, diagrams and CSV exports.",
       "inputs": [
         {
           "key": "length",
@@ -186,6 +186,90 @@
           "kind": "C"
         },
         {
+          "key": "studAltStockLength",
+          "label": "Stud Option A purchased length",
+          "kind": "L",
+          "value": 120,
+          "advanced": true
+        },
+        {
+          "key": "studAltUnitPrice",
+          "label": "Stud Option A price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "studAlt2StockLength",
+          "label": "Stud Option B purchased length",
+          "kind": "L",
+          "value": 144,
+          "advanced": true
+        },
+        {
+          "key": "studAlt2UnitPrice",
+          "label": "Stud Option B price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "headerAltStockLength",
+          "label": "Header Option A purchased length",
+          "kind": "L",
+          "value": 120,
+          "advanced": true
+        },
+        {
+          "key": "headerAltUnitPrice",
+          "label": "Header Option A price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "headerAlt2StockLength",
+          "label": "Header Option B purchased length",
+          "kind": "L",
+          "value": 144,
+          "advanced": true
+        },
+        {
+          "key": "headerAlt2UnitPrice",
+          "label": "Header Option B price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "sillAltStockLength",
+          "label": "Sill Option A purchased length",
+          "kind": "L",
+          "value": 120,
+          "advanced": true
+        },
+        {
+          "key": "sillAltUnitPrice",
+          "label": "Sill Option A price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "sillAlt2StockLength",
+          "label": "Sill Option B purchased length",
+          "kind": "L",
+          "value": 144,
+          "advanced": true
+        },
+        {
+          "key": "sillAlt2UnitPrice",
+          "label": "Sill Option B price per stick (0 = off)",
+          "kind": "C",
+          "value": 0,
+          "advanced": true
+        },
+        {
           "key": "openingStart",
           "label": "Opening start",
           "value": 32,
@@ -258,9 +342,9 @@
           "kind": "L"
         }
       ],
-      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces. Nominal first-fit decreasing groups cut pieces by Stud, Header or Sill stock type, packs full pieces without splices, charges kerf between consecutive cuts on a stick, and reports planned sticks/offcuts and separately rounded purchase allowance per stock group. It is an estimate, not proven minimum waste. The quote-based material estimate multiplies each material family's purchased sticks (including reserve) by the user-entered price per stick, with planned and reserve costs separated. Zero means price not supplied; no total purchase price is claimed until each used material family has a quote.",
+      "formula": "Full stud cut = wallHeight − bottomPlate − topPlate; Jack = openingSill + openingHeight − bottomPlate. Header begins at rough-opening top and spans between inside King faces, over both Jacks. Header depth is user-defined, not an engineered size. Window sill sits directly below the opening and lower cripples below that. Upper/lower cripples reuse eligible nominal OC centers fully inside the opening and are clipped to horizontal-member faces. Nominal first-fit decreasing groups cut pieces by Stud, Header or Sill stock type, packs full pieces without splices, charges kerf between consecutive cuts on a stick, and reports planned sticks/offcuts and separately rounded purchase allowance per stock group. It is an estimate, not proven minimum waste. The quote-based material estimate multiplies each material family's purchased sticks (including reserve) by the user-entered price per stick, with planned and reserve costs separated. Zero means price not supplied; no total purchase price is claimed until each used material family has a quote. When alternative per-stick prices are entered, each material family compares all feasible single-stock-length FFD layouts plus one greedy mixed-length plan. The estimated winner is the lowest purchase cost among those evaluated plans, including separately rounded reserve sticks per chosen length. This is not exhaustive or mathematically optimal.",
       "example": "120 in between end centers, 96 in gross wall, 16 in OC, 1.5 in studs, 1.5 in bottom plate, 3 in top plates, 32–68 in door opening top 80 in, 5.5 in header depth: six regular studs, four King/Jack, one 39 in header and two 7.5 in upper cripples; 13 listed pieces (plates not in cut list).",
-      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts. Stock cutting is a deterministic first-fit estimate, not a certified globally optimal nesting algorithm. Profiles are deliberately separate (Stud/Header/Sill); do not combine them without verifying cross sections. No splices, trimming loss, defective boards, or cost/pricing assumptions. Rounding of fractions is display-only: CSV retains numeric dimensions. Cost inputs are not market prices and contain no automatic currency exchange, tax, delivery, labor, permit or hardware charges. Currency selection labels the entered quotes only; changing denomination never converts values. A quoted total is a material-only subtotal based on the chosen stock family configuration, not a job estimate.",
+      "limit": "NONSTRUCTURAL reference-only geometry. Enter actual header depth; no span selection, header strength, load design, fastening, opening tolerances or code approval. Horizontal spans represent one piece each (not a prescribed number of built-up header layers). Top of rough opening means underside of header. Sill = 0 selects a door; nonzero is a window sill elevation. Verify material and field cuts. Stock cutting is a deterministic first-fit estimate, not a certified globally optimal nesting algorithm. Profiles are deliberately separate (Stud/Header/Sill); do not combine them without verifying cross sections. No splices, trimming loss, defective boards, or cost/pricing assumptions. Rounding of fractions is display-only: CSV retains numeric dimensions. Cost inputs are not market prices and contain no automatic currency exchange, tax, delivery, labor, permit or hardware charges. Currency selection labels the entered quotes only; changing denomination never converts values. A quoted total is a material-only subtotal based on the chosen stock family configuration, not a job estimate. Optional stock length offers A and B are disabled when their per-stick quote is zero. An unquoted default length is excluded from the quoted comparison; quotes are user-provided and cannot prove a market-wide cheapest plan. When no priced offer exists, the original single-length unquoted estimate is preserved. A chosen mixed-size plan records each source bar's own purchased length and price. Quote values support two decimals only.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -290,6 +374,14 @@
         {
           "heading": "Printable purchasing ticket and cost breakdown",
           "text": "The summary separates planned sticks, extra reserve sticks, their costs and the user-entered stock price by profile. The print ticket lists the actual buy quantity and source length for each used material group, including the 'quote needed' state; a numeric CSV export supports spreadsheet budgeting. Verify external costs such as tax, delivery, waste from defects, structural framing and fasteners separately."
+        },
+        {
+          "heading": "Compare 8, 10 and 12-foot supplier offers by stock family",
+          "text": "The standard stock length and price remain the Base offer. Expand Alternative stock offers to enter Option A (defaults to 120 inches / 10 feet) and Option B (defaults to 144 inches / 12 feet), with separate supplier prices for Stud, Header and Sill. A zero alternative price disables that alternative. Unquoted offers are not treated as free or silently included in the price comparison."
+        },
+        {
+          "heading": "Heuristic mixed-length plan and purchase quantities",
+          "text": "For every family, the calculator compares complete single-length FFD cutting estimates and one greedy mixed-length cutting estimate when two or more offers are quoted. Selection uses quoted purchase cost including reserve; ties prefer less offcut. See each candidate's cost, purchased sticks, and remaining stock in the comparison table. The chosen purchase checklist groups quantities by exact offered stock length; the method does not certify a globally optimal or engineering-approved plan."
         }
       ]
     },
