@@ -137,7 +137,7 @@ const unitToInches={in:1,ft:12,mm:1/25.4,cm:10/25.4,m:1000/25.4};
 export const convertToInches=(value,units)=>value*(unitToInches[units]??1);
 export const convertFromInches=(value,units)=>value/(unitToInches[units]??1);
 export function compute(slug,a){
-  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -176,7 +176,7 @@ export function compute(slug,a){
     });
   }
   case "framing-calculator":{
-    positive("length","spacing","width","wallHeight","openingWidth","openingHeight");
+    positive("length","spacing","width","wallHeight","openingWidth","openingHeight","headerDepth","sillThickness");
     nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill");
     need(a.spacing>=a.width&&a.length>=a.width,"Stud face width must fit the wall and OC interval.");
     const fullCut=a.wallHeight-a.bottomPlate-a.topPlate;
@@ -192,60 +192,110 @@ export function compute(slug,a){
         "Opening margins must accommodate king/jack reference studs and wall endpoints.");
       need(o.height>0&&o.sill>=0&&o.top<a.wallHeight,
         "Opening sill and height must fit below the wall top.");
-      need(o.top>a.bottomPlate,
-        "Jack stud cut length must be positive above the bottom plate.");
+      need(o.top>a.bottomPlate,"Jack stud cut length must be positive above the bottom plate.");
+      need(o.top+a.headerDepth<=a.wallHeight-a.topPlate+1e-8,
+        "Header depth exceeds the space below the top plate.");
+      if(o.sill>0)need(o.sill>=a.bottomPlate+a.sillThickness-1e-8,
+        "Window sill stock does not fit above the bottom plate.");
       if(i>0)need(o.start-openings[i-1].end>=4*a.width,
         "Adjacent openings need room for both side-member packs.");
     }
-    // Each mark and CSV line shares ONE center, physical face interval and
-    // actual vertical segment. Jack tops use rough-opening top elevation;
-    // regular/king tops stop at the underside of the top-plate assembly.
-    const makeMember=(item,type,x,referenceTop,topElevation)=>({
-      item,type,position:q(x),referenceTop:q(referenceTop),
+    // All positions are inches from the left END STUD CENTER, and all
+    // elevations are from the bottom of the wall. The header datum here is
+    // explicitly the UNDERSIDE of a nominal rectangular header assembly.
+    const vertical=(item,type,x,bottom,top,referenceTop=top)=>({
+      item,type,orientation:"vertical",position:q(x),referenceTop:q(referenceTop),
       faceLeft:q(x-a.width/2),faceRight:q(x+a.width/2),
-      bottomElevation:q(a.bottomPlate),topElevation:q(topElevation),
-      cutLength:q(topElevation-a.bottomPlate)
+      bottomElevation:q(bottom),topElevation:q(top),
+      cutLength:q(top-bottom)
+    });
+    const horizontal=(item,type,left,right,bottom,top)=>({
+      item,type,orientation:"horizontal",position:q((left+right)/2),
+      faceLeft:q(left),faceRight:q(right),bottomElevation:q(bottom),
+      topElevation:q(top),cutLength:q(right-left),stockDepth:q(top-bottom)
     });
     const sideRows=[];
     for(const o of openings){
       sideRows.push(
-        makeMember(o.label+" King left","King",o.start-1.5*a.width,a.wallHeight,a.wallHeight-a.topPlate),
-        makeMember(o.label+" Jack left","Jack",o.start-.5*a.width,o.top,o.top),
-        makeMember(o.label+" Jack right","Jack",o.end+.5*a.width,o.top,o.top),
-        makeMember(o.label+" King right","King",o.end+1.5*a.width,a.wallHeight,a.wallHeight-a.topPlate)
+        vertical(o.label+" King left","King",o.start-1.5*a.width,a.bottomPlate,a.wallHeight-a.topPlate,a.wallHeight),
+        vertical(o.label+" Jack left","Jack",o.start-.5*a.width,a.bottomPlate,o.top,o.top),
+        vertical(o.label+" Jack right","Jack",o.end+.5*a.width,a.bottomPlate,o.top,o.top),
+        vertical(o.label+" King right","King",o.end+1.5*a.width,a.bottomPlate,a.wallHeight-a.topPlate,a.wallHeight)
       );
     }
-    xs=studCenters(a.length,a.spacing,a.width).filter(x=>{
+    const nominal=studCenters(a.length,a.spacing,a.width);
+    xs=nominal.filter(x=>{
       const left=x-a.width/2,right=x+a.width/2;
       return !openings.some(o=>right>o.start+1e-8&&left<o.end-1e-8)
         && !sideRows.some(r=>right>r.faceLeft+1e-8&&left<r.faceRight-1e-8);
     });
-    const studRows=[
-      ...xs.map((x,i)=>makeMember("Regular "+(i+1),"Regular",x,a.wallHeight,a.wallHeight-a.topPlate)),
+    const fullRows=[
+      ...xs.map((x,i)=>vertical("Regular "+(i+1),"Regular",x,a.bottomPlate,a.wallHeight-a.topPlate,a.wallHeight)),
       ...sideRows
     ].sort((u,v)=>u.position-v.position);
-    need(studRows.every(r=>r.cutLength>0),"A stud cut length is not positive.");
-    for(let i=1;i<studRows.length;i++)
-      need(studRows[i].faceLeft>=studRows[i-1].faceRight-1e-7,
+    // Only full-height king/regular/jack members share the same vertical
+    // zone. Cripples legitimately reuse centers above/below an opening.
+    need(fullRows.every(r=>r.cutLength>0),"A stud cut length is not positive.");
+    for(let i=1;i<fullRows.length;i++)
+      need(fullRows[i].faceLeft>=fullRows[i-1].faceRight-1e-7,
         "Stud faces overlap; adjust opening intervals or spacing.");
+    const horizontalRows=[],crippleRows=[];
+    for(const o of openings){
+      // Header cuts run between the INNER FACES of the king studs, across
+      // the jack bearing faces, and do not imply structural header design.
+      horizontalRows.push(horizontal(o.label+" Header","Header",
+        o.start-a.width,o.end+a.width,o.top,o.top+a.headerDepth));
+      const insideCenters=nominal.filter(x=>
+        x-a.width/2>=o.start-1e-8&&x+a.width/2<=o.end+1e-8);
+      const upperBottom=o.top+a.headerDepth;
+      const upperTop=a.wallHeight-a.topPlate;
+      if(upperTop-upperBottom>1e-8)
+        insideCenters.forEach((x,i)=>crippleRows.push(vertical(
+          o.label+" Upper cripple "+(i+1),"Upper cripple",x,upperBottom,upperTop)));
+      if(o.sill>0){
+        const sillBottom=o.sill-a.sillThickness;
+        horizontalRows.push(horizontal(o.label+" Sill","Sill",
+          o.start,o.end,sillBottom,o.sill));
+        if(sillBottom-a.bottomPlate>1e-8)
+          insideCenters.forEach((x,i)=>crippleRows.push(vertical(
+            o.label+" Lower cripple "+(i+1),"Lower cripple",x,a.bottomPlate,sillBottom)));
+      }
+    }
+    const framingRows=[...fullRows,...horizontalRows,...crippleRows]
+      .sort((u,v)=>u.position-v.position||
+        u.bottomElevation-v.bottomElevation||u.item.localeCompare(v.item));
+    need(framingRows.every(r=>r.cutLength>0&&r.topElevation>r.bottomElevation),
+      "A header, sill or cripple has no positive geometric length.");
+    const markers=framingRows.map(r=>({
+      ...P(r.position,r.item,r.type==="King"?"king":r.type==="Jack"?"jack":
+        r.type==="Header"?"header":r.type==="Sill"?"sill":
+        r.type.includes("cripple")?"cripple":"mark"),
+      orientation:r.orientation,type:r.type,topHeight:r.topElevation,
+      bottomHeight:r.bottomElevation,cutLength:r.cutLength,
+      faceLeft:r.faceLeft,faceRight:r.faceRight
+    }));
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
+    const upper=crippleRows.filter(r=>r.type==="Upper cripple").length,
+      lower=crippleRows.length-upper;
+    need(framingRows.length===fullRows.length+horizontalRows.length+crippleRows.length,
+      "Frame schedule does not reconcile to piece count.");
     return result([
       M("Regular studs",xs.length,"N"),M("Opening intervals",openings.length,"N"),
       M("Opening-side reference members",sideRows.length,"N"),
-      M("Total listed pieces",studRows.length,"N"),
-      M("Wall reference height",a.wallHeight),
-      M("Regular and king cut length",fullCut),
-      M("Bottom plate thickness",a.bottomPlate),
-      M("Top plate thickness",a.topPlate),
+      M("Header pieces (geometry only)",openings.length,"N"),
+      M("Window sills",horizontalRows.length-openings.length,"N"),
+      M("Upper cripples",upper,"N"),M("Lower cripples",lower,"N"),
+      M("Total listed pieces",framingRows.length,"N"),
+      M("Wall reference height",a.wallHeight),M("Regular and king cut length",fullCut),
+      M("Bottom plate thickness",a.bottomPlate),M("Top plate thickness",a.topPlate),
+      M("Header vertical depth (user-defined)",a.headerDepth),
+      M("Window sill stock thickness",a.sillThickness),
       M("Rough opening face area",roughArea,"FT2"),
       ...openings.map(o=>M(o.label+" top elevation",o.top))
-    ],studRows.map(r=>({
-      ...P(r.position,r.item,r.type==="King"?"king":r.type==="Jack"?"jack":"mark"),
-      topHeight:r.topElevation,bottomHeight:r.bottomElevation,
-      cutLength:r.cutLength,faceLeft:r.faceLeft,faceRight:r.faceRight
-    })),a.length,studRows,"opening",{
-      openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,
-      topPlate:a.topPlate,studWidth:a.width,studRows
+    ],markers,a.length,framingRows,"opening",{
+      openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
+      studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
+      studRows:fullRows,framingRows
     });
   }
   case "deck-board-calculator":{
