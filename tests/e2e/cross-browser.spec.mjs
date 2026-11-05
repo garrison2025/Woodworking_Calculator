@@ -130,8 +130,11 @@ test("Keyboard can focus and PageDown through large measurement tables in Firefo
   await page.keyboard.press("PageDown");
   await expect.poll(()=>region.evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
   await page.goto("/rafter-calculator/");
+  const baseWidth=await page.locator("#dimension-svg svg").evaluate(el=>el.getBoundingClientRect().width);
   await page.locator("#zoom-in").click();
   await page.locator("#zoom-in").click();
+  const zoomedWidth=await page.locator("#dimension-svg svg").evaluate(el=>el.getBoundingClientRect().width);
+  expect(zoomedWidth).toBeGreaterThan(baseWidth*1.3);
   await expect(page.locator("#dimension-svg")).toHaveAttribute("tabindex","0");
   await expect(page.locator("#action-status")).toContainText("Updated:");
 });
