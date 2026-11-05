@@ -519,13 +519,13 @@
     },
     {
       "slug": "rafter-calculator",
-      "title": "Common Rafter & Birdsmouth Reference",
+      "title": "Common Rafter & Birdsmouth Cut Layout",
       "category": "roof",
       "priority": "P0",
       "keyword": "rafter calculator",
       "volume": 4400,
       "kd": 7,
-      "desc": "Common rafter ridge-deducted slope, eave extension and seat reference with physically proportionate side-view stock",
+      "desc": "Ridge-adjusted common rafter, eave length and measurable birdsmouth horizontal seat/vertical heel cut endpoints with HAP.",
       "inputs": [
         {
           "key": "run",
@@ -564,9 +564,9 @@
           "kind": "L"
         }
       ],
-      "formula": "Adjusted horizontal run = entered ridge-centerline run−ridge thickness/2; face slope=pitch/12; rise=adjusted run×slope; rafter reference line=hypot(adjusted run,rise); slope tail=hypot(horizontal overhang,horizontal overhang×slope). Total slope to tail=sum. Horizontal birdsmouth seat span has nominal vertical rise=seat×slope and perpendicular notch depth=seat×sin(atan(slope)); remaining normal stock depth=stock depth−notch depth.",
-      "example": "At 6:12 and horizontal ridge-centerline run 120 in with no ridge board, the common rafter to bearing is 134.16408 in with 60 in rise, matching Roof Pitch for 120 in. With 1.5 in ridge thickness, run reduces to 119.25 in, rise to 59.625 in and ridge-to-bearing length≈133.3256 in. A 12-in horizontal overhang adds 13.4164 in of slope line. Actual plumb/seat cuts are not certified.",
-      "limit": "The geometry labels ridge and bearing references and a horizontal birdsmouth seat line, NOT a physical verified notch profile or saw-setting pattern. Stock thickness is shown normal to the slope at the actual proportional angle; reference cutting and remaining stock are geometric only. No rafter bearing capacity, joist/roof structural verification, plumb-cut calibration, fasteners, code, stock defects or physical printed-scale certification.",
+      "formula": "Adjusted horizontal run = entered ridge-centerline run−ridge thickness/2; face slope=pitch/12; rise=adjusted run×slope; rafter reference line=hypot(adjusted run,rise); slope tail=hypot(horizontal overhang,horizontal overhang×slope). Total slope to tail=sum. Horizontal birdsmouth seat span has nominal vertical rise=seat×slope and perpendicular notch depth=seat×sin(atan(slope)); remaining normal stock depth=stock depth−notch depth. True 2D cut datum: X is horizontal from the ridge top toward the eave, Y is vertically DOWN from the ridge top. At bearing OUTSIDE wall-face x=adjusted run R, stock lower edge y=(pitch/12)×x + D×sqrt(1+(pitch/12)²), with D entered NORMAL to the sloping roof. The seat begins at (R−seat,lowerY(R−seat)) and ends at (R,same Y); the heel plumb cut ends at (R,lowerY(R)). HAP (vertical top at bearing to seat surface)=D×sqrt(1+slope²)−seat×slope. Notch face area=0.5×seat×heel vertical length. The schematic uses PLUMB reference end clips, not certified cut contours or a full-length saw jig.",
+      "example": "At 6:12 and horizontal ridge-centerline run 120 in with no ridge board, the common rafter to bearing is 134.16408 in with 60 in rise, matching Roof Pitch for 120 in. With 1.5 in ridge thickness, run reduces to 119.25 in, rise to 59.625 in and ridge-to-bearing length≈133.3256 in. A 12-in horizontal overhang adds 13.4164 in of slope line. Actual plumb/seat cuts are not certified. For a 6:12 pitched 5.5-in deep rafter with a 3-in seat, the vertical heel cut is 1.5 in, normal notch 1.34164079 in, HAP approximately 4.64918694 in and remaining normal throat 4.15835921 in. Reference coordinates and numeric CSV identify the precise two modeled cut segments. These are NOT validated plate-bearing or structural dimensions.",
+      "limit": "Exact 2D idealized birdsmouth seat and heel cut reference coordinates are calculated for a square-ended level seat, vertical plumb heel, and the user-entered wall outside-face datum. The modeled plumb-clipped side section is NOT verified against real stock end joinery, minimum bearing/fastener edge distances or overcut tolerances. This calculator does not determine member load rating, permissible code notch fraction, actual top-plate width, ridge connection, framing safety, blade kerf, actual stock defects, field fit or a 1:1 printing template. At zero roof pitch/seat no material-removing birdsmouth is represented.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -579,11 +579,15 @@
         },
         {
           "heading": "Differentiate seat length and notch depth",
-          "text": "The seat is a horizontal reference span. Its vertical change is seat×slope, while its perpendicular stock-depth penetration is seat×sin(arctan(slope)). At zero roof pitch, both reference changes are zero and the side-view marker is flat. The diagram deliberately does not pretend to be a certified notch silhouette."
+          "text": "The horizontal seat is measured INWARD from the wall outside-face plumb datum by the entered seat length. Its end is on that plumb line, and the perpendicular notch penetration is seat×sin(arctan(pitch/12)); the cut heel vertical height is seat×(pitch/12). The rendered side section and coordinate CSV use the same computed end points. At zero slope these cut lengths collapse to no material-removing notch. Positive remaining wood is a geometric condition, not structural acceptance."
         },
         {
           "heading": "Verify real lumber and roofing requirements",
           "text": "Real plumb cut, ridge connection, bearing, stock depth, permissible notch area, uplift and gravity loads require actual site and code verification. The diagram is proportional within the SVG but is NOT a 1:1 saw/cutting template."
+        },
+        {
+          "heading": "Read seat, heel and HAP coordinates from the same model",
+          "text": "Take X horizontally toward the eave from the ridge top, and Y vertically DOWN from that ridge datum. The chosen outside wall-face PLUMB line lies at the ridge-adjusted run. Horizontal seat begins at (run−seat, lower sloped edge at that station), joins the wall line at constant Y, then the vertical heel cut reaches the unnotched lower edge. HAP is the vertical distance from the wall-line roof top to the seat cut. The numeric CSV and SVG use identical endpoints; the raw board and real building bearing are not certified."
         }
       ]
     },
