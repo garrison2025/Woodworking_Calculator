@@ -1093,7 +1093,7 @@
       "keyword": "segmented bowl calculator",
       "volume": 260,
       "kd": 17,
-      "desc": "Multiple concentric polygon rings with signed per-ring diameter taper, true trapezoid chords, stack profile, optional rough blank allowances, and a per-segment cutting reference CSV.",
+      "desc": "Tapered polygon rings, per-ring miter cuts, accurate chord faces, stack heights and optional rough stock allowances with numeric SVG/CSV exports.",
       "inputs": [
         {
           "key": "outer",
@@ -1833,7 +1833,7 @@
       "keyword": "stair stringer calculator",
       "volume": 8100,
       "kd": 20,
-      "desc": "Straight stair stringer notch coordinates and modeled side section, remaining wood throat, stair nose, end support surface references and printable measurements. Individual tread/riser sawline coordinate schedule, optional user-measured end intersection lines and bounded raw-blank axis projection.",
+      "desc": "Straight stair nominal sawline coordinates, end-cut reference geometry, stock-axis envelope, scaled drawings and unit-aware cutting schedules.",
       "inputs": [
         {
           "key": "rise",
