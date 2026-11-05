@@ -15,6 +15,9 @@ if(slug){
   const scheduleGo=document.querySelector("#schedule-go");
   const schedulePageStatus=document.querySelector("#schedule-page-status");
   const scheduleCount=document.querySelector("#schedule-count");
+  const printInputPanel=document.querySelector("#print-input-snapshot");
+  const printInputRows=document.querySelector("#print-input-table tbody");
+  const printInputContext=document.querySelector("#print-input-context");
   const framingMaterial=document.querySelector("#framing-material-table tbody");
   const framingStock=document.querySelector("#framing-stock-table tbody");
   const stockExport=document.querySelector("#download-stock-csv");
@@ -808,6 +811,36 @@ if(slug){
           ". Print / PDF includes ALL "+count+" rows; CSV also includes all rows.":
         "Showing "+count+" computed rows.";
   };
+  const renderPrintInputSnapshot=()=>{
+    if(!printInputPanel||!printInputRows||!printInputContext)return;
+    if(!latest){
+      printInputPanel.hidden=true;
+      printInputRows.innerHTML="";
+      return;
+    }
+    // The print worksheet omits the entire editable input sidebar. Capture
+    // all actual raw form values (including advanced optional values),
+    // not display-rounded metrics or default values guessed by the client.
+    printInputRows.innerHTML=tool.inputs.map(f=>{
+      const field=form.elements.namedItem(f.key);
+      const raw=field?.value??"";
+      const display=f.kind==="E"?
+        (f.options||[]).find(choice=>String(choice.value)===String(raw))?.label??raw:
+        f.kind==="L"?raw+" "+unit:
+        f.kind==="A"?raw+"°":
+        f.kind==="D"?raw+"%":
+        f.kind==="P"?raw+" rise per 12 run":
+        f.kind==="C"?currencyCode()+" "+raw:raw;
+      return '<tr data-print-field="'+esc(f.key)+'"><th scope="row">'+
+        esc(f.label)+'</th><td>'+esc(display)+'</td></tr>';
+    }).join("");
+    printInputContext.textContent="Actual typed measurements at print time · input units "+unit+
+      " · entered price currency "+currencyCode()+
+      " · inch display precision 1/"+(Number(fraction.value)||16)+
+      ". Includes optional advanced inputs and disabled-by-zero settings. "+
+      "No structural or field verification is implied.";
+    printInputPanel.hidden=false;
+  };
   const setPrintFullSchedule=enabled=>{
     // Neither a stale invalid worksheet nor a native print dialog should
     // invent geometry. afterprint restores the EXACT prior screen page.
@@ -1113,6 +1146,7 @@ if(slug){
       const data=safeCompute(slug,values());
       if(!data.ok)throw new Error(data.error);
       latest=data.data;error.hidden=true;
+      renderPrintInputSnapshot();
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
@@ -1122,6 +1156,7 @@ if(slug){
       status.textContent="Updated from your measurements.";
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
+      renderPrintInputSnapshot();
       error.textContent=e.message;error.hidden=false;
       // Input parsing supplies its own field key. Most calculator rules use
       // "fieldKey must/cannot ..." messages; link those to the real input too.
