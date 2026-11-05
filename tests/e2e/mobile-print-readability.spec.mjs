@@ -61,6 +61,8 @@ test("full print schedule splits wide columns into readable labelled groups",asy
   await expect(page.locator("#cut-table").locator("xpath=..")).toBeHidden();
   await expect(page.locator("#print-calibration")).toBeVisible();
   await expect(page.locator(".proof #print-assumptions")).toBeVisible();
+  await expect(page.locator(".proof>.caution")).toBeHidden();
+  await expect(page.locator(".calibration-warning")).toContainText("structural capacity");
   await expect(page.locator(".proof .print-only-heading")).toBeVisible();
   await expect(page.locator(".proof > .formula")).toBeHidden();
   expect(await parts.first().evaluate(e=>getComputedStyle(e).breakInside)).toBe("auto");
@@ -95,6 +97,10 @@ test("grouped measurement worksheet exports genuine A4 and Letter PDF examples",
       margin:{top:"15mm",right:"15mm",bottom:"15mm",left:"15mm"}});
     expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(5000);
+    // Chromium emits a page dictionary per real PDF page; this catches
+    // reintroduced orphan pages and oversized groups in both paper formats.
+    const pageCount=(pdf.toString("latin1").match(/\\/Type\\s*\\/Page\\b/g)||[]).length;
+    expect(pageCount,paper+" worksheet pages").toBeLessThanOrEqual(paper==="A4"?5:6);
     writeFileSync("print-evidence/segmented-bowl-"+paper.toLowerCase()+"-readable.pdf",pdf);
   }
   await page.emulateMedia({media:"screen"});
