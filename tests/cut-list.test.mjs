@@ -568,3 +568,33 @@ test("P1 stringer blank and 1D end projection diagnostics export exact selected 
   assert.ok(projection.includes('"Inside reference"'),projection);
   assert.ok(projection.includes('"Outside reference"'),projection);
 });
+
+test("Stringer 2D line intersections CSV keeps t dimensionless and signed X/Y in five units",()=>{
+  const a={rise:105,risers:14,tread:10,depth:11.25,treadThickness:1.5,
+    lowerFinish:0,lowerEndCutRun:3,upperEndCutRun:6,
+    lowerSupportRun:5,upperSupportRun:4,
+    lowerSupportVerticalOffset:-4.40625,
+    upperSupportVerticalOffset:-4.78125};
+  const r=compute("stair-stringer-calculator",a);
+  for(const unit of ["in","ft","mm","cm","m"]){
+    const cols=scheduleColumns(r.endContactChecks,unit);
+    assert.equal(cols.find(c=>c.key==="cutParameter")?.kind,"plain");
+    assert.equal(cols.find(c=>c.key==="cutParameter")?.label,"Cut Parameter");
+    for(const key of ["intersectionX","intersectionElevation",
+      "supportElevation","crossingHorizontalMiss","sharedLineLength"]){
+      assert.equal(cols.find(c=>c.key===key)?.kind,"length");
+      assert.ok(cols.find(c=>c.key===key)?.label.endsWith("("+unit+")"));
+    }
+    const csv=buildScheduleCsv(r.endContactChecks,unit,
+      "Single mathematical point; no bearing area");
+    assert.ok(csv.includes('"Cut Parameter"'),csv);
+    assert.ok(!csv.includes('"Cut Parameter ('),csv);
+    assert.ok(csv.includes('"Single point only"'),csv);
+  }
+  const mm=buildScheduleCsv(r.endContactChecks,"mm");
+  assert.ok(mm.includes('"-38.1"'),mm); // lower intersection at x=-1.5in
+  assert.ok(mm.includes('"3378.2"'),mm); // upper intersection at x=133in
+  assert.ok(mm.includes('"2545.55625"'),mm); // support elevation 100.21875in
+  assert.ok(mm.includes('"0.5"'),mm); // true unitless segment fraction
+  assert.ok(mm.includes('"0"'),mm); // coincident linear contact length
+});
