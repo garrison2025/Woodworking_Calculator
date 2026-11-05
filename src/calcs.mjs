@@ -831,10 +831,37 @@ export function compute(slug,a){
       leftMargin:a.margin,rightMargin:a.margin,gap:a.gap});
   }
   case "stair-calculator":{
-    positive("rise","desired","tread");const risers=ceilStable(a.rise/a.desired);need(risers>=2&&risers<=200,"Stair count outside supported range.");
-    const treads=risers-1,h=a.rise/risers;
-    rows=Array.from({length:risers},(_,i)=>({item:"Riser "+(i+1),rise:q((i+1)*h),run:q(Math.min(i,treads)*a.tread)}));
-    return result([M("Risers",risers,"N"),M("Treads",treads,"N"),M("Actual riser height",h),M("Horizontal run",treads*a.tread),M("Incline",deg(Math.atan(h/a.tread)),"A")],rows.map(r=>P(r.run,r.item)),Math.max(treads*a.tread,1),rows,"stairs",{stepRise:h,tread:a.tread,risers});
+    positive("rise","desired","tread");nonnegative("landing");
+    const risers=ceilStable(a.rise/a.desired);
+    need(risers>=2&&risers<=200,"Stair count outside supported range.");
+    const treads=risers-1,h=a.rise/risers,flightRun=treads*a.tread;
+    const footprint=flightRun+a.landing;
+    // The final riser reaches the finished upper floor/landing. There is
+    // no additional counted tread at the top in this explicit convention.
+    // All exported mark coordinates and drawn steps share one physical datum.
+    rows=Array.from({length:risers},(_,i)=>{
+      const x=i*a.tread,atTop=i===risers-1;
+      return {
+        item:"Riser "+(i+1),rise:q((i+1)*h),run:q(x),
+        riserHeight:q(h),treadStart:q(x),
+        treadEnd:atTop?(a.landing>0?q(footprint):null):q(x+a.tread),
+        walkingSurface:atTop?"Upper landing":"Tread "+(i+1)
+      };
+    });
+    need(Math.abs(rows.at(-1).rise-a.rise)<1e-6,
+      "Calculated final riser must reach the specified finished floor level.");
+    need(Math.abs(rows.at(-1).run-flightRun)<1e-6,
+      "Calculated last riser position must match total flight run.");
+    return result([
+      M("Risers",risers,"N"),M("Treads",treads,"N"),
+      M("Actual riser height",h),M("Horizontal run",flightRun),
+      M("Upper landing reference depth",a.landing),
+      M("Total reference footprint",footprint),
+      M("Incline",deg(Math.atan(h/a.tread)),"A")
+    ],rows.map(r=>P(r.run,r.item)),Math.max(footprint,1),rows,"stairs",{
+      stepRise:h,tread:a.tread,risers,totalRise:a.rise,flightRun,
+      landingDepth:a.landing,totalFootprint:footprint,stairRows:rows
+    });
   }
   case "rise-run-calculator":{
     positive("run");nonnegative("rise");
