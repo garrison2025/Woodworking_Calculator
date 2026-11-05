@@ -2191,7 +2191,6 @@ test("Printed input-provenance table captures every typed dimension, enum, curre
   await page.locator("#deck-currency").selectOption("EUR");
   await page.locator("#unit-select").selectOption("mm");
   await expect(page.locator("#calc-error")).toBeHidden();
-  await expect(row("width")).toContainText("3,079.75");
   // Raw numeric input values are deliberately NOT locale-grouped.
   await expect(row("width").locator("td")).toHaveText("3079.75 mm");
   await expect(row("boardUnitPrice").locator("td")).toHaveText("EUR 8.75");
