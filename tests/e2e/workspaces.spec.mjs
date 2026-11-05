@@ -1151,3 +1151,74 @@ test("straight stair last walking surface is the upper landing with no phantom 1
   await expect(page.locator("#dimension-svg svg .stair-landing")).toHaveCount(0);
   await expect(page.locator("#result-cards .metric").filter({hasText:"Total reference footprint"})).toContainText("130 in");
 });
+
+
+test("equal spacing physical faces have accurate 1000mm coordinates and printable CSV",async({page})=>{
+  await page.goto("/equal-spacing-calculator/");
+  await expect(page.locator("#dimension-svg svg .equal-part-face")).toHaveCount(0);
+  await page.locator("#unit-select").selectOption("mm");
+  await page.locator("#f-length").fill("1000");
+  await page.locator("#f-count").fill("6");
+  await page.locator("#f-left").fill("50");
+  await page.locator("#f-right").fill("50");
+  await page.locator("#f-itemWidth").fill("30");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const metric=title=>page.locator("#result-cards .metric").filter({hasText:title});
+  await expect(metric("Equal center interval")).toContainText("180 mm");
+  await expect(metric("Clear space between faces")).toContainText("150 mm");
+  await expect(metric("Left end face margin")).toContainText("35 mm");
+  await expect(metric("Right end face margin")).toContainText("35 mm");
+  const faces=page.locator("#dimension-svg svg .equal-part-face");
+  await expect(faces).toHaveCount(6);
+  await expect(page.locator("#dimension-svg svg .equal-part-center")).toHaveCount(6);
+  const first=faces.first();
+  const box=await first.evaluate(node=>({
+    x:Number(node.getAttribute("x")),
+    width:Number(node.getAttribute("width")),
+    left:Number(node.dataset.left),right:Number(node.dataset.right),
+    center:Number(node.dataset.center)
+  }));
+  expect(box.left*25.4).toBeCloseTo(35,5);
+  expect(box.right*25.4).toBeCloseTo(65,5);
+  expect(box.center*25.4).toBeCloseTo(50,5);
+  expect(box.width).toBeCloseTo(776*30/1000,4);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(6);
+  await expect(page.locator("#cut-table tbody tr").first()).toContainText("35 mm");
+  const ready=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const csv=readFileSync(await(await ready).path(),"utf8");
+  expect(csv).toContain('"Face Left Edge (mm)"');
+  expect(csv).toContain('"Face Right Edge (mm)"');
+  expect(csv).toContain('"Clear To Previous (mm)"');
+  expect(csv).toContain('"Center 1","50","35","65",""');
+  expect(csv).toContain('"Center 6","950","935","965","150"');
+  expect(csv.split("\r\n").filter(Boolean)).toHaveLength(8);
+  await page.locator("#f-itemWidth").fill("300");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(faces).toHaveCount(0);
+  await page.locator("#f-itemWidth").fill("30");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(faces).toHaveCount(6);
+});
+
+test("equal spacing supports a single wide part without inventing a between-part gap",async({page})=>{
+  await page.goto("/equal-spacing-calculator/");
+  await page.locator("#f-length").fill("100");
+  await page.locator("#f-count").fill("1");
+  await page.locator("#f-left").fill("10");
+  await page.locator("#f-right").fill("20");
+  await page.locator("#f-itemWidth").fill("12");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg svg .equal-part-face")).toHaveCount(1);
+  await expect(page.locator("#dimension-svg svg .equal-part-face")).toHaveAttribute("data-left","39");
+  await expect(page.locator("#dimension-svg svg .equal-part-face")).toHaveAttribute("data-right","51");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Left end face margin"})).toContainText("39 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Right end face margin"})).toContainText("49 in");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Clear space between faces"})).toHaveCount(0);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(1);
+  await page.locator("#reset-values").click();
+  await expect(page.locator("#f-itemWidth")).toHaveValue("0");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg svg .equal-part-face")).toHaveCount(0);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Centers"})).toContainText("6");
+});
