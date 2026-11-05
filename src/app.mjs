@@ -846,7 +846,11 @@ if(slug){
       const visible=region.getClientRects().length>0;
       const canScroll=(overflowX||overflowY)&&visible;
       if(region.classList.contains("table-scroll")){
-        syncTableColumnNavigator(region,overflowX&&visible);
+        // An invalid or uninitialized result may still have a CSS min-width.
+        // Do not offer meaningless column buttons for empty/error placeholders.
+        const useful=Boolean(region.querySelector("thead th:nth-child(2)")&&
+          region.querySelector("tbody tr > :not([colspan])"));
+        syncTableColumnNavigator(region,overflowX&&visible&&useful);
       }
       if(canScroll){
         region.tabIndex=0;
