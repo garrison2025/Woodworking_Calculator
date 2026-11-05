@@ -2122,3 +2122,66 @@ test("P1 measured stringer end intersections remain distinct from support surfac
  assert.ok(small.requiredBlankAxis>100);
  assert.equal(safeCompute("stair-stringer-calculator",{...a,upperEndCutRun:40}).ok,false);
 });
+
+test("P1 rectangular sheathing optional offcut reuse fits four cuts in three stock sheets",()=>{
+ const args={width:70,length:110,pitch:0,sheetWidth:48,sheetLength:96,
+   orientation:0,waste:0,reuseMode:1,roofKerf:0};
+ const r=compute("roof-sheathing-calculator",args),p=r.roofReusePlan;
+ assert.equal(r.roofSheets.length,4);
+ assert.equal(p.rows.length,4);
+ assert.equal(p.stockCount,3);
+ assert.equal(p.reusedCutCount,1);
+ near(p.stockAreaSqIn,3*96*48,1e-7);
+ near(p.installedAreaSqIn,7700,1e-7);
+ near(p.installedAreaSqIn+p.freeAreaSqIn+p.kerfAreaSqIn+p.cornerScrapAreaSqIn,
+   p.stockAreaSqIn,1e-7);
+ assert.ok(p.rows.every(row=>row.stockCutVertices.every(([x,y])=>
+   x>=-1e-7&&y>=-1e-7&&x<=96+1e-7&&y<=48+1e-7)));
+ near(value(r,"Bounded reusable-box stock sheets"),3);
+ const baseline=compute("roof-sheathing-calculator",{...args,reuseMode:0});
+ assert.equal(baseline.roofReusePlan,null);
+ assert.equal(baseline.rows.length,4);
+});
+test("P1 roof rectangular stock reuse accounts for all kerfs and rejects invalid sizes",()=>{
+ for(const kerf of [0,.125,.5]){
+   const r=compute("roof-sheathing-calculator",{width:70,length:110,pitch:0,
+     sheetWidth:48,sheetLength:96,orientation:0,waste:10,reuseMode:1,roofKerf:kerf});
+   const p=r.roofReusePlan;
+   near(p.stockAreaSqIn,p.installedAreaSqIn+p.freeAreaSqIn+
+     p.kerfAreaSqIn+p.cornerScrapAreaSqIn,1e-6);
+   assert.ok(p.stockCount<=r.roofSheets.length);
+   for(const board of p.boards)for(let i=0;i<board.placements.length;i++)
+     for(let j=i+1;j<board.placements.length;j++){
+       const a=board.placements[i],b=board.placements[j];
+       const overlapX=Math.min(a.stockX+a.boxWidth,b.stockX+b.boxWidth)-
+         Math.max(a.stockX,b.stockX);
+       const overlapY=Math.min(a.stockY+a.boxHeight,b.stockY+b.boxHeight)-
+         Math.max(a.stockY,b.stockY);
+       assert.ok(overlapX<=1e-7||overlapY<=1e-7);
+     }
+ }
+ assert.equal(safeCompute("roof-sheathing-calculator",{
+   width:70,length:110,pitch:0,sheetWidth:48,sheetLength:96,
+   orientation:0,waste:0,reuseMode:1,roofKerf:49}).ok,false);
+});
+test("P1 hip developed-surface polygon reuse proves stock bounding box and full area accounting",()=>{
+ const r=compute("hip-roof-calculator",{
+   width:96,length:192,pitch:0,overhang:0,sheetWidth:48,sheetLength:96,
+   orientation:0,reuseMode:1,roofKerf:.125});
+ const p=r.roofReusePlan;
+ assert.ok(p&&p.rows.length===r.roofPanels.length);
+ assert.ok(p.stockCount<=r.roofPanels.length);
+ near(p.installedAreaSqIn,r.coveredAreaSqIn,1e-5);
+ near(p.stockAreaSqIn,p.installedAreaSqIn+
+   p.kerfAreaSqIn+p.cornerScrapAreaSqIn+p.freeAreaSqIn,1e-5);
+ for(const cut of p.rows){
+   const target=r.roofPanels.find(x=>x.id===cut.item);
+   assert.equal(cut.stockCutVertices.length,target.localVertices.length);
+   const local=cut.stockCutVertices.map(v=>[v[0]-cut.stockX,v[1]-cut.stockY]);
+   const twiceArea=local.reduce((sum,v,i)=>{
+     const next=local[(i+1)%local.length];return sum+v[0]*next[1]-next[0]*v[1]},0);
+   near(Math.abs(twiceArea)/2,target.cutAreaSqIn,1e-5);
+   assert.ok(cut.stockCutVertices.every(([x,y])=>x>=-1e-7&&y>=-1e-7&&
+      x<=p.stockWidth+1e-7&&y<=p.stockHeight+1e-7));
+ }
+});
