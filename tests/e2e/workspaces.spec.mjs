@@ -715,3 +715,74 @@ test("framing window stock family and printable fraction schedules stay visible"
   await expect(page.locator("#download-stock-csv")).toBeHidden();
   await expect(page.locator("#cut-table tbody")).toContainText("≈");
 });
+
+
+test("framing supplier quotes show partial coverage, reserve costs and no FX conversion",async({page})=>{
+  await page.goto("/framing-calculator/");
+  const summary=page.locator("#framing-price-status");
+  await expect(summary).toContainText("prices required: Stud, Header");
+  await expect(summary).toContainText("NOT a complete purchase total");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Quoted purchase total"})).toHaveCount(0);
+  const quote=page.locator("#framing-price-table tbody");
+  await expect(quote.locator("tr")).toHaveCount(3);
+  await expect(quote.locator("tr").first()).toContainText("Quote needed");
+  await page.locator("#f-studUnitPrice").fill("5.50");
+  await expect(summary).toContainText("priced groups subtotal USD 55.00");
+  await expect(summary).toContainText("prices required: Header");
+  await page.locator("#f-headerUnitPrice").fill("14.25");
+  await expect(summary).toContainText("Estimated quoted lumber purchase: USD 69.25");
+  await expect(summary).toContainText("reserve USD 0.00");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Quoted purchase total"})).toContainText("USD 69.25");
+  await expect(quote.locator("tr").nth(0)).toContainText("USD 55.00");
+  await expect(quote.locator("tr").nth(1)).toContainText("USD 14.25");
+  await page.locator("#f-stockWaste").fill("10");
+  await expect(summary).toContainText("USD 89.00");
+  await expect(summary).toContainText("reserve USD 19.75");
+  await expect(page.locator("#framing-ticket-list li")).toHaveCount(2);
+  await expect(page.locator("#framing-ticket-status")).toContainText("USD 89.00");
+  await page.locator("#framing-currency").selectOption("BRL");
+  await expect(summary).toContainText("BRL 89.00");
+  await expect(summary).not.toContainText("USD");
+  await expect(page.locator("#framing-ticket-list")).toContainText("BRL 60.50");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(summary).toContainText("BRL 89.00"); // Length unit must not change quoted money
+  const download=page.waitForEvent("download");
+  await page.locator("#download-price-csv").click();
+  const csv=readFileSync(await(await download).path(),"utf8");
+  expect(csv).toContain('"Stock Length (mm)"');
+  expect(csv).toContain('"Unit Price"');
+  expect(csv).toContain('"Planned Sticks"');
+  expect(csv).toContain('"Purchase Cost"');
+  expect(csv).toContain('"BRL"');
+  expect(csv).not.toContain('"Total Job Estimate"'); // No tax, hardware, labor or complete-job claim
+  expect(csv).not.toContain('"Unit Price (mm)"');
+  await page.locator("#unit-select").selectOption("in");
+  await page.locator("#f-studUnitPrice").fill("-1");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await expect(quote.locator("tr")).toHaveCount(0);
+  await expect(page.locator("#framing-ticket-list li")).toHaveCount(0);
+  await page.locator("#f-studUnitPrice").fill("5.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(summary).toContainText("BRL 89.00");
+});
+
+test("framing purchasing ticket and quote details are printable without export controls",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await page.locator("#f-studUnitPrice").fill("7.25");
+  await page.locator("#f-headerUnitPrice").fill("14");
+  await page.locator("#f-stockWaste").fill("10");
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#framing-order-ticket")).toBeVisible();
+  await expect(page.locator("#framing-price-table")).toBeVisible();
+  await expect(page.locator("#framing-material-table")).toBeVisible();
+  await expect(page.locator("#framing-stock-table")).toBeVisible();
+  await expect(page.locator("#framing-ticket-list li")).toHaveCount(2);
+  await expect(page.locator("#framing-ticket-list")).toContainText("planned 10 + reserve 1");
+  await expect(page.locator("#framing-ticket-list")).toContainText("USD 79.75");
+  await expect(page.locator("#framing-ticket-status")).toContainText("Total material quote");
+  await expect(page.locator("#framing-currency")).toBeHidden();
+  await expect(page.locator("#download-price-csv")).toBeHidden();
+  await expect(page.locator("#download-stock-csv")).toBeHidden();
+  await expect(page.locator("#print-calibration")).toBeVisible();
+  await expect(page.locator("#cut-table tbody")).toContainText("≈");
+});
