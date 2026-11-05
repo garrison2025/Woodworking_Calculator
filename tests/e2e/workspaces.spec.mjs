@@ -659,3 +659,59 @@ test("framing horizontal elevation respects header depth and window sill thickne
   await expect(svg.locator(".framing-sill")).toHaveAttribute("data-bottom","22");
   await expect(svg.locator('.framing-cripple[data-cut-length="20.5"]')).toHaveCount(2);
 });
+
+test("framing stock takeoff, fractional cuts, grouped stick plan and CSV update live",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#framing-material-table tbody tr")).toHaveCount(3);
+  await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(13);
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Planned stock sticks (FFD estimate)"})).toContainText("11");
+  await expect(page.locator("#cut-table tbody")).toContainText("≈ 91 1/2 in");
+  await expect(page.locator("#framing-stock-table tbody")).toContainText("91 1/2 in");
+  await page.locator("#f-stockWaste").fill("10");
+  await expect(page.locator("#result-cards .metric").filter({hasText:"Purchase sticks incl. allowance"})).toContainText("13");
+  await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
+  await page.locator("#f-stockWaste").fill("0");
+  await page.locator("#f-openingWidth").fill("36.03125");
+  await page.locator("#fraction-select").selectOption("32");
+  await expect(page.locator("#cut-table tbody")).toContainText("39 1/32 in");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#cut-table thead")).toContainText("Cut Length (mm)");
+  const downloading=page.waitForEvent("download");
+  await page.locator("#download-stock-csv").click();
+  const csv=readFileSync(await (await downloading).path(),"utf8");
+  expect(csv).toContain('"Cut Length (mm)"');
+  expect(csv).toContain('"Kerf Before (mm)"');
+  expect(csv).toContain('"Stock Group"');
+  expect(csv).toContain('"Header"');
+  expect(csv.split("\r\n").filter(Boolean).length).toBe(15); // header, 13 cuts, source note
+  await page.locator("#unit-select").selectOption("in");
+  await page.locator("#f-studStockLength").fill("90");
+  await expect(page.locator("#calc-error")).toContainText("longer stock required");
+  await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(0);
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(0);
+  await page.locator("#f-studStockLength").fill("96");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
+});
+
+test("framing window stock family and printable fraction schedules stay visible",async({page})=>{
+  await page.goto("/framing-calculator/");
+  await page.locator("#f-opening2Start").fill("82");
+  await page.locator("#f-opening2Width").fill("18");
+  await page.locator("#f-opening2Height").fill("40");
+  await page.locator("#f-opening2Sill").fill("32");
+  const material=page.locator("#framing-material-table tbody");
+  await expect(material.locator("tr").nth(2)).toContainText("Sill");
+  await expect(material.locator("tr").nth(2)).toContainText("18 in");
+  await expect(page.locator("#framing-stock-table tbody")).toContainText("SILL-001");
+  await expect(page.locator("#cut-table tbody")).toContainText("Lower cripple");
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator("#print-calibration")).toBeVisible();
+  await expect(page.locator("#framing-takeoff")).toBeVisible();
+  await expect(page.locator("#framing-material-table")).toBeVisible();
+  await expect(page.locator("#framing-stock-table")).toBeVisible();
+  await expect(page.locator("#download-stock-csv")).toBeHidden();
+  await expect(page.locator("#cut-table tbody")).toContainText("≈");
+});
