@@ -4,7 +4,19 @@ import {mkdirSync,writeFileSync} from "node:fs";
 const cases=[
   {slug:"framing-calculator",tables:["framing-material-table","framing-price-table","framing-offer-table","framing-proof-table"]},
   {slug:"deck-material-calculator",tables:["deck-budget-table","deck-fastener-table"]},
-  {slug:"stair-stringer-calculator",tables:["stringer-sawline-table","stringer-end-lines-table","stringer-end-contact-table"]},
+  {slug:"stair-stringer-calculator",tables:["stringer-sawline-table","stringer-end-lines-table","stringer-end-contact-table"],prepare:async page=>{
+    await page.locator("#f-lowerEndCutRun").fill("3");
+    await page.locator("#f-upperEndCutRun").fill("6");
+    await page.locator("#f-lowerSupportRun").fill("5");
+    await page.locator("#f-upperSupportRun").fill("4");
+  }},
+  {slug:"roof-sheathing-calculator",tables:["roof-reuse-table"],prepare:async page=>{
+    await page.locator("#f-width").fill("70");
+    await page.locator("#f-length").fill("110");
+    await page.locator("#f-pitch").fill("0");
+    await page.locator("#f-waste").fill("0");
+    await page.locator("#f-reuseMode").selectOption("1");
+  }},
   {slug:"shelf-spacing-calculator",tables:["shelf-pin-table"],prepare:async page=>{
     await page.locator("#f-height").fill("40");
     await page.locator("#f-thickness").fill("1");
@@ -56,7 +68,7 @@ for(const fixture of cases){
         const headers=await section.locator("thead th").allTextContents();
         const cols=headers.map(s=>s.trim());
         expect(cols[0]).toBe(source.headings[0]);
-        expect(cols.length).toBeLessThanOrEqual(id==="shelf-pin-table"?6:5);
+        expect(cols.length).toBeLessThanOrEqual(["shelf-pin-table","roof-reuse-table"].includes(id)?6:5);
         expect(cols.length).toBeGreaterThanOrEqual(2);
         for(const field of cols)if(!allNames.includes(field))allNames.push(field);
         await expect(section.locator("tbody tr")).toHaveCount(source.rows.length);

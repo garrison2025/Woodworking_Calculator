@@ -37,11 +37,12 @@ jobs:
         run: npx playwright install --with-deps chromium --only-shell
       - name: Test real Chromium calculations, exports and responsive layouts
         run: npx playwright test --project=chromium
-      - name: Audit actual 540-row A4 and Letter PDF content
+      - name: Audit actual 540-row and specialist A4/Letter PDF content
         run: |
           python3 -m pip install --quiet --disable-pip-version-check pypdf==5.9.0
           python3 tests/audit_long_print_pdf.py print-evidence/segmented-bowl-540-a4.pdf A4 180 3 5
           python3 tests/audit_long_print_pdf.py print-evidence/segmented-bowl-540-letter.pdf Letter 180 3 5
+          python3 tests/audit_specialty_print_pdf.py print-evidence
       - name: Install cross-engine Firefox and WebKit browsers
         run: npx playwright install --with-deps firefox webkit
       - name: Smoke-test actual Firefox and Linux WebKit DOM, geometry and export
