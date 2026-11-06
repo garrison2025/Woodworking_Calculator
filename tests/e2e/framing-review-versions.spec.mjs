@@ -150,3 +150,61 @@ const setupAfterReload=async page=>{
   await page.locator("#f-stockAuditReuseMin").fill("2");
   await expect(page.locator("#framing-review-versions")).toBeVisible();
 };
+
+test("Explicit historical measurement restore copies only inputs, never prices or old inspection declarations",async({page})=>{
+  test.setTimeout(150000);
+  await setup(page);
+  const lengths=page.locator('#framing-field-preflight [data-measured-stock]');
+  const n=await lengths.count();
+  expect(n).toBeGreaterThan(2);
+  for(const [key,val] of [
+    ["sawKerf","0.125"],["endTrim","0"],["finalSeverKerf","0"]
+  ])await page.locator('[data-measured-global="'+key+'"]').fill(val);
+  for(let i=0;i<n;i++)await lengths.nth(i).fill("120");
+  const rowChecks=page.locator('[data-review-source-input]');
+  const globalChecks=page.locator('#framing-purchase-review [data-review-global]');
+  for(let i=0;i<n*2;i++)await rowChecks.nth(i).check();
+  for(let i=0;i<4;i++)await globalChecks.nth(i).check();
+  await expect(page.locator('#framing-purchase-review-status'))
+    .toContainText("SELF-DECLARED REVIEW COMPLETE");
+  const recorded=await content(page,"#framing-version-json");
+  const data=JSON.parse(recorded);
+  const id=data.versionIds.packet;
+  await page.reload();
+  await setupAfterReload(page);
+  await expect(lengths.first()).toBeEmpty();
+  await page.locator("#framing-version-import").setInputFiles({
+    name:"previous-measurements.json",mimeType:"application/json",
+    buffer:Buffer.from(recorded,"utf8")
+  });
+  const restore=page.locator("#framing-version-restore");
+  await expect(restore).toBeEnabled();
+  await expect(page.locator("#framing-version-status")).toContainText("CHANGED PACKET");
+  const priceBefore=await content(page,"#download-price-csv");
+  await restore.click();
+  for(let i=0;i<n;i++)await expect(lengths.nth(i)).toHaveValue("120");
+  await expect(page.locator('[data-measured-global="sawKerf"]')).toHaveValue("0.125");
+  await expect(page.locator('[data-measured-global="endTrim"]')).toHaveValue("0");
+  await expect(page.locator('[data-measured-global="finalSeverKerf"]')).toHaveValue("0");
+  await expect(page.locator("#framing-version-restore-warning")).toBeVisible();
+  await expect(page.locator("#framing-version-restore-warning")).toContainText(
+    "HISTORICAL USER ENTRIES");
+  await expect(page.locator("#framing-purchase-review-status"))
+    .toContainText("HOLD — STOCK INSPECTION");
+  for(let i=0;i<n*2;i++)await expect(rowChecks.nth(i)).not.toBeChecked();
+  for(let i=0;i<4;i++)await expect(globalChecks.nth(i)).not.toBeChecked();
+  expect(await content(page,"#download-price-csv")).toBe(priceBefore);
+  const newVersion=JSON.parse(await content(page,"#framing-version-json"));
+  expect(newVersion.versionIds.measurement).toBe(data.versionIds.measurement);
+  expect(newVersion.versionIds.quotation).toBe(data.versionIds.quotation);
+  expect(newVersion.versionIds.declaration).not.toBe(data.versionIds.declaration);
+  expect(newVersion.versionIds.packet).not.toBe(id);
+  expect(newVersion.parts.declaration.automaticPurchaseAuthorized).toBe(false);
+  await page.locator("#f-stockAuditEndTrim").fill("1");
+  await expect(restore).toBeDisabled();
+  await expect(page.locator("#framing-version-status")).toContainText("CHANGED PACKET");
+  await expect(page.locator("#framing-field-preflight [data-measured-stock]").first()).toBeEmpty();
+  await page.locator("#f-stockAuditMode").selectOption("0");
+  await expect(restore).toBeDisabled();
+  await expect(page.locator("#framing-version-restore-warning")).toBeHidden();
+});
