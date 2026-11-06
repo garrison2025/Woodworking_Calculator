@@ -926,3 +926,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
 @media print{
   .intent-fit,.intent-query-copy{display:none!important}
 }
+
+/* Only the selected calculator mode's measurements are visible; all values
+   stay in the local form for reversible mode switching and reset. */
+.field[data-show-when][hidden]{display:none!important}

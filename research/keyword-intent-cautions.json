@@ -80,6 +80,54 @@
       "originalRoute": "/hip-rafter-calculator/",
       "reason": "Hip rafter line geometry is not a complete hip roof construction guide or structural framing plan.",
       "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "pointing calculator",
+      "originalRoute": "/equal-spacing-calculator/",
+      "reason": "The query may refer to masonry pointing, bearings, calculators or a distinct task; a woodworking equal-spacing tool must not claim it without a verified US SERP.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "calculator center",
+      "originalRoute": "/equal-spacing-calculator/",
+      "reason": "Generic calculator-center query does not establish wood-part center spacing intent.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "center calculator",
+      "originalRoute": "/equal-spacing-calculator/",
+      "reason": "Generic center calculator has ambiguous search intent.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "deck framing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "reason": "Current deck material takeoff does not size structural beams, footings or a full deck-framing assembly.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "decking joist spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "reason": "User enters reference joist centers; tool does not determine compliant joist spacing.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "deck joist spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "reason": "Entered joist spacing is a reference input, not a calculated engineering spacing recommendation.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "gambrel roof truss calculator",
+      "originalRoute": "/gambrel-roof-calculator/",
+      "reason": "A future geometry-only gambrel roof does not design structural trusses, loads or joints.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "gambrel truss calculator",
+      "originalRoute": "/gambrel-roof-calculator/",
+      "reason": "A gambrel slope/cut geometry tool cannot claim engineered truss design.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
     }
   ]
 }

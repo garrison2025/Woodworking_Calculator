@@ -185,7 +185,7 @@
     {
       "slug": "stair-calculator",
       "seoTitle": "Stair Treads Calculator for Straight Stair Rise and Run",
-      "useFor": "Calculate straight stair riser, tread and total run geometry.",
+      "useFor": "Calculate level-finished straight stairs with optional measured deck tread coverage and limited available-flight-run checks.",
       "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
       "next": [
         {
@@ -265,7 +265,7 @@
     {
       "slug": "roof-pitch-calculator",
       "seoTitle": "Roof Pitch Calculator in Degrees and Percent",
-      "useFor": "Convert a roof pitch ratio into degrees, rise and percentage.",
+      "useFor": "Convert roof pitch between rise-per-12, roof angle, percent grade or measured rise/run using an explicitly selected source.",
       "notFor": "Rafter birds-mouth geometry, hip-roof panel cuts or structural approval.",
       "next": [
         {
@@ -285,7 +285,7 @@
     {
       "slug": "equal-spacing-calculator",
       "seoTitle": "Equal Spacing Calculator for Layout Marks",
-      "useFor": "Place equally spaced center or edge marks along a measured run.",
+      "useFor": "Place precise measured part centers, or solve the number of parts from maximum face clearance or desired center-to-center spacing.",
       "notFor": "Thickness-aware shelf clearances, railing code or drilling hardware limits.",
       "next": [
         {

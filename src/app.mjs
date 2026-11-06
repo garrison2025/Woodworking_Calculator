@@ -1887,7 +1887,15 @@ if(slug){
     if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
   };
+  const refreshConditionalFields=()=>{
+    for(const wrapper of form.querySelectorAll("[data-show-when]")){
+      const [key,requiredValue]=wrapper.dataset.showWhen.split(":");
+      const parent=form.elements.namedItem(key);
+      wrapper.hidden=!parent||String(parent.value)!==requiredValue;
+    }
+  };
   function render(){
+    refreshConditionalFields();
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
     for(const f of tool.inputs){

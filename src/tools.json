@@ -188,9 +188,18 @@
           "value": 0,
           "advanced": true,
           "options": [
-            {"value": 0, "label": "Off — original purchasing model"},
-            {"value": 1, "label": "Review extra trims, last kerf and salvage only"},
-            {"value": 2, "label": "Reallocate eligible offcuts (bounded comparison)"}
+            {
+              "value": 0,
+              "label": "Off — original purchasing model"
+            },
+            {
+              "value": 1,
+              "label": "Review extra trims, last kerf and salvage only"
+            },
+            {
+              "value": 2,
+              "label": "Reallocate eligible offcuts (bounded comparison)"
+            }
           ]
         },
         {
@@ -906,11 +915,11 @@
       "keyword": "stair treads calculator",
       "volume": 1600,
       "kd": 18,
-      "desc": "Calculate straight stair riser heights, tread layout, proportional elevation and total footprint including optional upper landing depth.",
+      "desc": "Calculate straight indoor or deck stair riser/tread geometry, finished landing footprint and optional deck-board coverage and available-run checks.",
       "inputs": [
         {
           "key": "rise",
-          "label": "Total rise",
+          "label": "Total finished walking-surface rise",
           "value": 105,
           "kind": "L"
         },
@@ -922,7 +931,7 @@
         },
         {
           "key": "tread",
-          "label": "Tread run",
+          "label": "Tread run (horizontal)",
           "value": 10,
           "kind": "L"
         },
@@ -931,11 +940,62 @@
           "label": "Upper landing reference depth",
           "value": 0,
           "kind": "L"
+        },
+        {
+          "key": "stairMode",
+          "label": "Stair application",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Straight indoor / generic"
+            },
+            {
+              "value": 1,
+              "label": "Deck steps with board-coverage check"
+            }
+          ]
+        },
+        {
+          "key": "availableRun",
+          "label": "Deck available flight run (0 = unspecified)",
+          "value": 0,
+          "kind": "L",
+          "showWhen": "stairMode:1"
+        },
+        {
+          "key": "deckBoardWidth",
+          "label": "Deck board measured face across tread",
+          "value": 5.5,
+          "kind": "L",
+          "showWhen": "stairMode:1"
+        },
+        {
+          "key": "deckBoardsPerTread",
+          "label": "Deck boards across each tread",
+          "value": 2,
+          "kind": "N",
+          "showWhen": "stairMode:1"
+        },
+        {
+          "key": "deckBoardGap",
+          "label": "Clear deck board gap",
+          "value": 0.125,
+          "kind": "L",
+          "showWhen": "stairMode:1"
+        },
+        {
+          "key": "deckBoardThickness",
+          "label": "Actual deck board thickness (reference)",
+          "value": 1,
+          "kind": "L",
+          "showWhen": "stairMode:1"
         }
       ],
-      "formula": "risers = ceil(total rise / desired maximum riser); actual riser height = total rise / risers; treads = risers − 1 because upper finished landing is the last walking surface; flight run = treads × tread run; total horizontal footprint = flight run + optional upper landing reference depth.",
-      "example": "105 in total rise with 7.5 in desired maximum and 10 in tread run gives 14 equal 7.5 in risers, 13 treads, 130 in flight run. Add a separately measured 36 in upper landing for a 166 in reference footprint.",
-      "limit": "Straight-flight geometry only: measured total rise is between finished floor walking elevations; treads = risers − 1 assumes the upper landing is the last walking surface. Optional landing depth extends the horizontal footprint beyond the last riser but is NOT an extra tread. This does not verify code minima, headroom, handrails, stair widths, tread nosing, actual landing dimensions, structural capacity or stringer cuts. Verify site geometry and local regulations.",
+      "formula": "For a straight flight: risers = ceil(finished rise ÷ maximum riser); actual riser height = rise/risers; independent treads = risers − 1 and flight run = (risers − 1) × measured horizontal tread run. In Deck mode, user-specified board coverage = board count × face width + between-board gaps. Verify that coverage is not less than the nominal tread run and flight run fits any available measured horizontal run.",
+      "example": "105 in finished rise, 7.5 in maximum riser, 10 in tread run produces 14 risers, 13 treads and a 130 in flight. Deck mode with two 5.5 in measured boards and one 0.125 in gap covers 11.125 in per tread, giving 1.125 in of additional nominal coverage to review against actual support and nosing rules.",
+      "limit": "Straight-flight geometry only: measured total rise is between finished floor walking elevations; treads = risers − 1 assumes the upper landing is the last walking surface. Optional landing depth extends the horizontal footprint beyond the last riser but is NOT an extra tread. This does not verify code minima, headroom, handrails, stair widths, tread nosing, actual landing dimensions, structural capacity or stringer cuts. Verify site geometry and local regulations. Deck tread mode checks only entered board-face coverage and available horizontal run. It does not validate nosing, actual deck-board bearing, ledger/hanger hardware, stringer count/spacing, footing or structural stair code.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -953,6 +1013,10 @@
         {
           "heading": "Use the individual tread and riser coordinate schedule",
           "text": "The schedule lists each riser elevation, its horizontal position, the next tread's start/end coordinates and which surface is the upper landing. Zero is the first riser's horizontal datum; all positions increase toward the upper landing. Export in inches or switch to millimeters without changing the measured geometry. The SVG uses the same coordinates and scale, but is not a full-size cutting template."
+        },
+        {
+          "heading": "Deck stair layout is a measured reference, not a complete deck assembly",
+          "text": "Use finished deck elevation as the upper walking-surface datum and the lower finished landing as the lower datum. In Deck mode, enter actual decking board face widths, gaps and a measured available run. The calculator verifies that the entered board coverage is sufficient for the nominal run, but does not specify structural fastening, support bearing or an approved nosing allowance. Check the separate Stair Stringer tool and local requirements for actual construction."
         }
       ]
     },
@@ -1268,23 +1332,69 @@
       "keyword": "pitch calculator",
       "volume": 1300,
       "kd": 15,
-      "desc": "Convert rise per 12 horizontal run into roof-face degrees, grade, vertical rise and true slope-line length",
+      "desc": "Convert roof pitch, angle, percentage grade or measured rise/run in either direction, with one consistent proportional slope diagram.",
       "inputs": [
+        {
+          "key": "roofMode",
+          "label": "Given measurement",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Rise per 12"
+            },
+            {
+              "value": 1,
+              "label": "Roof angle in degrees"
+            },
+            {
+              "value": 2,
+              "label": "Percentage grade"
+            },
+            {
+              "value": 3,
+              "label": "Measured rise and run"
+            }
+          ]
+        },
         {
           "key": "pitch",
           "label": "Rise per 12",
           "value": 6,
-          "kind": "P"
+          "kind": "P",
+          "showWhen": "roofMode:0"
+        },
+        {
+          "key": "angle",
+          "label": "Measured roof angle (degrees)",
+          "value": 26.565051177,
+          "kind": "A",
+          "showWhen": "roofMode:1"
+        },
+        {
+          "key": "grade",
+          "label": "Measured percentage grade",
+          "value": 50,
+          "kind": "D",
+          "showWhen": "roofMode:2"
+        },
+        {
+          "key": "measuredRise",
+          "label": "Measured vertical rise",
+          "value": 60,
+          "kind": "L",
+          "showWhen": "roofMode:3"
         },
         {
           "key": "run",
-          "label": "Reference run",
+          "label": "Reference horizontal run",
           "value": 120,
           "kind": "L"
         }
       ],
-      "formula": "Given pitch p: slope=p/12; angle=atan(slope); percentage grade=100×slope; rise=horizontal run×slope; sloping length=hypot(horizontal run,rise). The 12 is horizontal, not measured along a sloped roof face.",
-      "example": "At 6:12 with 120 in horizontal face run, rise=60 in, slope-line length≈134.16408 in, angle≈26.56505° and grade=50%. The same rise and line apply to a common rafter with zero ridge deduction and zero overhang; a diagonal hip rafter is different.",
+      "formula": "Set s = pitch/12, tan(angle), grade/100, or measured rise ÷ horizontal run according to the selected mode. Report pitch = 12s, angle = atan(s), grade = 100s, rise = run × s, and sloped length = hypot(run,rise). Reference run is always horizontal.",
+      "example": "With 120 in horizontal run, 6:12 pitch, 26.565051° roof angle, 50% grade, or a 60 in measured rise are equivalent: the diagonal is 134.164079 in. Selecting a mode changes the primary source measurement, not the coordinate conventions.",
       "limit": "Ideal straight roof-face triangle only. No hip-azimuth correction, ridge thickness adjustment, bearing, plumb/saw calibration, roofing code, structure or actual site grade. The SVG is a correctly proportioned geometric reference within its viewport, not a scale-to-print cutting template.",
       "status": "BETA_NO_INDEX",
       "guidance": [
@@ -1299,6 +1409,10 @@
         {
           "heading": "Hip pitch uses a different horizontal reference",
           "text": "Hip Rafter's face pitch input is still this same common roof-face 6:12. Its elevation angle is based on the hip's PLAN DIAGONAL, which is longer than its across-face run. Do not substitute 26.565° as the hip-line elevation angle."
+        },
+        {
+          "heading": "Switch the primary measured input, not the roof model",
+          "text": "Choose Rise per 12, Degrees, Grade or Measured rise/run. Only the selected source is used, so an old value left in another mode cannot distort the result. Use the horizontal run to calculate a proportional slope triangle. A roof-face angle is not a hip-rafter elevation angle."
         }
       ]
     },
@@ -1310,7 +1424,7 @@
       "keyword": "equal spacing calculator",
       "volume": 480,
       "kd": 7,
-      "desc": "Place evenly spaced center marks or full-width parts with measured face edges, clear gaps and safe end margins.",
+      "desc": "Place exact center marks and part faces, or derive a part count from your maximum allowable clear gap or target center spacing.",
       "inputs": [
         {
           "key": "length",
@@ -1319,10 +1433,45 @@
           "kind": "L"
         },
         {
+          "key": "spacingMode",
+          "label": "Layout mode",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Enter exact number of centers"
+            },
+            {
+              "value": 1,
+              "label": "Find count from maximum clear gap"
+            },
+            {
+              "value": 2,
+              "label": "Find count closest to target center pitch"
+            }
+          ]
+        },
+        {
           "key": "count",
           "label": "Center count",
           "value": 6,
-          "kind": "N"
+          "kind": "N",
+          "showWhen": "spacingMode:0"
+        },
+        {
+          "key": "maxClearGap",
+          "label": "Largest allowed gap between faces",
+          "value": 5.9055118,
+          "kind": "L",
+          "showWhen": "spacingMode:1"
+        },
+        {
+          "key": "targetPitch",
+          "label": "Target center-to-center interval",
+          "value": 7.08661417,
+          "kind": "L",
+          "showWhen": "spacingMode:2"
         },
         {
           "key": "left",
@@ -1343,8 +1492,8 @@
           "kind": "L"
         }
       ],
-      "formula": "For n ≥ 2: center pitch = (total length − left center offset − right center offset)/(n − 1); center i = left offset + i×pitch. For n = 1, center = (left offset + total length − right offset)/2. When part width w > 0: face edges = center ± w/2, clear face gap = pitch − w, and first/last faces must stay inside the measured run.",
-      "example": "1000 mm total length, 6 equal parts, 50 mm left/right center offsets, 30 mm physical part width: centers 50, 230, 410, 590, 770, 950 mm; 180 mm center pitch, 150 mm clear face gaps and 35 mm end margins.",
+      "formula": "Exact-count: pitch = (length − left/right center offsets)/(count − 1). Maximum face gap: count = ceil(usable center run/(part width + maximum gap)) + 1, with at least two centers and no overlap. Target pitch: choose nearest integer number of intervals, then recompute the exact pitch and mark every location from the original reference datum.",
+      "example": "1000 mm of total run, with 50 mm left/right center offsets, 30 mm part face width and a maximum clear gap of 150 mm, selects 6 centers: pitch 180 mm, face gap 150 mm and outside margins 35 mm. A target pitch of 180 mm also selects 6 centers under the same offsets.",
       "limit": "All offsets are measured to part centers, not faces. Zero part width means marking centers only, not an infinitely thin physical board. With a positive width, full part faces must fit inside the entered run and adjacent parts must not overlap. Exactly one center is placed midway between offset reference positions; gap is not defined. This does not certify spacing code, safe minimum fastener distances or material deformation.",
       "status": "BETA_NO_INDEX",
       "guidance": [
@@ -1363,6 +1512,10 @@
         {
           "heading": "Example: six equal-width parts over one meter",
           "text": "For a 1000 mm run with six parts, centers inset 50 mm from both ends and part face widths of 30 mm, the correct pitch is 180 mm, clear gaps are 150 mm and outside clear margins are each 35 mm. This optional face-layout mode is different from the default zero-width center-only mark schedule; it does not design fasteners or structural connections."
+        },
+        {
+          "heading": "Automatic part count without guessing or stretching widths",
+          "text": "Maximum clear gap works with positive physical part width and chooses the minimum number of parts that fits the gap target; if that arrangement overlaps, the input is rejected. Target center pitch chooses the nearest integer number of intervals; the actual center pitch is always recomputed and shown, not silently assumed to equal the request."
         }
       ]
     },
