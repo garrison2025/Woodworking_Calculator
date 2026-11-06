@@ -21,7 +21,7 @@ test("Framing stock-local start/end locations match every exported cut and print
   const stockTable=page.locator("#framing-stock-table tbody tr");
   await expect(stockTable).toHaveCount(9);
   const stockText=await page.locator("#framing-stock-table").innerText();
-  expect(stockText).toMatch(/\[[0-9.,]+ in\s+[–-]\s+[0-9.,]+ in\]/);
+  expect(stockText).toMatch(/\[[0-9.,]+–[0-9.,]+ in\]/);
   const download=page.waitForEvent("download");
   await page.locator("#download-stock-csv").click();
   const csv=stockRows(readFileSync(await(await download).path(),"utf8"));
@@ -64,7 +64,7 @@ test("Framing stock-local start/end locations match every exported cut and print
   await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
   await page.emulateMedia({media:"print"});
   await expect(page.locator("#framing-stock-table")).toBeVisible();
-  expect(await page.locator("#framing-stock-table").innerText()).toContain(" – ");
+  expect(await page.locator("#framing-stock-table").innerText()).toMatch(/\[[0-9.,]+–[0-9.,]+ mm\]/);
   await expect(page.locator("#print-calibration")).toBeVisible();
   const widths=await page.evaluate(()=>({
     mm:document.querySelector(".calibration-100mm").getBoundingClientRect().width,
