@@ -1,0 +1,66 @@
+{
+  "basis": "User-supplied 2026-11-04 Semrush 400-row sample / 152 selected terms. Original research rows preserved unchanged.",
+  "purpose": "Flag search phrases whose underlying task is broader or materially different from the implemented calculator. Do not show as claimed synonyms on user-facing pages without a task-specific feature and fresh SERP review.",
+  "flagged": [
+    {
+      "keyword": "wall framing calculator with windows and doors",
+      "originalRoute": "/wall-stud-calculator/",
+      "reason": "Door/window opening layouts belong to the separate framing calculator, not the straight-wall stud counter.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "wall framing calculator",
+      "originalRoute": "/wall-stud-calculator/",
+      "reason": "Ambiguous framing query; do not claim the plain stud counter covers opening-member takeoff.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "deck joist span calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "reason": "Structural joist span capacity is not calculated; deck material geometry is not a code-approved span table.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "hip roof framing plan",
+      "originalRoute": "/hip-rafter-calculator/",
+      "reason": "The hip rafter page models line geometry rather than a complete roof frame design.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "hip roof volume calculator",
+      "originalRoute": "/hip-rafter-calculator/",
+      "reason": "Hip rafter line geometry does not output an enclosed roof volume.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "hip to gable calculator",
+      "originalRoute": "/gable-roof-calculator/",
+      "reason": "The gable tool estimates an existing gable roof, not a hip-to-gable conversion.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "shelf bracket spacing calculator",
+      "originalRoute": "/shelf-spacing-calculator/",
+      "reason": "Shelf clearance and pin locations do not size load-bearing bracket spacing.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "coopering calculator",
+      "originalRoute": "/segmented-bowl-calculator/",
+      "reason": "Segmented bowl ring angles are not stave/barrel coopering geometry.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "how to bend a plywood",
+      "originalRoute": "/kerf-bending-calculator/",
+      "reason": "A geometry kerf schedule is not a tested technique tutorial or material bending safety guide.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "staircase spindle spacing calculator",
+      "originalRoute": "/baluster-spacing-calculator/",
+      "reason": "Straight-reference baluster gap geometry does not calculate stair-slope-specific rail installation.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    }
+  ]
+}
