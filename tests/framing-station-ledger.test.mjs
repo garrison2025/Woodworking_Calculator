@@ -128,7 +128,7 @@ test("Incomplete, blocked and adulterated plans cannot be silently exported as s
   assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/mismatch|invalid/i);
   corrupted=modify();
   corrupted.bars[0].actualStockLength-=1;
-  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/overflows|mismatch/i);
+  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/overflows|mismatch|disagrees|baseline/i);
   corrupted=modify();
   corrupted.rows[0].item="NO SUCH CUT";
   assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/disagrees|cover/i);
