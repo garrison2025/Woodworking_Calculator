@@ -1,0 +1,33 @@
+{
+  "version": "2026-11-06",
+  "checks": {
+    "stud-calculator": "Check end-centerline heights and the separate left/right top cuts of each sloped stud face.",
+    "framing-calculator": "Compare the measured door/window jamb references with every king, jack, header and sill row before purchasing lumber.",
+    "deck-board-calculator": "Sum all board face widths and clear gaps, including the last rip, to reproduce the target deck coverage.",
+    "baluster-spacing-calculator": "Sum the physical baluster faces and all between-face and end spaces; local safety limits remain independent.",
+    "rafter-calculator": "Confirm half-ridge deduction, horizontal seat, plumb heel and normal remaining throat use different datums.",
+    "crown-molding-calculator": "Confirm the corner and spring angle on scrap; the illustration is not a saw-handed cutting instruction.",
+    "soffit-calculator": "Measure all roof-fall, fascia and lining values from the same wall-rafter datum.",
+    "kerf-bending-calculator": "Check flat-stock slot start/end positions and remaining continuous web; actual bendability needs a trial.",
+    "wainscoting-calculator": "Add physical panel faces, all between-panel gaps and both margins to close exactly to wall width.",
+    "stair-calculator": "Count N risers, N−1 separate treads, and check that the landing is not counted as an extra tread.",
+    "rise-run-calculator": "Verify the diagonal by hypot(rise, horizontal run); percentage grade divides by horizontal run.",
+    "deck-material-calculator": "Check board seams against joist center references, and review actual end gaps and unmodeled saw kerf.",
+    "segmented-bowl-calculator": "Compare straight physical chord lengths, not curved arcs, and distinguish polygon from turned-ring diameter.",
+    "roof-pitch-calculator": "Select the source ratio, angle, grade or measured rise/run explicitly; hip elevation is a separate angle.",
+    "equal-spacing-calculator": "Check first/last physical face positions, then verify the chosen integer count yields the reported REAL pitch.",
+    "hip-rafter-calculator": "Recalculate the horizontal plan diagonal from perpendicular runs before deriving true hip elevation angle.",
+    "hip-roof-calculator": "Separate sloped cut vertices from plan projections; check used sheet area plus discarded offcuts.",
+    "wall-stud-calculator": "Deduct the actual upper/lower plate stack from the gross straight-wall height.",
+    "shelf-spacing-calculator": "Check each shelf top/bottom datum and real support-pin positions, not just the count of shelves.",
+    "gable-roof-calculator": "Verify two mirrored sloped roof faces from the same half-span and horizontal eave overhang.",
+    "square-layout-calculator": "Compare both measured diagonals against an independent Pythagorean target; corner positions are not inferred.",
+    "diagonal-brace-calculator": "Compare the complete diagonal with separately shortened brace X/Y endpoints.",
+    "hole-spacing-calculator": "Use the same X/Y board edge origin for every hole, and measure clearance to the circular EDGE.",
+    "stair-stringer-calculator": "Verify finished-floor rise, installed tread thickness, and normal nominal throat independently.",
+    "roof-sheathing-calculator": "Sum actual eave/uphill cut bounds and verify stock area equals used face area plus offcuts.",
+    "fence-post-calculator": "Distinguish end POST CENTER run from the outside face-to-face length.",
+    "fence-picket-calculator": "N actual picket faces produce N+1 equal gaps, including both spaces beside the inside post faces.",
+    "gambrel-roof-calculator": "The two horizontal runs total the eave-to-ridge half-span, and the two rises total ridge elevation."
+  }
+}

@@ -930,3 +930,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
 /* Only the selected calculator mode's measurements are visible; all values
    stay in the local form for reversible mode switching and reset. */
 .field[data-show-when][hidden]{display:none!important}
+
+.field-verification{border-left:3px solid #8ca88f;background:#f6f8f4;padding:.5rem 1rem;margin:1rem 0}
+.field-verification h3{margin:.2rem 0 .45rem}
+@media print{.field-verification{display:none!important}}
