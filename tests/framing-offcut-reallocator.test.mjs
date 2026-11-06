@@ -7,7 +7,8 @@ const source=(group,id,len,parts,price=10.5,code="BASE")=>({
   stockGroup:group,stockId:id,offerLabel:code==="BASE"?"Base":"Alternative 1",
   offerCode:code,stockLength:len,actualStockLength:len,unitPrice:price,
   cuts:parts.map(([item,n])=>({item,type:group,cutLength:n})),
-  cutCount:parts.length,usedLength:parts.reduce((s,p)=>s+p[1],0)
+  cutCount:parts.length,usedLength:parts.reduce((s,p)=>s+p[1],0)+
+    (parts.length-1)*.125
 });
 const example=()=>[
   source("Stud","STUD-001",96,[["A",50]]),
@@ -195,4 +196,20 @@ test("Integration: mode 2 preserves base geometry, optimizer proof and supplier 
     .map(r=>({...r,currency:"USD"})),"in","MODELED ONLY");
   assert.ok(csvPrice.includes('"Purchase Sticks"'));
   assert.ok(csvPrice.includes('"Currency"'));
+});
+
+test("Never accept inconsistent source counts, duplicate source IDs or understated baseline kerf",()=>{
+  const bars=example();
+  const tampered=preserved(bars);
+  tampered[0].usedLength-=1;
+  assert.throws(()=>reallocateFramingOffcuts(tampered,{kerf:.125,reuseMin:10}),
+    /inconsistent original cut or kerf/);
+  const dup=preserved(bars);
+  dup[1].stockId=dup[0].stockId;
+  assert.throws(()=>reallocateFramingOffcuts(dup,{kerf:.125,reuseMin:10}),
+    /unique physical source/);
+  const count=preserved(bars);
+  count[2].cutCount=2;
+  assert.throws(()=>reallocateFramingOffcuts(count,{kerf:.125,reuseMin:10}),
+    /inconsistent original cut or kerf/);
 });
