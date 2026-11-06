@@ -21,6 +21,9 @@ test("Deck optional-joist purchase reconciles browser, CSV, print and 0/10/50/10
   ])await page.locator("#f-"+key).fill(value);
   const status=page.locator("#deck-cost-status");
   const ticket=page.locator("#deck-ticket-status");
+  const scope=page.locator("#deck-purchase-plan .ticket-caveat");
+  await expect(scope).toContainText("Optional full-width straight joist sticks are included");
+  await expect(scope).not.toContainText("Joist lumber, blocking, footings");
   const totalMetric=page.locator("#result-cards .metric")
     .filter({hasText:"Quoted deck materials total"});
   let previous=0,baseCutSchedule=null,baseFasteners=null;
