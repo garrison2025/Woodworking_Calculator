@@ -1,6 +1,6 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
-import {makeFramingStationLedger,auditMeasuredFramingFits} from "./framing-stations.mjs";
+import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -43,6 +43,21 @@ if(slug){
   const fieldExport=document.querySelector("#download-framing-field-csv");
   const fieldDraft={signature:"",unit:"in",sources:new Map(),
     sawKerf:null,endTrim:null,finalSeverKerf:null};
+  const purchaseReviewPanel=document.querySelector("#framing-purchase-review");
+  const purchaseReviewStatus=document.querySelector("#framing-purchase-review-status");
+  const purchaseReviewTable=document.querySelector("#framing-purchase-review-table tbody");
+  const purchaseReviewExport=document.querySelector("#download-framing-purchase-review-csv");
+  const purchaseReviewDraft={signature:"",quoteSignature:"",stocks:new Map(),
+    globals:{sawSafetyReviewed:false,structuralReviewed:false,
+      supplierVerified:false,totalCostReviewed:false}};
+  const clearPurchaseReview=(all=true)=>{
+    if(all){purchaseReviewDraft.signature="";purchaseReviewDraft.stocks.clear();}
+    if(all)purchaseReviewDraft.globals.sawSafetyReviewed=false;
+    if(all)purchaseReviewDraft.globals.structuralReviewed=false;
+    purchaseReviewDraft.globals.supplierVerified=false;
+    purchaseReviewDraft.globals.totalCostReviewed=false;
+    purchaseReviewDraft.quoteSignature="";
+  };
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
@@ -1094,12 +1109,85 @@ if(slug){
     if(!Number.isFinite(x)||(source?x<=0:x<0))return NaN;
     return convertToInches(x,unit);
   };
+  const renderPurchaseReview=(ledger,measurements)=>{
+    if(!purchaseReviewPanel)return;
+    const available=Boolean(ledger?.available);
+    purchaseReviewPanel.hidden=!available;
+    purchaseReviewExport.disabled=!available;
+    if(!available){
+      purchaseReviewTable.innerHTML="";
+      purchaseReviewStatus.textContent="HOLD — no valid alternative and field review.";
+      clearPurchaseReview();
+      return;
+    }
+    const alternative=latest?.stockReusePlan;
+    const quoteSignature=JSON.stringify([currencyCode(),
+      alternative?.reallocatedQuotedSubtotal,
+      (alternative?.purchaseVariants||[]).map(row=>[
+        row.stockGroup,row.offerCode,row.unitPrice,row.purchaseSticks,row.purchaseCost])]);
+    if(purchaseReviewDraft.quoteSignature!==quoteSignature){
+      purchaseReviewDraft.globals.supplierVerified=false;
+      purchaseReviewDraft.globals.totalCostReviewed=false;
+      purchaseReviewDraft.quoteSignature=quoteSignature;
+    }
+    const previousIds=[...purchaseReviewTable.querySelectorAll("tr[data-review-source]")].map(
+      row=>row.getAttribute("data-review-source"));
+    if(JSON.stringify(previousIds)!==JSON.stringify(ledger.bars.map(b=>b.stockId))){
+      purchaseReviewTable.innerHTML=ledger.bars.map(bar=>{
+        const id=esc(bar.stockId);
+        return '<tr data-review-source="'+id+'"><td>'+id+' · '+esc(bar.stockGroup)+'</td>'+
+          '<td data-review-dimension>—</td>'+
+          '<td><label><input type="checkbox" data-review-source-input="'+id+
+          '" data-review-source-key="profileGradeReviewed" aria-label="I reviewed profile and grade for '+
+          id+'"><span class="review-print-value">NOT DECLARED</span></label></td>'+
+          '<td><label><input type="checkbox" data-review-source-input="'+id+
+          '" data-review-source-key="defectsReviewed" aria-label="I reviewed defects for '+
+          id+'"><span class="review-print-value">NOT DECLARED</span></label></td>'+
+          '<td data-review-outcome>HOLD</td></tr>';
+      }).join("");
+    }
+    const report=assessFramingPurchaseReview(ledger,measurements,
+      purchaseReviewDraft.stocks,purchaseReviewDraft.globals,alternative);
+    for(const row of report.rows){
+      const tr=[...purchaseReviewTable.querySelectorAll("tr[data-review-source]")].
+        find(el=>el.getAttribute("data-review-source")===row.stockId);
+      if(!tr)continue;
+      tr.querySelector("[data-review-dimension]").textContent=row.dimensionStatus;
+      tr.querySelector("[data-review-outcome]").textContent=row.sourceStatus;
+      for(const key of ["profileGradeReviewed","defectsReviewed"]){
+        const input=tr.querySelector('[data-review-source-key="'+key+'"]');
+        if(input){
+          input.checked=row[key];
+          input.nextElementSibling.textContent=row[key]?
+            "USER DECLARED":"NOT DECLARED";
+        }
+      }
+    }
+    for(const key of ["sawSafetyReviewed","structuralReviewed",
+      "supplierVerified","totalCostReviewed"]){
+      const input=purchaseReviewPanel.querySelector('[data-review-global="'+key+'"]');
+      if(!input)continue;
+      input.checked=report.globalChecks[key]===true;
+      const note=input.nextElementSibling;
+      if(note?.matches(".review-print-value"))note.textContent=input.checked?
+        "USER DECLARED":"NOT DECLARED";
+    }
+    purchaseReviewStatus.textContent=report.status+
+      " · "+report.reviewed+"/"+report.total+" source inspection sets declared"+
+      " · "+report.shortOrInvalid+" source dimensions incomplete or short"+
+      " · "+report.globalPending.length+" other declarations pending"+
+      " · "+(report.quoteComplete?
+        "Model quote "+money(report.reviewedQuotedSubtotal)+" (not actual invoice)":
+        "Supplier price data incomplete")+
+      ". No order authorization is issued by the site.";
+  };
   const renderFieldPreflight=ledger=>{
     if(!fieldPanel)return;
     const available=Boolean(ledger?.available);
     fieldPanel.hidden=!available;
     fieldExport.disabled=!available;
     if(!available){
+      renderPurchaseReview(null,null);
       fieldDraft.signature="";
       fieldDraft.sources.clear();
       fieldDraft.sawKerf=null;fieldDraft.endTrim=null;fieldDraft.finalSeverKerf=null;
@@ -1112,6 +1200,7 @@ if(slug){
       ledger.rows.map(x=>[x.stockId,x.segmentKind,x.stationStart,x.stationEnd,x.item])]);
     const changed=fieldDraft.signature!==signature;
     if(changed){
+      clearPurchaseReview();
       fieldDraft.sources.clear();
       fieldDraft.sawKerf=null;fieldDraft.endTrim=null;fieldDraft.finalSeverKerf=null;
       fieldDraft.signature=signature;
@@ -1156,6 +1245,7 @@ if(slug){
         "LEFT "+fmt(Math.max(0,row.clearance),"L");
       tr.querySelector("[data-field-result]").textContent=row.status;
     }
+    renderPurchaseReview(ledger,review);
     fieldStatus.textContent=review.allDimensionalFit?
       "DIMENSION-ONLY FIT: "+review.fitting+" of "+review.rows.length+
       " entered source lengths fit the entered losses. NOT field-certified; inspect each actual source, grade and safe procedure.":
@@ -1175,7 +1265,30 @@ if(slug){
     }else if(el.hasAttribute("data-measured-global")){
       fieldDraft[el.getAttribute("data-measured-global")]=fieldNumeric(el.value);
     }else return;
+    // Any changed field reading invalidates prior human declarations.
+    clearPurchaseReview();
     renderFieldPreflight(makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan));
+  });
+  purchaseReviewPanel?.addEventListener("change",event=>{
+    const el=event.target;
+    if(!(el instanceof HTMLInputElement)||el.type!=="checkbox")return;
+    if(el.hasAttribute("data-review-source-input")){
+      const id=el.getAttribute("data-review-source-input");
+      const key=el.getAttribute("data-review-source-key");
+      if(!["profileGradeReviewed","defectsReviewed"].includes(key))return;
+      const flags=purchaseReviewDraft.stocks.get(id)||{};
+      flags[key]=el.checked;purchaseReviewDraft.stocks.set(id,flags);
+    }else if(el.hasAttribute("data-review-global")){
+      const key=el.getAttribute("data-review-global");
+      if(!["sawSafetyReviewed","structuralReviewed","supplierVerified",
+        "totalCostReviewed"].includes(key))return;
+      purchaseReviewDraft.globals[key]=el.checked;
+    }else return;
+    const ledger=makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan);
+    const review=auditMeasuredFramingFits(ledger,fieldDraft.sources,{
+      sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
+      finalSeverKerf:fieldDraft.finalSeverKerf});
+    renderPurchaseReview(ledger,review);
   });
   const renderFramingTakeoff=()=>{
     if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
@@ -1704,6 +1817,29 @@ if(slug){
       "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
     save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
     status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
+  });
+  purchaseReviewExport?.addEventListener("click",()=>{
+    const ledger=makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan);
+    if(!ledger.available)return;
+    const measured=auditMeasuredFramingFits(ledger,fieldDraft.sources,{
+      sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
+      finalSeverKerf:fieldDraft.finalSeverKerf});
+    const report=assessFramingPurchaseReview(ledger,measured,
+      purchaseReviewDraft.stocks,purchaseReviewDraft.globals,
+      latest?.stockReusePlan);
+    const detail=report.rows.map(row=>({...row,
+      packetStatus:report.status,sourceInspectionClaim:"USER DECLARATIONS ONLY",
+      sawSafetyReviewed:report.globalChecks.sawSafetyReviewed,
+      structuralReviewed:report.globalChecks.structuralReviewed,
+      supplierVerified:report.globalChecks.supplierVerified,
+      totalCostReviewed:report.globalChecks.totalCostReviewed,
+      modelQuoteCost:report.reviewedQuotedSubtotal,
+      currency:currencyCode(),
+      humanApprovalRequired:true,automaticPurchaseAuthorized:false}));
+    const note="SELF-REPORTED PRE-PURCHASE REVIEW, NOT AN APPROVAL. No checkout, stock grade certification, professional structural signoff, blade safety check or actual savings confirmation. A completed review requires independent human purchasing authorization.";
+    save(slug+"-"+unit+"-self-reported-purchase-review.csv",
+      buildScheduleCsv(detail,unit,note),"text/csv;charset=utf-8");
+    status.textContent="Unapproved self-reported purchasing review exported; no order placed.";
   });
   fieldExport?.addEventListener("click",()=>{
     const ledger=makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan);
