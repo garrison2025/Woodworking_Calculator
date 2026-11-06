@@ -25,6 +25,13 @@ cautions=json.loads((root/"research"/"keyword-intent-cautions.json").read_text(e
 flagged={(x["originalRoute"],x["keyword"].lower()) for x in cautions}
 assert len(cautions)==len(flagged), "Duplicated editorial search-intent caution"
 assert flagged<={(x["target_route"],x["keyword"].lower()) for x in research_rows}, "Flagged term lacks original user research evidence"
+# A reviewed intent correction may move copy ONLY to an existing P0/P1 page;
+# all original keyword data must still remain unchanged and traceable.
+supported_reassignments={x["keyword"].lower():x["supportedRoute"] for x in cautions if x.get("supportedRoute")}
+assert len(supported_reassignments)==sum(bool(x.get("supportedRoute")) for x in cautions), "Duplicated keyword reassignment"
+assert set(supported_reassignments.values()) <= {"/"+t["slug"]+"/" for t in active}, "Keyword redirected to a missing or held tool"
+assert all(supported_reassignments[k] != x["originalRoute"] for x in cautions
+           if (k:=x["keyword"].lower()) in supported_reassignments), "Reassignment has the same original destination"
 known_routes={"/"+t["slug"]+"/" for t in manifest["tools"]}
 for term in research_rows:
     assert term["target_route"] in known_routes, ("Keyword targets missing route",term)
@@ -113,9 +120,13 @@ for p in pages:
         # functionality synonym in the generic nearby-search paragraph.
         nearby=re.search(r'<p class="intent-query-copy">.*?</p>',body)
         if nearby:
+            rendered_query=html.unescape(nearby.group(0)).lower()
             for route,term in flagged:
-                if route==u and term in html.unescape(nearby.group(0)).lower():
+                if route==u and term in rendered_query:
                     errors.append(f"{u}: flagged nonmatching search phrase used as a claimed synonym: {term}")
+            for term,correct_route in supported_reassignments.items():
+                if correct_route==u and term not in rendered_query:
+                    errors.append(f"{u}: approved reassigned search intent not shown on the matching tool: {term}")
         expected={"f-"+field["key"] for field in page_tool["inputs"]}
         if len(c.input_ids)!=len(set(c.input_ids)):
             errors.append(f"{u}: duplicated calculator field IDs")
