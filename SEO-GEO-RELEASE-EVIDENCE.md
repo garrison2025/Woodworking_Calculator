@@ -1,4 +1,8 @@
-# SEO / GEO release evidence — 2026-11-04
+# SEO / GEO release evidence — historical evidence and current scope
+## Current scope checkpoint — 2026-11-07
+
+31 active geometry calculator routes and six populated categories make **42 static pages**. Original 152 KD≤29 Semrush research rows are preserved; their assignment does not guarantee user-intent fit, indexed traffic or revenue. [Baseline Actions #670](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42205140952) passed 556 Node, 190 Chromium, 18 cross-engine smoke checks and an offline 42-route SEO release simulation; PR #13 requires a new CI verdict. Preview remains noindex,nofollow,noarchive and robots.txt Disallow: /. There is no purchased custom domain, live sitemap, GSC evidence, physical printer calibration or field cut validation. Older 26-route figures below remain historical snapshots, not current inventory.
+
 ## Confirmed source and live preview
 - **9 P0 + 17 P1** unique tool routes; **5 P2** planning intentions are intentionally absent from public pages.
 - **36 prerendered HTML pages** with page-specific H1, title/description, explicit geometry rule, reproducible example, assumptions, real tool controls, related cross-links and legal/navigation pages.
