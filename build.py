@@ -137,7 +137,8 @@ def tool_page(t):
         else:
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = "Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"
-        return f'<div class="field"><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
+        condition = f' data-show-when="{esc(f["showWhen"])}"' if f.get("showWhen") else ""
+        return f'<div class="field"{condition}><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
     fields = ''.join(field_markup(f) for f in t["inputs"] if not f.get("advanced"))
     advanced_fields = ''.join(field_markup(f) for f in t["inputs"] if f.get("advanced"))
     advanced_options = (

@@ -1367,6 +1367,8 @@ export function compute(slug,a){
   }
   case "stair-calculator":{
     positive("rise","desired","tread");nonnegative("landing");
+    const stairMode=a.stairMode??0;
+    whole("stairMode",0,1);
     const risers=ceilStable(a.rise/a.desired);
     need(risers>=2&&risers<=200,"Stair count outside supported range.");
     const treads=risers-1,h=a.rise/risers,flightRun=treads*a.tread;
@@ -1374,6 +1376,23 @@ export function compute(slug,a){
     need(h>=1e-7&&a.tread>=1e-7,
       "Stair riser height or tread run is below cut-coordinate resolution.");
     const footprint=flightRun+a.landing;
+    // Deck mode is a tread-material coverage CHECK, not a board fastening
+    // system, guardrail analysis or structural stringer design.
+    let deckCoverage=null,deckRunMargin=null;
+    if(stairMode===1){
+      positive("deckBoardWidth","deckBoardThickness");
+      whole("deckBoardsPerTread",1,10);
+      nonnegative("deckBoardGap","availableRun");
+      deckCoverage=a.deckBoardsPerTread*a.deckBoardWidth+
+        (a.deckBoardsPerTread-1)*a.deckBoardGap;
+      need(deckCoverage+1e-8>=a.tread,
+        "Entered deck tread boards do not cover the requested tread run.");
+      if(a.availableRun>0){
+        need(flightRun<=a.availableRun+1e-8,
+          "Calculated deck flight run exceeds the entered available horizontal space.");
+        deckRunMargin=a.availableRun-flightRun;
+      }
+    }
     // The final riser reaches the finished upper floor/landing. There is
     // no additional counted tread at the top in this explicit convention.
     // All exported mark coordinates and drawn steps share one physical datum.
@@ -1398,10 +1417,17 @@ export function compute(slug,a){
       M("Actual riser height",h),M("Horizontal run",flightRun),
       M("Upper landing reference depth",a.landing),
       M("Total reference footprint",footprint),
-      M("Incline",deg(Math.atan(h/a.tread)),"A")
+      M("Incline",deg(Math.atan(h/a.tread)),"A"),
+      ...(stairMode===1?[
+        M("Deck tread board coverage",deckCoverage),
+        M("Deck tread overhang beyond nominal run",deckCoverage-a.tread),
+        M("Deck tread stock thickness reference",a.deckBoardThickness),
+        ...(deckRunMargin===null?[]:[M("Available horizontal space remaining",deckRunMargin)])
+      ]:[])
     ],rows.map(r=>P(r.run,r.item)),Math.max(footprint,1),rows,"stairs",{
       stepRise:h,tread:a.tread,risers,totalRise:a.rise,flightRun,
-      landingDepth:a.landing,totalFootprint:footprint,stairRows:rows
+      landingDepth:a.landing,totalFootprint:footprint,stairRows:rows,
+      stairMode,deckCoverage,deckRunMargin
     });
   }
   case "rise-run-calculator":{
@@ -1729,20 +1755,52 @@ export function compute(slug,a){
     });
   }
   case "roof-pitch-calculator":{
-    nonnegative("pitch");positive("run");
-    const ref=roofRunGeometry(a.run,a.pitch);
+    positive("run");
+    const mode=a.roofMode??0;
+    whole("roofMode",0,3);
+    let enteredPitch;
+    if(mode===0){nonnegative("pitch");enteredPitch=a.pitch;}
+    else if(mode===1){
+      need(a.angle>=0&&a.angle<89.9,"Roof angle must be from 0 to below 89.9 degrees.");
+      enteredPitch=12*Math.tan(a.angle*Math.PI/180);
+    }else if(mode===2){
+      nonnegative("grade");enteredPitch=12*a.grade/100;
+    }else{
+      nonnegative("measuredRise");enteredPitch=12*a.measuredRise/a.run;
+    }
+    need(Number.isFinite(enteredPitch)&&enteredPitch<=100000,
+      "Calculated pitch is outside the supported finite slope range.");
+    const ref=roofRunGeometry(a.run,enteredPitch);
     return result([
       M("Roof angle",ref.angle,"A"),M("Percentage grade",ref.slope*100,"D"),
-      M("Rise over reference run",ref.rise),M("Slope line",ref.line)
+      M("Rise over reference run",ref.rise),M("Slope line",ref.line),
+      M("Pitch / 12",enteredPitch,"P")
     ],[],a.run,[],"triangle",{
-      rise:ref.rise,run:a.run,pitch:a.pitch,roofLine:ref.line
+      rise:ref.rise,run:a.run,pitch:enteredPitch,roofLine:ref.line,
+      roofMode:mode
     });
   }
   case "equal-spacing-calculator":{
     positive("length");nonnegative("left","right","itemWidth");
-    whole("count");need(a.left+a.right<a.length,"Offsets consume the available length.");
-    const pitch=a.count===1?0:(a.length-a.left-a.right)/(a.count-1);
-    xs=Array.from({length:a.count},(_,i)=>a.count===1?
+    const spacingMode=a.spacingMode??0;
+    whole("spacingMode",0,2);
+    need(a.left+a.right<a.length,"Offsets consume the available length.");
+    const usable=a.length-a.left-a.right;
+    let count=a.count;
+    if(spacingMode===0)whole("count");
+    else if(spacingMode===1){
+      positive("maxClearGap");
+      need(a.itemWidth>=1e-7,
+        "Maximum clear-gap mode requires a measured physical part face width.");
+      count=Math.max(2,Math.ceil(usable/(a.itemWidth+a.maxClearGap)-1e-10)+1);
+      need(count<=500,"Clear-gap target needs more than 500 parts.");
+    }else{
+      positive("targetPitch");
+      count=Math.max(2,Math.round(usable/a.targetPitch)+1);
+      need(count<=500,"Target pitch needs more than 500 center positions.");
+    }
+    const pitch=count===1?0:usable/(count-1);
+    xs=Array.from({length:count},(_,i)=>count===1?
       (a.left+a.length-a.right)/2:a.left+i*pitch);
     // Zero width means center marks only; never imply zero-width pieces have
     // physical face gaps or a computed end-material clearance.
@@ -1750,7 +1808,7 @@ export function compute(slug,a){
     if(physical){
       need(a.itemWidth>=1e-7,
         "Part face width is below cut-coordinate resolution; use zero for center-only marks.");
-      if(a.count>1)measurableGap(Math.max(0,pitch-a.itemWidth),"Clear space between part faces");
+      if(count>1)measurableGap(Math.max(0,pitch-a.itemWidth),"Clear space between part faces");
     }
     const faces=xs.map((center,i)=>({
       item:"Center "+(i+1),position:q(center),
@@ -1762,26 +1820,28 @@ export function compute(slug,a){
       need(faces[0].faceLeftEdge>=-1e-7 &&
         faces.at(-1).faceRightEdge<=a.length+1e-7,
         "Part faces exceed the measured total length. Increase center offsets or reduce width.");
-      need(a.count===1||pitch+1e-8>=a.itemWidth,
+      need(count===1||pitch+1e-8>=a.itemWidth,
         "Part faces overlap. Reduce width or part count, or increase the run.");
-      if(a.count>1&&pitch>a.itemWidth)
+      if(count>1&&pitch>a.itemWidth)
         need(faces.slice(1).every((row,i)=>row.faceLeftEdge>faces[i].faceRightEdge),
           "Clear space between part faces collapses at cut-coordinate resolution.");
     }
     const metrics=[
-      M("Centers",a.count,"N"),
+      M("Centers",count,"N"),
       M("Equal center interval",pitch),
-      M("Usable length",a.length-a.left-a.right)
+      M("Usable length",usable),
+      ...(spacingMode===2?[M("Difference from target interval",pitch-a.targetPitch)]:[])
     ];
     if(physical){
       metrics.push(M("Physical part face width",a.itemWidth),
         M("Left end face margin",faces[0].faceLeftEdge),
         M("Right end face margin",a.length-faces.at(-1).faceRightEdge));
-      if(a.count>1)metrics.push(M("Clear space between faces",pitch-a.itemWidth));
+      if(count>1)metrics.push(M("Clear space between faces",pitch-a.itemWidth));
     }
     return result(metrics,xs.map(x=>P(x)),a.length,faces,
       physical?"spacing-faces":"ruler",
-      {partFaceWidth:a.itemWidth,faceRows:faces,clearFaceGap:physical&&a.count>1?pitch-a.itemWidth:null});
+      {partFaceWidth:a.itemWidth,faceRows:faces,clearFaceGap:physical&&count>1?pitch-a.itemWidth:null,
+        spacingMode,selectedCount:count});
   }
   case "hip-rafter-calculator":{
     positive("runX","runY");nonnegative("pitch");
