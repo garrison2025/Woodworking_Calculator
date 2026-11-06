@@ -51,11 +51,16 @@ function independentlyVerifyAlternative(input,out,{kerf=0,endTrim=0,finalSeverKe
       close(row.cutEnd,row.cutStart+row.cutLength,"local cut end");
       assert.ok(row.cutStart+1e-12>=previous,"overlapping retained members");
       assert.ok(row.cutEnd<=b.stockLength+1e-12,"source overrun");
+      close(row.endTrim,endTrim,"source leading/trailing trim");
       used+=row.cutLength+before;previous=row.cutEnd;
     }
     const sever=b.stockLength-(endTrim+used)>1e-12?finalSeverKerf:0;
     const tail=b.stockLength-(used+endTrim*2+sever);
     assert.ok(tail>=-1e-12,"negative physical offcut");
+    for(const row of rows){
+      close(row.finalSeverKerf,sever,"exported last-sever blade loss");
+      close(row.usableOffcutLength,Math.max(0,tail),"exported real usable tail");
+    }
     const key=b.stockGroup+"|"+b.offerCode;
     perSku.set(key,(perSku.get(key)||0)+1);
   }
@@ -192,6 +197,9 @@ test("Integration: mode 2 preserves base geometry, optimizer proof and supplier 
     "ALTERNATIVE, NOT BASELINE");
   assert.ok(csv.includes('"Original Stock Id"'));
   assert.ok(csv.includes('"Cut Start (mm)"'));
+  assert.ok(csv.includes('"End Trim (mm)"'));
+  assert.ok(csv.includes('"Final Sever Kerf (mm)"'));
+  assert.ok(csv.includes('"Usable Offcut Length (mm)"'));
   const csvPrice=buildScheduleCsv(opt.stockReusePlan.purchaseVariants
     .map(r=>({...r,currency:"USD"})),"in","MODELED ONLY");
   assert.ok(csvPrice.includes('"Purchase Sticks"'));
