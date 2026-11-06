@@ -720,6 +720,7 @@ if(slug){
       content+=svgText(75,72,"BOARD LENGTH "+fmt(b.length)+" / FACE WIDTH "+fmt(b.width),"tick-label");
       content+=svgText(75,290,"THICKNESS "+fmt(b.thickness)+" · "+b.purchased+" WHOLE PIECES","dim-label");
       content+=svgText(75,318,"BOARD FEET/PIECE "+trim(b.boardFeetPerPiece,4)+" · SUPPLIER RATES NOT VERIFIED","tick-label");
+    }else if(data.shape==="triangle"){
 
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
       // previous height-exaggerated sketch which changed the shown pitch.
