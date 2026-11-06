@@ -1334,6 +1334,17 @@ if(slug){
       " of "+plan.stockCount+" stock sheets. All cuts in CSV. NO 1:1 PRINT SCALE.</text></svg>");
     roofReuseSvg.innerHTML=parts.join("");
   };
+  // A failed calculation invalidates every export, including specialized
+  // purchasing files. A guarded click handler alone is not sufficient:
+  // keyboard and screen-reader users must see that stale results are disabled.
+  const syncResultActions=()=>{
+    const enabled=!!latest;
+    for(const button of [copy,csv,svg,print])if(button)button.disabled=!enabled;
+    if(stockExport)stockExport.disabled=!latest?.stockCuts?.length;
+    if(pricingExport)pricingExport.disabled=!latest?.purchaseVariants?.length;
+    if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
+    if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
+  };
   function render(){
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
@@ -1356,6 +1367,7 @@ if(slug){
       diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
+      syncResultActions();
       requestAnimationFrame(syncKeyboardScrollRegions);
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
@@ -1379,6 +1391,7 @@ if(slug){
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       renderSpecialtyPrintTables();
       status.textContent="Calculation requires correction; see the error message.";
+      syncResultActions();
       requestAnimationFrame(syncKeyboardScrollRegions);
     }
   }
