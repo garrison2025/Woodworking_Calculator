@@ -422,3 +422,7 @@ The four-plane Hip Roof Calculator now removes duplicate grid-intersection cut v
 ## 2026-11-06 — Deck stock-loss budgeting
 
 Deck Board now accepts optional measured per-end trim and a conservative crosscut-kerf allowance reserved for every purchased stock piece. This produces a net usable length, revised stock-piece quantity and an explicit unverified butt-joint warning when a row needs multiple pieces. This is NOT a piece-by-piece cutting or joist-bearing plan, does not reuse offcuts, and does not certify purchase suitability, material quality or structural code compliance.
+
+## 2026-11-06 — Lumber price by board foot / MBF
+
+The Lumber Price Calculator is P1 with explicit *entered nominal vs measured actual* dimensions, priced whole-board reserve, user tax rate, quotation per board foot or 1,000 board feet (MBF) and a physical top-face diagram. It does not guess finished dimensions, market prices, purchasing terms or FX. The other two former P2 tools (spiral stair and stave) remain held pending separate geometric review.

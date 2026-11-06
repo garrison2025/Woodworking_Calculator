@@ -14,7 +14,7 @@ test("homepage links to every active tool without publishing P2",async({page})=>
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content",/noindex/);
 });
 
-test("all 28 calculator pages execute JS, render metrics and SVG",async({page})=>{
+test("all 29 calculator pages execute JS, render metrics and SVG",async({page})=>{
   const pageErrors=[];
   page.on("pageerror",e=>pageErrors.push(e.message));
   for(const t of active){
@@ -963,7 +963,7 @@ test("memoization certifies default twelve-cut Framing wall and shows reused sta
 });
 
 
-test("all 28 tools retain blank inputs across unit changes and expose accessible error recovery",async({page})=>{
+test("all 29 tools retain blank inputs across unit changes and expose accessible error recovery",async({page})=>{
   const pageErrors=[];
   page.on("pageerror",err=>pageErrors.push(err.message));
   for(const tool of active){
@@ -1014,7 +1014,7 @@ test("calculator forms prevent accidental Enter submits and maintain accessible 
   await expect(page.locator("#calc-error")).toBeHidden();
 });
 
-test("all 28 calculator routes fit a 360px mobile viewport without page-wide horizontal overflow",async({page})=>{
+test("all 29 calculator routes fit a 360px mobile viewport without page-wide horizontal overflow",async({page})=>{
   await page.setViewportSize({width:360,height:760});
   for(const tool of active){
     const response=await page.goto("/"+tool.slug+"/");

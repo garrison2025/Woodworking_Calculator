@@ -211,7 +211,9 @@ def tool_page(t):
           f'<p><strong>Not covered</strong> {esc(intent["notFor"])}</p>'
           '</div>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
-    quote_currency_id="framing-currency" if t["slug"]=="framing-calculator" else "deck-currency"
+    quote_currency_id=("framing-currency" if t["slug"]=="framing-calculator"
+                       else "lumber-currency" if t["slug"]=="lumber-price-calculator"
+                       else "deck-currency")
     currency_picker=(
         f'<div class="framing-currency-control"><label for="{quote_currency_id}">Supplier quote currency</label>'
         f'<select id="{quote_currency_id}" aria-label="Currency for entered stock prices">'
@@ -219,7 +221,7 @@ def tool_page(t):
         '<option value="CAD">CAD</option><option value="AUD">AUD</option>'
         '<option value="BRL">BRL</option><option value="MXN">MXN</option>'
         '</select><small>No FX conversion: change prices yourself when changing currency.</small></div>'
-    ) if t["slug"] in ("framing-calculator","deck-material-calculator") else ""
+    ) if t["slug"] in ("framing-calculator","deck-material-calculator","lumber-price-calculator") else ""
     shelf_pin_panel=(
         '<section class="content-block shelf-pin-panel" id="shelf-pin-panel">'
         '<span class="eyebrow">OPTIONAL SUPPORT DRILL GUIDE</span>'

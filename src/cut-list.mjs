@@ -25,6 +25,9 @@ const csvEscape=(value,isNumeric=false)=>{
 const titleCase=(key)=>key.replace(/([A-Z])/g," $1").replace(/^./,ch=>ch.toUpperCase());
 const fieldType=(key,records)=>{
   if(/AreaFt2$/.test(key))return "area";
+  // Board-foot volume is cubic wood pricing (NOT a linear inch measurement).
+  // Quotes, taxes and quantities are monetary or count columns.
+  if(/^(?:boardFeetPerPiece|orderedBoardFeet|pricePerBoardFoot|subtotal|taxAmount|totalCost|quantity)$/.test(key))return "plain";
   if(key==="cutVertices"||key==="planVertices"||key==="stockCutVertices")return "vertices";
   if(key==="seamStations")return "lengthList";
   if(!records.some(r=>typeof r[key]==="number"))return "plain";
@@ -88,7 +91,7 @@ export function buildMetricsCsv(metrics,unit,sourceNote="",currency="USD"){
     return numeric(value);
   };
   const metricUnit=kind=>({
-    L:unit,N:"count",A:"°",D:"%",P:"rise per 12 run",
+    L:unit,N:"count",BF:"board feet",A:"°",D:"%",P:"rise per 12 run",
     C:currency,FT:["mm","cm","m"].includes(unit)?"m":"ft",
     FT2:["mm","cm","m"].includes(unit)?"m²":"ft²"
   })[kind]??"";

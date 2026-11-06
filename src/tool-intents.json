@@ -561,6 +561,26 @@
           "why": "Estimate rectangular sheathing on a separate single-slope roof plane"
         }
       ]
+    },
+    {
+      "slug": "lumber-price-calculator",
+      "seoTitle": "Lumber Board Foot and MBF Price Calculator",
+      "useFor": "Estimate lumber volume and an explicitly quoted price per board foot or per thousand board feet from supplier-specified dimensions.",
+      "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order.",
+      "next": [
+        {
+          "slug": "deck-board-calculator",
+          "why": "Count deck boards before pricing your wood order"
+        },
+        {
+          "slug": "deck-material-calculator",
+          "why": "Review more extensive deck material and fastener quantities"
+        },
+        {
+          "slug": "framing-calculator",
+          "why": "Compare separately quoted framing stock sizes and prices"
+        }
+      ]
     }
   ]
 }

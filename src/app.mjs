@@ -73,7 +73,7 @@ if(slug){
     purchaseReviewDraft.quoteSignature="";
   };
   const pricingExport=document.querySelector("#download-price-csv");
-  const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
+  const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency")||document.querySelector("#lumber-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
   const framingComparisons=document.querySelector("#framing-offer-table tbody");
   const framingProof=document.querySelector("#framing-proof-table tbody");
@@ -118,6 +118,7 @@ if(slug){
   const fmt=(x,kind="L")=>{
     if(!Number.isFinite(x))return "—";
     if(kind==="N")return String(Math.round(x));
+    if(kind==="BF")return trim(x,4)+" board ft";
     if(kind==="C")return money(x);
     if(kind==="D")return trim(x,3)+"%";
     if(kind==="A")return trim(x,3)+"°";
@@ -705,7 +706,21 @@ if(slug){
       content+=svgText(75,328,"LOWER RUN "+fmt(data.lowerRun)+
         " / UPPER RUN "+fmt(data.upperRun),"tick-label");
       content+=svgText(570,328,"RIDGE RISE "+fmt(data.ridgeRise),"tick-label");
-    }else if(data.shape==="triangle"){
+    }else if(data.shape==="lumber-board"){
+      // Exact TOP-face physical aspect ratio from entered dimensions;
+      // thickness is labeled, not silently drawn as a fake face width.
+      const b=data.lumberBoard,scale=Math.min(690/b.length,125/b.width);
+      const ww=b.length*scale,hh=b.width*scale,x0=(900-ww)/2,y0=192-hh/2;
+      content+='<rect class="lumber-board-face" data-length-in="'+b.length+
+        '" data-width-in="'+b.width+'" data-thickness-in="'+b.thickness+
+        '" x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+
+        '" fill="#e4cba6" stroke="#8b6846" stroke-width="1.5"/>';
+      content+=svgText(75,53,b.dimensionBasis===0?
+        "ENTERED NOMINAL SIZE — VERIFY BILLING BASIS":"ENTERED ACTUAL SIZE — MEASURED BASIS","dim-label");
+      content+=svgText(75,72,"BOARD LENGTH "+fmt(b.length)+" / FACE WIDTH "+fmt(b.width),"tick-label");
+      content+=svgText(75,290,"THICKNESS "+fmt(b.thickness)+" · "+b.purchased+" WHOLE PIECES","dim-label");
+      content+=svgText(75,318,"BOARD FEET/PIECE "+trim(b.boardFeetPerPiece,4)+" · SUPPLIER RATES NOT VERIFIED","tick-label");
+
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
       // previous height-exaggerated sketch which changed the shown pitch.
       const run=data.run||span,rise=Math.max(0,data.rise??0);
@@ -2092,7 +2107,9 @@ if(slug){
   csv.addEventListener("click",()=>{
     if(!latest)return;
     const text=latest.rows.length?
-      buildScheduleCsv(latest.rows,unit,tool.limit):
+      buildScheduleCsv(latest.rows,unit,
+        tool.limit+(slug==="lumber-price-calculator"?
+          " Entered price currency: "+currencyCode()+". No FX conversion.":"")):
       buildMetricsCsv(latest.metrics,unit,tool.limit,currencyCode());
     save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");
     status.textContent="CSV saved locally.";
