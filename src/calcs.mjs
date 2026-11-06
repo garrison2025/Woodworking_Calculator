@@ -698,24 +698,41 @@ export function compute(slug,a){
         need(b.used<=b.offer.stockLength+1e-12&&
           b.cuts.every(piece=>piece.cutLength<=b.offer.stockLength+1e-12),
           "A framing cut exceeds its purchased stock length.");
+        // An explicit 0-origin stock-local segment for every retained piece.
+        // Kerf is between successive pieces, not an inferred extra trim at
+        // the stock end. These coordinates describe the modeled placement,
+        // NOT a certified saw path or a 1:1 cutting template.
+        let consumed=0;
+        const placed=[];
+        for(const [idx,p] of b.cuts.entries()){
+          const before=idx?a.stockKerf:0;
+          const cutStart=q(consumed+before);
+          const cutEnd=q(consumed+before+p.cutLength);
+          need(cutStart>=0&&cutEnd>cutStart&&
+            Math.abs(q(cutEnd-cutStart)-p.cutLength)<=1e-8&&
+            cutEnd<=b.offer.stockLength+1e-12,
+            "Framing stock-local cut position exceeds its real purchased length.");
+          placed.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
+            index:idx+1,item:p.item,type:p.type,cutLength:p.cutLength,
+            kerfBefore:q(before),cutStart,cutEnd,
+            stockLength:q(b.offer.stockLength),
+            runningUsedLength:cutEnd,
+            remainingLength:q(Math.max(0,b.offer.stockLength-cutEnd))});
+          consumed=cutEnd;
+        }
+        need(Math.abs(consumed-b.used)<1e-7,
+          "Framing sequential cut positions do not match the packed stock use.");
+        need(Math.abs(cutsLength+barKerf+remaining-b.offer.stockLength)<1e-6,
+          "Mixed-stock cut and offcut dimensions do not conserve source length.");
         sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=barKerf;
         stockPlan.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
           offerCode:b.offer.code,stockLength:q(b.offer.stockLength),
-          unitPrice:b.offer.unitPrice,cuts:b.cuts.map(p=>({
-            item:p.item,type:p.type,cutLength:p.cutLength})),
+          unitPrice:b.offer.unitPrice,
+          cuts:placed.map(p=>({item:p.item,type:p.type,cutLength:p.cutLength,
+            cutStart:p.cutStart,cutEnd:p.cutEnd,kerfBefore:p.kerfBefore})),
           cutCount:b.cuts.length,piecesLength:cutsLength,kerfLoss:barKerf,
-          usedLength:q(b.used),offcutLength:remaining});
-        let consumed=0;
-        for(const [idx,p] of b.cuts.entries()){
-          const before=idx?a.stockKerf:0;
-          consumed=q(consumed+p.cutLength+before);
-          stockCuts.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
-            index:idx+1,item:p.item,type:p.type,cutLength:p.cutLength,
-            kerfBefore:q(before),stockLength:q(b.offer.stockLength),
-            runningUsedLength:consumed,remainingLength:q(Math.max(0,b.offer.stockLength-consumed))});
-        }
-        need(Math.abs(cutsLength+barKerf+remaining-b.offer.stockLength)<1e-6,
-          "Mixed-stock cut and offcut dimensions do not conserve source length.");
+          usedLength:q(b.used),offcutStart:q(b.used),offcutLength:remaining});
+        stockCuts.push(...placed);
       }
       const lines=[...best.counts.values()].sort((x,y)=>
         x.offer.stockLength-y.offer.stockLength||x.offer.code.localeCompare(y.offer.code));
