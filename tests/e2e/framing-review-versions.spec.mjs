@@ -71,7 +71,7 @@ test("Local version IDs, snapshot JSON and imported comparison change with quota
   expect(snapshot.versionIds.declaration).toMatch(/^DECL-[0-9a-f]{16}$/);
   expect(snapshot.parts.declaration.automaticPurchaseAuthorized).toBe(false);
   expect(snapshot.parts.declaration.humanApprovalRequired).toBe(true);
-  expect(snapshot.warning).toContain("NO");
+  expect(snapshot.warning).toContain("No digital signature");
   const baseReviewCsv=await content(page,"#download-framing-purchase-review-csv");
   for(const v of Object.values(snapshot.versionIds))expect(baseReviewCsv).toContain(v);
   for(const exportId of ["#download-framing-field-csv",
@@ -101,7 +101,8 @@ test("Local version IDs, snapshot JSON and imported comparison change with quota
   expect(diffCsv).toContain(completedId);
   expect(diffCsv).toContain(changedId);
   expect(diffCsv).toContain('"quotation"');
-  expect(diffCsv).toContain('"automaticPurchaseAuthorized"');
+  expect(diffCsv).toContain('"declaration"');
+  expect(diffCsv).toContain("supplierVerified");
   await expect(page.locator('[data-review-global="supplierVerified"]')).not.toBeChecked();
 
   // Import a real earlier JSON reference into the same browser after
