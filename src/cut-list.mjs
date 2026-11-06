@@ -47,7 +47,7 @@ export const scheduleColumns=(records,unit)=>{
   if(!Array.isArray(records))throw Error("Invalid schedule.");
   return [...new Set(records.flatMap(row=>Object.keys(row)))].map(key=>{
     const kind=fieldType(key,records);
-    const label=key==="stockCutVertices"?"Stock Cut Vertices":key==="cutAngleDeg"?"Cut Angle":key==="roughBlankAreaFt2"?"Rough Blank Area":key==="segmentFaceAreaFt2"?"Segment Face Area":key==="cutAreaFt2"?"Cut Area":key==="offcutAreaFt2"?"Offcut Area":key==="cutVertices"?"Cut Vertices":key==="planVertices"?"Plan Projection Vertices":titleCase(key);
+    const label=key==="stockCutVertices"?"Stock Cut Vertices":key==="cutAngleDeg"?"Cut Angle":key==="roughBlankAreaFt2"?"Rough Blank Area":key==="segmentFaceAreaFt2"?"Segment Face Area":key==="cutAreaFt2"?"Cut Area":key==="offcutAreaFt2"?"Offcut Area":key==="cutVertices"?"Cut Vertices":key==="planVertices"?"Plan Projection Vertices":titleCase(key).replace(/ Ft2$/,"");
     const suffix=unitLabel(kind,unit);
     return {key,kind,label:label+(suffix?" ("+suffix+")":"")};
   });
