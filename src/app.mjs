@@ -963,7 +963,12 @@ if(slug){
     // The print worksheet omits the entire editable input sidebar. Capture
     // all actual raw form values (including advanced optional values),
     // not display-rounded metrics or default values guessed by the client.
-    printInputRows.innerHTML=tool.inputs.map(f=>{
+    // Disabled, non-applied loss-review controls are not job measurements.
+    // Preserve every active input when review is enabled, but do not add
+    // four irrelevant blank audit settings to default print worksheets.
+    const includedFields=latest?.stockAudit?.enabled?tool.inputs:
+      tool.inputs.filter(f=>!f.key.startsWith("stockAudit"));
+    printInputRows.innerHTML=includedFields.map(f=>{
       const field=form.elements.namedItem(f.key);
       const raw=field?.value??"";
       const display=f.kind==="E"?
@@ -980,6 +985,8 @@ if(slug){
       " · entered price currency "+currencyCode()+
       " · inch display precision 1/"+(Number(fraction.value)||16)+
       ". Includes optional advanced inputs and disabled-by-zero settings. "+
+      (tool.slug==="framing-calculator"&&!latest?.stockAudit?.enabled?
+        " Optional stock-loss review is OFF, so its inactive parameters are not shown.":"")+
       "No structural or field verification is implied.";
     printInputPanel.hidden=false;
   };
@@ -1123,8 +1130,10 @@ if(slug){
     const required=checks.filter(s=>s.pieceCount>0);
     framingProofStatus.textContent=!summary?"Correct inputs to see validation.":
       summary.allGroupsCertified?
-        "CERTIFIED: lowest purchase cost under the quoted-stock model for all "+
-          required.length+" required material families. This is not a real-world universal optimum.":
+        (audit?.enabled?"BASE-MODEL CERTIFICATE ONLY: ":"CERTIFIED: ")+
+          "lowest purchase cost under the quoted-stock model for all "+
+          required.length+" required material families. This is not a real-world universal optimum."+
+          (audit?.enabled?" Optional trim/sever/reuse diagnostics are OUTSIDE the certificate.":""):
         "NOT CERTIFIED for the whole wall — "+summary.certifiedGroups+
           " of "+required.length+" required material families have completed exact search. "+
           (summary.allPricesEntered?"Remaining results use a bounded heuristic.":"Missing supplier quotes.")+
