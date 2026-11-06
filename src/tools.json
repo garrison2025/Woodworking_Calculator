@@ -490,15 +490,27 @@
           "kind": "L"
         },
         {
+          "key": "boardEndTrim",
+          "label": "End trim at EACH stock end (estimate)",
+          "value": 0,
+          "kind": "L"
+        },
+        {
+          "key": "boardCrosscutKerf",
+          "label": "Reserved crosscut kerf per purchased stock piece",
+          "value": 0,
+          "kind": "L"
+        },
+        {
           "key": "waste",
           "label": "Waste percentage",
           "value": 10,
           "kind": "D"
         }
       ],
-      "formula": "Rows = ceil((coverage width+gap)/(actual board width+gap)); final rip = coverage width−(rows−1)×(board+gap); face total=(rows−1)×board width+final rip; clear spaces=(rows−1)×gap; face total+spaces=coverage width. Conservative stock pieces=ceil(rows×ceil(row length/stock length)×(1+waste%)); no offcut reuse, butt-joint support or stock-layout optimization.",
+      "formula": "Rows = ceil((coverage width + gap)/(actual board width + gap)); final rip = width − (rows−1)×(board width+gap). Usable stock length = supplied stock length − 2×end trim − one conservative crosscut kerf per piece. Pieces per row = ceil(row length/usable stock length); gross stock pieces = ceil(board rows×pieces per row×(1+waste%)). No offcut optimization or joist-supported butt-joint placement.",
       "example": "120-in coverage, 5.5-in boards, 0.125-in gaps: 22 rows and a 1.875-in final rip. The 21 full faces sum to 115.5 in, plus 1.875 in final rip and 21 × 0.125 in gaps = 120 in total. If stock is shorter than each row, stock count is an ordering reference only, not an approved seam plan.",
-      "limit": "Straight parallel row quantity and face dimensions only; does NOT check joist alignment or provide a usable butt-joint plan when stock length is shorter than row length. The stock-piece estimate ignores offcut reuse, joist end support, fastening, board expansion, end trim, stagger patterns, tolerance, structural spans and code. Rows with extremely small final rip (<1e-7 in) are rejected. SVG is a schematic, not a physical cutting template. Use Deck Material Estimator for joist-center reference seam planning.",
+      "limit": "Deck board row faces and conservative stock-piece QUANTITY only; optional user-entered trims at both ends and one reserved crosscut kerf are deducted per purchased piece before estimating demand. The allowance can overstate real loss; it does not locate individual cuts, reuse scraps, plan seams, certify joists/fasteners, or approve a buildable deck. Multi-piece rows require an independent joist-supported butt-joint plan, actual board inspection, end-gap, manufacturer expansion, structural and local code review. SVG is schematic and not a 1:1 saw template.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
@@ -506,12 +518,12 @@
           "text": "The cut list now includes left and right face positions, physical rip width and the gap following each row. The last row has no following gap. Board-face widths, all inter-row gaps and the last rip must add exactly to the entered coverage."
         },
         {
-          "heading": "Count stock conservatively, not as an approved joint plan",
-          "text": "Stock pieces per row = ceiling(row length ÷ stock length). The displayed suggested order applies waste and assumes no offcut reuse. For stock shorter than a run, no joist or attachment positions are provided here: do not treat the quantity as a verified butt-joint layout."
+          "heading": "Plan against the measured usable stock, not the nominal board",
+          "text": "Reserve the intended trim from EACH supplier board end and optionally one conservative crosscut kerf per purchased piece. The model subtracts both trims and one kerf from stock length before dividing row length; this deliberately treats every piece as though one cut is required and may overestimate real waste. Confirm measured physical lengths and trims before buying."
         },
         {
-          "heading": "Compare with the joist-aware tool",
-          "text": "For a reference joist grid and allowable seams at those centers, use Deck Material Estimator. Actual joist dimensions, fasteners, staggered ends, edge supports and safe installations still require validation."
+          "heading": "Rows spanning multiple stock pieces are not automatically buildable",
+          "text": "If more than one stock piece is required to cover the row, the tool flags all affected rows. It does not position supported butt seams, satisfy stagger/end-bearing, place joists or certify fasteners. Use Deck Material Estimator for a different joist-center calculation and independently inspect the real structure."
         }
       ]
     },

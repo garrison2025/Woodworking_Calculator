@@ -948,3 +948,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .worked-case .worked-values{font-variant-numeric:tabular-nums;color:#2f5343}
 .worked-case .worked-apply{margin-top:3px;width:100%;font-size:.82rem;white-space:normal}
 @media print{.worked-cases{display:none!important}}
+
+.deck-joint-warning{grid-column:1/-1;margin:0;padding:12px 14px;border:1px solid #cab797;border-radius:9px;background:#f9f6f0;color:#604c32;font-size:.9rem;line-height:1.55}
+.deck-joint-warning strong{color:#543f22}
+@media print{.deck-joint-warning{break-inside:avoid}}
