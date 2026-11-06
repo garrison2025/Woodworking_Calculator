@@ -2,7 +2,7 @@
 
 **Status at creation: NOT RUN (physical).** This is a blank, field-completion worksheet. No measurements, material inspections, saw trials, structural signoffs, supplier invoices or printer-scale checks have been performed by these automated changes.
 
-**Scope:** 26 currently implemented P0/P1 calculators. P2 calculators remain intentionally unavailable. An SVG screenshot is a **proportional reference**, never a 1:1 cutting template or machine-ready saw path. Human review must use the **numeric cut list** and independently measured references.
+**Current implementation scope (2026-11-07):** 31 active geometry calculators (9 P0 + 22 P1), with zero held P2. All real cutting, physical printer measurements and professional acceptance remain NOT RUN unless independently recorded. An SVG screenshot is a **proportional reference**, never a 1:1 cutting template or machine-ready saw path. Human review must use the **numeric cut list** and independently measured references.
 
 ## Required provenance for every session
 
