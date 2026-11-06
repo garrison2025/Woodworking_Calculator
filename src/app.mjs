@@ -1085,7 +1085,10 @@ if(slug){
           "CHECK PASSED FOR EXISTING ALLOCATION — "+audit.rows.length+
           " source sticks fit the extra losses. "+audit.candidateSticks+
           " candidate tail offcuts ("+fmt(audit.candidateTotalLength,"L")+
-          ") exceed your minimum, but NONE are assigned to new cuts or deducted from the purchase.";
+          ") exceed your minimum. "+
+          (latest?.stockReusePlan?.enabled?
+            "This BASE audit does not change purchases; inspect the separately calculated relocation proposal below.":
+            "NONE are assigned to new cuts or deducted from the purchase.");
         stockAuditTable.innerHTML=audit.rows.map(p=>'<tr>'+
           [p.stockId+" · "+p.offerLabel,fmt(p.stockLength,"L"),
            fmt(p.adjustedLastCutEnd,"L"),fmt(p.finalSeverKerf,"L"),
