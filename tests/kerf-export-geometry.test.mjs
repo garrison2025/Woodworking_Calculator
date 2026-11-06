@@ -48,7 +48,7 @@ test("kerf schedules are geometrically closed and non-overlapping across multipl
 
 test("kerf geometry rejects overlapping or non-representable physical mouths",()=>{
   for(const input of [
-    {...base,radius:2.54},
+    {...base,radius:.1},
     {...base,web:1e-9},
     {...base,kerf:1e-9},
     {...base,thickness:.125000001},
