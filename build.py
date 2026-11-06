@@ -282,12 +282,12 @@ def tool_page(t):
         '<ul id="framing-ticket-list"></ul>'
         '<p class="ticket-caveat">Geometry-only material estimate. Verify lengths, profiles, prices and availability; plates, engineered header layers, tax, delivery, labor and hardware excluded.</p></section>'
         '<h3>Stock-by-stock cut plan</h3>'
-        '<p>Piece lengths and offcut for each stick share the calculated framing cut list. The browser worksheet shows approximate inch fractions; CSV exports keep numeric precision.</p>'
+        '<p>Every bracketed start–end interval is measured from the SAME 0 end of its purchased stick, not from the wall datum. Between successive pieces, the entered saw kerf occupies the intervening interval. Unallocated offcut starts after the last listed piece and is not automatically reused. Display fractions are approximate; CSV preserves numeric positions.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-stock-table" aria-label="Suggested stock cuts">'
-        '<thead><tr><th>Stock ID</th><th>Cut sequence (reference lengths)</th><th>Kerf</th><th>Offcut</th></tr></thead><tbody></tbody></table></div>'
+        '<thead><tr><th>Stock ID</th><th>Piece · cut length · stock-local start–end</th><th>Between-cut kerf</th><th>Unallocated offcut</th></tr></thead><tbody></tbody></table></div>'
         '<div class="takeoff-actions"><button id="download-stock-csv" type="button" class="btn secondary">↓ Download stock cut plan CSV</button>'
         '<button id="download-price-csv" type="button" class="btn secondary">↓ Download quoted materials CSV</button></div>'
-        '<p class="caution">Reference lengths only. No material grade, structural header sizing, defects, end trimming, splices or real-world optimizer certification. Verify each purchase and cut before working.</p>'
+        '<p class="caution">Stock-local placement intervals are NOT a certified saw sequence or full-scale cutting template. The model charges kerf ONLY between retained cuts; final end separation, rough-end trimming, defects, blade setup, clamps and stock profile checks require site verification and may consume extra material. Never assume unused offcuts have been reused or structurally approved.</p>'
         '</div>'
     ) if t["slug"]=="framing-calculator" else ""
     deck_takeoff=(
