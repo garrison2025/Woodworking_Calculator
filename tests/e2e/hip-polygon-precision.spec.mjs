@@ -19,8 +19,16 @@ const csvRows=text=>{
     return Object.fromEntries(headers.map((key,i)=>[key,values[i]]));
   }).filter(row=>row[headers[0]]!=="Source note");
 };
-const svgPoints=el=>el.getAttribute("points").trim().split(/\s+/)
-  .map(pair=>pair.split(",").map(Number));
+const areaOf=points=>{
+  if(points.length<3)return 0;
+  const origin=points[0];let sum=0;
+  for(let i=1;i<points.length-1;i++){
+    const a=points[i],b=points[i+1];
+    sum+=(a[0]-origin[0])*(b[1]-origin[1])-
+      (b[0]-origin[0])*(a[1]-origin[1]);
+  }
+  return Math.abs(sum)/2;
+};
 
 test("real hip-roof SVG includes all 4 tiny corner cuts and agrees with numeric mm polygon CSV",async({page})=>{
   await page.goto("/hip-roof-calculator/");
@@ -55,7 +63,14 @@ test("real hip-roof SVG includes all 4 tiny corner cuts and agrees with numeric 
       expect((point[0]-origin[0])/scale*25.4).toBeCloseTo(original[i][0],3);
       expect((point[1]-origin[1])/scale*25.4).toBeCloseTo(original[i][1],3);
     }
-    if(Number(r["Cut Area (m²)"])<1e-15){
+    const surfaceSqIn=Number(r["Cut Area (m²)"])/0.00064516;
+    const projectedSqPx=areaOf(shape.points);
+    expect(projectedSqPx).toBeGreaterThan(0);
+    // Pitch=0 in this fixture: diagram projected polygon and physical
+    // cut area are identical before SVG viewport scaling.
+    expect(Math.abs(projectedSqPx-surfaceSqIn*scale*scale)/
+      (surfaceSqIn*scale*scale)).toBeLessThan(.05);
+    if(Number(r["Cut Area (m²)"])<1e-12){
       tiny++;
       expect(Number(r["Cut Area (m²)"])).toBeGreaterThan(0);
     }
@@ -104,6 +119,12 @@ test("hip stock-local polygon SVG coordinates stay consistent with exported reus
     expect(row["Stock Id"]).toBe(shape.stock);
     const vertices=JSON.parse(row["Stock Cut Vertices (mm)"]);
     expect(vertices).toHaveLength(shape.points.length);
+    const physicalArea=Number(row["Installed Area (m²)"])/0.00064516;
+    expect(physicalArea).toBeGreaterThan(0);
+    const drawnArea=areaOf(shape.points);
+    expect(drawnArea).toBeGreaterThan(0);
+    expect(Math.abs(drawnArea-physicalArea*(box.width/47.999999)**2)/
+      (physicalArea*(box.width/47.999999)**2)).toBeLessThan(.05);
     const scale=box.width/47.999999;
     for(const [i,p] of shape.points.entries()){
       expect((p[0]-box.x)/scale*25.4).toBeCloseTo(vertices[i][0],3);
