@@ -49,8 +49,10 @@ const sourceCount=model=>{
     ring:[".ring-segment-face",model.segments],
     ruler:[".axis",1],
     "spacing-faces":[".equal-part-face",model.faceRows?.length],
+    "picket-faces":[".picket-face",model.picketRows?.length],
     "hip-line":[".hip-plan-diagonal",1],
     "roof-panels":[".roof-panel-cut",model.roofPanels?.length],
+    "gambrel-profile":[".gambrel-slope-segment",model.gambrelRows?.length],
     "wall-studs":[".wall-cut-stud",model.studRows?.length],
     shelves:[".shelf-face",model.shelfRows?.length],
     rectangle:[".square-target-outline",1],
@@ -180,6 +182,21 @@ async function checkSvg(page,model){
       await common(e,"data-horizontal-run",row.run);
       await common(e,"data-top-rise",row.rise);
     }
+  }else if(model.shape==="picket-faces"){
+    for(const [i,row] of model.picketRows.entries()){
+      const e=root.locator(".picket-face").nth(i);
+      await common(e,"data-left",row.faceLeft);
+      await common(e,"data-right",row.faceRight);
+      await common(e,"data-center",row.position);
+    }
+  }else if(model.shape==="gambrel-profile"){
+    for(const [i,row] of model.gambrelRows.entries()){
+      const e=root.locator(".gambrel-slope-segment").nth(i);
+      await common(e,"data-start-x",row.startX);
+      await common(e,"data-start-y",row.startElevation);
+      await common(e,"data-end-x",row.endX);
+      await common(e,"data-end-y",row.endElevation);
+    }
   }else if(model.shape==="shelves"){
     for(const [i,row] of model.shelfRows.entries()){
       const e=root.locator(".shelf-face").nth(i);
@@ -242,7 +259,7 @@ for(const tool of active){
   });
 }
 test("all active routes have explicit screenshot-family assertions",()=>{
-  expect(active.length).toBe(26);
-  expect(new Set(active.map(x=>x.slug)).size).toBe(26);
-  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(5);
+  expect(active.length).toBe(28);
+  expect(new Set(active.map(x=>x.slug)).size).toBe(28);
+  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(3);
 });
