@@ -47,6 +47,12 @@ jobs:
         run: npx playwright install --with-deps firefox webkit
       - name: Smoke-test actual Firefox and Linux WebKit DOM, geometry and export
         run: npx playwright test tests/e2e/cross-browser.spec.mjs --project=firefox --project=webkit
+      - name: Validate indexing gate and offline SEO release layout (no deployment)
+        run: |
+          SITE_URL=https://woodworking.example RELEASE_APPROVED=0 python3 build.py
+          python3 tests/validate_static.py
+          SITE_URL=https://woodworking.example RELEASE_APPROVED=1 python3 build.py
+          python3 tests/validate_release.py
       - name: Upload desktop and mobile design snapshots
         if: success()
         uses: actions/upload-artifact@v4
