@@ -169,7 +169,7 @@ if(slug){
     let content='<line class="axis" x1="'+left+'" y1="'+base+'" x2="'+right+'" y2="'+base+'"/>';
     let marks=data.marks||[];
     const tick=marks.length>60?Math.ceil(marks.length/60):1;
-    if(["ruler","spacing-faces","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening","wall-studs"].includes(data.shape)){
+    if(["ruler","spacing-faces","picket-faces","posts","holes","kerfs","balusters","shelves","boards","panels","slope","opening","wall-studs"].includes(data.shape)){
       // A single isotropic scale prevents wide drilled holes from becoming
       // distorted: shrink the board horizontally if the diameter would not
       // fit the fixed vertical diagram viewport.
@@ -193,6 +193,20 @@ if(slug){
         content+=svgText(left,71,"PART FACE WIDTH "+fmt(data.partFaceWidth),"dim-label");
         content+=svgText(left,90,data.clearFaceGap===null?"SINGLE CENTER · NO BETWEEN-PART GAP":
           "CLEAR BETWEEN FACES "+fmt(data.clearFaceGap),"tick-label");
+      }else if(data.shape==="picket-faces"){
+        content+='<rect class="picket-clear-opening" x="'+left+'" y="104" width="'+W+
+          '" height="147" fill="#edf0e8" stroke="#346a56" stroke-width="1.6"/>';
+        for(const [i,r] of data.picketRows.entries()){
+          const x1=x(r.faceLeft),x2=x(r.faceRight);
+          content+='<rect class="picket-face" data-index="'+(i+1)+
+            '" data-center="'+r.position+'" data-left="'+r.faceLeft+
+            '" data-right="'+r.faceRight+'" x="'+x1+'" y="110" width="'+(x2-x1)+
+            '" height="135" fill="#d5b28a" stroke="#826446" stroke-width=".7"><title>'+
+            esc(r.item+" · face "+fmt(r.faceLeft)+" to "+fmt(r.faceRight)+
+              " · equal clear space "+fmt(data.equalClearGap))+'</title></rect>';
+        }
+        content+=svgText(left,72,data.picketRows.length+" PICKETS · FACE "+fmt(data.picketWidth),"dim-label");
+        content+=svgText(left,92,"EQUAL END AND BETWEEN-FACE GAP "+fmt(data.equalClearGap),"tick-label");
       }else if(data.shape==="boards"){
         // Exactly the cut-list faces: no fake minimum width and no silently
         // omitted rows beyond the former 180-face drawing cap.
@@ -647,6 +661,32 @@ if(slug){
       content+=svgText(112,296,"RUN "+fmt(run)+" / RISE "+fmt(rise),"dim-label");
       content+=svgText(112,319,"FULL "+fmt(data.braceFullLength)+" / CUT "+fmt(data.braceCutLength),"dim-label");
       content+=svgText(570,319,"SETBACK EACH "+fmt(data.braceSetback),"tick-label");
+    }else if(data.shape==="gambrel-profile"){
+      // Actual symmetrical two-slope side PROFILE; not a truss design.
+      const sc=Math.min(645/Math.max(1e-8,data.roofSpan),
+        174/Math.max(1e-8,data.ridgeHeight));
+      const x0=(900-data.roofSpan*sc)/2,y0=256,
+        X=v=>x0+v*sc,Y=v=>y0-v*sc;
+      const polygon=data.profilePoints.map(p=>X(p.x)+","+Y(p.y)).join(" ");
+      content+='<polygon class="gambrel-roof-face" points="'+polygon+
+        '" fill="#e1ede4" stroke="#316650" stroke-width="1.8"/>';
+      for(const [i,row] of data.gambrelRows.entries()){
+        content+='<line class="gambrel-slope-segment" data-index="'+(i+1)+
+          '" data-start-x="'+row.startX+'" data-start-y="'+row.startElevation+
+          '" data-end-x="'+row.endX+'" data-end-y="'+row.endElevation+
+          '" x1="'+X(row.startX)+'" y1="'+Y(row.startElevation)+
+          '" x2="'+X(row.endX)+'" y2="'+Y(row.endElevation)+
+          '" stroke="'+(i===0||i===3?"#b07b43":"#245f52")+
+          '" stroke-width="3.5"><title>'+esc(row.item+" · slope "+fmt(row.slopeLine)+
+          " · pitch "+row.slopePitch+" · geometry only")+'</title></line>';
+      }
+      const ridge=data.profilePoints[2],breakPt=data.profilePoints[1];
+      content+='<circle class="gambrel-break" cx="'+X(breakPt.x)+'" cy="'+Y(breakPt.y)+'" r="4.2" fill="#ad7645"/>';
+      content+='<circle class="gambrel-ridge" cx="'+X(ridge.x)+'" cy="'+Y(ridge.y)+'" r="4.2" fill="#245f52"/>';
+      content+=svgText(95,45,"TWO-PITCH GAMBREL PROFILE · EAVE TOP = 0","dim-label");
+      content+=svgText(95,68,"LOWER "+data.lowerPitch+":12 / UPPER "+data.upperPitch+":12","tick-label");
+      content+=svgText(95,320,"FULL WIDTH "+fmt(data.roofSpan)+
+        " · RIDGE HEIGHT "+fmt(data.ridgeHeight),"dim-label");
     }else if(data.shape==="triangle"){
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
       // previous height-exaggerated sketch which changed the shown pitch.

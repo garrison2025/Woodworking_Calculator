@@ -2590,6 +2590,106 @@ export function compute(slug,a){
     ],xs.map(x=>P(x)),a.length,rows,"posts",
     {itemWidth:a.post,faceRows:rows,outsideLength});
   }
+  case "fence-picket-calculator":{
+    positive("opening","width");
+    const mode=a.mode??0;
+    need(Number.isInteger(mode)&&mode>=0&&mode<=1,
+      "Picket layout mode must be 0 or 1.");
+    need(a.width<=a.opening,
+      "A picket face cannot be wider than the measured clear opening.");
+    let count;
+    if(mode===0){
+      nonnegative("maxGap");
+      // n physical faces and n+1 EQUAL gaps, including both end spaces:
+      // opening = n*width + (n+1)*gap.
+      count=Math.max(1,Math.ceil((a.opening-a.maxGap)/(a.width+a.maxGap)-1e-10));
+    }else{
+      need(Number.isInteger(a.count)&&a.count>=1&&a.count<=500,
+        "Exact picket count must be 1–500.");
+      count=a.count;
+    }
+    need(count>=1&&count<=500&&count*a.width<=a.opening+1e-8,
+      "Picket count or measured face width exceeds the clear opening.");
+    const gap=(a.opening-count*a.width)/(count+1);
+    need(gap>=-1e-8,"Picket faces exceed the clear opening.");
+    measurableGap(Math.max(0,gap),"Picket equal clear gap");
+    if(mode===0)need(gap<=a.maxGap+1e-8,
+      "Calculated equal gap exceeds the entered maximum.");
+    rows=Array.from({length:count},(_,i)=>{
+      const left=gap+i*(a.width+gap),right=left+a.width;
+      return {item:"Picket "+(i+1),position:q((left+right)/2),
+        faceLeft:q(left),faceRight:q(right),faceWidth:q(a.width),
+        gapBefore:q(gap),gapAfter:q(gap)};
+    });
+    need(rows.every(r=>r.faceLeft>=-1e-8&&r.faceRight<=a.opening+1e-8&&
+      r.faceRight>r.faceLeft),"Picket edges collapse or exceed the opening.");
+    need(Math.abs(rows.at(-1).faceRight+gap-a.opening)<=
+      Math.max(1e-7,a.opening*1e-10),"Picket faces and end gaps fail to close.");
+    return result([
+      M("Pickets",count,"N"),M("Equal clear gap including both ends",gap),
+      M("First face left edge",rows[0].faceLeft),
+      M("Last face right edge",rows.at(-1).faceRight),
+      M("Total picket face widths",count*a.width),
+      M("All equal clear spaces",(count+1)*gap)
+    ],rows.map(r=>P(r.position,r.item)),a.opening,rows,"picket-faces",{
+      picketRows:rows,picketWidth:a.width,equalClearGap:gap,layoutMode:mode
+    });
+  }
+  case "gambrel-roof-calculator":{
+    positive("width","length","lowerRun","lowerPitch");
+    nonnegative("upperPitch","eaveOverhang","endOverhang","waste");
+    need(a.lowerPitch>a.upperPitch,
+      "Lower gambrel pitch must be steeper than the upper pitch.");
+    need(a.waste<=200,"Roof surface allowance must be 0–200%.");
+    const half=a.width/2+a.eaveOverhang;
+    need(a.lowerRun<half-1e-7,
+      "The lower slope break must occur before the ridge.");
+    const upperRun=half-a.lowerRun,fullSpan=2*half;
+    const lowerRise=a.lowerRun*a.lowerPitch/12,
+      upperRise=upperRun*a.upperPitch/12,ridgeHeight=lowerRise+upperRise,
+      lowerLength=Math.hypot(a.lowerRun,lowerRise),
+      upperLength=Math.hypot(upperRun,upperRise);
+    const roofLength=a.length+2*a.endOverhang;
+    const area=2*(lowerLength+upperLength)*roofLength;
+    const pts=[{x:0,y:0},{x:a.lowerRun,y:lowerRise},
+      {x:half,y:ridgeHeight},{x:half+upperRun,y:lowerRise},
+      {x:fullSpan,y:0}];
+    const segments=[
+      {item:"Left lower slope",start:pts[0],end:pts[1],pitch:a.lowerPitch},
+      {item:"Left upper slope",start:pts[1],end:pts[2],pitch:a.upperPitch},
+      {item:"Right upper slope",start:pts[2],end:pts[3],pitch:a.upperPitch},
+      {item:"Right lower slope",start:pts[3],end:pts[4],pitch:a.lowerPitch}
+    ];
+    rows=segments.map((seg,i)=>{
+      const run=seg.end.x-seg.start.x,delta=seg.end.y-seg.start.y;
+      return {item:seg.item,index:i+1,
+        startX:q(seg.start.x),startElevation:q(seg.start.y),
+        endX:q(seg.end.x),endElevation:q(seg.end.y),
+        horizontalRun:q(run),signedVerticalChange:q(delta),
+        slopeLine:q(Math.hypot(run,delta)),
+        slopeAngleDeg:q(Math.atan(seg.pitch/12)*180/Math.PI),
+        slopePitch:seg.pitch+":12"};
+    });
+    need(Math.abs(rows[0].horizontalRun+rows[1].horizontalRun-half)<1e-7,
+      "Gambrel pitch-break run does not close to the half-span.");
+    need(Math.abs(rows.reduce((s,r)=>s+r.slopeLine,0)-2*(lowerLength+upperLength))<1e-6,
+      "Gambrel segment lengths fail to conserve the sloped roof faces.");
+    return result([
+      M("Total plan roof width including eaves",fullSpan),
+      M("Lower-slope horizontal run",a.lowerRun),
+      M("Upper-slope horizontal run",upperRun),
+      M("Lower break elevation",lowerRise),
+      M("Ridge elevation above eave datum",ridgeHeight),
+      M("One lower slope line",lowerLength),
+      M("One upper slope line",upperLength),
+      M("Sloped roof surface",area/144,"FT2"),
+      M("Area with entered allowance",area*(1+a.waste/100)/144,"FT2")
+    ],[],fullSpan,rows,"gambrel-profile",{
+      profilePoints:pts,gambrelRows:rows,roofSpan:fullSpan,
+      ridgeHeight,roofLength,lowerRun:a.lowerRun,upperRun,
+      lowerPitch:a.lowerPitch,upperPitch:a.upperPitch
+    });
+  }
   default:throw new Error("Calculator not implemented: "+slug);
   }
 }
