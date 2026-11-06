@@ -685,7 +685,7 @@ if(slug){
         // The exported projected-plan vertices are the SVG's sole source of
         // polygon coordinates. Do not round to 0.01 pixels: tiny hip cuts
         // can collapse or misalign at sheet/diagonal intersections.
-        const p=sheet.planPoints.map(x=>(x0+x[0]*scale).toFixed(6)+","+(y0+x[1]*scale).toFixed(6)).join(" ");
+        const p=sheet.planPoints.map(x=>(x0+x[0]*scale)+","+(y0+x[1]*scale)).join(" ");
         content+='<polygon class="roof-panel-cut" data-panel="'+sheet.id+'" data-plane="'+sheet.planeIndex+'" data-row="'+sheet.row+'" data-column="'+sheet.column+'" points="'+p+'" fill="'+colors[sheet.planeIndex]+'" stroke="#fffefd" stroke-width="1"><title>'+esc(sheet.plane+" "+sheet.id+" · "+sheet.localVertices.length+" nonzero cut edges · "+fmt(sheet.cutAreaSqIn/144)+" ft² used · "+fmt(sheet.offcutAreaSqIn/144)+" ft² unreused offcut")+'</title></polygon>';
       }
       const ridge0=x0+data.roofMinor*scale/2,ridge1=x0+(data.roofMajor-data.roofMinor/2)*scale,mid=y0+hh/2;
@@ -1318,8 +1318,10 @@ if(slug){
         '" x="'+bx+'" y="'+by+'" width="'+(plan.stockWidth*sc)+
         '" height="'+(plan.stockHeight*sc)+'" fill="#e9eee7" stroke="#496b59" stroke-width="1.6"/>');
       for(const [index,piece] of plan.rows.filter(r=>r.stockId===id).entries()){
+        // Keep full floating-point SVG coordinates. Fixed pixel rounding to
+        // 5 digits could close tiny but positive polygon cuts in the preview.
         const polygon=piece.stockCutVertices.map(pair=>
-          (bx+pair[0]*sc).toFixed(5)+","+(by+pair[1]*sc).toFixed(5)).join(" ");
+          (bx+pair[0]*sc)+","+(by+pair[1]*sc)).join(" ");
         parts.push('<polygon class="roof-stock-cut" data-item="'+esc(piece.item)+
           '" data-stock="'+id+'" points="'+polygon+
           '" fill="'+(index%2?"#dfc399":"#b9d5c4")+
