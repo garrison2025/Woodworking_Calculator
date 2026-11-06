@@ -92,6 +92,7 @@ test("Deck optional-joist purchase reconciles browser, CSV, print and 0/10/50/10
 test("Framing mixed supplier quote is conserved across exported and printed line items",async({page})=>{
   test.setTimeout(120000);
   await page.goto("/framing-calculator/");
+  await page.locator("#framing-stock-options summary").click();
   for(const [key,value] of [
     ["wallHeight","80"],["openingHeight","60"],["studUnitPrice","8"],
     ["studAltUnitPrice","8.2"],["studAlt2UnitPrice","8.5"],
