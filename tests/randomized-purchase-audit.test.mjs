@@ -105,7 +105,7 @@ function checkDeck(result,input,allowance,caseName){
   for(const row of result.deckRows){
     const installed=rows.filter(x=>x.item.startsWith(row.item+" piece "))
       .reduce((sum,x)=>sum+x.cutLength,0);
-    close(installed+row.seamCenters.length*input.buttEndGap,input.length,
+    close(installed+row.seamCenters.length*(input.buttEndGap??0),input.length,
       1e-6,caseName+" row cut/gap conservation");
     assert.ok(row.ripWidth>0&&row.ripWidth<=input.board+1e-7,
       caseName+" invalid rip width");
@@ -115,9 +115,9 @@ function checkDeck(result,input,allowance,caseName){
       caseName+" full-width joist needs longer stock");
   const contactTotal=result.deckFastenerRows.reduce((sum,r)=>sum+r.fasteningContacts,0);
   assert.equal(contactTotal,quote.fastenerContacts);
-  assert.equal(quote.fastenerPieces,contactTotal*input.fastenersPerContact);
+  assert.equal(quote.fastenerPieces,contactTotal*(input.fastenersPerContact??2));
   assert.equal(quote.fastenerPacks,quote.fastenerPieces?
-    Math.ceil(quote.fastenerPieces/input.fastenerPackSize-1e-10):0);
+    Math.ceil(quote.fastenerPieces/(input.fastenerPackSize??100)-1e-10):0);
   let totalCents=0;
   for(const item of result.deckPurchaseRows){
     if(item.unitPrice!==null){
