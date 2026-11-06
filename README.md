@@ -6,6 +6,13 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): engineering beta, not a production launch.** [PR #13 verification](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) passed **556 Node, 193 Chromium and 18 Firefox/Linux WebKit tests**, plus 42 static pages and A4/Letter PDF checks before merge as `cafccc2`. PR #14's stricter cut-coordinate guards require a separate passing CI run. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — Cut diagram and exported schedule consistency (PR #15)
+
+- For **kerf bending**, physical slot SVG rectangles now use the same quantized left/right coordinates and cut depth as CSV; exported overlapping or out-of-bounds slots are rejected.
+- **Crown molding** drawings expose numerical miter/bevel angle checks and clearly separate illustrative left/right plan signs from unsafe saw-setting prescriptions. Use an actual scrap test pair.
+- **Stair stringer** drawing has a verifiable coordinate transform; new browser regression checks every modeled riser/tread vertex against metric CSV dimensions, without implying full-size saw or bearing approval.
+- Cross-surface evidence and unresolved physical risks: [cut drawing / schedule contract](research/CUT-VISUAL-SCHEDULE-CONTRACT-20261107.md). These new changes remain subject to PR #15's own CI, not previous baseline successes.
+
 ## 2026-11-07 — Current UX and release readiness
 
 - Homepage tool and category counts are derived from src/tools.json, with a local task/category search field and an explicit Clear history control for recently visited tools.
