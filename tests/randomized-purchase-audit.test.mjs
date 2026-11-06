@@ -237,3 +237,36 @@ test("Supplier unit-price changes do not mutate measured cut geometry",()=>{
   assert.deepEqual(d.deckFastenerRows,e.deckFastenerRows);
   checkDeck(d,deck,50,"deck quote A");checkDeck(e,deck,50,"deck quote B");
 });
+
+test("Sub-quantum stock shortfalls must not round up into physically valid cuts",()=>{
+  const framing={
+    length:120,spacing:16,width:1.5,
+    wallHeight:100.500000008,
+    openingStart:32,openingWidth:36,openingHeight:80,
+    studStockLength:96.000000006,headerStockLength:96,sillStockLength:96
+  };
+  const shortStud=safeCompute("framing-calculator",framing);
+  assert.equal(shortStud.ok,false,
+    "Cut 96.00000001 cannot fit source 96.000000006 simply because both round alike");
+  assert.match(shortStud.error,/longer stock required|stock length/i);
+  checkFraming(compute("framing-calculator",{
+    ...framing,studStockLength:96.00000001
+  }),0,"exact quantum framing length");
+
+  const deck={
+    width:120,length:144,board:5.5,gap:.125,
+    stock:144,joists:16,waste:0
+  };
+  assert.equal(safeCompute("deck-material-calculator",{
+    ...deck,joistStockLength:119.999999996
+  }).ok,false,"Full-width joist must use the actual quote, not rounded-up length");
+  const shortDeck={
+    width:30,length:100.000000008,board:5.5,gap:.125,
+    stock:100.000000006,joists:150,waste:0
+  };
+  assert.equal(safeCompute("deck-material-calculator",shortDeck).ok,false,
+    "Deck cut must not exceed source by a fraction of the output quantum");
+  checkDeck(compute("deck-material-calculator",{
+    ...shortDeck,stock:100.00000001
+  }),{...shortDeck,stock:100.00000001},0,"exact quantum deck length");
+});
