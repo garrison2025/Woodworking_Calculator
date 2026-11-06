@@ -764,3 +764,35 @@ tbody tr:nth-child(2n){background:#fafbf8}
     font-size:8pt;break-inside:avoid
   }
 }
+
+/* Explicitly user-entered wood measurement checks. Blank is never treated
+   as measured zero or approval; print shows text rather than form widgets. */
+.framing-field-preflight{border-top:1px solid #b4c6be;padding-top:17px;margin-top:20px}
+.framing-field-preflight[hidden]{display:none!important}
+.framing-field-preflight h4{font-size:16px;margin:5px 0 10px}
+.framing-field-preflight>p{font-size:12px;line-height:1.7}
+.field-measure-global{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:14px 0}
+.field-measure-global label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:650}
+.field-measure-global input,#framing-field-table input{
+  min-width:0;width:100%;max-width:190px;box-sizing:border-box;
+  border:1px solid #93a79a;border-radius:7px;padding:9px 10px;
+  min-height:38px;background:#fff;color:inherit;font-size:14px
+}
+.field-measure-global input:focus-visible,#framing-field-table input:focus-visible{
+  outline:3px solid #955b23;outline-offset:2px
+}
+#framing-field-table{min-width:760px}
+#framing-field-table th,#framing-field-table td{white-space:normal;vertical-align:middle}
+#framing-field-status{padding:10px 12px;background:#f7f4e9;border:1px solid #d7cba6}
+.field-print-value{display:none}
+@media print{
+ .framing-field-preflight[hidden]{display:none!important}
+ .field-measure-global{display:flex;flex-wrap:wrap;margin:6pt 0}
+ .field-measure-global label{display:inline-block;min-width:105pt;font-size:7.5pt}
+ .framing-field-preflight input{display:none!important}
+ #framing-field-table{min-width:0!important;table-layout:auto;font-size:7pt;width:100%}
+ #framing-field-table th,#framing-field-table td{padding:4pt 3pt}
+ #framing-field-table tr{break-inside:avoid}
+ .framing-field-preflight{break-inside:auto}
+ .field-print-value{display:inline!important}
+}
