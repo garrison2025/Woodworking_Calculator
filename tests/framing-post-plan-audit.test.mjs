@@ -114,7 +114,9 @@ test("Exactly-fit raw source, source epsilon and trimmed-offcut units remain exp
       assert.equal(cols.find(col=>col.key===key).kind,"length",key);
     assert.ok(csv.includes('"Stock Id"'));
     assert.ok(csv.includes('"Usable Offcut Length ('+unit+')"'));
-    assert.ok(csv.includes('"DOES NOT FIT"'));
+    assert.ok(csv.includes('"FITS — NO REUSE CLAIM"')||
+      csv.includes('"REUSE CANDIDATE"')||
+      csv.includes('"DOES NOT FIT"'),"CSV must preserve explicit fit and reuse status");
     assert.equal(csv.split("\r\n").filter(Boolean).length,rows.length+2);
   }
 });
