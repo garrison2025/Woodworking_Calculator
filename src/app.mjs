@@ -1,6 +1,6 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
-import {makeFramingStationLedger} from "./framing-stations.mjs";
+import {makeFramingStationLedger,auditMeasuredFramingFits} from "./framing-stations.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -37,6 +37,12 @@ if(slug){
   const stationStatus=document.querySelector("#framing-station-status");
   const stationTable=document.querySelector("#framing-station-table tbody");
   const stationExport=document.querySelector("#download-framing-stations-csv");
+  const fieldPanel=document.querySelector("#framing-field-preflight");
+  const fieldTable=document.querySelector("#framing-field-table tbody");
+  const fieldStatus=document.querySelector("#framing-field-status");
+  const fieldExport=document.querySelector("#download-framing-field-csv");
+  const fieldDraft={signature:"",unit:"in",sources:new Map(),
+    sawKerf:null,endTrim:null,finalSeverKerf:null};
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
@@ -1078,6 +1084,91 @@ if(slug){
   // Local stock intervals use compact numeric endpoints, never fraction-
   // rounded positions. The main measurement schedule still offers fractions.
   const stockLocalValue=v=>Number(convertFromInches(v,unit).toPrecision(15)).toString();
+  // Independently entered site dimensions are never populated from model
+  // defaults. A changed cutting plan invalidates every previous entry.
+  const fieldUnits=v=>v===null||v===undefined?"":String(
+    Number(convertFromInches(v,unit).toPrecision(12)));
+  const fieldNumeric=(raw,source=false)=>{
+    if(raw.trim()==="")return null;
+    const x=Number(raw);
+    if(!Number.isFinite(x)||(source?x<=0:x<0))return NaN;
+    return convertToInches(x,unit);
+  };
+  const renderFieldPreflight=ledger=>{
+    if(!fieldPanel)return;
+    const available=Boolean(ledger?.available);
+    fieldPanel.hidden=!available;
+    fieldExport.disabled=!available;
+    if(!available){
+      fieldDraft.signature="";
+      fieldDraft.sources.clear();
+      fieldDraft.sawKerf=null;fieldDraft.endTrim=null;fieldDraft.finalSeverKerf=null;
+      fieldTable.innerHTML="";
+      fieldStatus.textContent="No usable alternative station layout; measured inputs have been cleared.";
+      return;
+    }
+    const signature=JSON.stringify([ledger.bars.map(b=>[
+      b.stockId,b.stockLength,b.retainedPieces,b.lastSeverKerf,b.unallocatedTail]),
+      ledger.rows.map(x=>[x.stockId,x.segmentKind,x.stationStart,x.stationEnd,x.item])]);
+    const changed=fieldDraft.signature!==signature;
+    if(changed){
+      fieldDraft.sources.clear();
+      fieldDraft.sawKerf=null;fieldDraft.endTrim=null;fieldDraft.finalSeverKerf=null;
+      fieldDraft.signature=signature;
+    }
+    const rebuilt=changed||fieldDraft.unit!==unit||fieldTable.children.length!==ledger.bars.length;
+    if(rebuilt){
+      fieldDraft.unit=unit;
+      for(const key of ["sawKerf","endTrim","finalSeverKerf"]){
+        const input=fieldPanel.querySelector('[data-measured-global="'+key+'"]');
+        if(input)input.value=fieldUnits(fieldDraft[key]);
+      }
+      fieldPanel.querySelectorAll("[data-field-unit]").forEach(el=>el.textContent=unit);
+      fieldTable.innerHTML=ledger.bars.map(b=>'<tr data-source-id="'+esc(b.stockId)+'">'+
+        '<td>'+esc(b.stockId)+' · '+esc(b.stockGroup)+'</td>'+
+        '<td>'+esc(fmt(b.stockLength,"L"))+'</td>'+
+        '<td><label><span class="sr-only">Entered stock length for '+esc(b.stockId)+'</span>'+
+        '<input type="number" min="0" step="any" inputmode="decimal" data-measured-stock="'+
+          esc(b.stockId)+'" aria-label="Actual source length for '+esc(b.stockId)+' in '+esc(unit)+'" value="'+
+          esc(fieldUnits(fieldDraft.sources.get(b.stockId)??null))+'" placeholder="Not entered"></label></td>'+
+        '<td data-field-required>—</td><td data-field-clearance>—</td>'+
+        '<td data-field-result>PENDING INPUT</td></tr>').join("");
+    }
+    const review=auditMeasuredFramingFits(ledger,fieldDraft.sources,{
+      sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
+      finalSeverKerf:fieldDraft.finalSeverKerf});
+    const trs=[...fieldTable.querySelectorAll("tr")];
+    for(const [i,row] of review.rows.entries()){
+      const tr=trs[i];if(!tr)continue;
+      tr.querySelector("[data-field-required]").textContent=
+        row.requiredLength===null?"—":fmt(row.requiredLength,"L");
+      tr.querySelector("[data-field-clearance]").textContent=
+        row.clearance===null?"—":
+        row.shortfall>0?"SHORT "+fmt(row.shortfall,"L"):
+        "LEFT "+fmt(Math.max(0,row.clearance),"L");
+      tr.querySelector("[data-field-result]").textContent=row.status;
+    }
+    fieldStatus.textContent=review.allDimensionalFit?
+      "DIMENSION-ONLY FIT: "+review.fitting+" of "+review.rows.length+
+      " entered source lengths fit the entered losses. NOT field-certified; inspect each actual source, grade and safe procedure.":
+      "USER-ENTERED, NOT FIELD-VERIFIED — "+review.entered+"/"+review.rows.length+
+      " source lengths entered; "+review.fitting+" dimension-fit; "+
+      review.short+" SHORT — REPLAN; "+review.pending+" pending; "+
+      review.invalid+" invalid. Model purchases/quotes remain unchanged.";
+  };
+  fieldPanel?.addEventListener("input",event=>{
+    const el=event.target;
+    if(!(el instanceof HTMLInputElement))return;
+    if(el.hasAttribute("data-measured-stock")){
+      const id=el.getAttribute("data-measured-stock");
+      const value=fieldNumeric(el.value,true);
+      if(value===null)fieldDraft.sources.delete(id);
+      else fieldDraft.sources.set(id,value);
+    }else if(el.hasAttribute("data-measured-global")){
+      fieldDraft[el.getAttribute("data-measured-global")]=fieldNumeric(el.value);
+    }else return;
+    renderFieldPreflight(makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan));
+  });
   const renderFramingTakeoff=()=>{
     if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
     const audit=latest?.stockAudit;
@@ -1108,6 +1199,7 @@ if(slug){
     if(stockReusePanel){
       const alternative=latest?.stockReusePlan;
       const stationLedger=makeFramingStationLedger(alternative,latest?.stockPlan);
+      renderFieldPreflight(stationLedger);
       if(stationPanel){
         stationPanel.hidden=!stationLedger.available;
         stationExport.disabled=!stationLedger.available;
@@ -1604,6 +1696,21 @@ if(slug){
       "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
     save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
     status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
+  });
+  fieldExport?.addEventListener("click",()=>{
+    const ledger=makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan);
+    if(!ledger.available)return;
+    const review=auditMeasuredFramingFits(ledger,fieldDraft.sources,{
+      sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
+      finalSeverKerf:fieldDraft.finalSeverKerf});
+    const rows=review.rows.map(row=>({...row,
+      enteredBladeKerf:fieldDraft.sawKerf,
+      enteredEndTrim:fieldDraft.endTrim,
+      enteredFinalSeverKerf:fieldDraft.finalSeverKerf}));
+    const note="MANUAL USER ENTRIES ONLY. Blank means not measured. DIMENSION FIT ONLY does not certify physical stock, grade, saw safety, structure or actual savings. Purchase and cut plan unchanged.";
+    save(slug+"-"+unit+"-manual-source-preflight.csv",
+      buildScheduleCsv(rows,unit,note),"text/csv;charset=utf-8");
+    status.textContent="User-entered dimensional preflight exported; no physical inspection or safe cutting has been certified.";
   });
   stationExport?.addEventListener("click",()=>{
     if(!latest?.stockReusePlan?.enabled)return;
