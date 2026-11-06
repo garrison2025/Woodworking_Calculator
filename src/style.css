@@ -739,3 +739,28 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .framing-reuse-plan tr{break-inside:avoid;page-break-inside:avoid}
   .framing-reuse-plan .takeoff-actions{display:none!important}
 }
+
+/* Optional station ledger is a verification worksheet, never a toolpath.
+   Keep all checks visibly unmarked until physically inspected by a person. */
+.framing-station-ledger{border-top:1px solid #b7cdbf;margin-top:22px;padding-top:17px}
+.framing-station-ledger[hidden]{display:none!important}
+.framing-station-ledger h3{margin:0 0 10px}
+.framing-station-ledger #framing-station-status{font-size:12px;font-weight:700;color:#5b4229}
+.framing-station-ledger table{min-width:900px}
+.framing-station-ledger h4{margin:17px 0 8px}
+.framing-station-ledger .station-inspection-list{
+  margin:0;padding:12px 14px;list-style:none;border-radius:8px;
+  border:1px dashed #bd9d66;background:#fcf9f1
+}
+.framing-station-ledger .station-inspection-list li{
+  padding:5px 0;line-height:1.6;font-size:12px
+}
+@media print{
+  .framing-station-ledger[hidden]{display:none!important}
+  .framing-station-ledger table{min-width:0;width:100%;font-size:7pt}
+  .framing-station-ledger #framing-station-status{font-size:8pt}
+  .framing-station-ledger .station-inspection-list{background:white;padding:8pt 10pt}
+  .framing-station-ledger .station-inspection-list li{
+    font-size:8pt;break-inside:avoid
+  }
+}
