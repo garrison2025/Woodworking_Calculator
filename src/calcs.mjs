@@ -708,9 +708,9 @@ export function compute(slug,a){
           family+" "+suffix+" stock option needs a positive purchased length.");
     }
     need(a.stockWaste<=100,"Purchase allowance must be 0–100 percent.");
-    need(a.stockAuditMode===0||a.stockAuditMode===1,
-      "Stock audit mode must be Off or Review only.");
-    if(a.stockAuditMode===1)for(const key of
+    need([0,1,2].includes(a.stockAuditMode),
+      "Stock audit mode must be Off, Review or Reallocate.");
+    if(a.stockAuditMode!==0)for(const key of
       ["stockAuditEndTrim","stockAuditSeverKerf","stockAuditReuseMin"])
       need(a[key]===0||a[key]>=1e-8,
         key+" must be zero or at least 0.00000001 in.");
@@ -1058,11 +1058,17 @@ export function compute(slug,a){
       requiredGroups:materialSummary.filter(r=>r.purchaseSticks>0).length,
       certifiedGroups,allGroupsCertified
     };
-    const stockAudit=a.stockAuditMode===1?
+    const stockAudit=a.stockAuditMode!==0?
       auditFramingStock(stockPlan,{endTrim:a.stockAuditEndTrim,
         finalSeverKerf:a.stockAuditSeverKerf,reuseMin:a.stockAuditReuseMin}):
       {enabled:false,rows:[],physicallyFits:null,failingSticks:0,
         candidateSticks:0,candidateTotalLength:0};
+    const stockReusePlan=a.stockAuditMode===2?
+      reallocateFramingOffcuts(stockPlan,{kerf:a.stockKerf,
+        endTrim:a.stockAuditEndTrim,finalSeverKerf:a.stockAuditSeverKerf,
+        reuseMin:a.stockAuditReuseMin,allowance:a.stockWaste}):
+      {enabled:false,status:"off",rows:[],purchaseVariants:[],
+        canClaimModeledSavings:false};
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     const upper=crippleRows.filter(r=>r.type==="Upper cripple").length,
       lower=crippleRows.length-upper;
@@ -1092,7 +1098,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,optimizerStatus,costSummary,stockAudit
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,optimizerStatus,costSummary,stockAudit,stockReusePlan
     });
   }
   case "deck-board-calculator":{
