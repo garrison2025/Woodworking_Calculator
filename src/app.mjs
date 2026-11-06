@@ -2360,7 +2360,7 @@ if(slug){
 
 /* Homepage history is browser-only and optional; no tracking endpoint exists. */
 if(!slug){
-  const panel=document.querySelector("#recent-tools"),links=document.querySelector("#recent-links");
+  const panel=document.querySelector("#recent-tools"),links=document.querySelector("#recent-links"),clear=document.querySelector("#clear-recent-tools");
   if(panel&&links){
     try{
       const saved=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");
@@ -2375,6 +2375,32 @@ if(!slug){
         links.appendChild(a);
       }
       if(links.children.length)panel.hidden=false;
+      clear?.addEventListener("click",()=>{
+        try{localStorage.removeItem("woodwork-recent")}catch{/* Storage may be disabled. */}
+        links.replaceChildren();
+        panel.hidden=true;
+      });
     }catch{/* Recent tool history is optional. */}
+  }
+  // Filters prerendered links, never fetches a remote search index or changes the URL.
+  const search=document.querySelector("#tool-search");
+  const directory=document.querySelector("#tool-directory");
+  const searchStatus=document.querySelector("#tool-search-status");
+  if(search&&directory&&searchStatus){
+    const entries=[...directory.querySelectorAll("a")];
+    const filterTools=()=>{
+      const query=search.value.trim().toLocaleLowerCase("en");
+      let visible=0;
+      for(const item of entries){
+        const matched=!query||item.textContent.toLocaleLowerCase("en").includes(query);
+        item.hidden=!matched;
+        if(matched)visible++;
+      }
+      searchStatus.textContent=visible===0?"No matching calculator. Try another task.":
+        `Showing ${visible} of ${entries.length} tools`;
+    };
+    search.addEventListener("input",filterTools);
+    search.addEventListener("search",filterTools);
+    filterTools();
   }
 }
