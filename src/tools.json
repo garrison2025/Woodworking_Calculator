@@ -182,6 +182,38 @@
           "kind": "D"
         },
         {
+          "key": "stockAuditMode",
+          "label": "Optional post-plan stock-loss audit",
+          "kind": "E",
+          "value": 0,
+          "advanced": true,
+          "options": [
+            {"value": 0, "label": "Off — original purchasing model"},
+            {"value": 1, "label": "Review extra trims, last kerf and salvage only"}
+          ]
+        },
+        {
+          "key": "stockAuditEndTrim",
+          "label": "Additional trim allowance at EACH stock end (incl. trim loss)",
+          "kind": "L",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "stockAuditSeverKerf",
+          "label": "Extra last-piece separation saw kerf (when tail remains)",
+          "kind": "L",
+          "value": 0,
+          "advanced": true
+        },
+        {
+          "key": "stockAuditReuseMin",
+          "label": "Minimum candidate offcut length (0 = no salvage candidates)",
+          "kind": "L",
+          "value": 0,
+          "advanced": true
+        },
+        {
           "key": "studUnitPrice",
           "label": "Stud stock price per purchased stick (0 = quote needed)",
           "value": 0,
@@ -376,6 +408,10 @@
         {
           "heading": "Three stock families and conservative purchase allowance",
           "text": "Choose real purchased lengths for Stud, Header and Sill material separately. The cutting plan fits member cut lengths into each category using first-fit decreasing, charging one entered saw kerf between consecutive cuts; it never joins short offcuts into a longer board. The optional percentage adds whole reserve sticks to each used family, not to each individual cut. Purchase lengths should account for any additional trimming or defects not modeled."
+        },
+        {
+          "heading": "Optional post-plan trim, last saw kerf and offcut candidates",
+          "text": "Advanced input mode Off preserves the existing purchase optimization, stock cuts and prices. Review mode checks the already selected stock plan against an equal trim reservation at BOTH ends of each purchased stick, plus a separate final-sever saw kerf whenever a tail remains. It marks any stick that no longer fits; the original quote and optimization certificate are base-model figures only and MUST NOT be used to claim enough stock in a failing review. Set a positive minimum offcut length to list possible same-family reuse candidates. This is a read-only evaluation: it never assigns new cuts to scraps, reduces material quantities, or proves a reusable piece's grade, cross-section, straightness or structural suitability."
         },
         {
           "heading": "Fractional-inch worksheet vs numeric CSV",
