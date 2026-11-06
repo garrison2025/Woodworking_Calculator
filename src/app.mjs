@@ -1051,6 +1051,9 @@ if(slug){
   // Framing summary and stock-by-stock schedule reuse exactly the engine's
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
+  // Local stock intervals use compact numeric endpoints, never fraction-
+  // rounded positions. The main measurement schedule still offers fractions.
+  const stockLocalValue=v=>Number(convertFromInches(v,unit).toPrecision(15)).toString();
   const renderFramingTakeoff=()=>{
     if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
     const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[],
@@ -1061,8 +1064,9 @@ if(slug){
        r.plannedSticks,r.allowanceSticks,r.purchaseSticks,takeoffLength(r.offcutLength)]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
     framingStock.innerHTML=bars.map(bar=>'<tr><td>'+esc(bar.stockId+' · '+bar.offerLabel+' · '+takeoffLength(bar.stockLength))+'</td><td>'+
-      bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))+
-        " · ["+esc(fmt(p.cutStart,"L"))+" – "+esc(fmt(p.cutEnd,"L"))+"]").join("<br>")+
+      bar.cuts.map(p=>esc(p.item)+" · "+esc(fmt(p.cutLength,"L"))+
+        " ["+esc(stockLocalValue(p.cutStart))+"–"+
+        esc(stockLocalValue(p.cutEnd))+" "+esc(unit)+"]").join("<br>")+
       '</td><td>'+esc(takeoffLength(bar.kerfLoss))+'</td><td>'+
       esc(takeoffLength(bar.offcutLength))+'</td></tr>').join("");
     const summary=latest?.costSummary;
