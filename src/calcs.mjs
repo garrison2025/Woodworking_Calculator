@@ -1368,7 +1368,8 @@ export function compute(slug,a){
   case "stair-calculator":{
     positive("rise","desired","tread");nonnegative("landing");
     const stairMode=a.stairMode??0;
-    whole("stairMode",0,1);
+    need(Number.isInteger(stairMode)&&stairMode>=0&&stairMode<=1,
+      "Stair mode must be 0 or 1.");
     const risers=ceilStable(a.rise/a.desired);
     need(risers>=2&&risers<=200,"Stair count outside supported range.");
     const treads=risers-1,h=a.rise/risers,flightRun=treads*a.tread;
@@ -1757,7 +1758,8 @@ export function compute(slug,a){
   case "roof-pitch-calculator":{
     positive("run");
     const mode=a.roofMode??0;
-    whole("roofMode",0,3);
+    need(Number.isInteger(mode)&&mode>=0&&mode<=3,
+      "Roof input mode must be 0, 1, 2, or 3.");
     let enteredPitch;
     if(mode===0){nonnegative("pitch");enteredPitch=a.pitch;}
     else if(mode===1){
@@ -1783,7 +1785,8 @@ export function compute(slug,a){
   case "equal-spacing-calculator":{
     positive("length");nonnegative("left","right","itemWidth");
     const spacingMode=a.spacingMode??0;
-    whole("spacingMode",0,2);
+    need(Number.isInteger(spacingMode)&&spacingMode>=0&&spacingMode<=2,
+      "Spacing mode must be 0, 1, or 2.");
     need(a.left+a.right<a.length,"Offsets consume the available length.");
     const usable=a.length-a.left-a.right;
     let count=a.count;
