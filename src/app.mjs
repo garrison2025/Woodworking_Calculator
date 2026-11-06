@@ -327,12 +327,26 @@ if(slug){
         content+=svgText(kerfStart,87,"GREEN WEB "+fmt(data.retainedWeb)+" · TRIAL ONLY","tick-label");
       }else if(data.shape==="shelves"){
         // Both faces come from the same bottom/thickness values as the schedule.
-        const shelfHeight=(data.shelfThickness||1)/span*195;
-        for(const p of marks){
-          const yy=base-(p.x+data.shelfThickness)/span*195;
-          content+='<rect class="shelf-face" x="235" y="'+yy+'" width="445" height="'+Math.max(1,shelfHeight)+'" fill="#dbb890" stroke="#8c663e" stroke-width="1.4"><title>'+esc("Shelf at "+fmt(p.x)+" · thickness "+fmt(data.shelfThickness))+'</title></rect>';
+        const caseHeight=data.interiorHeight,scale=195/caseHeight;
+        // The actual cut-list top and bottom faces are the only source of
+        // shelf elevations; never inflate thin stock to a minimum pixel height.
+        // Border strokes are illustrative, but filled faces retain exact scale.
+        for(const [i,row] of (data.shelfRows||[]).entries()){
+          const yy=base-row.shelfTop*scale;
+          const faceHeight=(row.shelfTop-row.shelfBottom)*scale;
+          content+='<rect class="shelf-face" data-index="'+(i+1)+
+            '" data-shelf-bottom="'+row.shelfBottom+
+            '" data-shelf-top="'+row.shelfTop+
+            '" x="235" y="'+yy+'" width="445" height="'+faceHeight+
+            '" fill="#dbb890" stroke="#8c663e" stroke-width="1.4"><title>'+
+            esc(row.item+" · bottom "+fmt(row.shelfBottom)+
+              " · top "+fmt(row.shelfTop)+
+              " · thickness "+fmt(row.shelfTop-row.shelfBottom))+'</title></rect>';
         }
-        content+='<rect x="220" y="73" width="475" height="205" fill="none" stroke="#345f50" stroke-width="8"/>';
+        const caseTop=base-caseHeight*scale;
+        content+='<rect class="shelf-case-outline" data-interior-height="'+caseHeight+
+          '" x="220" y="'+caseTop+'" width="475" height="'+(caseHeight*scale)+
+          '" fill="none" stroke="#345f50" stroke-width="8"/>';
       }else{
         for(const [i,p] of marks.entries()){
           const px=x(p.x);
@@ -642,7 +656,9 @@ if(slug){
       const xx1=xx0+run*scale,yy1=yy0-rise*scale;
       content+='<path class="roof-pitch-triangle" d="M'+xx0+' '+yy0+' L'+xx1+' '+yy0+' L'+xx1+' '+yy1+' Z" fill="#e5ece5" stroke="#356c58" stroke-width="2"/>';
       content+='<line class="roof-pitch-slope" x1="'+xx0+'" y1="'+yy0+'" x2="'+xx1+'" y2="'+yy1+'" stroke="#b77a43" stroke-width="2.8"/>';
-      content+=svgText(100,60,"ROOF FACE · RISE PER 12 HORIZONTAL","dim-label");
+      content+=svgText(100,60,slug==="rise-run-calculator"?
+          "GENERAL SLOPE · RISE PER 12 HORIZONTAL":
+          "ROOF FACE · RISE PER 12 HORIZONTAL","dim-label");
       content+=svgText(100,84,"TRUE PROPORTIONAL SLOPE TRIANGLE","tick-label");
       content+=svgText(xx0,288,"RUN "+fmt(run),"dim-label");
       content+=svgText(xx0,310,"RISE "+fmt(rise),"tick-label");
@@ -682,7 +698,13 @@ if(slug){
       content+='<rect x="'+x0+'" y="'+y0+'" width="'+ww+'" height="'+hh+'" fill="#e7eae3" stroke="#1e6454" stroke-width="2"/>';
       for(const [i,row] of data.deckRows.entries()){
         const yy=y0+row.acrossStart*scale,sh=row.ripWidth*scale;
-        content+='<rect class="deck-plan-board" x="'+x0+'" y="'+yy+'" width="'+ww+'" height="'+Math.max(.1,sh)+'" fill="'+(i%2?"#d2b18b":"#e2c8a5")+'" stroke="#957452" stroke-width=".45"><title>'+esc(row.item+" · "+fmt(row.ripWidth)+" rip")+'</title></rect>';
+        content+='<rect class="deck-plan-board" data-row="'+(i+1)+
+          '" data-across-start="'+row.acrossStart+
+          '" data-rip-width="'+row.ripWidth+
+          '" x="'+x0+'" y="'+yy+'" width="'+ww+'" height="'+sh+
+          '" fill="'+(i%2?"#d2b18b":"#e2c8a5")+
+          '" stroke="#957452" stroke-width=".45"><title>'+
+          esc(row.item+" · "+fmt(row.ripWidth)+" rip")+'</title></rect>';
         for(const seam of row.seamCenters||[]){
           const xx=x0+seam*scale,jointWidth=(row.seamGap||0)*scale;
           if(jointWidth>0){
