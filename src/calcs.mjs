@@ -222,6 +222,17 @@ export function reallocateFramingOffcuts(stockPlan,{
     const tail=b.stockLength-required;
     return {used,required,sever,tail,fit:tail>=-1e-12};
   };
+  need(new Set(barData.map(b=>b.stockId)).size===barData.length,
+    "Reallocation requires unique physical source stick identifiers.");
+  // Never trust a hand-built/incomplete stock plan that understated between-
+  // member saw kerf. A false baseline fit could otherwise become a false
+  // positive quote reduction in the independent alternative.
+  for(let i=0;i<stockPlan.length;i++){
+    const raw=stockPlan[i],calculated=evalBar(barData[i]);
+    need(raw.cutCount===raw.cuts.length&&Number.isFinite(raw.usedLength)&&
+      Math.abs(raw.usedLength-calculated.used)<=1e-7,
+      "Reallocation refuses a source with an inconsistent original cut or kerf total.");
+  }
   const audit=auditFramingStock(stockPlan,{endTrim,finalSeverKerf,reuseMin});
   const summarize=bars=>{
     const grouped=new Map();
