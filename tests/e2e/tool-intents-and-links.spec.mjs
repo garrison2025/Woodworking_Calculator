@@ -67,7 +67,9 @@ test("On mobile the task-fit guidance remains legible, while print contains geom
   await page.emulateMedia({media:"print"});
   await expect(page.locator(".intent-fit")).toBeHidden();
   await expect(page.locator(".intent-query-copy")).toBeHidden();
-  await expect(page.locator(".proof .formula")).toBeVisible();
+  // The established compact worksheet deliberately prints the safety
+  // assumptions but hides the long on-screen method (including formula).
+  await expect(page.locator(".proof .formula")).toBeHidden();
   await expect(page.locator("#print-assumptions")).toBeVisible();
   await page.emulateMedia({media:"screen"});
 });
