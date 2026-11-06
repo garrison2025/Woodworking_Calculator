@@ -1137,12 +1137,14 @@ if(slug){
         "Incomplete quote — prices required: "+missing.join(", ")+
           (summary.pricedGroups?" · priced groups subtotal "+money(summary.quotedSubtotal):" · no groups priced yet")+
           ". This is NOT a complete purchase total.":
-        "Estimated BASE-MODEL lumber purchase: "+money(summary.quotedSubtotal)+
+        (audit?.enabled?"Estimated BASE-MODEL lumber purchase: ":"Estimated quoted lumber purchase: ")+
+        money(summary.quotedSubtotal)+
         " (planned "+money(summary.quotedPlanned)+
         " + reserve "+money(summary.quotedReserve)+"). Excludes tax, delivery, labor and fittings."+
         auditWarning;
     framingTicketStatus.textContent=!summary?"No valid material plan.":
-      summary.allPricesEntered?"Base-model material quote: "+money(summary.quotedSubtotal)+
+      summary.allPricesEntered?(audit?.enabled?"Base-model material quote: ":"Total material quote: ")+
+        money(summary.quotedSubtotal)+
         " · tax and delivery excluded"+auditWarning:
         "PRICE INCOMPLETE — obtain quotes for "+missing.join(", ")+".";
     framingTicket.innerHTML=variants.filter(r=>r.purchaseSticks>0).map(r=>
