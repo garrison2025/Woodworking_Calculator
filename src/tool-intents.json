@@ -581,6 +581,46 @@
           "why": "Compare separately quoted framing stock sizes and prices"
         }
       ]
+    },
+    {
+      "slug": "spiral-staircase-calculator",
+      "seoTitle": "Spiral Staircase Calculator for Tread Wedge Geometry",
+      "useFor": "Lay out a single-turn spiral stair's physical wedge sectors, polar plan coordinates, uniform risers and measured walk-line arc going.",
+      "notFor": "Stair headroom or guardrail approval, multi-turn stair design, code compliance, structural bearing, pole selection or finished shop cuts.",
+      "next": [
+        {
+          "slug": "stair-calculator",
+          "why": "Compare a straight-flight rise-and-tread layout"
+        },
+        {
+          "slug": "stair-stringer-calculator",
+          "why": "Calculate the distinct straight-stair stringer task"
+        },
+        {
+          "slug": "rise-run-calculator",
+          "why": "Review rise-and-run slope geometry separately"
+        }
+      ]
+    },
+    {
+      "slug": "stave-calculator",
+      "seoTitle": "Tapered Stave Calculator for Polygon Barrel Trapezoids",
+      "useFor": "Compute theoretical trapezoid faces, top and bottom chord cuts and separate vertical, face-center and long-edge stave dimensions.",
+      "notFor": "A barrel bulge, guaranteed inner capacity, proven table-saw compound bevel or certified coopering and hardwood stock purchasing.",
+      "next": [
+        {
+          "slug": "segmented-bowl-calculator",
+          "why": "Compare straight chord dimensions for segmented rings"
+        },
+        {
+          "slug": "crown-molding-calculator",
+          "why": "Check a separately defined compound-cut angle task"
+        },
+        {
+          "slug": "square-layout-calculator",
+          "why": "Verify reference diagonals on actual flat stock"
+        }
+      ]
     }
   ]
 }
