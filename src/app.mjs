@@ -1135,6 +1135,11 @@ if(slug){
         '<td data-field-required>—</td><td data-field-clearance>—</td>'+
         '<td data-field-result>PENDING INPUT</td></tr>').join("");
     }
+    for(const key of ["sawKerf","endTrim","finalSeverKerf"]){
+      const fieldEcho=fieldPanel.querySelector('[data-field-global-echo="'+key+'"]');
+      if(fieldEcho)fieldEcho.textContent=fieldDraft[key]===null?
+        "Not entered":fmt(fieldDraft[key],"L");
+    }
     const review=auditMeasuredFramingFits(ledger,fieldDraft.sources,{
       sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
       finalSeverKerf:fieldDraft.finalSeverKerf});
