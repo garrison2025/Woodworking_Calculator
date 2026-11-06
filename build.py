@@ -153,8 +153,9 @@ def tool_page(t):
         task_note = (
             '<p class="intent-query-copy">Specific measurement task: lumber '
             'quoted per board foot (BF) or 1,000 board feet (MBF). '
-            'The historical search phrase <strong>price per thousand calculator</strong> '
-            'is ambiguous and is NOT a general price-per-thousand-items feature. '
+            'The historical broad research query is NOT a general '
+            'price-per-thousand-items feature and is deliberately not '
+            'marketed as a matching search synonym. '
             'Enter the dimensions and supplier rate for actual lumber only.')
     reviewed = [word for word,route in SUPPORTED_REASSIGNMENTS.items()
                 if route == '/' + t['slug'] + '/']

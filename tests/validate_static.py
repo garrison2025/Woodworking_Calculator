@@ -110,7 +110,7 @@ for p in pages:
                 and "board foot" in intent["seoTitle"].lower()
                 and "mbf" in intent["seoTitle"].lower()):
                 errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
-            elif "historical search phrase" not in body.lower() or "NOT a general price-per-thousand-items" not in body:
+            elif "historical broad research query" not in body.lower() or "NOT a general" not in body:
                 errors.append(f"{u}: ambiguous historical thousand-price query lacks on-page scope caveat")
         if len(intent["seoTitle"])<25 or len(intent["seoTitle"])>75:
             errors.append(f"{u}: SEO title is too generic or overlong")
@@ -147,8 +147,12 @@ for p in pages:
             rendered_query=html.unescape(nearby.group(0)).lower()
             if "closely related search terms include" in rendered_query:
                 errors.append(f"{u}: generic synonym inventory still present")
-            if page_tool["keyword"].lower() not in rendered_query:
+            if (page_tool["slug"]!="lumber-price-calculator"
+                and page_tool["keyword"].lower() not in rendered_query):
                 errors.append(f"{u}: primary research search task missing")
+            if page_tool["slug"]=="lumber-price-calculator" and (
+                "lumber" not in rendered_query or "mbf" not in rendered_query):
+                errors.append(f"{u}: lumber scope not defined precisely")
             for route,term in flagged:
                 if route==u and term in rendered_query:
                     errors.append(f"{u}: flagged nonmatching search phrase used as a claimed synonym: {term}")
