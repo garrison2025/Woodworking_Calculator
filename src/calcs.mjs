@@ -2773,6 +2773,116 @@ export function compute(slug,a){
         purchased,boardFeetPerPiece:rawBf,purchasedBoardFeet:orderBf,
         pricePerBoardFoot:costPerBf,totalCost:total}});
   }
+
+  // Only one partial/full turn. The top finished floor accounts for the
+  // final riser, never an invented last physical tread.
+  case "spiral-staircase-calculator":{
+    positive("totalRise","outerDiameter","poleDiameter","walkInset","treadThickness","totalRotation");
+    whole("risers",3,48);whole("direction",0,1);
+    need(a.totalRotation>=60&&a.totalRotation<=360,"Only a single 60°–360° spiral turn is supported.");
+    const R=a.outerDiameter/2,r=a.poleDiameter/2,clear=R-r;
+    need(clear>1e-7&&a.walkInset<clear-1e-7,
+      "Walk-line reference must fit strictly between the pole and outside face.");
+    need(a.treadThickness<a.totalRise,"Tread thickness must be below the total floor rise.");
+    const count=a.risers-1,delta=a.totalRotation/count;
+    need(delta>=1&&delta<=60,"Angular sector per tread must be between 1° and 60°.");
+    const h=a.totalRise/a.risers,theta=rad(delta),rw=r+a.walkInset,
+      outerArc=R*theta,walkArc=rw*theta,
+      outerChord=2*R*Math.sin(theta/2),innerChord=2*r*Math.sin(theta/2),
+      walkChord=2*rw*Math.sin(theta/2),
+      areaFt2=(R*R-r*r)*theta/2/144,
+      sign=a.direction===0?1:-1;
+    const vertex=(radius,degrees)=>{
+      const t=rad(degrees);
+      return [q(R+radius*Math.cos(t)),q(R+radius*Math.sin(t))];
+    };
+    rows=Array.from({length:count},(_,i)=>{
+      const start=sign*i*delta,end=sign*(i+1)*delta;
+      return {item:"Tread "+(i+1),number:i+1,
+        startAngleDeg:q(start),endAngleDeg:q(end),
+        innerChord:q(innerChord),outerChord:q(outerChord),
+        walklineArcLength:q(walkArc),walklineChord:q(walkChord),
+        riserHeight:q(h),treadTopElevation:q((i+1)*h),
+        treadAnnularAreaFt2:areaFt2,
+        planVertices:[vertex(r,start),vertex(R,start),vertex(R,end),vertex(r,end)]};
+    });
+    need(rows.every(row=>row.outerChord>row.innerChord&&
+       row.planVertices.every(p=>p.every(Number.isFinite))),
+      "Spiral wedge plan collapses at drawing precision.");
+    return result([
+      M("Uniform riser height",h),
+      M("Risers including the upper finished floor",a.risers,"N"),
+      M("Physical wedge treads",count,"N"),
+      M("Total turn angle",a.totalRotation,"A"),
+      M("Angle per physical tread",delta,"A"),
+      M("Clear radial tread width",clear),
+      M("Walk-line radius from stair center",rw),
+      M("Walk-line arc going per tread",walkArc),
+      M("Walk-line straight chord per tread",walkChord),
+      M("Outer-edge arc length per tread",outerArc),
+      M("Outer-edge straight chord per tread",outerChord),
+      M("Inner-edge straight chord per tread",innerChord),
+      M("Annular sector area per tread",areaFt2,"FT2"),
+      M("Highest physical tread elevation",h*count),
+      M("Upper finished floor elevation",a.totalRise)
+    ],[],a.outerDiameter,rows,"spiral-plan",{
+      spiralPlan:{outerDiameter:a.outerDiameter,poleDiameter:a.poleDiameter,
+        walkRadius:rw,walkInset:a.walkInset,outerRadius:R,innerRadius:r,
+        riserHeight:h,treadAngle:delta,rows}
+    });
+  }
+  // Faceted frustum: corner-edge length and perpendicular face-center
+  // slant differ; neither angle is a certified table-saw setup.
+  case "stave-calculator":{
+    positive("topCornerDiameter","bottomCornerDiameter","height");
+    whole("staves",3,60);nonnegative("roughMargin","roughKerf");
+    measurableGap(a.roughMargin,"Rough stock margin");
+    measurableGap(a.roughKerf,"Rough stock kerf");
+    const topRadius=a.topCornerDiameter/2,bottomRadius=a.bottomCornerDiameter/2,
+      half=PI/a.staves,s=Math.sin(half),c=Math.cos(half),dR=topRadius-bottomRadius;
+    const topChord=2*topRadius*s,bottomChord=2*bottomRadius*s,
+      faceLength=Math.hypot(a.height,dR*c),edgeLength=Math.hypot(a.height,dR),
+      edgeTaperDeg=deg(Math.atan2(Math.abs(topChord-bottomChord)/2,faceLength)),
+      wallLeanDeg=deg(Math.atan2(Math.abs(dR),a.height)),
+      k=dR*c/a.height;
+    const normalDot=(Math.cos(2*PI/a.staves)+k*k)/(1+k*k),
+      halfDihedralDeg=deg(Math.acos(Math.min(1,Math.max(-1,normalDot)))/2);
+    const faceWidth=Math.max(topChord,bottomChord),
+      roughWidth=faceWidth+2*a.roughMargin+a.roughKerf,
+      roughLength=faceLength+2*a.roughMargin+a.roughKerf;
+    need(faceLength>1e-7&&Math.min(topChord,bottomChord)>1e-7&&
+      roughWidth<1e8&&roughLength<1e8,"Stave face or blank dimensions outside supported precision.");
+    const upperX=(faceWidth-topChord)/2,lowerX=(faceWidth-bottomChord)/2,
+      vertices=[[q(upperX),0],[q(upperX+topChord),0],
+        [q(lowerX+bottomChord),q(faceLength)],[q(lowerX),q(faceLength)]],
+      faceAreaFt2=(topChord+bottomChord)*faceLength/2/144;
+    rows=Array.from({length:a.staves},(_,i)=>({
+      item:"Stave "+(i+1),number:i+1,
+      topOuterChord:q(topChord),bottomOuterChord:q(bottomChord),
+      faceCenterlineLength:q(faceLength),cornerEdgeLength:q(edgeLength),
+      edgeSideTaperDeg:q(edgeTaperDeg),theoreticalHalfDihedralDeg:q(halfDihedralDeg),
+      roughBlankWidth:q(roughWidth),roughBlankLength:q(roughLength),
+      staveFaceAreaFt2:faceAreaFt2,planVertices:vertices.map(v=>v.slice())
+    }));
+    return result([
+      M("Identical polygon staves",a.staves,"N"),
+      M("Top outside straight chord",topChord),
+      M("Bottom outside straight chord",bottomChord),
+      M("Face-center slant length",faceLength),
+      M("Corner-edge true length",edgeLength),
+      M("Plan half-miter reference",180/a.staves,"A"),
+      M("Theoretical face-to-face half-dihedral",halfDihedralDeg,"A"),
+      M("Flat face-edge side taper",edgeTaperDeg,"A"),
+      M("Vessel wall lean from vertical",wallLeanDeg,"A"),
+      M("Trapezoid face area per stave",faceAreaFt2,"FT2"),
+      M("Conservative rough blank width",roughWidth),
+      M("Conservative rough blank length",roughLength),
+      M("Total rough rectangular blank area (no nesting)",roughWidth*roughLength*a.staves/144,"FT2")
+    ],[],faceWidth,rows,"stave-trapezoid",{
+      staveBlank:{topChord,bottomChord,faceLength,edgeLength,edgeTaperDeg,
+        halfDihedralDeg,roughWidth,roughLength,vertices,staves:a.staves}
+    });
+  }
   default:throw new Error("Calculator not implemented: "+slug);
   }
 }
