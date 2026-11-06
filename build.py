@@ -430,7 +430,7 @@ def tool_page(t):
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
            +framing_takeoff+deck_takeoff+stringer_section+roof_reuse_section+shelf_pin_panel+
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
-           f'<p>{esc(t["desc"])}</p><p>For the <strong>{esc(t["keyword"])}</strong> task, {esc(intent["useFor"][0].lower()+intent["useFor"][1:])} '+(f'Other research search phrases for this task include {esc(related_search_terms)}. They lead to this single calculator, not duplicate pages.' if related_search_terms else 'The results use one explicit dimensional model and set of measurements.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
+           f'<p>{esc(t["desc"])}</p><p class="intent-query-copy">For the <strong>{esc(t["keyword"])}</strong> task, {esc(intent["useFor"][0].lower()+intent["useFor"][1:])} '+(f'Other research search phrases for this task include {esc(related_search_terms)}. They lead to this single calculator, not duplicate pages.' if related_search_terms else 'The results use one explicit dimensional model and set of measurements.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
             '<h3>Assumptions and limits</h3>'
