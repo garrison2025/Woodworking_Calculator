@@ -841,3 +841,59 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .review-global-checks label{display:block;font-size:8pt}
  .review-global-checks label .review-print-value{margin-right:8pt}
 }
+
+/* Content-derived review versions are comparison references, never signatures
+   or human procurement approvals. Keep raw IDs selectable and printable. */
+.framing-review-versions{
+  margin:20px 0 10px;padding:17px 18px;
+  background:#f3f7f5;border:1px solid #bbd0c5;
+  border-radius:10px
+}
+.framing-review-versions[hidden]{display:none!important}
+.framing-review-versions h4{margin:0 0 9px;font-size:16px}
+.framing-review-versions>p{font-size:12px;line-height:1.7}
+.framing-version-identifiers{
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  padding:12px 14px;background:#e9f1ed;border-left:3px solid #4a8167;
+  border-radius:8px;color:#204b38;
+  font:600 11px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-variant-numeric:tabular-nums
+}
+.review-version-actions{display:flex;flex-wrap:wrap;gap:9px}
+.review-version-actions button{flex:1 1 190px;min-width:min(190px,100%)}
+.framing-version-import-label{
+  display:flex;flex-direction:column;gap:8px;margin:14px 0;
+  color:#335d4b;font-size:12px;font-weight:700
+}
+.framing-version-import-label input{max-width:100%;font:inherit}
+.framing-review-versions .framing-price-status{
+  overflow-wrap:anywhere;line-height:1.65;background:#e9f2ed;font-size:12px
+}
+#framing-version-diff-table{min-width:760px;table-layout:auto}
+#framing-version-diff-table td{
+  overflow-wrap:anywhere;vertical-align:top;
+  font-size:11px;max-width:340px
+}
+#framing-version-diff-table td:nth-child(2){
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px
+}
+@media(max-width:620px){
+ .framing-review-versions{padding:13px 11px}
+ #framing-version-diff-table{min-width:720px}
+}
+@media print{
+ .framing-review-versions[hidden]{display:none!important}
+ .framing-review-versions{background:#fff;padding:8pt;
+   border:1px solid #888;break-inside:auto}
+ .framing-review-versions .framing-version-identifiers{
+   white-space:pre-wrap;font-size:7pt;padding:6pt;background:#fff
+ }
+ .framing-review-versions .framing-version-import-label,
+ .framing-review-versions .review-version-actions{display:none!important}
+ .framing-review-versions p{font-size:8pt}
+ #framing-version-diff-table{min-width:0!important;width:100%;table-layout:fixed}
+ #framing-version-diff-table td,#framing-version-diff-table th{
+   font-size:7pt!important;padding:3pt 3pt;overflow-wrap:anywhere
+ }
+ #framing-version-diff-table tr{break-inside:avoid;page-break-inside:avoid}
+}
