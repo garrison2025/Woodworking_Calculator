@@ -393,8 +393,8 @@
           "why": "Estimate roof sheet quantities from panels"
         },
         {
-          "slug": "rafter-calculator",
-          "why": "Calculate the common rafter's cut geometry"
+          "slug": "gambrel-roof-calculator",
+          "why": "Model a roof with two distinct slope sections"
         },
         {
           "slug": "roof-pitch-calculator",
@@ -513,12 +513,52 @@
           "why": "Distribute narrow railing balusters"
         },
         {
-          "slug": "square-layout-calculator",
-          "why": "Check a rectangular garden or fence set-out"
+          "slug": "fence-picket-calculator",
+          "why": "Distribute actual picket faces between two posts"
         },
         {
           "slug": "deck-material-calculator",
           "why": "Estimate separate deck materials"
+        }
+      ]
+    },
+    {
+      "slug": "fence-picket-calculator",
+      "seoTitle": "Fence Picket Spacing Calculator with Cut Heights",
+      "useFor": "Lay out measured fence picket face edges and equal clear gaps, then optionally calculate a separate stepped top-cut height for each straight board.",
+      "notFor": "A structural fence span, curved cutting template, post embedment, safe pool barrier openings or approved wind-loading design.",
+      "next": [
+        {
+          "slug": "fence-post-calculator",
+          "why": "Check the fence post centers and actual faces"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Calculate a separate railing baluster task"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Place general part centers without fence-specific top cuts"
+        }
+      ]
+    },
+    {
+      "slug": "gambrel-roof-calculator",
+      "seoTitle": "Gambrel Roof Calculator with Upper and Lower Pitch",
+      "useFor": "Calculate symmetric two-pitch gambrel section geometry, knuckle stations, ridge height and surface areas of four roof segments.",
+      "notFor": "Structural gambrel truss loads or joints, timber span design, bearing cuts, sheet nesting or roofing code certification.",
+      "next": [
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Convert upper and lower pitches into degrees"
+        },
+        {
+          "slug": "gable-roof-calculator",
+          "why": "Compare a simpler single-slope gable profile"
+        },
+        {
+          "slug": "roof-sheathing-calculator",
+          "why": "Estimate rectangular sheathing on a separate single-slope roof plane"
         }
       ]
     }
