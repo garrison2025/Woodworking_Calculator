@@ -189,7 +189,8 @@
           "advanced": true,
           "options": [
             {"value": 0, "label": "Off — original purchasing model"},
-            {"value": 1, "label": "Review extra trims, last kerf and salvage only"}
+            {"value": 1, "label": "Review extra trims, last kerf and salvage only"},
+            {"value": 2, "label": "Reallocate eligible offcuts (bounded comparison)"}
           ]
         },
         {
@@ -411,7 +412,7 @@
         },
         {
           "heading": "Optional post-plan trim, last saw kerf and offcut candidates",
-          "text": "Advanced input mode Off preserves the existing purchase optimization, stock cuts and prices. Review mode checks the already selected stock plan against an equal trim reservation at BOTH ends of each purchased stick, plus a separate final-sever saw kerf whenever a tail remains. It marks any stick that no longer fits; the original quote and optimization certificate are base-model figures only and MUST NOT be used to claim enough stock in a failing review. Set a positive minimum offcut length to list possible same-family reuse candidates. This is a read-only evaluation: it never assigns new cuts to scraps, reduces material quantities, or proves a reusable piece's grade, cross-section, straightness or structural suitability."
+          "text": "Advanced mode Off preserves the original cut placement, quotes and optimizer certificate. Review checks both ends' trim and last-sever kerf on already selected sticks; a short stick means the base quote is NOT a sufficient order. Reallocate mode independently attempts to retire complete sticks by moving their intact members into eligible unused tails on sticks of the SAME stock profile. It conserves all members, recomputes internal kerf, actual source fit, separately rounded reserve purchases and entered per-SKU cent prices; it never splices or mixes profiles. Set a POSITIVE minimum offcut length to enable candidate search. A lower quoted subtotal is a modeled alternative only, NOT guaranteed site savings, global optimum, approved saw route, or new construction order. If the original audit does not fit with extra trimming, alternative reallocation is blocked until the underlying plan is revised. No physically verified material grading or piece suitability is inferred."
         },
         {
           "heading": "Fractional-inch worksheet vs numeric CSV",
