@@ -968,8 +968,10 @@ test("all 26 tools retain blank inputs across unit changes and expose accessible
   page.on("pageerror",err=>pageErrors.push(err.message));
   for(const tool of active){
     await page.goto("/"+tool.slug+"/");
-    const f=tool.inputs.find(x=>x.kind==="L")||
-      tool.inputs.find(x=>!x.options);
+    // Select a visible default-mode measurement; conditional fields exist
+    // in the form but must not be forced visible by a generic recovery test.
+    const f=tool.inputs.find(x=>x.kind==="L"&&!x.showWhen)||
+      tool.inputs.find(x=>!x.options&&!x.showWhen);
     expect(f,tool.slug+" needs an editable field").toBeTruthy();
     const field=page.locator("#f-"+f.key),note="field-note-"+f.key;
     await expect(field,tool.slug).toHaveAttribute("aria-describedby",note);
