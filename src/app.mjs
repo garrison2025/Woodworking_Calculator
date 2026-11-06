@@ -1130,7 +1130,8 @@ if(slug){
         '<td><label><span class="sr-only">Entered stock length for '+esc(b.stockId)+'</span>'+
         '<input type="number" min="0" step="any" inputmode="decimal" data-measured-stock="'+
           esc(b.stockId)+'" aria-label="Actual source length for '+esc(b.stockId)+' in '+esc(unit)+'" value="'+
-          esc(fieldUnits(fieldDraft.sources.get(b.stockId)??null))+'" placeholder="Not entered"></label></td>'+
+          esc(fieldUnits(fieldDraft.sources.get(b.stockId)??null))+'" placeholder="Not entered"></label>'+
+        '<span class="field-print-value" data-field-echo>Not entered</span></td>'+
         '<td data-field-required>—</td><td data-field-clearance>—</td>'+
         '<td data-field-result>PENDING INPUT</td></tr>').join("");
     }
@@ -1140,6 +1141,8 @@ if(slug){
     const trs=[...fieldTable.querySelectorAll("tr")];
     for(const [i,row] of review.rows.entries()){
       const tr=trs[i];if(!tr)continue;
+      tr.querySelector("[data-field-echo]").textContent=
+        row.enteredLength===null?"Not entered":fmt(row.enteredLength,"L");
       tr.querySelector("[data-field-required]").textContent=
         row.requiredLength===null?"—":fmt(row.requiredLength,"L");
       tr.querySelector("[data-field-clearance]").textContent=
