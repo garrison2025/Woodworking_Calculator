@@ -324,6 +324,11 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .framing-takeoff table{table-layout:fixed;min-width:0;width:100%;font-size:7pt;word-break:break-word}
   .framing-takeoff th,.framing-takeoff td{padding:5pt 3pt;vertical-align:top}
   .framing-takeoff #framing-stock-table td:nth-child(2){min-width:0}
+  /* Longer start/end references must remain legible without creating a
+     nearly blank extra page in Letter/A4 supplier worksheets. */
+  .framing-takeoff #framing-stock-table th,
+  .framing-takeoff #framing-stock-table td{padding:2.5pt 2pt;line-height:1.22}
+  .framing-takeoff #framing-stock-table td:nth-child(2){width:54%;overflow-wrap:anywhere}
   .framing-takeoff tr{break-inside:avoid}
   .framing-takeoff h2{break-after:avoid}
   .framing-takeoff .caution{font-size:8pt}
