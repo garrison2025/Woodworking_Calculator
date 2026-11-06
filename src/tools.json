@@ -2431,18 +2431,89 @@
     },
     {
       "slug": "spiral-staircase-calculator",
-      "title": "Spiral Staircase Calculator",
+      "title": "Spiral Staircase Tread Geometry",
       "category": "roof",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "spiral staircase calculator",
       "volume": 260,
       "kd": 11,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Explore equal spiral tread-sector stations with defined inner/outer radii, selected walking line, angular rise and a proportional top-view coordinate diagram.",
+      "inputs": [
+        {
+          "key": "totalRise",
+          "label": "Finished vertical rise between selected lower/upper datums",
+          "kind": "L",
+          "value": 96
+        },
+        {
+          "key": "innerRadius",
+          "label": "Inner radius to central column surface",
+          "kind": "L",
+          "value": 3
+        },
+        {
+          "key": "outerRadius",
+          "label": "Outer radius to tread edge",
+          "kind": "L",
+          "value": 30
+        },
+        {
+          "key": "walkRadius",
+          "label": "Entered walking-line radius from center axis",
+          "kind": "L",
+          "value": 15
+        },
+        {
+          "key": "totalTurn",
+          "label": "Total selected turn for ONE revolution maximum",
+          "kind": "A",
+          "value": 360
+        },
+        {
+          "key": "steps",
+          "label": "Equal tread sectors AND rise stations",
+          "kind": "N",
+          "value": 12
+        },
+        {
+          "key": "direction",
+          "label": "Viewed top-down turn direction",
+          "kind": "N",
+          "value": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Counterclockwise"
+            },
+            {
+              "value": 1,
+              "label": "Clockwise"
+            }
+          ]
+        }
+      ],
+      "formula": "For N explicitly entered equal angular sectors spanning total turn A degrees, Δθ=A/N and equal modeled station rise=totalRise/N. Walkline ARC per sector = entered walk radius × Δθ in radians; its straight CHORD=2×walk radius×sin(Δθ/2). Inner/outer tread edges have corresponding straight chord lengths. Coordinates come from center-axis polar positions for both inner and outer radii at each angular station. The final station reaches the chosen upper vertical datum; floor landing conventions are NOT inferred.",
+      "example": "For 96in selected rise, 12 angular sectors over 360°, inner radius 3in, outer radius 30in, entered walkline radius 15in: 8in rise per sector, 30° per sector, walkline arc≈7.85398in and walkline chord≈7.76457in. This is NOT a verified legal step or clearance.",
+      "limit": "This is a single-turn mathematical polar tread-sector model, not a safe staircase design. It makes NO code compliance, clear width at handrail, headroom, tread-overlap, top landing, riser-nosing, stringer, center-pole strength, load, fastener, or 1:1 fabrication template claims. The entered sector count also counts rise stations by explicit model convention, which may differ from supplier tread/landing conventions. An architect/engineer and current local codes must review any real stair.",
+      "guidance": [
+        {
+          "heading": "Choose your own vertical and angular reference datums",
+          "text": "The first sector begins at zero degrees relative to a rightward centerline in the top view. There are exactly N equal sectors and N modeled rises; the Nth end elevation reaches the entered upper datum. Real stairs may count the last landing as a riser instead of a tread. Match supplier and local requirements independently."
+        },
+        {
+          "heading": "Walkline ARC is not a verified straight-going tread depth",
+          "text": "A curve at the user-entered walk radius has arc length R×radians; the distance between its two boundary points is a shorter straight chord. Both are reported independently and neither automatically establishes a legal walkline or tread overlap. Place your walking path where your specification requires, not at a guessed fraction."
+        },
+        {
+          "heading": "Read the polar plan before making pieces",
+          "text": "The SVG draws straight chord-sided annular sectors using each CSV row's four vertex coordinates at actual geometric scale. It is a schematic top view of one turn. The height sequence is only a numeric schedule; any headroom interaction with the turn above and the upper landing is excluded."
+        },
+        {
+          "heading": "Safety and structural approval are outside this calculator",
+          "text": "No handrail clearance, code minimum, tread thickness, column anchorage, guard opening, rotational overlap or structural load is checked. A tidy diagram or positive walking arc does not mean the spiral stair can be built or occupied."
+        }
+      ]
     },
     {
       "slug": "gambrel-roof-calculator",
@@ -2765,18 +2836,79 @@
     },
     {
       "slug": "stave-calculator",
-      "title": "Tapered Stave Calculator",
+      "title": "Tapered Stave Flat-Pattern Calculator",
       "category": "wood",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "stave calculator",
       "volume": 90,
       "kd": 10,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Develop a straight-taper polygon-vessel stave into an exact trapezoid using entered outside polygon corner diameters, height and board count.",
+      "inputs": [
+        {
+          "key": "topDiameter",
+          "label": "TOP outside POLYGON CORNER diameter",
+          "kind": "L",
+          "value": 24
+        },
+        {
+          "key": "bottomDiameter",
+          "label": "BOTTOM outside POLYGON CORNER diameter",
+          "kind": "L",
+          "value": 18
+        },
+        {
+          "key": "height",
+          "label": "Vertical height between top/bottom rim planes",
+          "kind": "L",
+          "value": 30
+        },
+        {
+          "key": "staveCount",
+          "label": "Straight identical polygon staves",
+          "kind": "N",
+          "value": 12
+        },
+        {
+          "key": "thickness",
+          "label": "Measured blank stock thickness (reference only)",
+          "kind": "L",
+          "value": 0.75
+        },
+        {
+          "key": "roughMargin",
+          "label": "Optional rough-blank allowance on EACH side",
+          "kind": "L",
+          "value": 0
+        },
+        {
+          "key": "roughKerf",
+          "label": "One conservative rough-blank kerf per axis",
+          "kind": "L",
+          "value": 0
+        }
+      ],
+      "formula": "For n flat staves forming top/bottom REGULAR polygon corner diameters Dt, Db: half plan wedge φ=π/n; outer face chord widths are Dt sinφ and Db sinφ. The radial vertex difference is ΔR=(Dt−Db)/2. The unfolded flat face perpendicular slant = hypot(vertical height, ΔR cosφ), while each corner side edge = hypot(height, ΔR). Consistency invariant: corner edge² = developed face slant² + ((topChord−bottomChord)/2)². The face-normal half-angle is acos((cos(2φ)+s²)/(1+s²))/2, with s=ΔR cosφ/height; this is mathematical geometry, NOT a saw setup. Rough rectangular blank dimensions add both margins and one separately entered kerf.",
+      "example": "Top/bottom outside corner diameters 24in and 18in, vertical height 30in, 12 staves: plan half-wedge=15°; top chord=24 sin15°≈6.211657in; bottom chord=18 sin15°≈4.658743in. The correct developed face slant is hypot(30,3 cos15°), not an assumed true corner-edge length.",
+      "limit": "Straight-sided regular POLYGON tapered vessel outer-face geometry, not a bulging wine barrel. Diameters are measured through polygon VERTICES, not finished turned circular OD. Entered blank thickness is a reference only; it is NOT automatically converted into inner stave chord widths or saw bevel settings. Actual material grain, glue line, angles under clamping, blade orientation, coopering joints and finished inside capacity are NOT computed or certified. Flat SVG is proportional, not 1:1 ready-to-saw stock.",
+      "guidance": [
+        {
+          "heading": "Outside corner diameter differs from a finished round profile",
+          "text": "Enter dimensions through the outside polygon vertices. The largest ideal inscribed circular outside surface has a smaller diameter equal to corner diameter×cos(180°/staves). The diagram is a STRAIGHT trapezoid stave face, not a bowed barrel profile."
+        },
+        {
+          "heading": "Distinguish flat face slant from corner-edge length",
+          "text": "The flat trapezoid height uses the change in polygon APOTHEM, ΔR×cos(180°/n), while the physical corner side edge uses the change in vertex radius ΔR. They are not equal for taper and the consistency identity is independently tested."
+        },
+        {
+          "heading": "Do not treat geometric half-angles as a saw setup",
+          "text": "Plan half-wedge and adjacent outward face-normal half-angle are reported geometrically, not as the correct bevel setting for stock lying in any particular jig or saw orientation. Real thickness and material removal require a physical scrap-stave fit trial and professional setup review."
+        },
+        {
+          "heading": "Optional rough blank does not constitute a cutting layout",
+          "text": "Rough margins and kerf add a conservative envelope to the ideal developed face, but never optimize nesting or account for board irregularity. The CSV contains one ideal independent flat trapezoid for every entered stave."
+        }
+      ]
     }
   ],
   "source": "Owner supplied V3.0 / Blocklayer top-400 Semrush sample (2026-11-04). Metrics estimated, not promises."

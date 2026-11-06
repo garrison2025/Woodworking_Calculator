@@ -581,6 +581,46 @@
           "why": "Compare separately quoted framing stock sizes and prices"
         }
       ]
+    },
+    {
+      "slug": "spiral-staircase-calculator",
+      "seoTitle": "Spiral Staircase Calculator for Tread Sector Geometry",
+      "useFor": "Calculate equal angular tread stations, rises and measured annular walking-line arc/chord geometry around a center column.",
+      "notFor": "A code-compliant spiral stair, verified headroom/landing, approved walking-line tread depth, structural column or manufacturing-ready wedge template.",
+      "next": [
+        {
+          "slug": "stair-calculator",
+          "why": "Compare a separate straight stair with finished-rise inputs"
+        },
+        {
+          "slug": "stair-stringer-calculator",
+          "why": "Review a straight stringer notch layout, not spiral supporting structure"
+        },
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Inspect separate basic angle conversion geometry"
+        }
+      ]
+    },
+    {
+      "slug": "stave-calculator",
+      "seoTitle": "Tapered Stave Calculator for Flat Face Trapezoid Patterns",
+      "useFor": "Develop a straight polygon-frustum outer stave face into a measured planar trapezoid with distinct chord, side edge and slant lengths.",
+      "notFor": "A bulged barrel stave, certified timber bevel saw setting, inner-volume estimate or real stock cut sequence.",
+      "next": [
+        {
+          "slug": "segmented-bowl-calculator",
+          "why": "Explore planar polygon rings and rough-stock segment dimensions"
+        },
+        {
+          "slug": "square-layout-calculator",
+          "why": "Independently verify perpendicular reference and diagonal marks"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Mark equal stations before making a repeated part template"
+        }
+      ]
     }
   ]
 }

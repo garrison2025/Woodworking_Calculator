@@ -61,7 +61,9 @@ const sourceCount=model=>{
     posts:[".post-face",model.faceRows?.length],
     "picket-layout":[".picket-face",model.faceRows?.length],
     "gambrel-profile":[".gambrel-slope-segment",model.gambrelRows?.length],
-    "lumber-board":[".lumber-board-face",1]
+    "lumber-board":[".lumber-board-face",1],
+    "spiral-plan":[".spiral-tread-face",model.spiralRows?.length],
+    "stave-flat":[".stave-flat-template",1]
   };
   const found=shapes[model.shape];
   expect(found,"Missing explicit SVG family assertion for "+model.shape).toBeTruthy();
@@ -201,6 +203,23 @@ async function checkSvg(page,model){
     await common(el,"data-width-in",b.width);
     await common(el,"data-thickness-in",b.thickness);
     approx((await att(el,"width"))/(await att(el,"height")),b.length/b.width,1e-8);
+  }else if(model.shape==="spiral-plan"){
+    for(const [i,r] of model.spiralRows.entries()){
+      const e=root.locator(".spiral-tread-face").nth(i);
+      await common(e,"data-index",r.index);
+      await common(e,"data-angle-start",r.angleStartDeg);
+      await common(e,"data-angle-end",r.angleEndDeg);
+      await common(e,"data-rise-end",r.elevationEnd);
+      expect((await e.getAttribute("points")).trim().split(/\s+/).length)
+        .toBe(r.planVertices.length);
+    }
+  }else if(model.shape==="stave-flat"){
+    const e=root.locator(".stave-flat-template");
+    await common(e,"data-top-chord",model.topChord);
+    await common(e,"data-bottom-chord",model.bottomChord);
+    await common(e,"data-face-slant",model.faceSlant);
+    await common(e,"data-corner-edge",model.cornerEdge);
+    expect((await e.getAttribute("points")).trim().split(/\s+/).length).toBe(4);
   }else if(model.shape==="triangle"){
     const slope=root.locator(".roof-pitch-slope");
     const dx=(await att(slope,"x2"))-(await att(slope,"x1"));
@@ -273,7 +292,7 @@ for(const tool of active){
   });
 }
 test("all active routes have explicit screenshot-family assertions",()=>{
-  expect(active.length).toBe(29);
-  expect(new Set(active.map(x=>x.slug)).size).toBe(29);
-  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(2);
+  expect(active.length).toBe(31);
+  expect(new Set(active.map(x=>x.slug)).size).toBe(31);
+  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(0);
 });

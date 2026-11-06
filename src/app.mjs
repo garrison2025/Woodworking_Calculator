@@ -720,6 +720,48 @@ if(slug){
       content+=svgText(75,72,"BOARD LENGTH "+fmt(b.length)+" / FACE WIDTH "+fmt(b.width),"tick-label");
       content+=svgText(75,290,"THICKNESS "+fmt(b.thickness)+" · "+b.purchased+" WHOLE PIECES","dim-label");
       content+=svgText(75,318,"BOARD FEET/PIECE "+trim(b.boardFeetPerPiece,4)+" · SUPPLIER RATES NOT VERIFIED","tick-label");
+    }else if(data.shape==="spiral-plan"){
+      // Physical top view of one turn. Every polygon comes from the
+      // exact, exported annular-sector corner coordinates.
+      const rows=data.spiralRows,r=data.outerRadius,
+        scale=Math.min(246/(2*r),1e5),cx=450,cy=185;
+      const X=v=>cx+(v-r)*scale,Y=v=>cy-(v-r)*scale;
+      content+='<circle class="spiral-outer-reference" cx="'+cx+'" cy="'+cy+
+        '" r="'+(r*scale)+'" fill="none" stroke="#6c846e" stroke-width="1" stroke-dasharray="5 3"/>';
+      content+='<circle class="spiral-column-reference" cx="'+cx+'" cy="'+cy+
+        '" r="'+(data.innerRadius*scale)+'" fill="#e5ece8" stroke="#526f65" stroke-width="1"/>';
+      content+='<circle class="spiral-walk-reference" cx="'+cx+'" cy="'+cy+
+        '" r="'+(data.walkRadius*scale)+'" fill="none" stroke="#b88148" stroke-width="1.4" stroke-dasharray="4 3"/>';
+      for(const [i,row] of rows.entries()){
+        const coords=row.planVertices.map(p=>X(p[0])+","+Y(p[1])).join(" ");
+        content+='<polygon class="spiral-tread-face" data-index="'+(i+1)+
+          '" data-angle-start="'+row.angleStartDeg+'" data-angle-end="'+row.angleEndDeg+
+          '" data-rise-end="'+row.elevationEnd+'" points="'+coords+
+          '" fill="'+(i%2===0?"#d2e4d8":"#c3d4c7")+
+          '" fill-opacity=".6" stroke="#36614f" stroke-width=".9"><title>'+
+          esc(row.item+" · walkline arc "+fmt(row.walklineArc)+
+          " · end rise "+fmt(row.elevationEnd))+'</title></polygon>';
+      }
+      content+=svgText(74,40,"TOP VIEW · ANNULAR STRAIGHT-CHORD SECTORS","dim-label");
+      content+=svgText(74,60,"WALKLINE DOTTED · NOT CODE HEADROOM","tick-label");
+      content+=svgText(74,314,"TURN "+fmt(data.totalTurn,"A")+
+        " · "+rows.length+" STATIONS","tick-label");
+    }else if(data.shape==="stave-flat"){
+      // Developed outside-face trapezoid, not a suggested saw blade angle.
+      const v=data.staveVertices,scale=Math.min(620/Math.max(1e-8,data.span||span),
+        182/Math.max(1e-8,data.faceSlant));
+      const x0=450-span*scale/2,y0=78;
+      const points=v.map(p=>[x0+p[0]*scale,y0+p[1]*scale].join(",")).join(" ");
+      content+='<polygon class="stave-flat-template" data-top-chord="'+data.topChord+
+        '" data-bottom-chord="'+data.bottomChord+
+        '" data-face-slant="'+data.faceSlant+'" data-corner-edge="'+data.cornerEdge+
+        '" points="'+points+'" fill="#e4cfaf" stroke="#856544" stroke-width="2"/>';
+      content+=svgText(76,43,"STRAIGHT TAPERED STAVE · OUTSIDE FACE","dim-label");
+      content+=svgText(76,63,"REGULAR POLYGON CORNER DIAMETERS · NOT BARREL BULGE","tick-label");
+      content+=svgText(76,299,"TOP CHORD "+fmt(data.topChord)+
+        " / BOTTOM CHORD "+fmt(data.bottomChord),"dim-label");
+      content+=svgText(76,321,"FLAT SLANT "+fmt(data.faceSlant)+
+        " · EDGE "+fmt(data.cornerEdge),"tick-label");
     }else if(data.shape==="triangle"){
 
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the

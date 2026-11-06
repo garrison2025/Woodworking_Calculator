@@ -2773,6 +2773,131 @@ export function compute(slug,a){
         purchased,boardFeetPerPiece:rawBf,purchasedBoardFeet:orderBf,
         pricePerBoardFoot:costPerBf,totalCost:total}});
   }
+  // A flat annular tread-sector station chart: equal angular increments
+  // across ONE revolution, with a deliberate user-entered walkline radius.
+  // The last station reaches the upper finished datum; no assumption about
+  // top landing, structural pole, handrails, overlap or headroom compliance.
+  case "spiral-staircase-calculator":{
+    positive("totalRise","innerRadius","outerRadius","walkRadius","totalTurn");
+    whole("steps",4,64);whole("direction",0,1);
+    need(a.outerRadius-a.innerRadius>=1e-7,
+      "Outer tread radius must exceed the center-post radius by a measurable clear band.");
+    need(a.walkRadius>a.innerRadius+1e-8&&a.walkRadius<a.outerRadius-1e-8,
+      "Walkline radius must be strictly inside the measured tread band.");
+    need(a.totalTurn<=360,"This single-revolution plan supports at most 360 degrees.");
+    const deltaDeg=a.totalTurn/a.steps,delta=rad(deltaDeg);
+    need(deltaDeg>0&&deltaDeg<=90,
+      "Each plan-view tread sector must be between 0 and 90 degrees.");
+    const sign=a.direction===0?1:-1;
+    const stepRise=a.totalRise/a.steps,
+      innerChord=2*a.innerRadius*Math.sin(delta/2),
+      outerChord=2*a.outerRadius*Math.sin(delta/2),
+      walkChord=2*a.walkRadius*Math.sin(delta/2),
+      walkArc=a.walkRadius*delta,
+      radialBand=a.outerRadius-a.innerRadius,diameter=2*a.outerRadius;
+    need([stepRise,innerChord,outerChord,walkChord,walkArc].every(Number.isFinite)
+      &&Math.min(stepRise,outerChord,walkArc)>1e-8,
+      "Tread geometry falls below measurable geometry resolution.");
+    const polar=(radius,angle)=>[
+      q(a.outerRadius+radius*Math.cos(rad(angle))),
+      q(a.outerRadius+radius*Math.sin(rad(angle)))
+    ];
+    const treadRows=Array.from({length:a.steps},(_,i)=>{
+      const start=sign*i*deltaDeg,end=sign*(i+1)*deltaDeg,
+        planVertices=[polar(a.innerRadius,start),polar(a.outerRadius,start),
+          polar(a.outerRadius,end),polar(a.innerRadius,end)],
+        midpoint=sign*(i+.5)*deltaDeg,center=polar(a.walkRadius,midpoint);
+      return {item:"Tread station "+(i+1),index:i+1,
+        angleStartDeg:q(start),angleEndDeg:q(end),
+        elevationStart:q(i*stepRise),elevationEnd:q((i+1)*stepRise),
+        riserHeight:q(stepRise),radialBandWidth:q(radialBand),
+        innerChord:q(innerChord),outerChord:q(outerChord),
+        walklineArc:q(walkArc),walklineChord:q(walkChord),
+        walklineCenterX:center[0],walklineCenterY:center[1],planVertices};
+    });
+    need(Math.abs(treadRows.at(-1).elevationEnd-a.totalRise)<=1e-6,
+      "Spiral tread stations must finish at the selected upper datum.");
+    return result([
+      M("Tread sectors / vertical stations",a.steps,"N"),
+      M("Equal station rise",stepRise),
+      M("Rotation per sector",deltaDeg,"A"),
+      M("Total selected rotation",a.totalTurn,"A"),
+      M("Physical clear radial band (not code clear width)",radialBand),
+      M("Entered walkline radius",a.walkRadius),
+      M("Walkline arc per sector",walkArc),
+      M("Walkline straight chord per sector",walkChord),
+      M("Inner chord per sector",innerChord),
+      M("Outer chord per sector",outerChord)
+    ],treadRows.map(x=>P(x.walklineCenterX,x.item)),
+      diameter,treadRows,"spiral-plan",{
+        spiralRows:treadRows,innerRadius:a.innerRadius,outerRadius:a.outerRadius,
+        walkRadius:a.walkRadius,totalTurn:a.totalTurn,direction:sign,
+        riserHeight:stepRise,sectorAngleDeg:deltaDeg
+      });
+  }
+  // Faceted straight-taper stave: polygon CORNER diameters, not true
+  // finished turned diameters. Each straight face unwraps to one trapezoid.
+  // Half normal-angle is a 3D geometric reference, NOT a saw-blade setting.
+  case "stave-calculator":{
+    positive("topDiameter","bottomDiameter","height","thickness");
+    nonnegative("roughMargin","roughKerf");
+    whole("staveCount",3,64);
+    measurableGap(a.roughMargin,"Rough stock margin");
+    measurableGap(a.roughKerf,"Rough stock kerf");
+    const phi=PI/a.staveCount,s=Math.sin(phi),c=Math.cos(phi);
+    const topChord=a.topDiameter*s,bottomChord=a.bottomDiameter*s;
+    const dr=(a.topDiameter-a.bottomDiameter)/2;
+    const faceSlant=Math.hypot(a.height,dr*c),
+      cornerEdge=Math.hypot(a.height,dr);
+    const deltaChord=(topChord-bottomChord)/2;
+    need(Math.abs(Math.hypot(faceSlant,deltaChord)-cornerEdge)<=
+      Math.max(1e-7,cornerEdge*1e-10),
+      "Developed stave face must conserve its spatial corner-edge length.");
+    const normalSlope=dr*c/a.height;
+    const cosine=Math.max(-1,Math.min(1,
+      (Math.cos(2*phi)+normalSlope**2)/(1+normalSlope**2)));
+    const normalHalfAngle=deg(Math.acos(cosine)/2),
+      planHalfWedge=180/a.staveCount,
+      faceTopInradius=a.topDiameter*c/2,
+      faceBottomInradius=a.bottomDiameter*c/2;
+    const roughBlankWidth=Math.max(topChord,bottomChord)+2*a.roughMargin+a.roughKerf,
+      roughBlankLength=faceSlant+2*a.roughMargin+a.roughKerf;
+    need([faceSlant,cornerEdge,roughBlankWidth,roughBlankLength,normalHalfAngle]
+      .every(Number.isFinite)&&Math.min(topChord,bottomChord,faceSlant)>1e-8,
+      "Stave geometric cut faces are below supported size resolution.");
+    const envelope=Math.max(topChord,bottomChord),
+      leftTop=(envelope-topChord)/2,leftBottom=(envelope-bottomChord)/2;
+    const vertices=[[q(leftTop),0],[q(leftTop+topChord),0],
+      [q(leftBottom+bottomChord),q(faceSlant)],[q(leftBottom),q(faceSlant)]];
+    const staveRows=Array.from({length:a.staveCount},(_,i)=>({
+      item:"Stave "+(i+1),index:i+1,
+      topChord:q(topChord),bottomChord:q(bottomChord),
+      developedFaceSlant:q(faceSlant),cornerSideEdge:q(cornerEdge),
+      planHalfWedgeAngleDeg:q(planHalfWedge),
+      faceNormalHalfAngleDeg:q(normalHalfAngle),
+      thicknessReference:q(a.thickness),
+      roughBlankLength:q(roughBlankLength),
+      roughBlankWidth:q(roughBlankWidth),
+      planVertices:vertices
+    }));
+    return result([
+      M("Staves",a.staveCount,"N"),
+      M("Top outside polygon chord",topChord),
+      M("Bottom outside polygon chord",bottomChord),
+      M("Developed flat face slant height",faceSlant),
+      M("Outside corner side edge",cornerEdge),
+      M("Plan half-wedge angle (not saw angle)",planHalfWedge,"A"),
+      M("Half-angle between adjacent face normals",normalHalfAngle,"A"),
+      M("Top ideal polygon inradius",faceTopInradius),
+      M("Bottom ideal polygon inradius",faceBottomInradius),
+      M("Rough rectangular blank length",roughBlankLength),
+      M("Rough rectangular blank width",roughBlankWidth)
+    ],[],envelope,staveRows,"stave-flat",{
+      staveVertices:vertices,staveRows,topChord,bottomChord,
+      faceSlant,cornerEdge,roughBlankLength,roughBlankWidth,
+      thickness:a.thickness,staveCount:a.staveCount,normalHalfAngle
+    });
+  }
   default:throw new Error("Calculator not implemented: "+slug);
   }
 }
