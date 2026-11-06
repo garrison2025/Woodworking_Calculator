@@ -217,3 +217,83 @@ export function auditMeasuredFramingFits(ledger,sourceLengths={},{
     allDimensionalFit:rows.length>0&&fitting===rows.length,
     note:"User-entered lengths and kerfs, not independently measured by the website. A dimension fit never certifies wood grade, defects, physical clamping, safe cut order, building codes or invoiced savings."};
 }
+
+
+/**
+ * A deliberately non-authorizing purchasing review checklist. Passing this
+ * self-declared review only prepares a pack for a human; it NEVER approves a
+ * purchase order, certifies real material or claims realized cash savings.
+ *
+ * Only the current alternative stock IDs count; omitted declarations are
+ * always false. A previously completed checklist must be invalidated by
+ * the caller if either the allocation or supplier quotation changes.
+ */
+export function assessFramingPurchaseReview(ledger,fieldReview,perSource={},
+  globalChecks={},alternative=null){
+  const missing=["sawSafetyReviewed","structuralReviewed",
+    "supplierVerified","totalCostReviewed"];
+  if(!ledger?.available||!fieldReview?.available||!alternative?.enabled||
+    !Array.isArray(ledger.bars)||!Array.isArray(fieldReview.rows))
+    return {available:false,status:"HOLD — NO VALID ALTERNATIVE",rows:[],
+      total:0,reviewed:0,unreviewed:0,shortOrInvalid:0,quoteComplete:false,
+      reviewPacketComplete:false,automaticPurchaseAuthorized:false,
+      humanApprovalRequired:true};
+  const get=id=>perSource instanceof Map?perSource.get(id):
+    Object.prototype.hasOwnProperty.call(perSource,id)?perSource[id]:null;
+  const measured=new Map();
+  for(const row of fieldReview.rows){
+    if(measured.has(row.stockId))
+      throw Error("Duplicate measured physical stock in purchasing review.");
+    measured.set(row.stockId,row);
+  }
+  const rows=ledger.bars.map(bar=>{
+    const result=measured.get(bar.stockId);
+    if(!result)throw Error("Purchasing review is missing a stock dimension row.");
+    const declared=get(bar.stockId)||{};
+    const profileGradeReviewed=declared.profileGradeReviewed===true;
+    const defectsReviewed=declared.defectsReviewed===true;
+    const dimensionalFit=result.status==="DIMENSION FIT ONLY";
+    const checked=profileGradeReviewed&&defectsReviewed;
+    return {stockId:bar.stockId,stockGroup:bar.stockGroup,
+      modelStockLength:bar.stockLength,enteredLength:result.enteredLength,
+      dimensionStatus:result.status,profileGradeReviewed,defectsReviewed,
+      reviewed:checked,dimensionalFit,sourceStatus:!dimensionalFit?
+        "HOLD — DIMENSIONS":checked?
+        "SELF-DECLARED INSPECTIONS":"HOLD — STOCK REVIEW"};
+  });
+  if(measured.size!==rows.length)
+    throw Error("Purchasing review dimension rows and alternative sources differ.");
+  const variants=alternative.purchaseVariants;
+  const quoteComplete=Array.isArray(variants)&&variants.length>0&&
+    variants.every(v=>Number.isInteger(v.purchaseSticks)&&v.purchaseSticks>0&&
+      Number.isFinite(v.unitPrice)&&v.unitPrice>0&&
+      Number.isFinite(v.purchaseCost)&&v.purchaseCost>=0&&
+      Math.abs(v.purchaseCost*100-v.purchaseSticks*Math.round(v.unitPrice*100))<1e-6)&&
+    Number.isFinite(alternative.reallocatedQuotedSubtotal)&&
+    Math.abs(variants.reduce((sum,v)=>sum+
+      v.purchaseSticks*Math.round(v.unitPrice*100),0)-
+      alternative.reallocatedQuotedSubtotal*100)<1e-6;
+  const shortOrInvalid=rows.filter(r=>!r.dimensionalFit).length;
+  const unreviewed=rows.filter(r=>!r.reviewed).length;
+  const globalPending=missing.filter(key=>globalChecks[key]!==true);
+  let status="SELF-DECLARED REVIEW COMPLETE — HUMAN AUTHORIZATION REQUIRED";
+  if(!fieldReview.complete||shortOrInvalid>0)
+    status="HOLD — DIMENSION INPUT OR STOCK SHORTFALL";
+  else if(unreviewed>0)
+    status="HOLD — STOCK INSPECTION DECLARATIONS MISSING";
+  else if(!quoteComplete)
+    status="HOLD — SUPPLIER PRICES UNQUOTED";
+  else if(globalPending.length)
+    status="HOLD — PURCHASE AND SAFETY REVIEWS INCOMPLETE";
+  const complete=status.startsWith("SELF-DECLARED");
+  return {available:true,status,rows,total:rows.length,
+    reviewed:rows.length-unreviewed,unreviewed,shortOrInvalid,
+    quoteComplete,globalPending,
+    globalChecks:Object.fromEntries(missing.map(key=>
+      [key,globalChecks[key]===true])),
+    reviewedQuotedSubtotal:quoteComplete?alternative.reallocatedQuotedSubtotal:null,
+    currencyClaim:"MODEL QUOTE ONLY — NEVER AN INVOICE",
+    reviewPacketComplete:complete,
+    automaticPurchaseAuthorized:false,humanApprovalRequired:true,
+    note:"Checkboxes record user declarations only. The site cannot verify supplier invoices, wood grading, structural design, tool safety or approve any purchase."};
+}
