@@ -4,7 +4,8 @@ import {reallocateFramingOffcuts} from "../src/calcs.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,
   assessFramingPurchaseReview} from "../src/framing-stations.mjs";
 import {makeFramingReviewVersion,validateFramingReviewVersion,
-  compareFramingReviewVersions,framingReviewVersionNote
+  compareFramingReviewVersions,framingReviewVersionNote,
+  proposeFramingMeasurementRestore
 } from "../src/framing-review-versions.mjs";
 import {buildScheduleCsv,scheduleColumns} from "../src/cut-list.mjs";
 
@@ -201,5 +202,67 @@ test("Versioned review CSV columns and notes are strings, never converted to fak
     assert.ok(exported.includes('"Source note"'));
     assert.ok(exported.includes('"false"'));
     assert.ok(exported.includes('"true"'));
+  }
+});
+
+test("Historical measurement recovery only proposes values from exact matching source layout",()=>{
+  const f=fixture(),baseline=f.create();
+  const historical=f.create({
+    inputs:{sawKerf:.25,endTrim:1,finalSeverKerf:.125},
+    measurements:Object.fromEntries(f.ledger.bars.map(b=>[
+      b.stockId, b.stockLength-.01
+    ]))
+  });
+  const restored=proposeFramingMeasurementRestore(historical,baseline);
+  assert.equal(restored.layoutId,baseline.versionIds.layout);
+  assert.equal(restored.referenceId,historical.versionIds.packet);
+  assert.equal(restored.sourceEntries.length,baseline.parts.layout.bars.length);
+  assert.equal(restored.sawKerf,.25);
+  assert.equal(restored.endTrim,1);
+  assert.equal(restored.finalSeverKerf,.125);
+  assert.ok(restored.sourceEntries.every(row=>row[1]===95.99));
+  assert.equal(restored.restoresInspectionDeclarations,false);
+  assert.equal(restored.restoresSupplierPrices,false);
+  assert.equal(restored.restoresPurchaseAuthorization,false);
+  assert.equal(baseline.parts.declaration.reviewPacketComplete,true,
+    "old checked review is only historical evidence, not a restored approval");
+  const restoredSame=proposeFramingMeasurementRestore(baseline,baseline);
+  assert.equal(restoredSame.sourceEntries.length,restored.sourceEntries.length);
+});
+
+test("Never restore historical measurements onto an altered or retired source layout",()=>{
+  const a=fixture({endTrim:0}).create();
+  const b=fixture({endTrim:1}).create();
+  assert.notEqual(a.versionIds.layout,b.versionIds.layout);
+  assert.throws(()=>proposeFramingMeasurementRestore(a,b),
+    /RESTORE BLOCKED.*layout/i);
+  const blank=clone(a);
+  blank.parts.measurement.stocks[0].enteredLength=null;
+  assert.throws(()=>proposeFramingMeasurementRestore(blank,a),
+    /content\/ID mismatch/i);
+  const wrong=clone(a);
+  wrong.parts.measurement.sawKerf=-1;
+  assert.throws(()=>proposeFramingMeasurementRestore(wrong,a),
+    /content\/ID mismatch/i);
+});
+
+test("Reject malformed duplicate reference source, member, station and SKU identities before flattening",()=>{
+  const version=fixture().create();
+  const malformed=(fn)=>{
+    const x=clone(version);
+    fn(x);
+    return x;
+  };
+  for(const [label,change] of [
+    ["stock",v=>v.parts.layout.bars.push({...v.parts.layout.bars[0]})],
+    ["member",v=>v.parts.layout.members.push({...v.parts.layout.members[0]})],
+    ["station",v=>v.parts.layout.stations.push({...v.parts.layout.stations[0]})],
+    ["measurement",v=>v.parts.measurement.stocks.push({...v.parts.measurement.stocks[0]})],
+    ["declaration",v=>v.parts.declaration.sourceRows.push({...v.parts.declaration.sourceRows[0]})],
+    ["SKU",v=>v.parts.quotation.supplierRows.push({...v.parts.quotation.supplierRows[0]})]
+  ]){
+    assert.throws(()=>validateFramingReviewVersion(malformed(change)),
+      new RegExp("Duplicate Framing reference "+label,"i"),
+      label+" identity must fail even before version checksum comparison");
   }
 });
