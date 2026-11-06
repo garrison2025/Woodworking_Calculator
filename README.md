@@ -2,13 +2,21 @@
 
 **Woodworking Calculator V3 implementation · US English · Cloudflare Pages static site**
 
-A free, browser-only woodworking measurement workspace: **9 P0 + 17 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Five complex P2 intentions are held, not published.
+A free, browser-only woodworking measurement workspace: **9 P0 + 19 P1** routes, with live measurements, local SVG diagrams, fractional inch display, five length units (in / ft / mm / cm / m), result copy, CSV cut lists, and browser Print / Save as PDF. Three remaining P2 intentions are held, not published (spiral staircase, lumber pricing and tapered stave).
 
-> **Release status: engineering beta, not a production launch.** 404 geometry tests, 105 Chromium browser tests, 18 Firefox/WebKit engine smoke checks and visual snapshots pass. Independent physical cutting design, Safari/Firefox, printer-scale and full accessibility verification remain open. All default deployments are `noindex`.
+> **Release status: engineering beta, not a production launch.** 510 Node tests, 180 Chromium browser tests, 18 Firefox/WebKit engine smoke tests and PDF/visual checks passed on PR #6 in GitHub Actions #648. Actual material trial cuts, full hardware Safari review, physical printer-scale measurement, local-code requirements and professional structural signoff remain unverified. All default deployments are `noindex`.
+
+## 2026-11-06 — Expanded functional scope and field review
+
+- **Fence Picket**: equal clear gaps including both boundary faces or flush end pickets; calculated part count, measured edge stations, optional stepped-parabolic FLAT top-cut heights. No safety-code approval or real curved template.
+- **Gambrel Roof**: four mirrored lower/upper roof segments, eave-break-ridge coordinates, separate sloped lengths and geometric face areas. No engineered truss design.
+- Each of the 28 calculator routes includes a distinct task-specific **independent measurement verification prompt**, intended for manual comparison with physical datums and typed CSV coordinates; prompts are not a claim of completed field inspection.
+- The 152 keyword rows remain historically sourced research assignments, not verified organic traffic or exact-match rankings. The preview remains `noindex,nofollow,noarchive`, and production sitemap/canonical release requires explicit authorization and an actual HTTPS custom domain.
+- Verified source CI for new geometry: [#648](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42183890543). Post-merge and subsequent SEO test runs are independently tracked.
 
 ## What is implemented
 
-- 26 distinct static calculator URLs built from `src/tools.json`. All five length units use the same route; no duplicate unit URLs.
+- 28 distinct static calculator URLs built from `src/tools.json`. All five length units use the same route; no duplicate unit URLs.
 - Five active categories (Framing & walls, Decks & railings, Roofs & stairs, Interior finish, Woodworking). Materials category remains a P2-only planning category and has **no empty public page**.
 - Search-ready prerendered HTML explaining inputs, formulas, examples, caveats and related tools.
 - 152 keyword rows, with Semrush estimates and mapped URLs, saved in `research/woodworking-keyword-map-152.csv`. The owner-approved complete V3 specification is saved in `research/WOODWORKING_BUILD_SPEC_V3_20261104.md`.
