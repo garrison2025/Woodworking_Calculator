@@ -2835,6 +2835,8 @@ export function compute(slug,a){
   // slant differ; neither angle is a certified table-saw setup.
   case "stave-calculator":{
     positive("topCornerDiameter","bottomCornerDiameter","height");
+    need(a.height>=1e-7&&q(a.height)>0,
+      "Vertical stave height must exceed a measurable cut-coordinate resolution.");
     whole("staves",3,60);nonnegative("roughMargin","roughKerf");
     measurableGap(a.roughMargin,"Rough stock margin");
     measurableGap(a.roughKerf,"Rough stock kerf");
