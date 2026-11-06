@@ -129,6 +129,48 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
     memoHits,costPrunes,candidate:{kind:"exact",bars:winner},maxPieces,nodeLimit};
 }
 
+// Optional POST-PLAN material-loss audit. The engine's selected purchase
+// offers, installed member geometry and exact/heuristic cost certificate
+// remain in their original model. These per-stick diagnostics are never an
+// automatically purchased or reused stock layout.
+export function auditFramingStock(stockPlan,{endTrim=0,finalSeverKerf=0,reuseMin=0}={}){
+  need(Array.isArray(stockPlan),"Stock audit requires a source cut plan.");
+  for(const [label,value] of Object.entries({endTrim,finalSeverKerf,reuseMin})){
+    need(Number.isFinite(value)&&value>=0&&value<1e8,
+      label+" must be a finite nonnegative length.");
+    need(value===0||value>=1e-8,
+      label+" is below cut-coordinate resolution.");
+  }
+  const rows=stockPlan.map(bar=>{
+    const stockLength=bar.actualStockLength??bar.stockLength;
+    // The adjusted last cut occupies endTrim more than the base placement.
+    // The terminal kerf is charged only when a separate tail remains:
+    // a full-length untrimmed piece needs no fictional final severing cut.
+    const lastPieceEnd=endTrim+bar.usedLength;
+    const hasTail=stockLength-lastPieceEnd>1e-12;
+    const chargedSever=hasTail?finalSeverKerf:0;
+    const required=lastPieceEnd+endTrim+chargedSever;
+    const available=stockLength-required;
+    const fits=available>=-1e-12;
+    const remaining=fits?Math.max(0,available):0;
+    const shortfall=fits?0:required-stockLength;
+    const reuseEligible=fits&&reuseMin>0&&remaining+1e-12>=reuseMin;
+    return {stockGroup:bar.stockGroup,stockId:bar.stockId,
+      offerLabel:bar.offerLabel,stockLength,cutCount:bar.cutCount,
+      endTrim,adjustedFirstCutStart:q(endTrim),adjustedLastCutEnd:q(lastPieceEnd),
+      finalSeverKerf:chargedSever,requiredLength:q(required),
+      tailTrim:endTrim,usableOffcutLength:q(remaining),
+      shortfallLength:q(shortfall),reuseEligible,
+      status:!fits?"DOES NOT FIT":reuseEligible?"REUSE CANDIDATE":"FITS — NO REUSE CLAIM"};
+  });
+  return {enabled:true,endTrim,finalSeverKerf,reuseMin,rows,
+    failingSticks:rows.filter(r=>r.status==="DOES NOT FIT").length,
+    candidateSticks:rows.filter(r=>r.reuseEligible).length,
+    candidateTotalLength:q(rows.filter(r=>r.reuseEligible)
+      .reduce((sum,r)=>sum+r.usableOffcutLength,0)),
+    physicallyFits:rows.every(r=>r.status!=="DOES NOT FIT")};
+}
+
 function roofPolygonArea(poly){
   if(poly.length<3)return 0;
   // A triangle fan relative to the first vertex avoids catastrophic
@@ -394,7 +436,7 @@ export function inchFraction(value,denominator=16){
   return sign+(whole?whole+" ":"")+(numerator/div)+"/"+(denominator/div)+" in";
 }
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -434,7 +476,8 @@ export function compute(slug,a){
   }
   case "framing-calculator":{
     positive("length","spacing","width","wallHeight","openingWidth","openingHeight","headerDepth","sillThickness","studStockLength","headerStockLength","sillStockLength");
-    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill","stockKerf","stockWaste","studUnitPrice","headerUnitPrice","sillUnitPrice","studAltStockLength","studAltUnitPrice","studAlt2StockLength","studAlt2UnitPrice","headerAltStockLength","headerAltUnitPrice","headerAlt2StockLength","headerAlt2UnitPrice","sillAltStockLength","sillAltUnitPrice","sillAlt2StockLength","sillAlt2UnitPrice");
+    nonnegative("bottomPlate","topPlate","openingStart","openingSill","opening2Start","opening2Width","opening2Sill","opening3Start","opening3Width","opening3Sill","stockKerf","stockWaste","studUnitPrice","headerUnitPrice","sillUnitPrice","studAltStockLength","studAltUnitPrice","studAlt2StockLength","studAlt2UnitPrice","headerAltStockLength","headerAltUnitPrice","headerAlt2StockLength","headerAlt2UnitPrice","sillAltStockLength","sillAltUnitPrice","sillAlt2StockLength","sillAlt2UnitPrice",
+      "stockAuditEndTrim","stockAuditSeverKerf","stockAuditReuseMin");
     const prices=["studUnitPrice","headerUnitPrice","sillUnitPrice",
       "studAltUnitPrice","studAlt2UnitPrice","headerAltUnitPrice",
       "headerAlt2UnitPrice","sillAltUnitPrice","sillAlt2UnitPrice"];
@@ -447,6 +490,12 @@ export function compute(slug,a){
           family+" "+suffix+" stock option needs a positive purchased length.");
     }
     need(a.stockWaste<=100,"Purchase allowance must be 0–100 percent.");
+    need(a.stockAuditMode===0||a.stockAuditMode===1,
+      "Stock audit mode must be Off or Review only.");
+    if(a.stockAuditMode===1)for(const key of
+      ["stockAuditEndTrim","stockAuditSeverKerf","stockAuditReuseMin"])
+      need(a[key]===0||a[key]>=1e-8,
+        key+" must be zero or at least 0.00000001 in.");
     // Physical cut coordinates and saw-loss fields use 1e-8 inch increments.
     // A positive kerf below this precision would silently export as zero.
     need(a.stockKerf===0||a.stockKerf>=1e-8,
@@ -727,6 +776,7 @@ export function compute(slug,a){
         sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=barKerf;
         stockPlan.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
           offerCode:b.offer.code,stockLength:q(b.offer.stockLength),
+          actualStockLength:b.offer.stockLength,
           unitPrice:b.offer.unitPrice,
           cuts:placed.map(p=>({item:p.item,type:p.type,cutLength:p.cutLength,
             cutStart:p.cutStart,cutEnd:p.cutEnd,kerfBefore:p.kerfBefore})),
@@ -790,6 +840,11 @@ export function compute(slug,a){
       requiredGroups:materialSummary.filter(r=>r.purchaseSticks>0).length,
       certifiedGroups,allGroupsCertified
     };
+    const stockAudit=a.stockAuditMode===1?
+      auditFramingStock(stockPlan,{endTrim:a.stockAuditEndTrim,
+        finalSeverKerf:a.stockAuditSeverKerf,reuseMin:a.stockAuditReuseMin}):
+      {enabled:false,rows:[],physicallyFits:null,failingSticks:0,
+        candidateSticks:0,candidateTotalLength:0};
     const roughArea=openings.reduce((sum,o)=>sum+o.width*o.height,0)/144;
     const upper=crippleRows.filter(r=>r.type==="Upper cripple").length,
       lower=crippleRows.length-upper;
@@ -819,7 +874,7 @@ export function compute(slug,a){
     ],markers,a.length,framingRows,"opening",{
       openings,wallHeight:a.wallHeight,bottomPlate:a.bottomPlate,topPlate:a.topPlate,
       studWidth:a.width,headerDepth:a.headerDepth,sillThickness:a.sillThickness,
-      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,optimizerStatus,costSummary
+      studRows:fullRows,framingRows,materialSummary,stockPlan,stockCuts,purchaseVariants,stockComparisons,optimizerStatus,costSummary,stockAudit
     });
   }
   case "deck-board-calculator":{
