@@ -33,7 +33,7 @@ const fieldType=(key,records)=>{
   if(!records.some(r=>typeof r[key]==="number"))return "plain";
   // Ring/segment indexes are counts, never lengths. Angular sweeps are degrees.
   if(/(?:angle|degrees|deg)$/i.test(key))return "angle";
-  if(/^(?:count|ring|rings|segment|segments|index|row|column|quantity|pieces|risers|treads|planeIndex|cutParameter)$/i.test(key))return "plain";
+  if(/^(?:number|count|ring|rings|segment|segments|index|row|column|quantity|pieces|risers|treads|planeIndex|cutParameter)$/i.test(key))return "plain";
   // Purchase quantities and user-quoted currency amounts are NOT dimensions.
   // Their denomination appears in the separate currency column, never "(in)".
   if(/(?:Sticks|Price|Cost|Quantity|Count|Packs|PiecesPerRow|PerContact|References|Seams|Contacts|rowNumber|columnNumber|shelfNumber)$/i.test(key))return "plain";

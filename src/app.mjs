@@ -900,6 +900,53 @@ if(slug){
       }
       content+=svgText(650,49,"STACK ENVELOPE · CORNER DIAMETERS","tick-label");
       content+=svgText(655,290,"TOTAL STACK "+fmt(height),"tick-label");
+    }else if(data.shape==="spiral-plan"){
+      const d=data.spiralPlan,R=d.outerRadius,r=d.innerRadius,cx=468,cy=176,
+        scale=128/R;
+      content+='<circle class="spiral-outer-envelope" cx="'+cx+'" cy="'+cy+
+        '" r="'+(R*scale)+'" fill="none" stroke="#b9c4ba" stroke-width="2"/>';
+      content+='<circle class="spiral-walkline" cx="'+cx+'" cy="'+cy+
+        '" r="'+(d.walkRadius*scale)+'" fill="none" stroke="#bc9050" stroke-dasharray="5 4" stroke-width="1.7"/>';
+      for(const [i,row] of d.rows.entries()){
+        const points=row.planVertices.map(v=>(cx+(v[0]-R)*scale)+","+
+          (cy+(v[1]-R)*scale)).join(" ");
+        content+='<polygon class="spiral-tread-face" data-index="'+(i+1)+
+          '" data-start-angle="'+row.startAngleDeg+
+          '" data-end-angle="'+row.endAngleDeg+
+          '" data-elevation-in="'+row.treadTopElevation+
+          '" data-walk-arc-in="'+row.walklineArcLength+
+          '" points="'+points+
+          '" fill="'+(i%2?"#dbe8dc":"#f2dfc6")+
+          '" stroke="#456a59" stroke-width="1"><title>'+
+          esc(row.item+" · elevation "+fmt(row.treadTopElevation)+
+            " · walk-line arc "+fmt(row.walklineArcLength))+
+          '</title></polygon>';
+      }
+      content+='<circle class="spiral-center-post" cx="'+cx+'" cy="'+cy+
+        '" r="'+(r*scale)+'" fill="#667d70" stroke="#2c4b3d" stroke-width="1.5"/>';
+      content+=svgText(76,50,"SPIRAL TOP VIEW · POLAR XY CHORD REFERENCE","dim-label");
+      content+=svgText(76,71,"ONE TURN ONLY · NOT CODE / STRUCTURAL APPROVAL","tick-label");
+      content+=svgText(75,315,d.rows.length+" PHYSICAL TREADS · "+
+        trim(d.treadAngle,3)+"° EACH · POLE "+fmt(d.poleDiameter),"dim-label");
+      content+=svgText(600,335,"WALK RADIUS "+fmt(d.walkRadius),"tick-label");
+    }else if(data.shape==="stave-trapezoid"){
+      const d=data.staveBlank,scale=Math.min(142/Math.max(d.topChord,d.bottomChord),
+        205/d.faceLength),cx=465,top=76,
+        maxWidth=Math.max(d.topChord,d.bottomChord),left=cx-maxWidth*scale/2;
+      const points=d.vertices.map(v=>(left+v[0]*scale)+","+
+        (top+v[1]*scale)).join(" ");
+      content+='<polygon class="stave-face" data-top-chord-in="'+d.topChord+
+        '" data-bottom-chord-in="'+d.bottomChord+
+        '" data-face-length-in="'+d.faceLength+
+        '" data-edge-length-in="'+d.edgeLength+
+        '" data-half-dihedral-deg="'+d.halfDihedralDeg+
+        '" points="'+points+'" fill="#e5c79c" stroke="#825c35" stroke-width="2"/>';
+      content+=svgText(76,50,"STRAIGHT POLYGON-FRUSTUM STAVE · OUTSIDE FACE","dim-label");
+      content+=svgText(76,70,"FACETED FACE, NOT A BULGED BARREL","tick-label");
+      content+=svgText(78,315,"TOP CHORD "+fmt(d.topChord)+
+        " / BOTTOM CHORD "+fmt(d.bottomChord),"dim-label");
+      content+=svgText(575,315,"FACE SLANT "+fmt(d.faceLength),"tick-label");
+      content+=svgText(575,334,"CORNER EDGE "+fmt(d.edgeLength),"tick-label");
     }else if(data.shape==="angles"){
       // Two independent angle illustrations. The inside/left choices affect
       // the PLAN reference orientation only, NEVER a real saw hand setting.
