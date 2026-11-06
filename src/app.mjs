@@ -318,11 +318,26 @@ if(slug){
       }else if(data.shape==="kerfs"){
         const y0=98,woodWidth=data.kerfArcLength*kerfScale;
         const stockH=data.stockThickness*kerfScale,depthH=data.cutDepth*kerfScale,webH=data.retainedWeb*kerfScale;
-        content+='<rect class="kerf-stock" x="'+kerfStart+'" y="'+y0+'" width="'+woodWidth+'" height="'+stockH+'" fill="#e4c49b" stroke="#926d45" stroke-width="1.8"><title>'+esc("Flat stock thickness "+fmt(data.stockThickness))+'</title></rect>';
+        content+='<rect class="kerf-stock" data-arc-in="'+data.kerfArcLength+
+          '" data-thickness-in="'+data.stockThickness+
+          '" x="'+kerfStart+'" y="'+y0+'" width="'+woodWidth+'" height="'+stockH+
+          '" fill="#e4c49b" stroke="#926d45" stroke-width="1.8"><title>'+esc("Flat stock thickness "+fmt(data.stockThickness))+'</title></rect>';
         content+='<rect class="kerf-retained-web" x="'+kerfStart+'" y="'+(y0+depthH)+'" width="'+woodWidth+'" height="'+webH+'" fill="#a4c3a2"><title>'+esc("Continuous retained web "+fmt(data.retainedWeb))+'</title></rect>';
-        for(const [i,p] of marks.entries()){
-          const sx=kerfStart+(p.x-data.kerfWidth/2)*kerfScale;
-          content+='<rect class="kerf-slot" x="'+sx+'" y="'+y0+'" width="'+(data.kerfWidth*kerfScale)+'" height="'+depthH+'" fill="#fcfbf8" stroke="#9e764c" stroke-width=".35"><title>'+esc("Kerf "+(i+1)+" · center "+fmt(p.x)+" · width "+fmt(data.kerfWidth)+" · depth "+fmt(data.cutDepth))+'</title></rect>';
+        // Draw from the quantized CSV schedule, not unrounded tick marks.
+        for(const [i,row] of data.rows.entries()){
+          const sx=kerfStart+row.slotLeft*kerfScale;
+          const sw=(row.slotRight-row.slotLeft)*kerfScale;
+          content+='<rect class="kerf-slot" data-index="'+(i+1)+
+            '" data-center-in="'+row.position+
+            '" data-left-in="'+row.slotLeft+
+            '" data-right-in="'+row.slotRight+
+            '" data-cut-depth-in="'+row.cutDepth+
+            '" data-retained-web-in="'+row.retainedWeb+
+            '" x="'+sx+'" y="'+y0+'" width="'+sw+'" height="'+(row.cutDepth*kerfScale)+
+            '" fill="#fcfbf8" stroke="#9e764c" stroke-width=".35"><title>'+
+            esc(row.item+" · center "+fmt(row.position)+" · left "+
+              fmt(row.slotLeft)+" · right "+fmt(row.slotRight)+
+              " · depth "+fmt(row.cutDepth))+'</title></rect>';
         }
         content+=svgText(kerfStart,71,"FLAT STOCK · KERF "+fmt(data.kerfWidth),"dim-label");
         content+=svgText(kerfStart,87,"GREEN WEB "+fmt(data.retainedWeb)+" · TRIAL ONLY","tick-label");
@@ -546,7 +561,9 @@ if(slug){
         }
       }
       const points=verts.map(v=>px(v)+","+py(v)).join(" ");
-      content+='<polyline class="stringer-step-profile" points="'+points+'" data-vertices="'+verts.length+'" fill="none" stroke="#246a58" stroke-width="2.7" stroke-linejoin="round"><title>Nominal riser and tread cut reference; vertices follow the exported riser elevations and horizontal runs</title></polyline>';
+      content+='<polyline class="stringer-step-profile" points="'+points+'" data-vertices="'+verts.length+
+        '" data-svg-scale="'+sc+'" data-origin-x="'+ox+'" data-origin-y="'+oy+
+        '" fill="none" stroke="#246a58" stroke-width="2.7" stroke-linejoin="round"><title>Nominal riser and tread cut reference; vertices follow the exported riser elevations and horizontal runs</title></polyline>';
       const first=verts[1],end=verts.at(-1);
       content+='<line class="stringer-pitch-line" x1="'+px(first)+'" y1="'+py(first)+'" x2="'+px(end)+'" y2="'+py(end)+'" stroke="#b77b44" stroke-width="1.8" stroke-dasharray="6 4"><title>'+esc("Notch pitch line "+fmt(data.pitchLine)+"; NOT the floor diagonal")+'</title></line>';
       content+='<line class="stringer-floor-diagonal" x1="'+ox+'" y1="'+oy+'" x2="'+px(end)+'" y2="'+py(end)+'" stroke="#aeb7ad" stroke-width="1.2" stroke-dasharray="3 5"><title>'+esc("Floor datum diagonal "+fmt(data.floorDiagonal)+"; NOT a cut length")+'</title></line>';
@@ -954,13 +971,25 @@ if(slug){
       const ox=255,oy=190,ray=140,sgn=data.planSign;
       const mx=ox+ray*Math.cos(m),my=oy-sgn*ray*Math.sin(m);
       content+='<line class="crown-miter-base" x1="'+ox+'" y1="'+oy+'" x2="'+(ox+ray)+'" y2="'+oy+'" stroke="#386b57" stroke-width="3"/>';
-      content+='<line class="crown-miter-ray" data-sign="'+sgn+'" x1="'+ox+'" y1="'+oy+'" x2="'+mx+'" y2="'+my+'" stroke="#bd8651" stroke-width="3.2"><title>'+esc("Illustrative plan turn "+trim(sgn*data.miter,3)+" degrees; NOT a saw rotation setting")+'</title></line>';
+      content+='<line class="crown-miter-ray" data-sign="'+sgn+
+        '" data-magnitude-deg="'+data.miter+
+        '" data-plan-turn-deg="'+(sgn*data.miter)+
+        '" x1="'+ox+'" y1="'+oy+'" x2="'+mx+'" y2="'+my+
+        '" stroke="#bd8651" stroke-width="3.2"><title>'+
+        esc("Illustrative plan turn "+trim(sgn*data.miter,3)+
+          " degrees; NOT a left/right saw setting")+'</title></line>';
       const bx=610,by=240,br=145;
       content+='<line x1="'+bx+'" y1="'+by+'" x2="'+(bx+br)+'" y2="'+by+'" stroke="#386b57" stroke-width="3"/>';
-      content+='<line class="crown-bevel-ray" x1="'+bx+'" y1="'+by+'" x2="'+(bx+br*Math.cos(b))+'" y2="'+(by-br*Math.sin(b))+'" stroke="#bd8651" stroke-width="3.2"><title>'+esc("Bevel magnitude "+trim(data.bevel,3)+" degrees")+'</title></line>';
+      content+='<line class="crown-bevel-ray" data-bevel-deg="'+data.bevel+
+        '" x1="'+bx+'" y1="'+by+'" x2="'+(bx+br*Math.cos(b))+
+        '" y2="'+(by-br*Math.sin(b))+
+        '" stroke="#bd8651" stroke-width="3.2"><title>'+
+        esc("Bevel magnitude "+trim(data.bevel,3)+
+          " degrees; test physical saw setup on scrap stock")+'</title></line>';
       content+=svgText(93,69,"MITER · ILLUSTRATIVE PLAN","dim-label");
       content+=svgText(93,89,(data.inside?"INSIDE":"OUTSIDE")+" / "+(data.left?"LEFT":"RIGHT")+" REFERENCE","tick-label");
       content+=svgText(93,317,trim(sgn*data.miter,2)+"° (NOT SAW SETTING)","dim-label");
+      content+=svgText(93,334,"TEST LEFT/RIGHT ON SCRAP FIRST","tick-label");
       content+=svgText(573,69,"BEVEL · MAGNITUDE","dim-label");
       content+=svgText(594,315,trim(data.bevel,2)+"°","dim-label");
     }
