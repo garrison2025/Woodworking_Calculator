@@ -25,7 +25,7 @@ test("picket integer solver independently closes 96in opening with 13 pickets an
   for(const bad of [
     {opening:0},{width:0},{width:97},{mode:9},
     {mode:1,count:0},{mode:1,count:28},{mode:1,count:1000},
-    {maxGap:-1},{opening:1,width:.1,maxGap:.00001}
+    {maxGap:-1},{opening:1,width:.3,maxGap:.00001}
   ])assert.equal(safeCompute("fence-picket-calculator",{...a,...bad}).ok,false,
     JSON.stringify(bad));
 });
