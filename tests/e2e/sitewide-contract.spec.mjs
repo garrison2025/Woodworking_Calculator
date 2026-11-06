@@ -58,7 +58,9 @@ const sourceCount=model=>{
     holes:[".drill-hole",model.holeCenters?.length],
     stringer:[".stringer-step-profile",1],
     "sheathing-panels":[".sheathing-cut",model.roofSheets?.length],
-    posts:[".post-face",model.faceRows?.length]
+    posts:[".post-face",model.faceRows?.length],
+    "picket-layout":[".picket-face",model.faceRows?.length],
+    "gambrel-profile":[".gambrel-slope-segment",model.gambrelRows?.length]
   };
   const found=shapes[model.shape];
   expect(found,"Missing explicit SVG family assertion for "+model.shape).toBeTruthy();
@@ -199,6 +201,28 @@ async function checkSvg(page,model){
     approx(dy/dx,model.rise/model.run,1e-8);
   }else if(model.shape==="stringer"){
     await common(root.locator(".stringer-step-profile"),"data-vertices",model.stepVertices.length);
+  }else if(model.shape==="picket-layout"){
+    for(const [i,r] of model.faceRows.entries()){
+      const el=root.locator(".picket-face").nth(i);
+      await common(el,"data-face-left",r.faceLeft);
+      await common(el,"data-face-right",r.faceRight);
+      await common(el,"data-center",r.position);
+      await common(el,"data-cut-height",r.cutHeight);
+      const h=await att(el,"height"),w=await att(el,"width");
+      approx(h/w,r.cutHeight/(r.faceRight-r.faceLeft),1e-6);
+    }
+  }else if(model.shape==="gambrel-profile"){
+    for(const [i,r] of model.gambrelRows.entries()){
+      const el=root.locator(".gambrel-slope-segment").nth(i);
+      await common(el,"data-start-x",r.startX);
+      await common(el,"data-end-x",r.endX);
+      await common(el,"data-start-height",r.startHeight);
+      await common(el,"data-end-height",r.endHeight);
+      await common(el,"data-slope-length",r.slopedLength);
+      const dx=Math.abs((await att(el,"x2"))-(await att(el,"x1")));
+      const dy=Math.abs((await att(el,"y2"))-(await att(el,"y1")));
+      approx(dy/dx,r.verticalRise/r.horizontalRun,1e-8);
+    }
   }
 }
 
@@ -242,7 +266,7 @@ for(const tool of active){
   });
 }
 test("all active routes have explicit screenshot-family assertions",()=>{
-  expect(active.length).toBe(26);
-  expect(new Set(active.map(x=>x.slug)).size).toBe(26);
-  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(5);
+  expect(active.length).toBe(28);
+  expect(new Set(active.map(x=>x.slug)).size).toBe(28);
+  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(3);
 });

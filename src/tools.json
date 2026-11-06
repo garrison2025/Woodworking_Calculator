@@ -2434,18 +2434,85 @@
     },
     {
       "slug": "gambrel-roof-calculator",
-      "title": "Gambrel Roof Calculator",
+      "title": "Gambrel Roof Two-Pitch Geometry",
       "category": "roof",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "gambrel roof calculator",
       "volume": 480,
       "kd": 5,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Calculate two steep lower and shallow upper gambrel roof slopes with exact break coordinates, a proportional section and four roof-face areas.",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Building width between wall reference planes",
+          "value": 240,
+          "kind": "L"
+        },
+        {
+          "key": "length",
+          "label": "Building roof length between end walls",
+          "value": 360,
+          "kind": "L"
+        },
+        {
+          "key": "eaveOverhang",
+          "label": "Horizontal eave projection each side",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "endOverhang",
+          "label": "Longitudinal overhang each gable",
+          "value": 12,
+          "kind": "L"
+        },
+        {
+          "key": "lowerRun",
+          "label": "Eave-to-break horizontal run (one side)",
+          "value": 60,
+          "kind": "L"
+        },
+        {
+          "key": "lowerPitch",
+          "label": "Lower steep pitch (rise per 12)",
+          "value": 12,
+          "kind": "P"
+        },
+        {
+          "key": "upperPitch",
+          "label": "Upper shallow pitch (rise per 12)",
+          "value": 4,
+          "kind": "P"
+        },
+        {
+          "key": "waste",
+          "label": "Optional roof area allowance %",
+          "value": 10,
+          "kind": "D"
+        }
+      ],
+      "formula": "Roof half-span H=(building width+2×eave overhang)/2. Lower horizontal run R1 is entered, upper horizontal run R2=H−R1. Lower rise=R1×lower pitch/12; upper rise=R2×upper pitch/12; ridge elevation=sum of rises. Each true slope is hypot(horizontal run,rise). Total surface area=2×(lower slope length+upper slope length)×(building length+2×end overhang)/144 ft².",
+      "example": "For 240 in building width, 12 in eaves, 60 in eave-to-break run, 12:12 lower and 4:12 upper pitch, half-roof run is 132 in and upper run is 72 in. Break elevation is 60 in and roof ridge is 84 in above the eave datum. For 360 in building length and 12 in end overhangs, each slope pair extends 384 in.",
+      "limit": "Symmetric two-pitch gambrel roof geometry only; no dormers, valleys, sheet cut nesting, wind/snow loads, material span, structural truss design, actual saw joints, bearing notches or building code certification. The drawn section is a proportional schematic, never a full-size cutting template.",
+      "guidance": [
+        {
+          "heading": "Locate break point horizontally, not along the slope",
+          "text": "Measure the lower segment from the roof eave to the knuckle along the horizontal reference. Its true slope length is longer than its horizontal run. The upper segment fills the remaining half-span horizontally to the ridge."
+        },
+        {
+          "heading": "Lower slope must be steeper than upper slope",
+          "text": "A real gambrel profile contains two different pitches per side: a steeper lower face and a shallower upper face. Equal or inverted pitches fail validation. The drawing and exported four roof-segment coordinates share one eave-origin coordinate system."
+        },
+        {
+          "heading": "Surface area is not a purchasable sheet layout",
+          "text": "Roof surface is calculated as the sum of four actual sloped plane areas at the entered longitudinal length. The optional waste allowance adjusts area only: panel seam locations, overlapping material, offcut reuse and purchasing bundles are not computed."
+        },
+        {
+          "heading": "Not a gambrel truss calculator",
+          "text": "No structural loads, member sizing, fasteners, support, structural timber strengths or stamped drawings are provided. The historical gambrel truss search terms are excluded as unsupported scope. Obtain qualified design review before construction."
+        }
+      ]
     },
     {
       "slug": "lumber-price-calculator",
@@ -2464,18 +2531,124 @@
     },
     {
       "slug": "fence-picket-calculator",
-      "title": "Fence Picket Calculator",
+      "title": "Fence Picket Spacing & Stepped-Top Layout",
       "category": "decks",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "picket spacing calculator",
       "volume": 210,
       "kd": 2,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Calculate measured fence picket faces, equal boundary gaps, center stations and optional stepped top cut heights.",
+      "inputs": [
+        {
+          "key": "length",
+          "label": "Clear opening between post inside faces",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "key": "width",
+          "label": "Actual picket face width",
+          "value": 3.5,
+          "kind": "L"
+        },
+        {
+          "key": "height",
+          "label": "Flat picket cut height",
+          "value": 48,
+          "kind": "L"
+        },
+        {
+          "key": "layoutMode",
+          "label": "Picket quantity mode",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Find count from maximum clear gap"
+            },
+            {
+              "value": 1,
+              "label": "Use entered picket count"
+            }
+          ]
+        },
+        {
+          "key": "maxGap",
+          "label": "Maximum clear gap",
+          "value": 4,
+          "kind": "L",
+          "showWhen": "layoutMode:0"
+        },
+        {
+          "key": "count",
+          "label": "Fixed picket quantity",
+          "value": 16,
+          "kind": "N",
+          "showWhen": "layoutMode:1"
+        },
+        {
+          "key": "edgeMode",
+          "label": "Outer picket face placement",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Equal clear gaps at both ends"
+            },
+            {
+              "value": 1,
+              "label": "Flush with both ends"
+            }
+          ]
+        },
+        {
+          "key": "archMode",
+          "label": "Picket top profile",
+          "value": 0,
+          "kind": "N",
+          "options": [
+            {
+              "value": 0,
+              "label": "Straight flat tops"
+            },
+            {
+              "value": 1,
+              "label": "Stepped parabolic heights"
+            }
+          ]
+        },
+        {
+          "key": "archRise",
+          "label": "Extra center lift for stepped profile",
+          "value": 6,
+          "kind": "L",
+          "showWhen": "archMode:1"
+        }
+      ],
+      "formula": "Within a clear opening L and n boards of actual face width w, equal end gaps mean n+1 gaps g=(L−n×w)/(n+1); flush outer pickets mean n−1 internal gaps g=(L−n×w)/(n−1). The maximum-gap mode selects the smallest integer n that meets the entered limit. Center i = first face gap+i(w+g)+w/2. Optional STEPPED top height per board is baseHeight+archRise×(1−(2×center/L−1)²).",
+      "example": "A 120 in measured inside-post opening with 3.5 in wide pickets and maximum 4 in clear gaps uses 16 boards and 17 equally spaced gaps of 64/17≈3.764706 in. The first board center is 3.764706+1.75 in from the left inside post face.",
+      "limit": "The reference is measured from the INSIDE faces of the posts, not their center lines. Stepped arch mode calculates separate FLAT picket top heights; it is not a continuous circular cut, full-scale print template, structural approval, pool barrier code, or connection design. Real wood dimensions and local spacing requirements must be checked separately.",
+      "guidance": [
+        {
+          "heading": "Measure clear opening, not post-center distance",
+          "text": "Measure from the inside face of the left post to the inside face of the right post. Zero in the exported coordinate schedule is the inside face of the left post. Use Fence Post Calculator separately for post-center positions."
+        },
+        {
+          "heading": "Equal end gaps or flush outside pickets",
+          "text": "The first convention distributes n+1 equal clear gaps, including both ends. The second places outer pickets flush, leaving n−1 equal gaps. The two conventions cannot be combined: choose the intended boundary before transferring marks."
+        },
+        {
+          "heading": "Stepped top is a separate flat cut for every board",
+          "text": "This optional look computes a height at each individual board center. Every top edge remains a flat crosscut, giving a stepped parabolic silhouette. It does not output a continuous curved cutting template or a circular-arc radius."
+        },
+        {
+          "heading": "Gap input is not a safety-code recommendation",
+          "text": "The user-selected maximum gap controls only part count. This calculator does not determine a legal or safe maximum gap for pool barriers, guardrails, fencing animals or building permits. Confirm applicable regulations and fastening details independently."
+        }
+      ]
     },
     {
       "slug": "stave-calculator",

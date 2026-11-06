@@ -94,30 +94,30 @@ def categories_nav():
     return ''.join(out)
 
 def hero_graphic():
-    return '''<div class="hero-graphic" aria-hidden="true"><svg viewBox="0 0 590 350"><defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#d0d8d0" stroke-width=".7"/></pattern></defs><rect x="0" y="0" width="590" height="350" fill="url(#p)"/><g transform="translate(75 48)"><path d="M35 228L395 228 395 38Z" fill="#e5eee6" stroke="#1e6454" stroke-width="3"/><path d="M35 228V70L395 38" fill="none" stroke="#b48456" stroke-dasharray="9 6" stroke-width="2"/><path d="M35 228L395 38" stroke="#1e6454" stroke-width="5"/><g stroke="#bd8d54" stroke-width="4"><path d="M85 228V202M145 228V170M205 228V139M265 228V107M325 228V75"/></g><path d="M35 245V262M395 245V262M35 256H395" stroke="#64736c" stroke-width="1.5"/><path d="M25 228L35 228 35 218" fill="none" stroke="#64736c" stroke-width="1.5"/><g fill="#34554b" font-family="monospace" font-size="14"><text x="185" y="280">12′-0″  /  144 IN</text><text x="400" y="38">6:12</text><text x="46" y="58">R A K E  W A L L</text></g></g></svg><div class="graphic-caption"><span class="graphic-dot"></span> LIVE GEOMETRY WORKSPACE <span>DRAWING 01 / 26</span></div></div>'''
+    return '''<div class="hero-graphic" aria-hidden="true"><svg viewBox="0 0 590 350"><defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#d0d8d0" stroke-width=".7"/></pattern></defs><rect x="0" y="0" width="590" height="350" fill="url(#p)"/><g transform="translate(75 48)"><path d="M35 228L395 228 395 38Z" fill="#e5eee6" stroke="#1e6454" stroke-width="3"/><path d="M35 228V70L395 38" fill="none" stroke="#b48456" stroke-dasharray="9 6" stroke-width="2"/><path d="M35 228L395 38" stroke="#1e6454" stroke-width="5"/><g stroke="#bd8d54" stroke-width="4"><path d="M85 228V202M145 228V170M205 228V139M265 228V107M325 228V75"/></g><path d="M35 245V262M395 245V262M35 256H395" stroke="#64736c" stroke-width="1.5"/><path d="M25 228L35 228 35 218" fill="none" stroke="#64736c" stroke-width="1.5"/><g fill="#34554b" font-family="monospace" font-size="14"><text x="185" y="280">12′-0″  /  144 IN</text><text x="400" y="38">6:12</text><text x="46" y="58">R A K E  W A L L</text></g></g></svg><div class="graphic-caption"><span class="graphic-dot"></span> LIVE GEOMETRY WORKSPACE <span>DRAWING 01 / 28</span></div></div>'''
 
 def home():
     featured = sorted(TOOLS, key=lambda t:(t["priority"] != "P0", -t["volume"]))[:6]
     body = ('<section class="hero wrap"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> PRECISION FOR THE WORKSHOP</span>'
             '<h1>Good work begins<br>with <em>better measurements.</em></h1>'
             '<p>Woodworking calculators for practical layouts, cut lengths, spacing and material takeoffs. Enter dimensions, inspect an annotated drawing, then export your work.</p>'
-            '<div class="hero-actions"><a class="btn primary" href="/#tools">Explore 26 free tools <span aria-hidden="true">↗</span></a>'
+            f'<div class="hero-actions"><a class="btn primary" href="/#tools">Explore {len(TOOLS)} free tools <span aria-hidden="true">↗</span></a>'
             '<a class="btn subtle" href="/stud-calculator/">Try the stud calculator</a></div>'
-            '<div class="hero-facts"><span><strong>26</strong> working calculator routes</span><span><strong>5</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
+            f'<div class="hero-facts"><span><strong>{len(TOOLS)}</strong> working calculator routes</span><span><strong>5</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
             '</div>' + hero_graphic() + '</section>')
     body += ('<section id="tools" class="wrap home-section"><div class="section-heading"><div><span class="eyebrow">FIND YOUR TOOL</span>'
              '<h2>Built around the work, not the jargon.</h2><p>Browse the most common workshop measurements and quickly jump to the right calculator.</p></div></div>'
              '<nav class="categories" aria-label="Tool categories">'+categories_nav()+'</nav>'
              '<section id="recent-tools" class="recent-panel" hidden><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h3>Recently used tools</h3><div id="recent-links" class="recent-links"></div></section>'
              '<div class="section-heading compact"><h3>Start with a proven task</h3><span>FEATURED TOOLS</span></div><div class="tool-grid">'+''.join(tool_card(t) for t in featured)+'</div>'
-             '<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>26 TOOL WORKSPACES</span></div>'
+             f'<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>{len(TOOLS)} TOOL WORKSPACES</span></div>'
              '<div class="directory-list">'+''.join(f'<a href="/{esc(t["slug"])}/"><span>{esc(t["title"])}</span><small>{esc(CATS[t["category"]][0])}</small><b>↗</b></a>' for t in TOOLS)+'</div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
             '<div><b>02 / Check</b><p>Visible formulas, explicit assumptions, precise dimensions.</p></div>'
             '<div><b>03 / Export</b><p>Save a locally generated CSV or SVG; print to PDF from your browser.</p></div></section>')
-    return page("Free Woodworking Calculators, Layout & Cutting Geometry","26 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
+    return page("Free Woodworking Calculators, Layout & Cutting Geometry",f"{len(TOOLS)} practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]

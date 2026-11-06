@@ -6,10 +6,10 @@ const manifest=JSON.parse(readFileSync(new URL("../../src/tools.json",import.met
 const active=manifest.filter(t=>t.priority==="P0"||t.priority==="P1");
 const bySlug=new Map(intents.map(t=>[t.slug,t]));
 
-test("All 26 calculator landings explain real search tasks and link only to valid contextual follow-ups",async({page})=>{
+test("All 28 calculator landings explain real search tasks and link only to valid contextual follow-ups",async({page})=>{
   test.setTimeout(110000);
-  expect(active).toHaveLength(26);
-  expect(intents).toHaveLength(26);
+  expect(active).toHaveLength(28);
+  expect(intents).toHaveLength(28);
   for(const t of active){
     const intent=bySlug.get(t.slug);
     expect(intent,"missing intent mapping for "+t.slug).toBeDefined();

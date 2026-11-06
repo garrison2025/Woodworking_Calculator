@@ -647,6 +647,64 @@ if(slug){
       content+=svgText(112,296,"RUN "+fmt(run)+" / RISE "+fmt(rise),"dim-label");
       content+=svgText(112,319,"FULL "+fmt(data.braceFullLength)+" / CUT "+fmt(data.braceCutLength),"dim-label");
       content+=svgText(570,319,"SETBACK EACH "+fmt(data.braceSetback),"tick-label");
+    }else if(data.shape==="picket-layout"){
+      // Shared physical X/Y scale; board heights are the exact FLAT cut
+      // heights from the numerical schedule, not a continuous curved cut.
+      const rows=data.faceRows||[],
+        maxH=data.picketHeight+data.archRise;
+      const scale=Math.min(752/span,179/Math.max(1e-8,maxH)),
+        x0=(900-span*scale)/2,y0=261;
+      const X=v=>x0+v*scale,Y=v=>y0-v*scale;
+      content+='<rect class="picket-clear-opening" x="'+X(0)+'" y="'+Y(maxH)+
+        '" width="'+(span*scale)+'" height="'+(maxH*scale)+
+        '" fill="#f3f2ec" stroke="#9db5a9" stroke-dasharray="5 3"/>';
+      for(const [i,r] of rows.entries()){
+        const xx=X(r.faceLeft),w=(r.faceRight-r.faceLeft)*scale,
+          yy=Y(r.cutHeight),h=r.cutHeight*scale;
+        content+='<rect class="picket-face" data-index="'+(i+1)+
+          '" data-face-left="'+r.faceLeft+'" data-face-right="'+r.faceRight+
+          '" data-center="'+r.position+'" data-cut-height="'+r.cutHeight+
+          '" x="'+xx+'" y="'+yy+'" width="'+w+'" height="'+h+
+          '" fill="'+(i%2?"#d2b18b":"#e3c8a4")+
+          '" stroke="#846541" stroke-width=".65"><title>'+
+          esc(r.item+" · face "+fmt(r.faceLeft)+" to "+fmt(r.faceRight)+
+            " · individual FLAT cut height "+fmt(r.cutHeight))+'</title></rect>';
+      }
+      content+=svgText(75,42,"CLEAR OPENING · POST INSIDE FACES","dim-label");
+      content+=svgText(75,64,"EQUAL GAP "+fmt(data.equalGap)+" / "+data.picketCount+" PICKETS","tick-label");
+      content+=svgText(75,302,"LEFT INNER FACE = 0 "+unit,"tick-label");
+      content+=svgText(510,302,"RIGHT INNER FACE "+fmt(span),"tick-label");
+      content+=svgText(75,328,data.archMode?
+        "STEPPED FLAT TOPS · NOT A CURVED CUT":"LEVEL FLAT PICKET TOPS","tick-label");
+    }else if(data.shape==="gambrel-profile"){
+      // Draw exactly the 4 exported roof segment endpoint coordinates
+      // in ONE physical 2D scale. No invented truss connection points.
+      const pts=data.gambrelVertices,
+        scale=Math.min(698/span,193/Math.max(1e-8,data.ridgeRise));
+      const X=v=>(900-span*scale)/2+v*scale,Y=v=>269-v*scale;
+      content+='<polyline class="gambrel-roof-profile" points="'+
+        pts.map(p=>X(p.x)+","+Y(p.y)).join(" ")+
+        '" fill="none" stroke="#9eaaa0" stroke-width="7" stroke-linejoin="round"/>';
+      for(const [i,r] of data.gambrelRows.entries()){
+        content+='<line class="gambrel-slope-segment" data-segment="'+r.segment+
+          '" data-index="'+(i+1)+'" data-start-x="'+r.startX+
+          '" data-end-x="'+r.endX+'" data-start-height="'+r.startHeight+
+          '" data-end-height="'+r.endHeight+'" data-slope-length="'+r.slopedLength+
+          '" x1="'+X(r.startX)+'" y1="'+Y(r.startHeight)+
+          '" x2="'+X(r.endX)+'" y2="'+Y(r.endHeight)+
+          '" stroke="'+(r.segment==="lower"?"#b37a45":"#28705b")+
+          '" stroke-width="4" stroke-linecap="round"><title>'+
+          esc(r.item+" · run "+fmt(r.horizontalRun)+" · rise "+fmt(r.verticalRise)+
+            " · slope "+fmt(r.slopedLength))+'</title></line>';
+      }
+      for(const [i,p] of pts.entries())
+        content+=point(X(p.x),Y(p.y),i===2?5:3,"#1e6454");
+      content+=svgText(75,42,"SYMMETRIC GAMBREL · EAVE / BREAK / RIDGE","dim-label");
+      content+=svgText(75,63,"LOWER STEEP / UPPER SHALLOW · NOT TRUSS DESIGN","tick-label");
+      content+=svgText(75,301,"ROOF SPAN "+fmt(span),"dim-label");
+      content+=svgText(75,328,"LOWER RUN "+fmt(data.lowerRun)+
+        " / UPPER RUN "+fmt(data.upperRun),"tick-label");
+      content+=svgText(570,328,"RIDGE RISE "+fmt(data.ridgeRise),"tick-label");
     }else if(data.shape==="triangle"){
       // Roof pitch triangle uses ONE isotropic x/y scale, unlike the
       // previous height-exaggerated sketch which changed the shown pitch.

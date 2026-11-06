@@ -14,7 +14,7 @@ active=[t for t in manifest["tools"] if t["priority"] in ("P0","P1")]
 intent_manifest=json.loads((root/"src"/"tool-intents.json").read_text(encoding="utf8"))
 intent_entries=intent_manifest["tools"]
 intents={x["slug"]:x for x in intent_entries}
-assert len(intent_entries)==len(intents)==len(active)==26, "Exactly 26 unique active intents required"
+assert len(intent_entries)==len(intents)==len(active)==28, "Exactly 26 unique active intents required"
 assert set(intents)=={t["slug"] for t in active}, "Intent metadata missing or holding an unpublished P2 route"
 assert all(len(x["next"])==3 for x in intent_entries), "Exactly three specific next-task links per tool"
 with (root/"research"/"woodworking-keyword-map-152.csv").open(newline="",encoding="utf-8") as source:
@@ -67,8 +67,8 @@ class Checker(html.parser.HTMLParser):
         if self.title:self.title_text+=data
 errors=[]
 pages=sorted(dist.rglob("index.html"))
-assert len(active)==26 and len(hold)==5,(len(active),len(hold))
-assert len(pages)==1+26+len({t["category"] for t in active})+4,len(pages)
+assert len(active)==28 and len(hold)==3,(len(active),len(hold))
+assert len(pages)==1+28+len({t["category"] for t in active})+4,len(pages)
 for p in pages:
     c=Checker();c.feed(p.read_text(encoding="utf8"))
     u="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
@@ -180,4 +180,4 @@ print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
-print("PASS: static structure, all 26 field labels/guidance, links, metadata, preview noindex, P2 hold")
+print("PASS: static structure, all 28 field labels/guidance, links, metadata, preview noindex, P2 hold")
