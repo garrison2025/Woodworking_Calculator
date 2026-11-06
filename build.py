@@ -22,6 +22,22 @@ assert len(INTENTS) == len(INTENT_FILE["tools"]) == len(TOOLS), "Intent metadata
 assert set(INTENTS) == {t["slug"] for t in TOOLS}, "Missing or extra released-tool intent metadata"
 FIELD_CHECKS = json.loads((ROOT / "src" / "field-verification.json").read_text(encoding="utf-8"))["checks"]
 assert set(FIELD_CHECKS) == set(INTENTS), "Every active tool needs a distinct independent measurement check"
+# Reviewed, reproducible synthetic measurement fixtures. These are useful
+# examples, not real wood cuts, a structural signoff or provider data.
+CASE_FILE = json.loads((ROOT / "src" / "worked-cases.json").read_text(encoding="utf-8"))
+CASES_BY_SLUG = {}
+for case in CASE_FILE["cases"]:
+    tool = next((x for x in TOOLS if x["slug"] == case["slug"]), None)
+    assert tool and len(case["checks"]) >= 3 and case["id"] not in {
+        c["id"] for sub in CASES_BY_SLUG.values() for c in sub
+    }, "Invalid or duplicated worked measurement case"
+    assert set(case["inputs"]) == {f["key"] for f in tool["inputs"]}, "A worked case must supply every modeled input"
+    assert all(isinstance(v, (int, float)) for v in case["inputs"].values()), "Worked case contains nonnumeric inputs"
+    assert all(check["label"] and isinstance(check["value"], (int,float)) for check in case["checks"]), "Expected values must be typed"
+    CASES_BY_SLUG.setdefault(case["slug"], []).append(case)
+assert {key:len(value) for key,value in CASES_BY_SLUG.items()} == {
+    "deck-board-calculator":2, "rafter-calculator":2,
+    "stair-stringer-calculator":2}, "Exactly two scenarios per approved high-demand tool"
 
 with (ROOT / "research" / "woodworking-keyword-map-152.csv").open(encoding="utf-8", newline="") as keyword_file:
     KEYWORDS = list(csv.DictReader(keyword_file))
@@ -153,6 +169,25 @@ def tool_page(t):
             note = "Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"
         condition = f' data-show-when="{esc(f["showWhen"])}"' if f.get("showWhen") else ""
         return f'<div class="field"{condition}><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
+    scenarios=CASES_BY_SLUG.get(t["slug"], [])
+    scenario_panel=(
+        '<section class="worked-cases" id="worked-cases" aria-label="Reproducible dimension scenarios">'
+        '<h3>Try a calculated measurement scenario</h3>'
+        '<p>Two complete sample input sets with independently checkable dimensions. '
+        'Click to fill the calculator in your current units, then check the drawing and downloadable CSV. '
+        '<strong>Not verified on real lumber or approved for cutting.</strong></p>'
+        '<div class="worked-cases-grid">'+''.join(
+            '<article class="worked-case"><h4>'+esc(case["title"])+'</h4><p>'+esc(case["description"])+'</p>'
+            '<p class="worked-values">'+
+            '; '.join(esc(v["label"])+': <b>'+esc(format(v["value"], ".8g"))+
+                 (" "+("in" if v["kind"]=="L" else "") if v["kind"] in ("L","N") else "")+'</b>'
+                for v in case["checks"])+'</p>'
+            '<p class="worked-proof">'+esc(case["verification"])+'</p>'
+            '<button class="btn secondary worked-apply" type="button" data-case-id="'+esc(case["id"])+
+            '" data-case-name="'+esc(case["title"])+
+            '" data-case-inputs="'+esc(json.dumps(case["inputs"],separators=(",",":")))+
+            '">Use these measurements</button></article>' for case in scenarios)+'</div></section>'
+    ) if scenarios else ""
     fields = ''.join(field_markup(f) for f in t["inputs"] if not f.get("advanced"))
     advanced_fields = ''.join(field_markup(f) for f in t["inputs"] if f.get("advanced"))
     advanced_options = (
@@ -268,7 +303,7 @@ def tool_page(t):
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
            '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
            +currency_picker+
-           f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'
+           f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel+
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally.</p></div>'
            '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
@@ -488,6 +523,8 @@ def build():
     DEST.mkdir()
     assets=DEST/"assets";assets.mkdir()
     shutil.copyfile(ROOT/"src"/"tools.json",assets/"tools.json")
+    # Preset inputs are embedded in rendered HTML; no extra browser fetch is
+    # necessary and all worked cases can be examined without JavaScript.
     shutil.copyfile(ROOT/"src"/"app.mjs",assets/"app.mjs")
     shutil.copyfile(ROOT/"src"/"calcs.mjs",assets/"calcs.mjs")
     shutil.copyfile(ROOT/"src"/"cut-list.mjs",assets/"cut-list.mjs")

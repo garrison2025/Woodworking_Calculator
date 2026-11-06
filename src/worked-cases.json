@@ -1,0 +1,242 @@
+{
+  "version": "2026-11-06",
+  "cases": [
+    {
+      "slug": "deck-board-calculator",
+      "id": "deck-patio-120",
+      "title": "120 in patio board rows",
+      "description": "A 10 ft coverage with 5½ in actual board faces and ⅛ in gaps; row length matches 12 ft stock.",
+      "inputs": {
+        "width": 120,
+        "length": 144,
+        "board": 5.5,
+        "gap": 0.125,
+        "stock": 144,
+        "waste": 10
+      },
+      "checks": [
+        {
+          "label": "Board rows",
+          "value": 22,
+          "kind": "N"
+        },
+        {
+          "label": "Last rip width",
+          "value": 1.875,
+          "kind": "L"
+        },
+        {
+          "label": "Stock pieces: no offcut reuse",
+          "value": 25,
+          "kind": "N"
+        }
+      ],
+      "verification": "22 rows use 21 full 5.5 in faces, 21 gaps at 0.125 in, and a 1.875 in final ripped face: 21×5.5+21×0.125+1.875=120 in. Waste changes the purchase count, not the physical row coordinates."
+    },
+    {
+      "slug": "deck-board-calculator",
+      "id": "deck-porch-95",
+      "title": "95 in porch; stock shorter than row",
+      "description": "A 95 in coverage, 10 ft long row, 5½ in faces, ¼ in gaps, using 8 ft supplier stock. The result does not determine butt-joint placement.",
+      "inputs": {
+        "width": 95,
+        "length": 120,
+        "board": 5.5,
+        "gap": 0.25,
+        "stock": 96,
+        "waste": 10
+      },
+      "checks": [
+        {
+          "label": "Board rows",
+          "value": 17,
+          "kind": "N"
+        },
+        {
+          "label": "Last rip width",
+          "value": 3,
+          "kind": "L"
+        },
+        {
+          "label": "Stock pieces: no offcut reuse",
+          "value": 38,
+          "kind": "N"
+        }
+      ],
+      "verification": "17 rows produce 16×5.5+16×0.25+3=95 in. Each 120 in row requires at least two 96 in stock pieces mathematically; the 38-piece conservative quote is NOT a buildable seam/joist layout."
+    },
+    {
+      "slug": "rafter-calculator",
+      "id": "rafter-ridge-96",
+      "title": "8 ft reference; 1½ in ridge board",
+      "description": "A 96 in centerline run at 6:12 with half the 1.5 in ridge thickness removed, 12 in horizontal overhang, 3 in seat.",
+      "inputs": {
+        "run": 96,
+        "pitch": 6,
+        "ridge": 1.5,
+        "overhang": 12,
+        "depth": 5.5,
+        "seat": 3
+      },
+      "checks": [
+        {
+          "label": "Adjusted run",
+          "value": 95.25,
+          "kind": "L"
+        },
+        {
+          "label": "Rise",
+          "value": 47.625,
+          "kind": "L"
+        },
+        {
+          "label": "Rafter reference length",
+          "value": 106.49273742842749,
+          "kind": "L"
+        },
+        {
+          "label": "Seat notch (normal depth)",
+          "value": 1.3416407864998738,
+          "kind": "L"
+        }
+      ],
+      "verification": "The horizontal run is 96−1.5/2=95.25 in, rise is 95.25×6/12=47.625 in and slope length is hypot(95.25,47.625). Seat notch normal depth is 3×sin(arctan(6/12))≈1.341641 in; bearing and structural limits need independent review."
+    },
+    {
+      "slug": "rafter-calculator",
+      "id": "rafter-pitch-4",
+      "title": "10 ft run; shallower 4:12 roof",
+      "description": "A 120 in horizontal run at 4:12 with no ridge board, 18 in horizontal eave overhang, 7¼ in measured stock depth and 3½ in horizontal seat.",
+      "inputs": {
+        "run": 120,
+        "pitch": 4,
+        "ridge": 0,
+        "overhang": 18,
+        "depth": 7.25,
+        "seat": 3.5
+      },
+      "checks": [
+        {
+          "label": "Adjusted run",
+          "value": 120,
+          "kind": "L"
+        },
+        {
+          "label": "Rise",
+          "value": 40,
+          "kind": "L"
+        },
+        {
+          "label": "Rafter reference length",
+          "value": 126.49110640673518,
+          "kind": "L"
+        },
+        {
+          "label": "Seat notch (normal depth)",
+          "value": 1.1067971810589328,
+          "kind": "L"
+        }
+      ],
+      "verification": "At 4:12, the rise is 120/3=40 in and roof-line length is hypot(120,40). The 3.5 in seat reference removes 3.5×sin(arctan(1/3))≈1.106797 in normal depth; this is not a code-rated rafter design."
+    },
+    {
+      "slug": "stair-stringer-calculator",
+      "id": "stringer-105",
+      "title": "105 in rise; 14 uniform risers",
+      "description": "A reference stair flight rising 105 in in 14 risers, with 13 independent 10 in horizontal treads, 11¼ in stock depth and 1½ in tread thickness.",
+      "inputs": {
+        "rise": 105,
+        "risers": 14,
+        "tread": 10,
+        "depth": 11.25,
+        "treadThickness": 1.5,
+        "lowerFinish": 0,
+        "nosing": 0,
+        "upperLandingDepth": 0,
+        "lowerSupportRun": 0,
+        "upperSupportRun": 0,
+        "lowerSupportVerticalOffset": 0,
+        "upperSupportVerticalOffset": 0,
+        "lowerEndCutRun": 0,
+        "upperEndCutRun": 0,
+        "blankEndAllowance": 0,
+        "measuredBlankLength": 0
+      },
+      "checks": [
+        {
+          "label": "Uniform riser height",
+          "value": 7.5,
+          "kind": "L"
+        },
+        {
+          "label": "Treads",
+          "value": 13,
+          "kind": "N"
+        },
+        {
+          "label": "Total horizontal run",
+          "value": 130,
+          "kind": "L"
+        },
+        {
+          "label": "Uncut throat (nominal)",
+          "value": 5.25,
+          "kind": "L"
+        }
+      ],
+      "verification": "The step rise is 105÷14=7.5 in, flight run=(14−1)×10=130 in, and a 10 in tread with 7.5 in rise cuts 7.5×10/hypot(7.5,10)=6 in into the normal section, leaving 11.25−6=5.25 in nominal throat. Structural approval is excluded."
+    },
+    {
+      "slug": "stair-stringer-calculator",
+      "id": "stringer-96",
+      "title": "96 in rise; 13 risers and thicker finish",
+      "description": "A 96 in finished rise, 13 risers, 10½ in run per tread, 1¼ in tread surface thickness and ¼ in lower-floor finish allowance.",
+      "inputs": {
+        "rise": 96,
+        "risers": 13,
+        "tread": 10.5,
+        "depth": 11.25,
+        "treadThickness": 1.25,
+        "lowerFinish": 0.25,
+        "nosing": 0,
+        "upperLandingDepth": 0,
+        "lowerSupportRun": 0,
+        "upperSupportRun": 0,
+        "lowerSupportVerticalOffset": 0,
+        "upperSupportVerticalOffset": 0,
+        "lowerEndCutRun": 0,
+        "upperEndCutRun": 0,
+        "blankEndAllowance": 0,
+        "measuredBlankLength": 0
+      },
+      "checks": [
+        {
+          "label": "Uniform riser height",
+          "value": 7.384615384615385,
+          "kind": "L"
+        },
+        {
+          "label": "Treads",
+          "value": 12,
+          "kind": "N"
+        },
+        {
+          "label": "Total horizontal run",
+          "value": 126,
+          "kind": "L"
+        },
+        {
+          "label": "Bottom riser layout cut",
+          "value": 6.384615384615385,
+          "kind": "L"
+        },
+        {
+          "label": "Uncut throat (nominal)",
+          "value": 5.2096573211086925,
+          "kind": "L"
+        }
+      ],
+      "verification": "The riser is 96÷13≈7.384615 in; only 12 independent treads contribute to the 126 in run. Nominal bottom reference is 96/13−1.25+0.25≈6.384615 in. Bottom-finish adjustment and structural bearing must be measured separately."
+    }
+  ]
+}

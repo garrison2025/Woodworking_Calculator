@@ -2022,6 +2022,29 @@ if(slug){
   schedulePageInput.addEventListener("keydown",event=>{
     if(event.key==="Enter"){event.preventDefault();jumpSchedule();}
   });
+  // All example inputs are in the same engine-internal inches as the
+  // registry. Unit conversion happens exactly once when filling the form.
+  const workedCases=document.querySelector("#worked-cases");
+  workedCases?.addEventListener("click",event=>{
+    const button=event.target.closest("button[data-case-inputs]");
+    if(!button||!workedCases.contains(button))return;
+    const preset=JSON.parse(button.dataset.caseInputs);
+    const keys=Object.keys(preset);
+    if(keys.length!==tool.inputs.length||
+      tool.inputs.some(f=>!Object.hasOwn(preset,f.key)||
+        typeof preset[f.key]!=="number"||!Number.isFinite(preset[f.key]))){
+      status.textContent="Example is incomplete and was not applied.";
+      return;
+    }
+    for(const field of tool.inputs){
+      const el=form.elements.namedItem(field.key);
+      el.value=field.kind==="L"?
+        convertEditableLength(preset[field.key],"in",unit):preset[field.key];
+    }
+    schedulePage=0;zoom=1;render();
+    if(latest)status.textContent="Loaded example: "+button.dataset.caseName+
+      ". Compare physical reference faces before using dimensions.";
+  });
   const restoreValues=()=>{
     for(const f of tool.inputs){
       const el=form.elements.namedItem(f.key);
