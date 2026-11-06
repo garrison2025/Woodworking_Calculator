@@ -1123,10 +1123,12 @@ if(slug){
       rows=latest?.deckFastenerRows||[];
     deckCostStatus.textContent=!quote?"Correct inputs to see deck supplier costs.":
       quote.allPricesEntered?
-        "Estimated quoted deck boards + fastener packs: "+money(quote.quotedSubtotal)+
-          " (boards "+money(quote.boardCost)+
-          " + packs "+money(quote.fastenerCost)+
-          "). Excludes structural framing, joist lumber, tax, delivery and labor.":
+        "Estimated quoted material subtotal: "+money(quote.quotedSubtotal)+
+          " (decking boards "+money(quote.boardCost)+
+          " + fastener packs "+money(quote.fastenerCost)+
+          (quote.quoteJoists?" + optional full-width joist stock "+money(quote.joistCost):"")+
+          "). Excludes unmodeled structure, tax, delivery and labor. "+
+          "Any quoted straight joists are geometric cuts only, not approved structural sizing.":
         "INCOMPLETE QUOTE — missing: "+quote.missingQuotes.join(", ")+
           " · quoted components subtotal "+money(quote.quotedSubtotal)+
           " is NOT the total buying cost.";
@@ -1141,7 +1143,7 @@ if(slug){
         r.lastSeamAt===null?"—":fmt(r.lastSeamAt,"L")]
           .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
     deckTicketStatus.textContent=!quote?"No current material plan.":
-      quote.allPricesEntered?"COMPLETE quoted material subtotal: "+money(quote.quotedSubtotal):
+      quote.allPricesEntered?"ALL LISTED MATERIALS QUOTED · subtotal: "+money(quote.quotedSubtotal):
         "PRICE INCOMPLETE — "+quote.missingQuotes.join(", ")+" require quotes.";
     deckTicketList.innerHTML=buys.filter(r=>r.purchaseQuantity>0).map(r=>
       '<li><span class="ticket-check" aria-hidden="true">□</span><strong>'+esc(r.material)+
