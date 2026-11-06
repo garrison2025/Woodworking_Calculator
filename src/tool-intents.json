@@ -1,0 +1,526 @@
+{
+  "version": "V3-intent-review-2026-11-06",
+  "basis": "V3 supplied 152-keyword/26-live-route map; editorial links, not fresh keyword volume measurements or verified ranking predictions",
+  "tools": [
+    {
+      "slug": "stud-calculator",
+      "seoTitle": "Gable Stud Calculator for Rake Walls",
+      "useFor": "Calculate the individual lengths and stations of studs under a sloped top plate.",
+      "notFor": "A straight wall stud count or framing structural approval.",
+      "next": [
+        {
+          "slug": "wall-stud-calculator",
+          "why": "Count ordinary studs on a level wall"
+        },
+        {
+          "slug": "framing-calculator",
+          "why": "Lay out a wall with door and window openings"
+        },
+        {
+          "slug": "rafter-calculator",
+          "why": "Calculate the sloping roof rafter line"
+        }
+      ]
+    },
+    {
+      "slug": "framing-calculator",
+      "seoTitle": "Wall Framing Calculator with Doors and Windows",
+      "useFor": "Lay out wall studs, opening members, and modeled lumber purchasing for doors or windows.",
+      "notFor": "An engineering-approved header span, bearing design, or permit drawing.",
+      "next": [
+        {
+          "slug": "wall-stud-calculator",
+          "why": "Count studs for an uninterrupted straight wall"
+        },
+        {
+          "slug": "stud-calculator",
+          "why": "Measure rake-wall studs under a pitched top"
+        },
+        {
+          "slug": "square-layout-calculator",
+          "why": "Check the wall layout diagonals"
+        }
+      ]
+    },
+    {
+      "slug": "deck-board-calculator",
+      "seoTitle": "Deck Board Calculator with Board Gaps",
+      "useFor": "Calculate parallel deck board rows, gaps, and the final rip width.",
+      "notFor": "A full deck frame, joist span, post or footing design.",
+      "next": [
+        {
+          "slug": "deck-material-calculator",
+          "why": "Estimate the wider deck material takeoff"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Set railing spindle clearances"
+        },
+        {
+          "slug": "fence-post-calculator",
+          "why": "Plan separate fence-post centers"
+        }
+      ]
+    },
+    {
+      "slug": "baluster-spacing-calculator",
+      "seoTitle": "Baluster Spacing Calculator for Deck Railings",
+      "useFor": "Distribute balusters with explicit clear gaps and center positions.",
+      "notFor": "Proof of local railing, child-safety, or structural-code compliance.",
+      "next": [
+        {
+          "slug": "fence-post-calculator",
+          "why": "Lay out post intervals along a fence"
+        },
+        {
+          "slug": "deck-material-calculator",
+          "why": "Estimate deck boards and framing materials"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Distribute generic marks or centers"
+        }
+      ]
+    },
+    {
+      "slug": "rafter-calculator",
+      "seoTitle": "Rafter Calculator with Birdsmouth Geometry",
+      "useFor": "Calculate a common rafter's geometric line, ridge adjustment, and reference cuts.",
+      "notFor": "A hip-rafter cut, engineered span, load rating, or approved roof assembly.",
+      "next": [
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Convert roof pitch into angle or rise"
+        },
+        {
+          "slug": "hip-rafter-calculator",
+          "why": "Find the distinct diagonal hip-rafter line"
+        },
+        {
+          "slug": "soffit-calculator",
+          "why": "Measure soffit drop at the eave"
+        }
+      ]
+    },
+    {
+      "slug": "crown-molding-calculator",
+      "seoTitle": "Crown Molding Calculator for Miter and Bevel",
+      "useFor": "Find compound miter and bevel reference angles for crown molding.",
+      "notFor": "Proof of saw orientation, material spring angle, or a verified test cut.",
+      "next": [
+        {
+          "slug": "wainscoting-calculator",
+          "why": "Space wall finish panels and stiles"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Divide repeated trim marks evenly"
+        },
+        {
+          "slug": "shelf-spacing-calculator",
+          "why": "Lay out evenly spaced interior shelves"
+        }
+      ]
+    },
+    {
+      "slug": "soffit-calculator",
+      "seoTitle": "Soffit Calculator for Eave Drop and Depth",
+      "useFor": "Calculate an eave-section soffit drop with the defined thickness offsets.",
+      "notFor": "Structural design for rafter tails, fascia fastening or roof ventilation.",
+      "next": [
+        {
+          "slug": "rafter-calculator",
+          "why": "Measure the adjoining common rafter"
+        },
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Check the roof's pitch and inclination"
+        },
+        {
+          "slug": "roof-sheathing-calculator",
+          "why": "Estimate the roof panel surface"
+        }
+      ]
+    },
+    {
+      "slug": "kerf-bending-calculator",
+      "seoTitle": "Kerf Bending Calculator for Cut Spacing",
+      "useFor": "Model kerf stations around an intended bending arc.",
+      "notFor": "A guaranteed bend radius, material strength or safe blade path.",
+      "next": [
+        {
+          "slug": "segmented-bowl-calculator",
+          "why": "Plan segmented turning rings instead of flexing wood"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Distribute non-curved repeated marks"
+        },
+        {
+          "slug": "hole-spacing-calculator",
+          "why": "Lay out drilling centers on straight stock"
+        }
+      ]
+    },
+    {
+      "slug": "wainscoting-calculator",
+      "seoTitle": "Wainscoting Calculator for Panel Layout",
+      "useFor": "Divide a wall into repeatable wainscoting panel bays and margins.",
+      "notFor": "Wall framing, molding compound cuts, or an installed structural design.",
+      "next": [
+        {
+          "slug": "crown-molding-calculator",
+          "why": "Calculate compound trim cuts"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Distribute simple panel-center marks"
+        },
+        {
+          "slug": "hole-spacing-calculator",
+          "why": "Plan repeated installation hole positions"
+        }
+      ]
+    },
+    {
+      "slug": "stair-calculator",
+      "seoTitle": "Straight Stair Calculator for Rise and Treads",
+      "useFor": "Calculate straight stair riser, tread and total run geometry.",
+      "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
+      "next": [
+        {
+          "slug": "stair-stringer-calculator",
+          "why": "Inspect separate stair stringer notch geometry"
+        },
+        {
+          "slug": "rise-run-calculator",
+          "why": "Convert rise and run into slope"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Lay out railing baluster gaps separately"
+        }
+      ]
+    },
+    {
+      "slug": "rise-run-calculator",
+      "seoTitle": "Rise and Run Calculator for Slope",
+      "useFor": "Convert rise, run and slope angle for a straight reference line.",
+      "notFor": "Full roof cuts, stair step counts, or structural clearance checks.",
+      "next": [
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Express a roof slope as pitch per 12"
+        },
+        {
+          "slug": "stair-calculator",
+          "why": "Calculate an actual repeated stair layout"
+        },
+        {
+          "slug": "diagonal-brace-calculator",
+          "why": "Find a brace between two perpendicular endpoints"
+        }
+      ]
+    },
+    {
+      "slug": "deck-material-calculator",
+      "seoTitle": "Deck Material Calculator and Estimator",
+      "useFor": "Estimate deck material quantities and modeled joist or board layouts.",
+      "notFor": "Engineered joist-span capacity, footings, approved beams or fasteners.",
+      "next": [
+        {
+          "slug": "deck-board-calculator",
+          "why": "Calculate board gaps and final board rip"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Distribute separate deck railing balusters"
+        },
+        {
+          "slug": "fence-post-calculator",
+          "why": "Lay out nearby fence posts independently"
+        }
+      ]
+    },
+    {
+      "slug": "segmented-bowl-calculator",
+      "seoTitle": "Segmented Bowl Calculator for Ring Cuts",
+      "useFor": "Compute segmented bowl ring geometry and reference segment cutting angles.",
+      "notFor": "Wood species machinability, glue-joint strength or lathe safety.",
+      "next": [
+        {
+          "slug": "kerf-bending-calculator",
+          "why": "Model kerf bending as a different curved-stock technique"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Divide repeated positions around a straight reference"
+        },
+        {
+          "slug": "hole-spacing-calculator",
+          "why": "Calculate drilling stations on a jig"
+        }
+      ]
+    },
+    {
+      "slug": "roof-pitch-calculator",
+      "seoTitle": "Roof Pitch Calculator in Degrees and Percent",
+      "useFor": "Convert a roof pitch ratio into degrees, rise and percentage.",
+      "notFor": "Rafter birds-mouth geometry, hip-roof panel cuts or structural approval.",
+      "next": [
+        {
+          "slug": "rafter-calculator",
+          "why": "Use pitch in a common rafter layout"
+        },
+        {
+          "slug": "gable-roof-calculator",
+          "why": "Estimate a two-plane gable roof surface"
+        },
+        {
+          "slug": "rise-run-calculator",
+          "why": "Work with a general non-roof slope"
+        }
+      ]
+    },
+    {
+      "slug": "equal-spacing-calculator",
+      "seoTitle": "Equal Spacing Calculator for Layout Marks",
+      "useFor": "Place equally spaced center or edge marks along a measured run.",
+      "notFor": "Thickness-aware shelf clearances, railing code or drilling hardware limits.",
+      "next": [
+        {
+          "slug": "hole-spacing-calculator",
+          "why": "Lay out explicit drill-hole centers"
+        },
+        {
+          "slug": "shelf-spacing-calculator",
+          "why": "Account for shelf-board thicknesses"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Account for baluster widths and clear gaps"
+        }
+      ]
+    },
+    {
+      "slug": "hip-rafter-calculator",
+      "seoTitle": "Hip Rafter Calculator for Diagonal Runs",
+      "useFor": "Calculate hip-rafter diagonal run and pitched line reference geometry.",
+      "notFor": "A complete hip roof sheathing layout, birdsmouth, or engineered timber.",
+      "next": [
+        {
+          "slug": "hip-roof-calculator",
+          "why": "Lay out hip roof sheathing cut polygons"
+        },
+        {
+          "slug": "rafter-calculator",
+          "why": "Calculate a common rather than hip rafter"
+        },
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Check the input roof pitch"
+        }
+      ]
+    },
+    {
+      "slug": "hip-roof-calculator",
+      "seoTitle": "Hip Roof Calculator for Sheathing Layout",
+      "useFor": "Calculate roof-plane panel geometry and a modeled hip roof cut layout.",
+      "notFor": "A complete structural hip roof truss or verified on-site saw program.",
+      "next": [
+        {
+          "slug": "roof-sheathing-calculator",
+          "why": "Estimate general roof sheathing sheets"
+        },
+        {
+          "slug": "hip-rafter-calculator",
+          "why": "Measure hip rafter line geometry"
+        },
+        {
+          "slug": "gable-roof-calculator",
+          "why": "Compare a distinct gable roof shape"
+        }
+      ]
+    },
+    {
+      "slug": "wall-stud-calculator",
+      "seoTitle": "Wall Stud Calculator for Straight Walls",
+      "useFor": "Count and position studs in a straight, level wall reference.",
+      "notFor": "Door and window King/Jack framing or sloped rake-wall stud lengths.",
+      "next": [
+        {
+          "slug": "framing-calculator",
+          "why": "Model door and window openings"
+        },
+        {
+          "slug": "stud-calculator",
+          "why": "Find lengths under a sloping rake wall"
+        },
+        {
+          "slug": "square-layout-calculator",
+          "why": "Check rectangular wall set-out"
+        }
+      ]
+    },
+    {
+      "slug": "shelf-spacing-calculator",
+      "seoTitle": "Shelf Spacing Calculator with Hole Positions",
+      "useFor": "Calculate shelf clearances and optional pin-hole coordinate references.",
+      "notFor": "Hardware load capacity, shelf sag limits or a 1:1 drill jig.",
+      "next": [
+        {
+          "slug": "hole-spacing-calculator",
+          "why": "Plan a generic row of drilling centers"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Lay out equal centers without shelf thickness"
+        },
+        {
+          "slug": "wainscoting-calculator",
+          "why": "Plan evenly divided wall finish panels"
+        }
+      ]
+    },
+    {
+      "slug": "gable-roof-calculator",
+      "seoTitle": "Gable Roof Calculator for Area and Pitch",
+      "useFor": "Estimate a symmetric gable roof's slope lengths and surface area.",
+      "notFor": "Hip or valley roof cuts, sheathing nesting, or a structural roof design.",
+      "next": [
+        {
+          "slug": "roof-sheathing-calculator",
+          "why": "Estimate roof sheet quantities from panels"
+        },
+        {
+          "slug": "rafter-calculator",
+          "why": "Calculate the common rafter's cut geometry"
+        },
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Convert roof slope to angle"
+        }
+      ]
+    },
+    {
+      "slug": "square-layout-calculator",
+      "seoTitle": "Square Layout Calculator for Diagonal Checks",
+      "useFor": "Compare diagonals when setting out a rectangle or foundation footprint.",
+      "notFor": "Structural footing design, concrete volume or a survey-grade report.",
+      "next": [
+        {
+          "slug": "diagonal-brace-calculator",
+          "why": "Measure a brace across two set-out points"
+        },
+        {
+          "slug": "wall-stud-calculator",
+          "why": "Mark the studs on a checked wall footprint"
+        },
+        {
+          "slug": "deck-material-calculator",
+          "why": "Plan deck material after confirming layout geometry"
+        }
+      ]
+    },
+    {
+      "slug": "diagonal-brace-calculator",
+      "seoTitle": "Diagonal Brace Calculator for Angle and Length",
+      "useFor": "Compute reference diagonal length and angle between two measured legs.",
+      "notFor": "Engineered diagonal bracing resistance or an approved load path.",
+      "next": [
+        {
+          "slug": "square-layout-calculator",
+          "why": "Check whether the overall rectangle is square"
+        },
+        {
+          "slug": "rise-run-calculator",
+          "why": "Convert the brace slope angle"
+        },
+        {
+          "slug": "wall-stud-calculator",
+          "why": "Place studs along the related straight wall"
+        }
+      ]
+    },
+    {
+      "slug": "hole-spacing-calculator",
+      "seoTitle": "Hole Spacing Calculator for Drill Centers",
+      "useFor": "Calculate repeated hole centers and edge offsets for a drilling line.",
+      "notFor": "A calibrated drill jig, fastener edge-distance code or shelf loading.",
+      "next": [
+        {
+          "slug": "shelf-spacing-calculator",
+          "why": "Place specific support holes for shelves"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Use generic evenly spaced reference marks"
+        },
+        {
+          "slug": "kerf-bending-calculator",
+          "why": "Layout kerfs rather than drill holes"
+        }
+      ]
+    },
+    {
+      "slug": "stair-stringer-calculator",
+      "seoTitle": "Stair Stringer Calculator for Notch Geometry",
+      "useFor": "Compute nominal straight stringer notches and modeled side-profile stations.",
+      "notFor": "Approved bearing cuts, structural stringer capacity or spiral stairs.",
+      "next": [
+        {
+          "slug": "stair-calculator",
+          "why": "Calculate rise, run and tread counts first"
+        },
+        {
+          "slug": "rise-run-calculator",
+          "why": "Double-check the pitch of the overall run"
+        },
+        {
+          "slug": "diagonal-brace-calculator",
+          "why": "Use a separate straight diagonal reference"
+        }
+      ]
+    },
+    {
+      "slug": "roof-sheathing-calculator",
+      "seoTitle": "Roof Sheathing Calculator for Panel Takeoff",
+      "useFor": "Estimate roof panel pieces and optional sheet-stock bounding-box reuse.",
+      "notFor": "Hip valley panel cuts outside the entered geometry or an approved roof nailing schedule.",
+      "next": [
+        {
+          "slug": "hip-roof-calculator",
+          "why": "Lay out hip roof polygon cuts"
+        },
+        {
+          "slug": "gable-roof-calculator",
+          "why": "Calculate the roof plane area"
+        },
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Convert roof slope before panel estimates"
+        }
+      ]
+    },
+    {
+      "slug": "fence-post-calculator",
+      "seoTitle": "Fence Post Calculator for Post Spacing",
+      "useFor": "Count fence posts and calculate their center locations along a run.",
+      "notFor": "Fence picket layout, post embedment or wind-load structural design.",
+      "next": [
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Distribute narrow railing balusters"
+        },
+        {
+          "slug": "square-layout-calculator",
+          "why": "Check a rectangular garden or fence set-out"
+        },
+        {
+          "slug": "deck-material-calculator",
+          "why": "Estimate separate deck materials"
+        }
+      ]
+    }
+  ]
+}
