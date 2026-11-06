@@ -104,7 +104,7 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
       if(seen.has(fingerprint))continue;
       seen.add(fingerprint);
       const increase=piece.cutLength+(bar.cuts.length?kerf:0);
-      if(bar.used+increase>bar.offer.stockLength+1e-8)continue;
+      if(q(bar.used+increase)>q(bar.offer.stockLength))continue;
       const previous=bar.used;
       bar.used=q(previous+increase);bar.cuts.push(piece);
       visit(index+1);
@@ -113,7 +113,7 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
     }
     for(let k=0;k<offers.length;k++){
       const offer=offers[k];
-      if(piece.cutLength>offer.stockLength+1e-8)continue;
+      if(q(piece.cutLength)>q(offer.stockLength))continue;
       groups[k]++;
       bins.push({offer,used:q(piece.cutLength),cuts:[piece]});
       visit(index+1);
@@ -573,7 +573,7 @@ export function compute(slug,a){
       const available=quoted.length?quoted:[offers[0]];
       const ordered=[...group.items].sort((u,v)=>
         v.cutLength-u.cutLength||u.item.localeCompare(v.item));
-      const fitting=ordered.length?available.filter(o=>ordered.every(p=>p.cutLength<=o.stockLength+1e-8)):[];
+      const fitting=ordered.length?available.filter(o=>ordered.every(p=>q(p.cutLength)<=q(o.stockLength))):[];
       const candidates=[];
       const makeBar=(source,cuts)=>({
         offer:source,used:q(cuts.reduce((sum,p,i)=>sum+p.cutLength+(i?a.stockKerf:0),0)),
@@ -583,7 +583,7 @@ export function compute(slug,a){
       for(const o of fitting){
         const bars=[];
         for(const p of ordered){
-          let bar=bars.find(b=>b.used+p.cutLength+(b.cuts.length?a.stockKerf:0)<=o.stockLength+1e-8);
+          let bar=bars.find(b=>q(b.used+p.cutLength+(b.cuts.length?a.stockKerf:0))<=q(o.stockLength));
           if(!bar){bar=makeBar(o,[]);bars.push(bar);}
           bar.cuts.push(p);
           bar.used=q(bar.used+p.cutLength+(bar.cuts.length>1?a.stockKerf:0));
@@ -602,7 +602,7 @@ export function compute(slug,a){
             const selected=[];let used=0;
             for(const p of pending){
               const needed=p.cutLength+(selected.length?a.stockKerf:0);
-              if(used+needed<=o.stockLength+1e-8){
+              if(q(used+needed)<=q(o.stockLength)){
                 selected.push(p);used=q(used+needed);
               }
             }
@@ -690,6 +690,11 @@ export function compute(slug,a){
           cutsLength=q(b.cuts.reduce((s,p)=>s+p.cutLength,0)),
           barKerf=q(Math.max(0,b.cuts.length-1)*a.stockKerf),
           remaining=q(Math.max(0,b.offer.stockLength-b.used));
+        // No selected cutting sequence may use more physical length than
+        // the quoted stock. Clamping a negative offcut to zero is not proof.
+        need(q(b.used)<=q(b.offer.stockLength)&&
+          b.cuts.every(piece=>q(piece.cutLength)<=q(b.offer.stockLength)),
+          "A framing cut exceeds its purchased stock length.");
         sumCut+=cutsLength;sumOffcut+=remaining;sumKerf+=barKerf;
         stockPlan.push({stockGroup:group.name,stockId,offerLabel:b.offer.label,
           offerCode:b.offer.code,stockLength:q(b.offer.stockLength),
@@ -1121,7 +1126,7 @@ export function compute(slug,a){
     const quoteJoists=a.joistStockLength>0;
     need(quoteJoists||a.joistUnitPrice===0,
       "Enter purchased joist stock length before quoting joist materials.");
-    need(!quoteJoists||a.joistStockLength+1e-8>=a.width,
+    need(!quoteJoists||q(a.joistStockLength)>=q(a.width),
       "Purchased joist stock cannot cover full deck width; splicing is not modeled.");
     const joistPurchaseCount=quoteJoists?
       ceilStable(joistGrid.length*(1+a.waste/100)):0;
@@ -1133,10 +1138,10 @@ export function compute(slug,a){
     // certify sufficient bearing, fasteners, double joists or safe joist spans.
     const cutEnds=[0],seamCenters=[];
     let cutStart=0;
-    while(a.length-cutStart>a.stock+1e-8){
+    while(q(a.length-cutStart)>q(a.stock)){
       let seam=null;
       for(const center of joistGrid){
-        if(center>cutStart+1e-8&&center<a.length-1e-8&&center<=cutStart+a.stock+1e-8)seam=center;
+        if(center>cutStart+1e-8&&center<a.length-1e-8&&q(center-cutStart)<=q(a.stock))seam=center;
       }
       need(seam!==null,"No intermediate joist center is reachable with this stock length. Use longer stock or closer joist centers; butt joints cannot be placed on the entered reference grid.");
       seamCenters.push(q(seam));
@@ -1151,8 +1156,8 @@ export function compute(slug,a){
     // the reverse solution only when the user explicitly opts in.
     const reverse=[a.length];
     let right=a.length;
-    while(right>a.stock+1e-8){
-      const center=joistGrid.find(x=>x>1e-8&&x<right-1e-8&&x>=right-a.stock-1e-8);
+    while(q(right)>q(a.stock)){
+      const center=joistGrid.find(x=>x>1e-8&&x<right-1e-8&&q(right-x)<=q(a.stock));
       need(center!==undefined,
         "Reverse seam layout cannot reach a support center with the entered stock.");
       reverse.unshift(q(center));right=center;
@@ -1190,7 +1195,7 @@ export function compute(slug,a){
         const start=referenceStart+(j>0?a.buttEndGap/2:0);
         const end=referenceEnd-(j<ends.length-2?a.buttEndGap/2:0);
         const segment=end-start;
-        need(segment>1e-8&&segment<=a.stock+1e-7,
+        need(segment>1e-8&&q(segment)<=q(a.stock),
           "Butt-end gaps consume a board cut or a cut exceeds purchased stock length.");
         need(j===ends.length-2||joistGrid.some(x=>Math.abs(x-referenceEnd)<1e-7),
           "Butt seam is not on the measured joist-center reference.");
@@ -1206,6 +1211,8 @@ export function compute(slug,a){
           }:{})});
       }
     }
+    need(schedule.every(row=>q(row.cutLength)<=q(a.stock)),
+      "At least one physical decking cut is longer than purchased stock.");
     for(const [i,x] of joistGrid.entries())schedule.push({
       item:"Joist reference "+(i+1),type:quoteJoists?"Joist straight cut":"Joist center",
       acrossStart:null,alongStart:null,
