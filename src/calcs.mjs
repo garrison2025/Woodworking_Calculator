@@ -360,7 +360,10 @@ export function reallocateFramingOffcuts(stockPlan,{
         offerLabel:b.offerLabel,index:i+1,item:p.item,type:p.type,
         originalStockId:p.originalStockId,cutLength:p.cutLength,
         kerfBefore:q(before),cutStart:start,cutEnd:end,
-        stockLength:q(b.stockLength),remainingLength:q(Math.max(0,b.stockLength-end))};
+        stockLength:q(b.stockLength),endTrim:q(endTrim),
+        finalSeverKerf:q(state.sever),
+        usableOffcutLength:q(Math.max(0,state.tail)),
+        remainingLength:q(Math.max(0,b.stockLength-end))};
       barRows.push(row);rows.push(row);
       present.push(b.stockGroup+"|"+p.item);
       used=end;
