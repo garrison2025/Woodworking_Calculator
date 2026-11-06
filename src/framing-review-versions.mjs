@@ -285,7 +285,11 @@ export function compareFramingReviewVersions(reference,current){
 export function proposeFramingMeasurementRestore(reference,current){
   validateFramingReviewVersion(reference);
   validateFramingReviewVersion(current);
-  if(reference.versionIds.layout!==current.versionIds.layout)
+  // Compare canonical full source/member/interval content in addition to
+  // the deliberately non-cryptographic display checksum. Never grant a
+  // restore on a checksum collision or a changed source geometry.
+  if(reference.versionIds.layout!==current.versionIds.layout||
+    JSON.stringify(reference.parts.layout)!==JSON.stringify(current.parts.layout))
     throw Error("RESTORE BLOCKED — source layout differs from the reference.");
   const sourceIds=new Set(current.parts.layout.bars.map(b=>b.stockId));
   const previous=reference.parts.measurement;
