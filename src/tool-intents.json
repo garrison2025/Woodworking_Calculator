@@ -144,7 +144,7 @@
     },
     {
       "slug": "kerf-bending-calculator",
-      "seoTitle": "Kerf Bending Calculator for Cut Spacing",
+      "seoTitle": "Kerf Calculator for Bending Cut Spacing",
       "useFor": "Model kerf stations around an intended bending arc.",
       "notFor": "A guaranteed bend radius, material strength or safe blade path.",
       "next": [
@@ -184,7 +184,7 @@
     },
     {
       "slug": "stair-calculator",
-      "seoTitle": "Straight Stair Calculator for Rise and Treads",
+      "seoTitle": "Stair Treads Calculator for Straight Stair Rise and Run",
       "useFor": "Calculate straight stair riser, tread and total run geometry.",
       "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
       "next": [
@@ -224,7 +224,7 @@
     },
     {
       "slug": "deck-material-calculator",
-      "seoTitle": "Deck Material Calculator and Estimator",
+      "seoTitle": "Deck Estimator – Deck Material Calculator",
       "useFor": "Estimate deck material quantities and modeled joist or board layouts.",
       "notFor": "Engineered joist-span capacity, footings, approved beams or fasteners.",
       "next": [
@@ -304,7 +304,7 @@
     },
     {
       "slug": "hip-rafter-calculator",
-      "seoTitle": "Hip Rafter Calculator for Diagonal Runs",
+      "seoTitle": "Hip Rafter Calculator for Diagonal Roof Lines",
       "useFor": "Calculate hip-rafter diagonal run and pitched line reference geometry.",
       "notFor": "A complete hip roof sheathing layout, birdsmouth, or engineered timber.",
       "next": [
@@ -314,7 +314,7 @@
         },
         {
           "slug": "rafter-calculator",
-          "why": "Calculate a common rather than hip rafter"
+          "why": "Calculate a common rafter rather than a hip rafter"
         },
         {
           "slug": "roof-pitch-calculator",
@@ -404,7 +404,7 @@
     },
     {
       "slug": "square-layout-calculator",
-      "seoTitle": "Square Layout Calculator for Diagonal Checks",
+      "seoTitle": "Foundation Square Calculator for Layout Diagonals",
       "useFor": "Compare diagonals when setting out a rectangle or foundation footprint.",
       "notFor": "Structural footing design, concrete volume or a survey-grade report.",
       "next": [
@@ -424,7 +424,7 @@
     },
     {
       "slug": "diagonal-brace-calculator",
-      "seoTitle": "Diagonal Brace Calculator for Angle and Length",
+      "seoTitle": "Cross Brace Angle Calculator – Diagonal Length",
       "useFor": "Compute reference diagonal length and angle between two measured legs.",
       "notFor": "Engineered diagonal bracing resistance or an approved load path.",
       "next": [
