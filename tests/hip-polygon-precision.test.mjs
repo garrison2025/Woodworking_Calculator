@@ -94,6 +94,10 @@ test("hip: reuse stock polygons preserve footprint, kerf, area and unrounded tin
     Math.max(1e-5,plan.stockAreaSqIn*1e-8));
   const cols=scheduleColumns(plan.rows,"mm");
   assert.ok(cols.some(c=>c.label==="Stock Cut Vertices (mm)"));
+  assert.ok(cols.some(c=>c.label==="Installed Area (m²)"));
+  assert.ok(cols.some(c=>c.label==="Rectangular Box Area (m²)"));
+  assert.ok(!cols.some(c=>c.label.includes("Ft2")),
+    "Area headings must not mix an imperial field name with a metric unit");
   const csv=buildScheduleCsv(plan.rows,"mm");
   assert.equal(csv.split("\r\n").filter(Boolean).length,18);
   assert.ok(!csv.includes('"Installed Area (m²)","0"'));
