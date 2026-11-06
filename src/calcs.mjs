@@ -255,7 +255,7 @@ function layoutHipSheets(major,minor,factor,sheetAlong,sheetUphill){
  * This proves non-overlap in the *chosen* placements, not minimum stock.
  * The one explicit kerf applies at split lines within each free rectangle.
  */
-function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
+export function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
   need(parts.length>0&&parts.length<=400,
     "Reuse plan is bounded to 400 roof cut pieces; use a larger sheet or disable reuse.");
   need(stockWidth>0&&stockHeight>0&&kerf>=0&&kerf<Math.min(stockWidth,stockHeight),
@@ -267,15 +267,18 @@ function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
   const boards=[],out=[];
   let kerfLost=0,polygonWasted=0;
   for(const item of ordered){
+    // Admission uses the SAME 1e-8-inch coordinates as the exported cut
+    // schedule. The earlier +1e-7 tolerance could silently fit a 10.00000005
+    // inch piece in a 10 inch sheet (or occupied free slot).
     need(item.width>=1e-7&&item.height>=1e-7&&
-      item.width<=stockWidth+1e-7&&item.height<=stockHeight+1e-7,
+      q(item.width)<=q(stockWidth)&&q(item.height)<=q(stockHeight),
       "At least one roof cut bounding rectangle cannot fit the full stock sheet.");
     need(item.actualArea>0&&item.actualArea<=item.width*item.height+
       Math.max(1e-6,item.width*item.height*1e-8),
       "Roof polygon area is inconsistent with its stock bounding rectangle.");
     let winner=null;
     for(const board of boards)for(const [j,free] of board.free.entries()){
-      if(item.width>free.width+1e-7||item.height>free.height+1e-7)continue;
+      if(q(item.width)>q(free.width)||q(item.height)>q(free.height))continue;
       const excess=free.width*free.height-item.width*item.height;
       if(!winner||excess<winner.excess-1e-9)
         winner={board,index:j,free,excess};
@@ -318,6 +321,18 @@ function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
       rectangularBoxAreaFt2:(item.width*item.height)/144,
       stockCutVertices:item.vertices.map(([x,y])=>[q(free.x+x),q(free.y+y)])
     };
+    // Validate the coordinates the customer actually receives. Raw floating
+    // point fit alone is insufficient if rounded X + rounded width escapes
+    // the original sheet or if a rounded vertex leaves its cut envelope.
+    need(row.stockX>=0&&row.stockY>=0&&
+      row.stockX+row.boxWidth<=q(stockWidth)+1e-12&&
+      row.stockY+row.boxHeight<=q(stockHeight)+1e-12,
+      "Roof reuse stock placement extends outside the physical sheet.");
+    need(row.stockCutVertices.every(([x,y])=>
+      x>=row.stockX-1e-8&&y>=row.stockY-1e-8&&
+      x<=row.stockX+row.boxWidth+1e-8&&
+      y<=row.stockY+row.boxHeight+1e-8),
+      "Roof cut polygon extends outside its allocated stock rectangle.");
     board.placements.push(row);out.push(row);
   }
   // Put user-visible schedule back in original roof-position order.
@@ -339,7 +354,7 @@ function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
         Math.max(a.stockX,b.stockX);
       const overlapY=Math.min(a.stockY+a.boxHeight,b.stockY+b.boxHeight)-
         Math.max(a.stockY,b.stockY);
-      need(overlapX<=1e-7||overlapY<=1e-7,
+      need(overlapX<=1e-8||overlapY<=1e-8,
         "Roof reuse layout accidentally places overlapping stock bounding boxes.");
     }
   }
