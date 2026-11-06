@@ -50,8 +50,8 @@ test("Independent same-profile offcut alternative never changes original cutting
   await expect(page.locator('.print-specialty-groups[data-source="framing-reuse-table"] .print-specialty-part')).toHaveCount(2);
   await expect(page.locator('.print-specialty-groups[data-source="framing-reuse-purchase-table"] .print-specialty-part')).toHaveCount(2);
   const printText=await page.locator('.print-specialty-groups[data-source="framing-reuse-table"]').innerText();
-  expect(printText).toContain("Original stock");
-  expect(printText).toContain("Alternative stock");
+  expect(printText).toContain("Original Stock");
+  expect(printText).toContain("Alternative Stock");
   const pdf=await page.pdf({format:"Letter",printBackground:true});
   expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
   expect(pdf.length).toBeGreaterThan(10000);
