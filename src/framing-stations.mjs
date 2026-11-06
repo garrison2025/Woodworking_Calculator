@@ -6,7 +6,7 @@
  * Never use the independently modelled reserve sticks as cut sources:
  * only plan.bars with already assigned, uniquely identified members.
  */
-export function makeFramingStationLedger(plan){
+export function makeFramingStationLedger(plan,originalStockPlan){
   if(!plan?.enabled||!Array.isArray(plan.bars)||!plan.bars.length||
     !Array.isArray(plan.rows)||!plan.rows.length){
     return {available:false,rows:[],bars:[],memberCount:0,sourceCount:0,
@@ -20,6 +20,20 @@ export function makeFramingStationLedger(plan){
     if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a-b)>EPS)
       throw Error("Station ledger mismatch: "+reason+".");
   };
+  if(!Array.isArray(originalStockPlan)||!originalStockPlan.length)
+    throw Error("Station ledger requires the independent original cutting plan.");
+  const originalStocks=new Map(),originalMembers=new Map();
+  for(const bar of originalStockPlan){
+    if(originalStocks.has(bar.stockId))
+      throw Error("Station ledger original stock IDs are not unique.");
+    originalStocks.set(bar.stockId,bar);
+    for(const cut of bar.cuts||[]){
+      const key=bar.stockGroup+"|"+cut.item;
+      if(originalMembers.has(key))
+        throw Error("Station ledger duplicate baseline member.");
+      originalMembers.set(key,{stockId:bar.stockId,length:cut.cutLength});
+    }
+  }
   const rows=[],summaries=[],ids=new Set(),memberIds=new Set();
   const allRows=new Map();
   for(const member of plan.rows){
@@ -34,6 +48,10 @@ export function makeFramingStationLedger(plan){
     if(ids.has(source.stockId))throw Error("Station ledger duplicate source stock ID.");
     ids.add(source.stockId);
     const L=source.actualStockLength;
+    const originalSource=originalStocks.get(source.stockId);
+    if(!originalSource||originalSource.stockGroup!==source.stockGroup||
+      Math.abs((originalSource.actualStockLength??originalSource.stockLength)-L)>1e-12)
+      throw Error("Station ledger source profile/real length disagrees with baseline.");
     if(!Number.isFinite(L)||L<=0||!source.cuts?.length)
       throw Error("Station ledger needs a positive real source length and assigned pieces.");
     const first=source.cuts[0],trim=first.endTrim;
@@ -66,10 +84,11 @@ export function makeFramingStationLedger(plan){
       if(origin?.item!==cut.item||origin?.stockGroup!==source.stockGroup||
         origin?.originalStockId!==cut.originalStockId)
         throw Error("Station ledger disagrees with exported alternative placement.");
-      const identity=cut.stockGroup+"|"+cut.item;
-      // Cut rows currently omit stockGroup on the bar-local copy, so check
-      // using the exact parent stock group.
       const validIdentity=source.stockGroup+"|"+cut.item;
+      const originalMember=originalMembers.get(validIdentity);
+      if(!originalMember||originalMember.stockId!==cut.originalStockId||
+        Math.abs(originalMember.length-cut.cutLength)>EPS)
+        throw Error("Station ledger retained member differs from original cutting plan.");
       if(visitedMembers.has(validIdentity))
         throw Error("Station ledger repeats a retained cut.");
       visitedMembers.add(validIdentity);
@@ -115,6 +134,8 @@ export function makeFramingStationLedger(plan){
     });
   }
   if(allRows.size!==ids.size||visitedMembers.size!==memberIds.size||
+    memberIds.size!==originalMembers.size||
+    [...originalMembers.keys()].some(x=>!visitedMembers.has(x))||
     [...memberIds].some(x=>!visitedMembers.has(x)))
     throw Error("Station ledger does not cover all reallocated members.");
   return {available:true,rows,bars:summaries,sourceCount:summaries.length,
