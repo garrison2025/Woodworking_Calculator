@@ -1,4 +1,10 @@
-# UI release evidence — 2026-11-04
+# UI release evidence — historical evidence and current scope
+## Current UX candidate — 2026-11-07, requires PR #13 verification
+
+- Current manifest contains 31 active tools and six populated categories, and the homepage was corrected to derive both counts and drawing label from this manifest.
+- Added browser-local task search of existing prerendered links, Clear history for local recent-tool storage, and new Chromium/static regression checks including 390px. New functionality is NOT marked PASS until its fresh CI succeeds.
+- Previous [Actions #670](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42205140952) passed core automated tests; actual Android/iOS touch, macOS Safari, NVDA/VoiceOver, aesthetic review, real printer calibration and field cutting have not been completed by this change.
+
 ## Verified
 - Practical three-panel desktop calculator: measurement controls, original geometry SVG, live numeric takeoff; mobile order: input → results → diagram → schedule and method.
 - Actual Playwright Chromium navigation and input→result updates passed on **all 26 routes**. Unit dropdown supports inches, feet, millimeters, centimeters and meters.
