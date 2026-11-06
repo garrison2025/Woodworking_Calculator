@@ -1,5 +1,6 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
+import {makeFramingStationLedger} from "./framing-stations.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -32,6 +33,10 @@ if(slug){
   const stockReusePriceTable=document.querySelector("#framing-reuse-purchase-table tbody");
   const stockReuseExport=document.querySelector("#download-framing-reuse-csv");
   const stockReusePriceExport=document.querySelector("#download-framing-reuse-quote-csv");
+  const stationPanel=document.querySelector("#framing-station-ledger");
+  const stationStatus=document.querySelector("#framing-station-status");
+  const stationTable=document.querySelector("#framing-station-table tbody");
+  const stationExport=document.querySelector("#download-framing-stations-csv");
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
@@ -1003,6 +1008,7 @@ if(slug){
     ["framing-material-table",1,5],["framing-price-table",2,5],
     ["framing-offer-table",2,5],["framing-proof-table",1,5],
     ["framing-reuse-table",3,6],["framing-reuse-purchase-table",2,5],
+    ["framing-station-table",3,6],
     ["deck-budget-table",1,5],["deck-fastener-table",1,5],
     ["stringer-sawline-table",2,5],["stringer-end-lines-table",2,5],
     ["stringer-end-contact-table",2,5],["shelf-pin-table",3,6],
@@ -1101,6 +1107,27 @@ if(slug){
     }
     if(stockReusePanel){
       const alternative=latest?.stockReusePlan;
+      const stationLedger=makeFramingStationLedger(alternative);
+      if(stationPanel){
+        stationPanel.hidden=!stationLedger.available;
+        stationExport.disabled=!stationLedger.available;
+        if(stationLedger.available){
+          stationStatus.textContent="DIMENSIONAL CHECK ONLY — "+
+            stationLedger.sourceCount+" source sticks, "+
+            stationLedger.memberCount+" distinct retained pieces, "+
+            stationLedger.rows.length+" source-length intervals. "+
+            "No physical stock, blade or grade inspection has been performed.";
+          stationTable.innerHTML=stationLedger.rows.map(row=>'<tr>'+
+            [row.stockId,row.stockGroup,row.index,row.segmentKind,
+              row.item||"—",row.originalStockId||"—",
+              fmt(row.stationStart,"L"),fmt(row.stationEnd,"L"),
+              fmt(row.segmentLength,"L")]
+            .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+        }else{
+          stationStatus.textContent="No valid optional source station ledger is available.";
+          stationTable.innerHTML="";
+        }
+      }
       stockReusePanel.hidden=!alternative?.enabled;
       const hasAlternative=alternative?.enabled&&alternative.rows?.length>0;
       stockReuseExport.disabled=!hasAlternative;
@@ -1446,6 +1473,7 @@ if(slug){
       !latest?.stockReusePlan?.rows?.length;
     if(stockReusePriceExport)stockReusePriceExport.disabled=!latest?.stockReusePlan?.enabled||
       !latest?.stockReusePlan?.purchaseVariants?.length;
+    if(stationExport)stationExport.disabled=!makeFramingStationLedger(latest?.stockReusePlan).available;
     if(pricingExport)pricingExport.disabled=!latest?.purchaseVariants?.length;
     if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
@@ -1576,6 +1604,16 @@ if(slug){
       "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
     save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
     status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
+  });
+  stationExport?.addEventListener("click",()=>{
+    if(!latest?.stockReusePlan?.enabled)return;
+    const ledger=makeFramingStationLedger(latest.stockReusePlan);
+    if(!ledger.available)return;
+    const body=buildScheduleCsv(ledger.rows,unit,
+      "DIMENSIONAL ACCOUNTING ONLY, NOT A CUTTING ORDER OR MACHINE TOOLPATH. Every physical stock length, grade, defects, saw kerf, trims, clamping and structural suitability require independent verification. No site-verified cost savings.");
+    save(slug+"-"+unit+"-reallocation-station-ledger.csv",
+      body,"text/csv;charset=utf-8");
+    status.textContent="Independent stock-local dimensional ledger saved; physical inspection required.";
   });
   stockReuseExport?.addEventListener("click",()=>{
     if(!latest?.stockReusePlan?.enabled||!latest.stockReusePlan.rows?.length)return;
