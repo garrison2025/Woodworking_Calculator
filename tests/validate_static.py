@@ -11,10 +11,20 @@ root=Path(__file__).resolve().parents[1]
 dist=root/"dist"
 manifest=json.loads((root/"src"/"tools.json").read_text())
 active=[t for t in manifest["tools"] if t["priority"] in ("P0","P1")]
+intent_manifest=json.loads((root/"src"/"tool-intents.json").read_text(encoding="utf8"))
+intent_entries=intent_manifest["tools"]
+intents={x["slug"]:x for x in intent_entries}
+assert len(intent_entries)==len(intents)==len(active)==26, "Exactly 26 unique active intents required"
+assert set(intents)=={t["slug"] for t in active}, "Intent metadata missing or holding an unpublished P2 route"
+assert all(len(x["next"])==3 for x in intent_entries), "Exactly three specific next-task links per tool"
 with (root/"research"/"woodworking-keyword-map-152.csv").open(newline="",encoding="utf-8") as source:
     research_rows=list(csv.DictReader(source))
 assert len(research_rows)==152, "Expected 152 distinct approved research terms"
 assert len({r["keyword"] for r in research_rows})==152, "Keyword duplicate in export"
+cautions=json.loads((root/"research"/"keyword-intent-cautions.json").read_text(encoding="utf8"))["flagged"]
+flagged={(x["originalRoute"],x["keyword"].lower()) for x in cautions}
+assert len(cautions)==len(flagged), "Duplicated editorial search-intent caution"
+assert flagged<={(x["target_route"],x["keyword"].lower()) for x in research_rows}, "Flagged term lacks original user research evidence"
 known_routes={"/"+t["slug"]+"/" for t in manifest["tools"]}
 for term in research_rows:
     assert term["target_route"] in known_routes, ("Keyword targets missing route",term)
@@ -26,6 +36,7 @@ class Checker(html.parser.HTMLParser):
         super().__init__()
         self.title=False;self.title_text="";self.h1=0;self.robots=[];self.links=[];self.descriptions=[];self.canon=[];self.forms=0
         self.input_ids=[];self.label_targets=set();self.field_note_ids=set()
+        self.context_targets=[]
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
         if tag=="title":self.title=True
@@ -41,6 +52,8 @@ class Checker(html.parser.HTMLParser):
         if tag=="meta" and a.get("name")=="description":self.descriptions.append(a.get("content",""))
         if tag=="link" and a.get("rel")=="canonical":self.canon.append(a.get("href",""))
         if tag=="a" and a.get("href","").startswith("/"):self.links.append(a["href"])
+        if tag=="a" and a.get("data-intent-target"):
+            self.context_targets.append((a["data-intent-target"],a.get("href","")))
     def handle_endtag(self,tag):
         if tag=="title":self.title=False
     def handle_data(self,data):
@@ -71,6 +84,38 @@ for p in pages:
     page_tool=next((t for t in active if t["slug"]==u.strip("/")),None)
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
+        intent=intents[page_tool["slug"]]
+        if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
+            errors.append(f"{u}: SEO title does not match task-specific approved intent")
+        if page_tool["keyword"].lower() not in intent["seoTitle"].lower():
+            errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
+        if len(intent["seoTitle"])<25 or len(intent["seoTitle"])>75:
+            errors.append(f"{u}: SEO title is too generic or overlong")
+        if len(intent["useFor"])<45 or len(intent["notFor"])<42:
+            errors.append(f"{u}: tool intent boundary descriptions are too thin")
+        if 'class="intent-fit"' not in body or 'class="related-box intent-related"' not in body:
+            errors.append(f"{u}: task boundary or contextual-link panel missing")
+        if html.escape(intent["useFor"],quote=True) not in body or html.escape(intent["notFor"],quote=True) not in body:
+            errors.append(f"{u}: task fit or inappropriate-use warning missing")
+        links=intent["next"]
+        targets=[link["slug"] for link in links]
+        if len(targets)!=len(set(targets)) or page_tool["slug"] in targets:
+            errors.append(f"{u}: duplicate or self-targeted related workflow")
+        if any(target not in intents for target in targets):
+            errors.append(f"{u}: linked to an unpublished or unknown workflow")
+        if c.context_targets != [(target,"/"+target+"/") for target in targets]:
+            errors.append(f"{u}: generated contextual links do not follow the curated intent map")
+        for link in links:
+            if len(link["why"])<25 or html.escape(link["why"],quote=True) not in body:
+                errors.append(f"{u}: missing practical explanation for next calculator {link['slug']}")
+        # A captured SERP keyword that does not match the actual calculator
+        # task is kept in research records but cannot be marketed as a live
+        # functionality synonym in the generic nearby-search paragraph.
+        nearby=re.search(r'Other research search phrases.*?</p>',body)
+        if nearby:
+            for route,term in flagged:
+                if route==u and term in html.unescape(nearby.group(0)).lower():
+                    errors.append(f"{u}: flagged nonmatching search phrase used as a claimed synonym: {term}")
         expected={"f-"+field["key"] for field in page_tool["inputs"]}
         if len(c.input_ids)!=len(set(c.input_ids)):
             errors.append(f"{u}: duplicated calculator field IDs")
