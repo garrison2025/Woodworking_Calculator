@@ -1160,6 +1160,7 @@ if(slug){
     }
     const result=compareFramingReviewVersions(versionState.reference,current);
     versionState.difference=result;
+    versionDiffCsv.disabled=result.changes.length===0;
     if(!versionStatus.textContent.startsWith("IMPORT REJECTED")){
       versionStatus.textContent=result.samePacket?
         "SAME PACKET — "+result.currentId+
@@ -1371,6 +1372,64 @@ if(slug){
       finalSeverKerf:fieldDraft.finalSeverKerf});
     renderPurchaseReview(ledger,review);
   });
+  versionPin?.addEventListener("click",()=>{
+    if(!versionState.current)return;
+    versionState.reference=JSON.parse(JSON.stringify(versionState.current));
+    versionState.importError=null;
+    refreshReviewVersionPanel();
+    status.textContent="Local reference pinned for comparison only. Download JSON to retain it after this page is closed.";
+  });
+  versionJson?.addEventListener("click",()=>{
+    if(!versionState.current)return;
+    validateFramingReviewVersion(versionState.current);
+    const version=versionState.current;
+    const exportData={...version,exportedAtUtc:new Date().toISOString(),
+      exportedFrom:"Woodworking Calculator · optional Framing pre-purchase self-report"};
+    save(slug+"-"+version.versionIds.packet+"-self-reported-reference.json",
+      JSON.stringify(exportData,null,2)+"\n","application/json;charset=utf-8");
+    status.textContent="Local reference JSON downloaded. Not a signed inspection or purchase approval.";
+  });
+  versionImport?.addEventListener("change",async event=>{
+    const file=event.target.files?.[0];
+    if(!file)return;
+    try{
+      if(file.size<=0||file.size>2000000)
+        throw Error("Reference must be a nonempty JSON file under 2 MB.");
+      const imported=JSON.parse(await file.text());
+      validateFramingReviewVersion(imported);
+      if(!versionState.current)
+        throw Error("Activate a valid current Framing alternative before comparison.");
+      // Fully exercise the diff on the imported shape before adopting it.
+      compareFramingReviewVersions(imported,versionState.current);
+      versionState.reference=JSON.parse(JSON.stringify(imported));
+      versionState.importError=null;
+      refreshReviewVersionPanel();
+      status.textContent="Reference compared locally. This does not authenticate the file or authorize buying.";
+    }catch(err){
+      versionState.importError=String(err?.message||err).slice(0,240);
+      refreshReviewVersionPanel();
+    }finally{
+      event.target.value="";
+    }
+  });
+  versionDiffCsv?.addEventListener("click",()=>{
+    const diff=versionState.difference;
+    if(!diff||!diff.changes.length||!versionState.current||
+      !versionState.reference)return;
+    const rows=diff.changes.map(row=>({...row,
+      referencePacketId:diff.referenceId,currentPacketId:diff.currentId,
+      humanApprovalRequired:true,automaticPurchaseAuthorized:false}));
+    const note="CONTENT CHECKSUM COMPARISON ONLY, NOT A DIGITAL SIGNATURE OR PURCHASE AUTHORIZATION. Ref "+diff.referenceId+
+      "; current "+diff.currentId+". Source values are inches for raw dimension changes; prices use the corresponding quote currency, not length units.";
+    // Diff cells are already human-readable raw source values; never run
+    // stock-length conversion on these free-text comparison columns.
+    save(slug+"-"+diff.referenceId+"-to-"+diff.currentId+
+      "-review-differences.csv",
+      buildScheduleCsv(rows,unit,note),"text/csv;charset=utf-8");
+    status.textContent="Complete local reference comparison saved as CSV; original purchase documents unchanged.";
+  });
+  const optionalVersionNote=()=>versionState.current?
+    " "+framingReviewVersionNote(versionState.current,versionState.reference):"";
   const renderFramingTakeoff=()=>{
     if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
     const audit=latest?.stockAudit;
