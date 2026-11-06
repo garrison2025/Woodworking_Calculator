@@ -12,7 +12,9 @@
         "board": 5.5,
         "gap": 0.125,
         "stock": 144,
-        "waste": 10
+        "waste": 10,
+        "boardEndTrim": 0,
+        "boardCrosscutKerf": 0
       },
       "checks": [
         {
@@ -44,7 +46,9 @@
         "board": 5.5,
         "gap": 0.25,
         "stock": 96,
-        "waste": 10
+        "waste": 10,
+        "boardEndTrim": 0,
+        "boardCrosscutKerf": 0
       },
       "checks": [
         {

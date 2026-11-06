@@ -668,7 +668,7 @@ export function inchFraction(value,denominator=16){
   return sign+(whole?whole+" ":"")+(numerator/div)+"/"+(denominator/div)+" in";
 }
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,boardEndTrim:0,boardCrosscutKerf:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1116,8 +1116,17 @@ export function compute(slug,a){
     });
   }
   case "deck-board-calculator":{
-    positive("width","length","board","stock");nonnegative("gap","waste");
+    positive("width","length","board","stock");nonnegative("gap","waste","boardEndTrim","boardCrosscutKerf");
     need(a.waste<=200,"Waste allowance is unreasonably large.");
+    measurableGap(a.boardEndTrim,"Per-end stock trim");
+    measurableGap(a.boardCrosscutKerf,"Per-stock crosscut kerf");
+    // Reserve two rough end trims and ONE conservative separating kerf on
+    // EVERY purchased piece. This is a length budget, not a verified cutting
+    // or joist-supported seam plan. It may overcount real saw loss.
+    const stockLoss=2*a.boardEndTrim+a.boardCrosscutKerf;
+    const usableStock=a.stock-stockLoss;
+    need(usableStock>=1e-7&&q(usableStock)>0,
+      "Stock length must exceed two end trims and the reserved crosscut kerf by a measurable usable length.");
     n=ceilStable((a.width+a.gap)/(a.board+a.gap));
     need(n>=1&&n<=1200,"Board-row count exceeds supported layout.");
     const last=a.width-(n-1)*(a.board+a.gap);
@@ -1128,7 +1137,10 @@ export function compute(slug,a){
     need(Math.abs(faceTotal+gapsTotal-a.width)<=Math.max(1e-7,a.width*1e-10),
       "Board faces and spaces do not close to the entered deck width.");
     const linear=n*a.length;
-    const piecesPerRow=ceilStable(a.length/a.stock);
+    const nominalPiecesPerRow=ceilStable(a.length/a.stock);
+    const piecesPerRow=ceilStable(a.length/usableStock);
+    need(piecesPerRow>=1&&piecesPerRow<=10000&&n*piecesPerRow<=50000,
+      "Stock demand exceeds the supported 50,000-piece estimate; use longer stock or a smaller job.");
     const conservativeOrder=ceilStable(n*piecesPerRow*(1+a.waste/100));
     rows=Array.from({length:n},(_,i)=>{
       const left=i*(a.board+a.gap);
@@ -1147,10 +1159,19 @@ export function compute(slug,a){
       M("Total spaces between board rows",gapsTotal),
       M("Covered deck width",faceTotal+gapsTotal),
       M("Installed linear footage",linear/12,"FT"),
+      M("Measured stock length",a.stock),
+      M("Two end trims plus reserved crosscut kerf",stockLoss),
+      M("Usable stock length after allowance",usableStock),
+      M("Nominal pieces per row (no loss reserve)",nominalPiecesPerRow,"N"),
       M("Stock pieces per row (unverified joints)",piecesPerRow,"N"),
+      M("Rows needing unverified butt-joint locations",piecesPerRow>1?n:0,"N"),
       M("Stock pieces: no offcut reuse",conservativeOrder,"N")
     ],rows.map(row=>P(row.left+row.ripWidth/2,row.item)),a.width,rows,"boards",
-    {boardWidth:a.board,lastWidth:last,boardRows:rows,boardGap:a.gap});
+    {boardWidth:a.board,lastWidth:last,boardRows:rows,boardGap:a.gap,
+      deckBoardStock:{nominalStockLength:a.stock,endTrim:a.boardEndTrim,
+        crosscutKerf:a.boardCrosscutKerf,stockLoss,
+        usableStockLength:q(usableStock),nominalPiecesPerRow,piecesPerRow,
+        requiresJointPlan:piecesPerRow>1,estimatedPieces:conservativeOrder}});
   }
   case "baluster-spacing-calculator":{
     positive("length","width","gap");

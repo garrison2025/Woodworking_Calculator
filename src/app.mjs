@@ -1967,6 +1967,14 @@ if(slug){
       latest=data.data;error.hidden=true;
       renderPrintInputSnapshot();
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
+      if(latest.deckBoardStock?.requiresJointPlan){
+        out.insertAdjacentHTML("beforeend",
+          '<p class="deck-joint-warning" role="note"><strong>Unverified butt joints.</strong> '
+          +'The row exceeds the reserved usable stock length. '
+          +'The stock count is NOT a supported installation plan: butt joints, '
+          +'end bearing, joist centers and fastening remain unverified. '
+          +'Use Deck Material Estimator for a separate joist-center reference.</p>');
+      }
       scheduleCols=latest.rows.length?scheduleColumns(latest.rows,unit):[];
       renderSchedule();
       if(printFullSchedule)renderReadablePrintSchedule();

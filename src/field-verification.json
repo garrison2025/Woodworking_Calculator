@@ -3,7 +3,7 @@
   "checks": {
     "stud-calculator": "Check end-centerline heights and the separate left/right top cuts of each sloped stud face.",
     "framing-calculator": "Compare the measured door/window jamb references with every king, jack, header and sill row before purchasing lumber.",
-    "deck-board-calculator": "Sum all board face widths and clear gaps, including the last rip, to reproduce the target deck coverage.",
+    "deck-board-calculator": "Sum all board face widths and clear gaps, including the last rip, to reproduce the target deck coverage. If the entered board has end trim or reserved saw kerf, physically check each end and compare stock length minus both end trims and kerf against the reported usable length. Multiple stock pieces per row still require a separate verified joist-supported seam plan.",
     "baluster-spacing-calculator": "Sum the physical baluster faces and all between-face and end spaces; local safety limits remain independent.",
     "rafter-calculator": "Confirm half-ridge deduction, horizontal seat, plumb heel and normal remaining throat use different datums.",
     "crown-molding-calculator": "Confirm the corner and spring angle on scrap; the illustration is not a saw-handed cutting instruction.",
