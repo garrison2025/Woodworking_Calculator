@@ -20,6 +20,8 @@ INTENT_FILE = json.loads((ROOT / "src" / "tool-intents.json").read_text(encoding
 INTENTS = {entry["slug"]:entry for entry in INTENT_FILE["tools"]}
 assert len(INTENTS) == len(INTENT_FILE["tools"]) == len(TOOLS), "Intent metadata must cover exactly the released tools"
 assert set(INTENTS) == {t["slug"] for t in TOOLS}, "Missing or extra released-tool intent metadata"
+FIELD_CHECKS = json.loads((ROOT / "src" / "field-verification.json").read_text(encoding="utf-8"))["checks"]
+assert set(FIELD_CHECKS) == set(INTENTS), "Every active tool needs a distinct independent measurement check"
 
 with (ROOT / "research" / "woodworking-keyword-map-152.csv").open(encoding="utf-8", newline="") as keyword_file:
     KEYWORDS = list(csv.DictReader(keyword_file))
@@ -441,6 +443,7 @@ def tool_page(t):
            f'<p>{esc(t["desc"])}</p><p class="intent-query-copy">This tool handles the <strong>{esc(t["keyword"])}</strong> task using the dimensions above. '+(f'Closely related search terms include {esc(related_search_terms)}; the same measurements and geometry apply.' if related_search_terms else 'The results use one explicit dimensional model and set of measurements.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
+            f'<section class="field-verification" aria-label="Independent measurement review"><h3>How to independently verify your result</h3><p>{esc(FIELD_CHECKS[t["slug"]])}</p><p class="field-caution">Use actual measured reference faces and the numeric CSV. This is a review prompt, not a completed field inspection or structural approval.</p></section>'
             '<h3>Assumptions and limits</h3>'
            '<h3 class="print-only-heading">Worksheet assumptions &amp; safety limits</h3>'
            f'<p id="print-assumptions">{esc(t["limit"])}</p>'

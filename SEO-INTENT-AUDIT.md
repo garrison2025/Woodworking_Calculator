@@ -88,3 +88,7 @@ Original historical research assignments are **not rewritten**. These terms are 
 ## 2026-11-06 — Fence Picket and Gambrel Roof promoted from researched P2
 
 The baseline figures above refer to the prior 26/5 release. This update adds two independently implemented geometry tools: **28 active P0/P1**, **3 still held P2** (spiral staircase, lumber price, stave), maintaining the complete **152 original Semrush rows unchanged**. Gambrel truss-related queries remain explicitly excluded from the mathematical gambrel roof tool's SEO synonym claims. Fence Picket uses measured inner-post clear span and two distinct end-gap conventions; its optional stepped top is NOT a curved template. Gambrel uses two distinct symmetric slopes; it is NOT structural roof-truss design. All new routes must pass Node/browser/CSV/SVG and offline SEO release gates before publication, and the pages.dev preview remains noindex.
+
+## 2026-11-06 — 28 task-specific field-verification prompts
+
+Each active calculator now contains a distinct, task-aligned independent measurement checklist instruction, separate from its formula and safety disclaimer. The review instructions explicitly identify physical datums, material faces or cut coordinates to compare with CSV; no check is claimed as completed or mechanically safe. Original 152-row Semrush research dataset and preview noindex gate are unchanged.

@@ -3,6 +3,7 @@ import {readFileSync} from "node:fs";
 
 const intents=JSON.parse(readFileSync(new URL("../../src/tool-intents.json",import.meta.url),"utf8")).tools;
 const manifest=JSON.parse(readFileSync(new URL("../../src/tools.json",import.meta.url),"utf8")).tools;
+const fieldChecks=JSON.parse(readFileSync(new URL("../../src/field-verification.json",import.meta.url),"utf8")).checks;
 const active=manifest.filter(t=>t.priority==="P0"||t.priority==="P1");
 const bySlug=new Map(intents.map(t=>[t.slug,t]));
 
@@ -34,6 +35,8 @@ test("All 28 calculator landings explain real search tasks and link only to vali
       expect(dest,"linked to an unreleased P2 or non-tool route").toBeTruthy();
     }
     await expect(page.locator(".intent-query-copy")).toBeVisible();
+    await expect(page.locator(".field-verification")).toContainText(fieldChecks[t.slug]);
+    await expect(page.locator(".field-verification")).toContainText("not a completed field inspection");
   }
 });
 

@@ -14,6 +14,8 @@ active=[t for t in manifest["tools"] if t["priority"] in ("P0","P1")]
 intent_manifest=json.loads((root/"src"/"tool-intents.json").read_text(encoding="utf8"))
 intent_entries=intent_manifest["tools"]
 intents={x["slug"]:x for x in intent_entries}
+field_checks=json.loads((root/"src"/"field-verification.json").read_text(encoding="utf8"))["checks"]
+assert set(field_checks)==set(intents), "All active tools require task-specific field checks"
 assert len(intent_entries)==len(intents)==len(active)==28, "Exactly 26 unique active intents required"
 assert set(intents)=={t["slug"] for t in active}, "Intent metadata missing or holding an unpublished P2 route"
 assert all(len(x["next"])==3 for x in intent_entries), "Exactly three specific next-task links per tool"
@@ -100,6 +102,8 @@ for p in pages:
             errors.append(f"{u}: SEO title is too generic or overlong")
         if len(intent["useFor"])<45 or len(intent["notFor"])<42:
             errors.append(f"{u}: tool intent boundary descriptions are too thin")
+        if 'class="field-verification"' not in body or html.escape(field_checks[page_tool["slug"]],quote=True) not in body:
+            errors.append(f"{u}: task-specific field verification missing")
         if 'class="intent-fit"' not in body or 'class="related-box intent-related"' not in body:
             errors.append(f"{u}: task boundary or contextual-link panel missing")
         if html.escape(intent["useFor"],quote=True) not in body or html.escape(intent["notFor"],quote=True) not in body:
