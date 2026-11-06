@@ -1107,7 +1107,7 @@ if(slug){
     }
     if(stockReusePanel){
       const alternative=latest?.stockReusePlan;
-      const stationLedger=makeFramingStationLedger(alternative);
+      const stationLedger=makeFramingStationLedger(alternative,latest?.stockPlan);
       if(stationPanel){
         stationPanel.hidden=!stationLedger.available;
         stationExport.disabled=!stationLedger.available;
@@ -1473,7 +1473,7 @@ if(slug){
       !latest?.stockReusePlan?.rows?.length;
     if(stockReusePriceExport)stockReusePriceExport.disabled=!latest?.stockReusePlan?.enabled||
       !latest?.stockReusePlan?.purchaseVariants?.length;
-    if(stationExport)stationExport.disabled=!makeFramingStationLedger(latest?.stockReusePlan).available;
+    if(stationExport)stationExport.disabled=!makeFramingStationLedger(latest?.stockReusePlan,latest?.stockPlan).available;
     if(pricingExport)pricingExport.disabled=!latest?.purchaseVariants?.length;
     if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
@@ -1607,7 +1607,7 @@ if(slug){
   });
   stationExport?.addEventListener("click",()=>{
     if(!latest?.stockReusePlan?.enabled)return;
-    const ledger=makeFramingStationLedger(latest.stockReusePlan);
+    const ledger=makeFramingStationLedger(latest.stockReusePlan,latest.stockPlan);
     if(!ledger.available)return;
     const body=buildScheduleCsv(ledger.rows,unit,
       "DIMENSIONAL ACCOUNTING ONLY, NOT A CUTTING ORDER OR MACHINE TOOLPATH. Every physical stock length, grade, defects, saw kerf, trims, clamping and structural suitability require independent verification. No site-verified cost savings.");
