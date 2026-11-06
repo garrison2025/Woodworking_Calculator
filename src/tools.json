@@ -2431,18 +2431,89 @@
     },
     {
       "slug": "spiral-staircase-calculator",
-      "title": "Spiral Staircase Calculator",
+      "title": "Spiral Staircase Plan Calculator",
       "category": "roof",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "spiral staircase calculator",
       "volume": 260,
       "kd": 11,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "One-turn spiral stair plan geometry with count-correct wedge treads, walk-line arc going, straight chords, height schedule and proportional top view.",
+      "inputs": [
+        {
+          "key": "totalRise",
+          "label": "Finished floor-to-floor rise",
+          "kind": "L",
+          "value": 108
+        },
+        {
+          "key": "outerDiameter",
+          "label": "Overall outside stair diameter",
+          "kind": "L",
+          "value": 72
+        },
+        {
+          "key": "poleDiameter",
+          "label": "Center column OUTSIDE diameter",
+          "kind": "L",
+          "value": 4
+        },
+        {
+          "key": "risers",
+          "label": "Risers INCLUDING final upper-floor landing",
+          "kind": "N",
+          "value": 15
+        },
+        {
+          "key": "totalRotation",
+          "label": "Total rotation across physical treads (degrees)",
+          "kind": "A",
+          "value": 360
+        },
+        {
+          "key": "walkInset",
+          "label": "Walk-line radius offset from column outer face",
+          "kind": "L",
+          "value": 12
+        },
+        {
+          "key": "direction",
+          "label": "Top-view rotation direction",
+          "kind": "N",
+          "value": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Clockwise viewed from above"
+            },
+            {
+              "value": 1,
+              "label": "Counterclockwise viewed from above"
+            }
+          ]
+        }
+      ],
+      "formula": "Physical wedge treads = entered risers − 1; the final rise reaches the top landing. Uniform rise = finished floor rise ÷ risers. Angular sector per physical tread = total rotation ÷ number of physical treads. Inner/outer radii are HALF the entered diameters; walk line radius = column outer radius + entered offset. Per tread: walk-line ARC going = walk radius × angular sector in radians; straight chord = 2×walk radius×sin(angular sector/2). The CSV gives four measured straight-chord plan coordinates per wedge and its top elevation.",
+      "example": "108 in floor-to-floor rise, 72 in stair outer diameter, 4 in column, 15 risers over one 360° turn, and a walk line 12 in from column outside face: 14 physical wedge treads, 7.2 in per riser, 25.7142857° sector, 14 in walk radius, and 2π≈6.283185 in walk-line arc per tread.",
+      "limit": "Geometric single-turn/partial-turn 60–360° plan ONLY, NOT a construction permit, compliant tread going, landing clearance, safe headroom, handrail, column sizing, structural bearing, welds, bracket capacity, cut-ready template or multi-turn stair plan. The top floor is the final riser, NOT another physical wedge. Straight plan-vertex polygons approximate the annular sector boundary; curved nosing fabrication and safety need separate verified templates and a qualified designer.",
+      "guidance": [
+        {
+          "heading": "The upper floor replaces the final physical tread",
+          "text": "The upper finished floor completes the last rise. A staircase with 15 equal risers contains 14 wedge treads and a final rise onto the upper landing. The plan does not invent a 15th physical wedge or assume where the upper landing begins."
+        },
+        {
+          "heading": "Do not confuse circular arc going with its straight chord",
+          "text": "The walk line is a user-chosen radial offset from the OUTSIDE of the center column. The calculated circular arc length at that radius is longer than the chord between radial tread edges. Neither number alone is a safety or building-code approval."
+        },
+        {
+          "heading": "Verify polar tread coordinates and elevations separately",
+          "text": "Each CSV row includes four chord-face vertices measured in a top-view local XY system whose origin is the outside bounding circle's upper-left corner, plus the physical tread top elevation. The drawing displays each wedge as a straight-chord polygon; it does not export an accurate curved-nosing cut template."
+        },
+        {
+          "heading": "Headroom and the real landing are outside this model",
+          "text": "Only one partial or full rotation (60° to 360°) is supported. Stair headroom requires the actual opening, landing elevation and overlapping members. Local rules and structural details must be independently checked by a qualified professional before building."
+        }
+      ]
     },
     {
       "slug": "gambrel-roof-calculator",
@@ -2765,18 +2836,73 @@
     },
     {
       "slug": "stave-calculator",
-      "title": "Tapered Stave Calculator",
+      "title": "Tapered Stave Calculator for Polygon Barrels",
       "category": "wood",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "stave calculator",
       "volume": 90,
       "kd": 10,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Straight-taper polygon stave geometry: actual top/bottom chords, distinct corner-edge and face slant, angles, and rough blank dimensions.",
+      "inputs": [
+        {
+          "key": "topCornerDiameter",
+          "label": "TOP outer CORNER-to-corner polygon diameter",
+          "kind": "L",
+          "value": 20
+        },
+        {
+          "key": "bottomCornerDiameter",
+          "label": "BOTTOM outer CORNER-to-corner polygon diameter",
+          "kind": "L",
+          "value": 16
+        },
+        {
+          "key": "height",
+          "label": "Vertical height between end planes",
+          "kind": "L",
+          "value": 24
+        },
+        {
+          "key": "staves",
+          "label": "Equal stave polygon count",
+          "kind": "N",
+          "value": 12
+        },
+        {
+          "key": "roughMargin",
+          "label": "Extra allowance on EACH rough blank side",
+          "kind": "L",
+          "value": 0.125
+        },
+        {
+          "key": "roughKerf",
+          "label": "One conservatively reserved kerf per rough blank axis",
+          "kind": "L",
+          "value": 0.125
+        }
+      ],
+      "formula": "For N straight polygon-frustum faces with outer polygon corner diameters Dtop and Dbottom: top/bottom straight chord widths = D×sin(π/N). Radius change ΔR=(Dtop−Dbottom)/2. Face-center slant from chord midpoint to chord midpoint = sqrt(height²+(ΔR×cos(π/N))²). Long corner-edge length = sqrt(height²+ΔR²). Plan half-miter is 180°/N. Theoretical face-to-face half-dihedral = ½×acos((cos(2π/N)+k²)/(1+k²)), where k=ΔR×cos(π/N)/height. Flat face-edge side taper = atan(abs(topChord−bottomChord)/(2×face-center length)). Rough rectangle = longer of two chords plus two margins plus one conservative kerf, by face slant plus two margins plus one kerf.",
+      "example": "20 in top and 16 in bottom OUTER polygon corner diameters over 24 in vertical height with 12 staves: each top chord = 20×sin15°≈5.176381 in; each bottom chord=16×sin15°≈4.141105 in. The face-center slant differs from the 24.08319 in long corner edge. The theoretical plan half miter is 15° before taper.",
+      "limit": "This models a STRAIGHT-FACED regular polygon frustum, not the curved bulge of a wine barrel or any guaranteed finished turning diameter. Measured inside diameter, wood thickness, board grain, bending, moisture, glue-up, clamp compression, cutter fences, actual table-saw bevel, nesting and allowable stock are not solved. The mathematical half-dihedral is NOT a shop saw-setting instruction. Rough rectangles and CSV are conservative per-piece references, not a certified stock purchase plan or 1:1 cutting template.",
+      "guidance": [
+        {
+          "heading": "Polygon corner diameters are not finished round diameters",
+          "text": "The upper and lower diameters are measured between the OUTER POLYGON CORNERS at each horizontal end plane. Straight stave faces meet at those corners; the side face edges are chords and the finished circular turnable diameter may be smaller."
+        },
+        {
+          "heading": "The face-center slant is different from the long corner edge",
+          "text": "A tapered trapezoid has a centerline between its top and bottom chord midpoints and longer side edges joining polygon corners. The model calculates both true distances independently, using the vertical rise and the projected change in polygon radius."
+        },
+        {
+          "heading": "Plan miter is not a proven compound saw tilt",
+          "text": "The 180°/N plan reference describes a polygon cross-section. The tapered vessel's theoretical face-to-face half-dihedral additionally accounts for the wall lean, but is not the blade angle your actual saw or workholding setup necessarily needs. Use a scrap dry fit before cuts."
+        },
+        {
+          "heading": "Rough blanks are reference rectangles, not an optimized nesting",
+          "text": "A separate margin on both sides of the widest trapezoid and both ends of its face slant plus one conservative kerf per blank axis supplies a bounding rectangle. The estimate does not solve cutting order, board widths, reusable offcuts, interior wall faces or actual lumber purchasing."
+        }
+      ]
     }
   ],
   "source": "Owner supplied V3.0 / Blocklayer top-400 Semrush sample (2026-11-04). Metrics estimated, not promises."

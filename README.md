@@ -426,3 +426,7 @@ Deck Board now accepts optional measured per-end trim and a conservative crosscu
 ## 2026-11-06 — Lumber price by board foot / MBF
 
 The Lumber Price Calculator is P1 with explicit *entered nominal vs measured actual* dimensions, priced whole-board reserve, user tax rate, quotation per board foot or 1,000 board feet (MBF) and a physical top-face diagram. It does not guess finished dimensions, market prices, purchasing terms or FX. The other two former P2 tools (spiral stair and stave) remain held pending separate geometric review.
+
+## 2026-11-06 — Spiral and tapered-stave geometric tools
+
+Spiral Staircase and Tapered Stave are implemented as P1 geometry references with explicit limitations, numbered physical schedule CSVs and proportional SVG previews. The former supports one partial/full rotation, distinguishing 14 physical wedge treads from 15 risers and differentiating walk-line arc lengths from chords; the latter models straight planar polygon-frustum faces and distinguishes face-center and true corner-edge slants. Neither certifies safe stair construction, structural loads, shop saw settings, glued joints or prints at 1:1 scale. The original 152-keyword Semrush research stays unchanged, and Cloudflare preview remains noindex,nofollow,noarchive.
