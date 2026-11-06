@@ -22,6 +22,10 @@ if(slug){
   const framingMaterial=document.querySelector("#framing-material-table tbody");
   const framingStock=document.querySelector("#framing-stock-table tbody");
   const stockExport=document.querySelector("#download-stock-csv");
+  const stockAuditPanel=document.querySelector("#framing-stock-audit");
+  const stockAuditStatus=document.querySelector("#framing-stock-audit-status");
+  const stockAuditTable=document.querySelector("#framing-stock-audit-table tbody");
+  const stockAuditExport=document.querySelector("#download-stock-audit-csv");
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
@@ -1056,6 +1060,28 @@ if(slug){
   const stockLocalValue=v=>Number(convertFromInches(v,unit).toPrecision(15)).toString();
   const renderFramingTakeoff=()=>{
     if(!framingMaterial||!framingStock||!framingPriceTable||!framingComparisons||!framingProof||!framingProofStatus||!framingPriceStatus||!framingTicket||!framingTicketStatus)return;
+    const audit=latest?.stockAudit;
+    if(stockAuditPanel){
+      stockAuditPanel.hidden=!audit?.enabled;
+      stockAuditExport.disabled=!audit?.enabled||!audit.rows?.length;
+      if(audit?.enabled){
+        stockAuditStatus.textContent=!audit.physicallyFits?
+          "STOCK PLAN UNSAFE WITH ENTERED EXTRA LOSSES — "+audit.failingSticks+
+          " original sticks are too short. The base supplier quote is NOT a sufficient buy order. Replan with longer stock or more sticks before purchase.":
+          "CHECK PASSED FOR EXISTING ALLOCATION — "+audit.rows.length+
+          " source sticks fit the extra losses. "+audit.candidateSticks+
+          " candidate tail offcuts ("+fmt(audit.candidateTotalLength,"L")+
+          ") exceed your minimum, but NONE are assigned to new cuts or deducted from the purchase.";
+        stockAuditTable.innerHTML=audit.rows.map(p=>'<tr>'+
+          [p.stockId+" · "+p.offerLabel,fmt(p.stockLength,"L"),
+           fmt(p.adjustedLastCutEnd,"L"),fmt(p.finalSeverKerf,"L"),
+           fmt(p.usableOffcutLength,"L"),fmt(p.shortfallLength,"L"),
+           p.status].map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+      }else{
+        stockAuditStatus.textContent="Review mode off — original purchase and stock cut plan is unchanged.";
+        stockAuditTable.innerHTML="";
+      }
+    }
     const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[],
       variants=latest?.purchaseVariants||[],comparisons=latest?.stockComparisons||[],
       checks=latest?.optimizerStatus||[];
@@ -1104,16 +1130,20 @@ if(slug){
           (summary.allPricesEntered?"Remaining results use a bounded heuristic.":"Missing supplier quotes.")+
           " No global optimality claim.";
     const missing=summary?.unpricedGroups||[];
+    const auditWarning=audit?.enabled&&!audit.physicallyFits?
+      " WARNING: selected sticks DO NOT FIT the optional extra losses. Recalculate purchases; this baseline quote must NOT be used as a sufficient order.":"";
     framingPriceStatus.textContent=!summary?"Fix inputs to see supplier quote costs.":
       !summary.allPricesEntered?
         "Incomplete quote — prices required: "+missing.join(", ")+
           (summary.pricedGroups?" · priced groups subtotal "+money(summary.quotedSubtotal):" · no groups priced yet")+
           ". This is NOT a complete purchase total.":
-        "Estimated quoted lumber purchase: "+money(summary.quotedSubtotal)+
+        "Estimated BASE-MODEL lumber purchase: "+money(summary.quotedSubtotal)+
         " (planned "+money(summary.quotedPlanned)+
-        " + reserve "+money(summary.quotedReserve)+"). Excludes tax, delivery, labor and fittings.";
+        " + reserve "+money(summary.quotedReserve)+"). Excludes tax, delivery, labor and fittings."+
+        auditWarning;
     framingTicketStatus.textContent=!summary?"No valid material plan.":
-      summary.allPricesEntered?"Total material quote: "+money(summary.quotedSubtotal)+" · tax and delivery excluded":
+      summary.allPricesEntered?"Base-model material quote: "+money(summary.quotedSubtotal)+
+        " · tax and delivery excluded"+auditWarning:
         "PRICE INCOMPLETE — obtain quotes for "+missing.join(", ")+".";
     framingTicket.innerHTML=variants.filter(r=>r.purchaseSticks>0).map(r=>
       '<li><span class="ticket-check" aria-hidden="true">□</span><strong>'+esc(r.stockGroup)+
@@ -1348,6 +1378,7 @@ if(slug){
     const enabled=!!latest;
     for(const button of [copy,csv,svg,print])if(button)button.disabled=!enabled;
     if(stockExport)stockExport.disabled=!latest?.stockCuts?.length;
+    if(stockAuditExport)stockAuditExport.disabled=!latest?.stockAudit?.enabled||!latest?.stockAudit?.rows?.length;
     if(pricingExport)pricingExport.disabled=!latest?.purchaseVariants?.length;
     if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
@@ -1471,6 +1502,13 @@ if(slug){
       "FFD stock cutting estimate; groups cannot mix; kerf charged between cuts; extra reserve sticks omitted from plan; not a structural or optimality guarantee.");
     save(slug+"-"+unit+"-stock-cut-plan.csv",text,"text/csv;charset=utf-8");
     status.textContent="Stock cut plan CSV saved locally.";
+  });
+  stockAuditExport?.addEventListener("click",()=>{
+    if(!latest?.stockAudit?.enabled||!latest.stockAudit.rows.length)return;
+    const body=buildScheduleCsv(latest.stockAudit.rows,unit,
+      "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
+    save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
+    status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
   });
   pricingExport?.addEventListener("click",()=>{
     if(!latest||!latest.materialSummary)return;
