@@ -150,8 +150,8 @@ def tool_page(t):
           f'<span class="eyebrow"><span class="eyebrow-dot"></span> TOOL {esc(t["priority"])} · GEOMETRY WORKSPACE</span>'
           f'<h1>{esc(t["title"])}</h1><p class="tool-lede">{esc(t["desc"])}</p>'
           '<div class="intent-fit" aria-label="When to use this calculator">'
-          f'<p><strong>Use this calculator for</strong> {esc(intent["useFor"])}</p>'
-          f'<p><strong>Choose a different tool for</strong> {esc(intent["notFor"])}</p>'
+          f'<p><strong>Typical task</strong> {esc(intent["useFor"])}</p>'
+          f'<p><strong>Not covered</strong> {esc(intent["notFor"])}</p>'
           '</div>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
     quote_currency_id="framing-currency" if t["slug"]=="framing-calculator" else "deck-currency"
