@@ -28,7 +28,7 @@ test("Post-reallocation stock-local station segments partition every source exac
       kerf:.125,endTrim:trim,finalSeverKerf:sever,reuseMin:10,allowance:10
     });
     assert.equal(alternate.status,"reallocated");
-    const ledger=makeFramingStationLedger(alternate);
+    const ledger=makeFramingStationLedger(alternate,sources);
     assert.equal(ledger.available,true);
     assert.equal(ledger.sourceCount,alternate.plannedSticks);
     assert.equal(ledger.memberCount,alternate.rows.length);
@@ -73,7 +73,7 @@ test("No tail, no terminal sever or fictitious final cut on an exactly used sour
   const plan=reallocateFramingOffcuts([b],{kerf:.125,endTrim:0,
     finalSeverKerf:.125,reuseMin:1,allowance:0});
   assert.equal(plan.status,"no-reduction");
-  const ledger=makeFramingStationLedger(plan);
+  const ledger=makeFramingStationLedger(plan,[b]);
   assert.deepEqual(ledger.rows.map(x=>x.segmentKind),["RETAINED MEMBER"]);
   approx(ledger.bars[0].unallocatedTail,0,"no phantom remaining stock");
   approx(ledger.bars[0].lastSeverKerf,0,"no phantom terminal kerf");
@@ -86,7 +86,7 @@ test("Actual source-local cutting station CSV preserves numeric units and unveri
     stockAuditMode:2,stockAuditReuseMin:2,stockKerf:.125,
     studUnitPrice:8,headerUnitPrice:12
   });
-  const ledger=makeFramingStationLedger(a.stockReusePlan);
+  const ledger=makeFramingStationLedger(a.stockReusePlan,a.stockPlan);
   assert.equal(ledger.available,true);
   for(const [unit,factor] of [["in",1],["ft",1/12],["mm",25.4],
     ["cm",2.54],["m",.0254]]){
@@ -120,18 +120,19 @@ test("Incomplete, blocked and adulterated plans cannot be silently exported as s
   });
   assert.equal(makeFramingStationLedger(blocked).available,false);
   assert.equal(makeFramingStationLedger({enabled:false}).available,false);
-  const good=reallocateFramingOffcuts(fixture(),{kerf:.125,reuseMin:10});
+  const baseline=fixture();
+  const good=reallocateFramingOffcuts(baseline,{kerf:.125,reuseMin:10});
   const modify=()=>structuredClone(good);
   let corrupted=modify();
   corrupted.bars[0].cuts[0].cutStart+=.25;
-  assert.throws(()=>makeFramingStationLedger(corrupted),/mismatch|invalid/i);
+  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/mismatch|invalid/i);
   corrupted=modify();
   corrupted.bars[0].actualStockLength-=1;
-  assert.throws(()=>makeFramingStationLedger(corrupted),/overflows|mismatch/i);
+  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/overflows|mismatch/i);
   corrupted=modify();
   corrupted.rows[0].item="NO SUCH CUT";
-  assert.throws(()=>makeFramingStationLedger(corrupted),/disagrees|cover/i);
+  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/disagrees|cover/i);
   corrupted=modify();
   corrupted.bars[1].stockId=corrupted.bars[0].stockId;
-  assert.throws(()=>makeFramingStationLedger(corrupted),/duplicate source/i);
+  assert.throws(()=>makeFramingStationLedger(corrupted,baseline),/duplicate source/i);
 });
