@@ -15,6 +15,12 @@ intent_manifest=json.loads((root/"src"/"tool-intents.json").read_text(encoding="
 intent_entries=intent_manifest["tools"]
 intents={x["slug"]:x for x in intent_entries}
 field_checks=json.loads((root/"src"/"field-verification.json").read_text(encoding="utf8"))["checks"]
+approved_cases=json.loads((root/"src"/"worked-cases.json").read_text(encoding="utf8"))["cases"]
+case_map={}
+for case in approved_cases:case_map.setdefault(case["slug"],[]).append(case)
+assert {k:len(v) for k,v in case_map.items()}=={
+    "deck-board-calculator":2,"rafter-calculator":2,"stair-stringer-calculator":2
+}, "Only three audited tools may offer two worked scenarios each"
 assert set(field_checks)==set(intents), "All active tools require task-specific field checks"
 assert len(intent_entries)==len(intents)==len(active)==28, "Exactly 26 unique active intents required"
 assert set(intents)=={t["slug"] for t in active}, "Intent metadata missing or holding an unpublished P2 route"
@@ -102,6 +108,12 @@ for p in pages:
             errors.append(f"{u}: SEO title is too generic or overlong")
         if len(intent["useFor"])<45 or len(intent["notFor"])<42:
             errors.append(f"{u}: tool intent boundary descriptions are too thin")
+        samples=case_map.get(page_tool["slug"],[])
+        if body.count('class="btn secondary worked-apply"')!=len(samples):
+            errors.append(f"{u}: worked scenario buttons do not match approved case list")
+        for sample in samples:
+            if sample["id"] not in body or html.escape(sample["verification"],quote=True) not in body:
+                errors.append(f"{u}: worked scenario lacks its reproducible inputs or explanation")
         if 'class="field-verification"' not in body or html.escape(field_checks[page_tool["slug"]],quote=True) not in body:
             errors.append(f"{u}: task-specific field verification missing")
         if 'class="intent-fit"' not in body or 'class="related-box intent-related"' not in body:

@@ -935,3 +935,16 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .field-verification h3{margin:0 0 9px;color:#234b3d}
 .field-verification p{margin:0 0 8px}
 .field-verification .field-caution{font-size:.88rem;color:#576b5f;margin:0}
+
+/* User-initiated synthetic scenarios; keep separate from real job signoff. */
+.worked-cases{margin:18px 0;padding:16px;border:1px solid #d4ded4;border-radius:12px;background:#f7faf6}
+.worked-cases h3{font-size:1rem;line-height:1.35;margin:0 0 8px;color:#254e40}
+.worked-cases>p{font-size:.88rem;line-height:1.55;margin:0 0 12px}
+.worked-cases-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.worked-case{border:1px solid #dae5db;border-radius:10px;padding:12px;background:#fff}
+.worked-case h4{font-size:.94rem;margin:0 0 6px;color:#23533d}
+.worked-case p{font-size:.82rem;line-height:1.55;margin:0 0 8px}
+.worked-case .worked-proof{color:#57675b}
+.worked-case .worked-values{font-variant-numeric:tabular-nums;color:#2f5343}
+.worked-case .worked-apply{margin-top:3px;width:100%;font-size:.82rem;white-space:normal}
+@media print{.worked-cases{display:none!important}}
