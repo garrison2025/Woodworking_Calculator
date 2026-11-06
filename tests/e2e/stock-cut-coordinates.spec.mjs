@@ -77,11 +77,12 @@ test("Framing stock-local start/end locations match every exported cut and print
   await page.locator("#f-studStockLength").fill("1");
   // Alternate quoted stock offers can still cover the wall; a clearly
   // invalid geometry instead must disable the stock CSV and clear the table.
-  await page.locator("#f-wallHeight").fill("1000");
+  // The unit selector is still millimeters: 25400 mm is 1000 in.
+  await page.locator("#f-wallHeight").fill("25400");
   await expect(page.locator("#calc-error")).toBeVisible();
   await expect(stockTable).toHaveCount(0);
   await expect(page.locator("#download-stock-csv")).toBeDisabled();
-  await page.locator("#f-wallHeight").fill("80");
+  await page.locator("#f-wallHeight").fill("2032");
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(page.locator("#download-stock-csv")).toBeEnabled();
 });
