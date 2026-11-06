@@ -52,7 +52,7 @@ expected_urls={"/","/about/","/contact/","/privacy/","/terms/"}
 expected_urls.update("/"+t["slug"]+"/" for t in published)
 expected_urls.update("/"+data[1]+"/" for key,data in manifest["categories"].items()
                      if any(t["category"]==key for t in published))
-assert len(published)==26 and len(hold)==5
+assert len(published)==28 and len(hold)==3
 actual_urls=set()
 for p in pages:
     path="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
@@ -108,5 +108,5 @@ if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
 print("PASS: release dry-run contains",len(expected_urls),
-      "unique canonical/schema/sitemap routes, all 26 P0/P1 tools, no P2, valid index gate")
+      "unique canonical/schema/sitemap routes, all 28 P0/P1 tools, three P2 held, valid index gate")
 print("NOTE: https://woodworking.example is a reserved offline test domain, not a purchased or deployed domain.")
