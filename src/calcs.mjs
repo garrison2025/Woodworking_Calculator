@@ -171,6 +171,224 @@ export function auditFramingStock(stockPlan,{endTrim=0,finalSeverKerf=0,reuseMin
     physicallyFits:rows.every(r=>r.status!=="DOES NOT FIT")};
 }
 
+// Bounded, optional OFFCUT REASSIGNMENT of COMPLETE existing members.
+// This is independent of the primary FFD/exact purchasing selection and
+// never replaces or mutates those certified/base-model source records.
+// It only tries to retire complete sticks by appending their individual
+// members to already-open, same-profile sticks with eligible tails.
+// It does not splice parts, buy a new stick, or reuse a tail twice.
+// Savings are modeled quoted-material differences, NOT field-verified money.
+export function reallocateFramingOffcuts(stockPlan,{
+  kerf=0,endTrim=0,finalSeverKerf=0,reuseMin=0,allowance=0,
+  maxBars=120,attemptLimit=8000
+}={}){
+  need(Array.isArray(stockPlan),"Reallocation needs an existing cut plan.");
+  for(const [key,value] of Object.entries({kerf,endTrim,finalSeverKerf,reuseMin,allowance})){
+    need(Number.isFinite(value)&&value>=0,"Reallocation "+key+" must be nonnegative and finite.");
+  }
+  need(allowance<=100,"Reallocation reserve must be 0–100 percent.");
+  need(maxBars>0&&attemptLimit>0,"Reallocation search bounds must be positive.");
+  const purchases=n=>n?Math.ceil(n*(1+allowance/100)-1e-10):0;
+  const originalCutKeys=[];
+  const barData=stockPlan.map(b=>{
+    need(Array.isArray(b.cuts)&&b.cuts.length>0,
+      "Reallocation cannot use an empty or incomplete original stock bar.");
+    const length=b.actualStockLength??b.stockLength;
+    need(Number.isFinite(length)&&length>0,"Reallocation needs real source length.");
+    need(Number.isFinite(b.unitPrice??0)&&
+      (b.unitPrice===null||b.unitPrice>=0),"Invalid source quote.");
+    const cuts=b.cuts.map(p=>{
+      need(p.cutLength>0&&Number.isFinite(p.cutLength),
+        "Reallocation cut length must be positive and finite.");
+      const key=b.stockGroup+"|"+p.item;
+      originalCutKeys.push(key);
+      return {item:p.item,type:p.type,cutLength:p.cutLength,
+        originalStockId:b.stockId};
+    });
+    return {stockGroup:b.stockGroup,stockId:b.stockId,
+      offerLabel:b.offerLabel,offerCode:b.offerCode,
+      stockLength:length,unitPrice:b.unitPrice,cuts};
+  });
+  need(new Set(originalCutKeys).size===originalCutKeys.length,
+    "Reallocation requires uniquely identified installed members per stock profile.");
+  const evalBar=b=>{
+    let used=0;
+    for(const [idx,p] of b.cuts.entries()){
+      used=q(used+p.cutLength+(idx?kerf:0));
+    }
+    const beforeEnd=endTrim+used;
+    const sever=b.stockLength-beforeEnd>1e-12?finalSeverKerf:0;
+    const required=beforeEnd+endTrim+sever;
+    const tail=b.stockLength-required;
+    return {used,required,sever,tail,fit:tail>=-1e-12};
+  };
+  const audit=auditFramingStock(stockPlan,{endTrim,finalSeverKerf,reuseMin});
+  const summarize=bars=>{
+    const grouped=new Map();
+    for(const b of bars){
+      const key=b.stockGroup+"|"+b.offerCode;
+      if(!grouped.has(key))grouped.set(key,{
+        stockGroup:b.stockGroup,offerLabel:b.offerLabel,offerCode:b.offerCode,
+        stockLength:b.stockLength,unitPrice:b.unitPrice,plannedSticks:0
+      });
+      const v=grouped.get(key);
+      need(v.stockLength===b.stockLength&&v.unitPrice===b.unitPrice,
+        "A quote SKU must not have conflicting lengths or prices.");
+      v.plannedSticks++;
+    }
+    let totalCents=0,allQuoted=true,purchaseSticks=0;
+    const rows=[...grouped.values()].sort((a,b)=>
+      a.stockGroup.localeCompare(b.stockGroup)||
+      a.stockLength-b.stockLength||a.offerCode.localeCompare(b.offerCode));
+    for(const row of rows){
+      row.purchaseSticks=purchases(row.plannedSticks);
+      row.allowanceSticks=row.purchaseSticks-row.plannedSticks;
+      purchaseSticks+=row.purchaseSticks;
+      if(row.unitPrice===null){allQuoted=false;row.purchaseCost=null;}
+      else{
+        const cents=row.purchaseSticks*Math.round(row.unitPrice*100);
+        totalCents+=cents;row.purchaseCost=cents/100;
+      }
+    }
+    return {rows,allQuoted,totalCents:allQuoted?totalCents:null,
+      purchaseSticks,plannedSticks:bars.length};
+  };
+  const baseQuote=summarize(barData);
+  const early=(status,notes)=>({enabled:true,status,notes,attempts:0,
+    originalPlannedSticks:barData.length,plannedSticks:barData.length,
+    originalPurchaseSticks:baseQuote.purchaseSticks,
+    purchaseSticks:baseQuote.purchaseSticks,
+    originalQuotedSubtotal:baseQuote.totalCents===null?null:baseQuote.totalCents/100,
+    reallocatedQuotedSubtotal:null,quotedDifference:null,
+    canClaimModeledSavings:false,removedSourceIds:[],movedPieces:[],
+    rows:[],purchaseVariants:[],audit,physicallyFits:audit.physicallyFits});
+  if(!audit.physicallyFits)
+    return early("baseline-shortfall",
+      "At least one original source is too short after added trim/kerf. Repair the original layout before relying on offcut reallocation.");
+  if(reuseMin<=0)
+    return early("threshold-required",
+      "Set a positive minimum reusable tail length to enable bounded reallocation.");
+  if(barData.length>maxBars)
+    return early("size-limit",
+      "Too many source sticks for bounded offcut reassignment; original purchase plan remains unchanged.");
+  const copy=bars=>bars.map(b=>({...b,cuts:b.cuts.map(p=>({...p}))}));
+  let bars=copy(barData),current=baseQuote,attempts=0,removed=[];
+  // One deletion can require several cut migrations. Search targets are
+  // eligible before this trial, then each appended cut consumes that same
+  // measured tail; no other source's tail is double-allocated.
+  const tryRemove=(currentBars,sourceIndex)=>{
+    const source=currentBars[sourceIndex];
+    const eligible=currentBars.map((b,i)=>({
+      index:i,bar:b,audit:evalBar(b)
+    })).filter(v=>v.index!==sourceIndex&&
+      v.bar.stockGroup===source.stockGroup&&
+      v.audit.fit&&v.audit.tail+1e-12>=reuseMin);
+    if(!eligible.length)return null;
+    const proposal=copy(currentBars);
+    const moving=[...source.cuts].sort((a,b)=>
+      b.cutLength-a.cutLength||a.item.localeCompare(b.item));
+    for(const part of moving){
+      let target=null,slack=Infinity;
+      for(const {index} of eligible){
+        const targetBar=proposal[index];
+        const candidate={...targetBar,cuts:[...targetBar.cuts,part]};
+        const state=evalBar(candidate);
+        if(!state.fit)continue;
+        if(state.tail<slack-1e-12||
+          (Math.abs(state.tail-slack)<=1e-12&&targetBar.stockId<(target?.stockId??"\uffff"))){
+          target=targetBar;slack=state.tail;
+        }
+      }
+      if(!target)return null;
+      target.cuts.push({...part});
+    }
+    proposal.splice(sourceIndex,1);
+    return proposal;
+  };
+  while(attempts<attemptLimit&&removed.length<maxBars){
+    let best=null;
+    for(let i=0;i<bars.length&&attempts<attemptLimit;i++){
+      attempts++;
+      const candidate=tryRemove(bars,i);
+      if(!candidate)continue;
+      const quote=summarize(candidate);
+      // Cost-complete plans never accept a more expensive replacement.
+      // In unquoted plans, only stick quantity is comparable.
+      if(current.allQuoted&&quote.totalCents>current.totalCents)continue;
+      if(quote.purchaseSticks>current.purchaseSticks)continue;
+      const gain=current.allQuoted?current.totalCents-quote.totalCents:0;
+      const improvement=quote.purchaseSticks<current.purchaseSticks||gain>0;
+      if(!improvement)continue;
+      if(!best||
+        (current.allQuoted&&gain>best.gain)||
+        (gain===best.gain&&quote.purchaseSticks<best.quote.purchaseSticks)||
+        (gain===best.gain&&quote.purchaseSticks===best.quote.purchaseSticks&&
+          bars[i].stockId<best.removed)){
+        best={candidate,quote,gain,removed:bars[i].stockId};
+      }
+    }
+    if(!best)break;
+    removed.push(best.removed);
+    bars=best.candidate;current=best.quote;
+  }
+  // Independently reconstruct all resulting piece positions, never recycle
+  // identities or assume previous source coordinates remain valid.
+  const rows=[],finalBars=[];
+  const present=[];
+  for(const b of bars){
+    const state=evalBar(b);
+    need(state.fit,"Reallocation created a physically overfilled stock stick.");
+    let used=endTrim;
+    const barRows=[];
+    for(const [i,p] of b.cuts.entries()){
+      const before=i?kerf:0,start=q(used+before);
+      const end=q(start+p.cutLength);
+      need(end<=b.stockLength+1e-12&&end-start>=p.cutLength-1e-8,
+        "Reallocated member extends outside its actual purchased source.");
+      const row={stockGroup:b.stockGroup,stockId:b.stockId,
+        offerLabel:b.offerLabel,index:i+1,item:p.item,type:p.type,
+        originalStockId:p.originalStockId,cutLength:p.cutLength,
+        kerfBefore:q(before),cutStart:start,cutEnd:end,
+        stockLength:q(b.stockLength),remainingLength:q(Math.max(0,b.stockLength-end))};
+      barRows.push(row);rows.push(row);
+      present.push(b.stockGroup+"|"+p.item);
+      used=end;
+    }
+    need(Math.abs(used-(endTrim+state.used))<=1e-7,
+      "Reallocation stock-local coordinates do not conserve material.");
+    finalBars.push({stockGroup:b.stockGroup,stockId:b.stockId,
+      offerLabel:b.offerLabel,actualStockLength:b.stockLength,
+      usedLength:q(state.used),finalSeverKerf:q(state.sever),
+      usableOffcutLength:q(Math.max(0,state.tail)),
+      cuts:barRows});
+  }
+  need(rows.length===originalCutKeys.length&&
+    present.length===new Set(present).size&&
+    present.every(key=>originalCutKeys.includes(key)),
+    "Reallocation must conserve every installed cut exactly once.");
+  const movedPieces=rows.filter(x=>x.originalStockId!==x.stockId)
+    .map(x=>({stockGroup:x.stockGroup,item:x.item,
+      fromStockId:x.originalStockId,toStockId:x.stockId,
+      cutLength:x.cutLength}));
+  const modelSavings=current.allQuoted&&baseQuote.allQuoted?
+    Math.max(0,baseQuote.totalCents-current.totalCents):null;
+  const changed=removed.length>0;
+  return {enabled:true,status:changed?"reallocated":"no-reduction",
+    notes:attempts>=attemptLimit?"Bounded attempt limit reached; result is heuristic, never certified globally optimal.":
+      "Deterministic local bar-retirement search; not a globally optimal or construction-certified nesting plan.",
+    attempts,attemptLimit,originalPlannedSticks:baseQuote.plannedSticks,
+    plannedSticks:current.plannedSticks,
+    originalPurchaseSticks:baseQuote.purchaseSticks,
+    purchaseSticks:current.purchaseSticks,
+    originalQuotedSubtotal:baseQuote.totalCents===null?null:baseQuote.totalCents/100,
+    reallocatedQuotedSubtotal:current.totalCents===null?null:current.totalCents/100,
+    quotedDifference:modelSavings===null?null:modelSavings/100,
+    canClaimModeledSavings:changed&&modelSavings!==null&&modelSavings>0,
+    removedSourceIds:removed,movedPieces,rows,bars:finalBars,
+    purchaseVariants:current.rows,
+    audit,physicallyFits:true};
+}
+
 function roofPolygonArea(poly){
   if(poly.length<3)return 0;
   // A triangle fan relative to the first vertex avoids catastrophic
