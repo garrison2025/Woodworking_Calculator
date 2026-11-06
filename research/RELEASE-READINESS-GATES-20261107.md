@@ -4,8 +4,8 @@ Current implementation: **31 geometry calculators** (9 P0 + 22 P1), **six popula
 
 | Gate | Prior evidence | Required acceptance | State |
 |---|---|---|---|
-| Source and regression | main CI #670: 556 Node, 190 Chromium, 18 cross-browser checks | PR #13 CI and 42-page offline release checks must pass before merge | PENDING PR CI |
-| Homepage UX | Known hardcoded 28/5 labels | Dynamic 31/6 counts, task/category search, history clearing, 390px no horizontal overflow | PENDING PR CI |
+| Source and regression | PR #13 CI #42310268231: 556 Node, 193 Chromium, 18 Firefox/WebKit passed + 42 static pages | PR #14 separate full Node/browser/PDF/release checks must pass | PRIOR PASS / CURRENT PR PENDING |
+| Homepage UX | PR #13 passed 31/6 counts, tool search, local history clearing, 390px browser checks | Keep behavior stable; manual touch / assistive tech review still required | AUTOMATED PASS / DEVICES NOT RUN |
 | Independent geometry | 31 tool models and numeric / SVG / CSV tests | Second-source hand calculation and independent measurement on high-risk trade geometry | HUMAN NOT RUN |
 | Print/PDF | Browser A4/Letter and complete long schedule checks | Physically measure 100mm rule between 99.5–100.5mm and 1in rule between 0.995–1.005in at actual print scale; check all rows | PHYSICAL NOT RUN |
 | Devices / accessibility | Chromium/Firefox/Linux WebKit and keyboard tests | Real Android/iOS touch, macOS Safari, NVDA/VoiceOver review, recorded screenshots | MANUAL NOT RUN |

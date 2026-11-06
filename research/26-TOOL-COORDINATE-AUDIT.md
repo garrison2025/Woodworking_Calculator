@@ -1,8 +1,8 @@
-# 26-tool numerical ↔ CSV ↔ SVG consistency gate
+# 31-tool numerical ↔ CSV ↔ SVG consistency gate (historical filename retained)
 
-**Source of truth:** \`src/tools.json\` determines the 26 live P0/P1 calculator routes and their defaults; \`src/calcs.mjs\` computes geometry in inches; \`src/cut-list.mjs\` exports typed columns. Browser snapshots can otherwise appear visually plausible with a missing or shifted measurement.
+**Source of truth:** \`src/tools.json\` determines the current 31 live P0/P1 calculator routes and their defaults; \`src/calcs.mjs\` computes geometry in inches; \`src/cut-list.mjs\` exports typed columns. Browser snapshots can otherwise appear visually plausible with a missing or shifted measurement.
 
-The regression \`tests/e2e/sitewide-contract.spec.mjs\` verifies **every** live route at both inch and millimeter display settings against the same entered measurements: all on-screen metric labels and numbers, all downloaded typed CSV cells and units (including vertex lists), SVG shape family and world-span attributes, representative primitive counts, and multiple row/coordinate annotations. No historical P2 tool is published or tested as active.
+The regression \`tests/e2e/sitewide-contract.spec.mjs\` verifies **every** live route at both inch and millimeter display settings against the same entered measurements: all on-screen metric labels and numbers, all downloaded typed CSV cells and units (including vertex lists), SVG shape family and world-span attributes, representative primitive counts, and multiple row/coordinate annotations. All five originally held P2 concepts were subsequently implemented as bounded P1 geometry tools and now participate in the 31-tool cross-surface contract.
 
 This is a *cross-surface consistency* check: engine, UI, SVG, CSV. Independent math/scientific and physical certification require different evidence; see \`tests/field-acceptance-regressions.test.mjs\`, \`research/GEOMETRY_REFERENCE_NOTES.md\` and \`FIELD-ACCEPTANCE-CHECKLIST.md\`.
 
@@ -34,5 +34,10 @@ This is a *cross-surface consistency* check: engine, UI, SVG, CSV. Independent m
 | /stair-stringer-calculator/ | Nominal stair-step polyline | \`.stringer-step-profile\` |
 | /roof-sheathing-calculator/ | Individual sheet bounds | \`.sheathing-cut\` |
 | /fence-post-calculator/ | Post face | \`.post-face\` |
+| /spiral-staircase-calculator/ | Single-turn annular wedge plan | `.spiral-tread-face` |
+| /gambrel-roof-calculator/ | Four pitched roof sections | `.gambrel-slope-segment` |
+| /lumber-price-calculator/ | Board-foot cross section | `.lumber-board-face` |
+| /fence-picket-calculator/ | Picket face stations | `.picket-face` |
+| /stave-calculator/ | Faceted frustum stave | `.stave-face` |
 
 **Test limitations:** SVG primitive count and stored coordinate attributes are NOT an independent measurement of real printed scale, hardware compliance or saw setup. Synthetic default inputs are audited; full user input-space coverage is mathematically impossible. A separate manual worksheet requires real measurements and tolerances before any use in a job.

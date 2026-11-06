@@ -4,12 +4,12 @@
 
 A free browser-only woodworking workspace with **31 active geometry calculators (9 P0 + 22 P1), six populated categories and zero held P2**. Includes proportional SVG drawings, fractional inch display, five length units (in/ft/mm/cm/m), local-only tool search and recent-history controls, typed CSV exports and browser Print / Save as PDF. Geometry references are not certified structural designs or saw-cut instructions.
 
-> **Release status as of 2026-11-07: engineering beta; not a production launch.** Last green baseline on main, [Actions #670](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42205140952), passed **556 Node, 190 Chromium and 18 Firefox/Linux WebKit tests**, plus static/print checks across 42 pages. This documents the prior commit, not the present change. Real workpiece trials, macOS Safari, screen-reader review, physical printer ruler checks and professional approvals remain unverified. Preview retains `noindex,nofollow,noarchive`.
+> **Release status (2026-11-07): engineering beta, not a production launch.** [PR #13 verification](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) passed **556 Node, 193 Chromium and 18 Firefox/Linux WebKit tests**, plus 42 static pages and A4/Letter PDF checks before merge as `cafccc2`. PR #14's stricter cut-coordinate guards require a separate passing CI run. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
 
 ## 2026-11-07 — Current UX and release readiness
 
 - Homepage tool and category counts are derived from src/tools.json, with a local task/category search field and an explicit Clear history control for recently visited tools.
-- Static verification and browser checks cover the catalog, 390px layout, search behavior, localStorage clearing, existing geometry and print/PDF workflows. A new CI pass is required for PR #13; the historical statistics in sections below are snapshots of older 26/28-tool revisions, not the current scope.
+- Static verification and browser checks cover the catalog, 390px layout, search behavior, localStorage clearing, existing geometry and print/PDF workflows. PR #13 passed [CI #42310268231](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) and merged. PR #14 addresses cut-coordinate resolution and must pass its own regression gate; the historical figures below describe older 26/28-tool snapshots.
 - See [Release Readiness Gates](research/RELEASE-READINESS-GATES-20261107.md). Real printer-scale measurement, actual workpieces, hardware Safari, NVDA/VoiceOver, GSC and a real launch domain remain outstanding.
 
 ## 2026-11-06 — Expanded functional scope and field review

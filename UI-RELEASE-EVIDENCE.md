@@ -1,8 +1,8 @@
 # UI release evidence — historical evidence and current scope
-## Current UX candidate — 2026-11-07, requires PR #13 verification
+## Current UX check — 2026-11-07, PR #13 verified
 
 - Current manifest contains 31 active tools and six populated categories, and the homepage was corrected to derive both counts and drawing label from this manifest.
-- Added browser-local task search of existing prerendered links, Clear history for local recent-tool storage, and new Chromium/static regression checks including 390px. New functionality is NOT marked PASS until its fresh CI succeeds.
+- Added browser-local task search of existing prerendered links, Clear history for local recent-tool storage, and new Chromium/static regression checks including 390px. The new catalog search, history reset and mobile viewport checks passed [PR #13 CI #42310268231](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) before merge. Physical devices, Safari and screen-reader acceptance are still NOT RUN.
 - Previous [Actions #670](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42205140952) passed core automated tests; actual Android/iOS touch, macOS Safari, NVDA/VoiceOver, aesthetic review, real printer calibration and field cutting have not been completed by this change.
 
 ## Verified
