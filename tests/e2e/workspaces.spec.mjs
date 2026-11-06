@@ -668,7 +668,9 @@ test("framing stock takeoff, fractional cuts, grouped stick plan and CSV update 
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(13);
   await expect(page.locator("#result-cards .metric").filter({hasText:"Planned stock sticks (FFD estimate)"})).toContainText("11");
   await expect(page.locator("#cut-table tbody")).toContainText("≈ 91 1/2 in");
-  await expect(page.locator("#framing-stock-table tbody")).toContainText("91 1/2 in");
+  // Fractions stay in the detailed cut schedule; the per-stick stock
+  // sequence uses concise decimal lengths plus unambiguous 0-origin bounds.
+  await expect(page.locator("#framing-stock-table tbody")).toContainText("91.5 in [0–91.5 in]");
   await page.locator("#f-stockWaste").fill("10");
   await expect(page.locator("#result-cards .metric").filter({hasText:"Purchase sticks incl. allowance"})).toContainText("13");
   await expect(page.locator("#framing-stock-table tbody tr")).toHaveCount(11);
