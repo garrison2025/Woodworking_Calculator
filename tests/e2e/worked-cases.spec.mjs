@@ -35,7 +35,9 @@ for(const slug of ["deck-board-calculator","rafter-calculator","stair-stringer-c
        .toBeLessThanOrEqual(field.kind==="L"&&unit==="mm"?1e-5:1e-7);
     }
     for(const check of c.checks){
-     const cell=page.locator("#result-cards .metric").filter({hasText:check.label});
+     const cell=page.locator("#result-cards .metric").filter({
+      has:page.getByText(check.label,{exact:true})
+     });
      await expect(cell).toHaveCount(1);
      const actual=ntext(await cell.locator("strong").textContent());
      const expected=check.kind==="L"?convertFromInches(check.value,unit):check.value;
