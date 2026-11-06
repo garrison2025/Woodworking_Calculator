@@ -103,7 +103,15 @@ for p in pages:
         if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
             errors.append(f"{u}: SEO title does not match task-specific approved intent")
         if page_tool["keyword"].lower() not in intent["seoTitle"].lower():
-            errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
+            # One historically broad research query is deliberately NOT used
+            # in a title as if it matched a generic pricing intent.
+            if page_tool["slug"]!="lumber-price-calculator" or not (
+                "lumber" in intent["seoTitle"].lower()
+                and "board foot" in intent["seoTitle"].lower()
+                and "mbf" in intent["seoTitle"].lower()):
+                errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
+            elif "historical search phrase" not in body.lower() or "NOT a general price-per-thousand-items" not in body:
+                errors.append(f"{u}: ambiguous historical thousand-price query lacks on-page scope caveat")
         if len(intent["seoTitle"])<25 or len(intent["seoTitle"])>75:
             errors.append(f"{u}: SEO title is too generic or overlong")
         if len(intent["useFor"])<45 or len(intent["notFor"])<42:

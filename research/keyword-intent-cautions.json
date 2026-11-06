@@ -128,6 +128,12 @@
       "originalRoute": "/gambrel-roof-calculator/",
       "reason": "A gambrel slope/cut geometry tool cannot claim engineered truss design.",
       "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "price per thousand calculator",
+      "originalRoute": "/lumber-price-calculator/",
+      "reason": "The historical competitor keyword is broad. This tool handles ONLY the entered lumber per-1000-BOARD-FEET (MBF) quote, not generic 1000-count item unit prices, log-scale formulas or price feeds.",
+      "status": "historical-ranking-only-not-generic-search-intent"
     }
   ]
 }

@@ -147,6 +147,15 @@ def tool_page(t):
                  f'<strong>{esc(t["keyword"])}</strong>. '
                  'The dimensions, SVG and CSV cover this specific layout. '
                  'Do not infer that a differently named task uses the same model.')
+    if t["slug"] == "lumber-price-calculator":
+        # The historical research keyword is broader than the actual
+        # supported task. Do not pretend a generic thousand-item quote is MBF.
+        task_note = (
+            '<p class="intent-query-copy">Specific measurement task: lumber '
+            'quoted per board foot (BF) or 1,000 board feet (MBF). '
+            'The historical search phrase <strong>price per thousand calculator</strong> '
+            'is ambiguous and is NOT a general price-per-thousand-items feature. '
+            'Enter the dimensions and supplier rate for actual lumber only.')
     reviewed = [word for word,route in SUPPORTED_REASSIGNMENTS.items()
                 if route == '/' + t['slug'] + '/']
     if reviewed:
