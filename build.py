@@ -101,23 +101,23 @@ def home():
     body = ('<section class="hero wrap"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> PRECISION FOR THE WORKSHOP</span>'
             '<h1>Good work begins<br>with <em>better measurements.</em></h1>'
             '<p>Woodworking calculators for practical layouts, cut lengths, spacing and material takeoffs. Enter dimensions, inspect an annotated drawing, then export your work.</p>'
-            '<div class="hero-actions"><a class="btn primary" href="/#tools">Explore 26 free tools <span aria-hidden="true">↗</span></a>'
+            '<div class="hero-actions"><a class="btn primary" href="/#tools">Explore 28 free tools <span aria-hidden="true">↗</span></a>'
             '<a class="btn subtle" href="/stud-calculator/">Try the stud calculator</a></div>'
-            '<div class="hero-facts"><span><strong>26</strong> working calculator routes</span><span><strong>5</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
+            '<div class="hero-facts"><span><strong>28</strong> working calculator routes</span><span><strong>5</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
             '</div>' + hero_graphic() + '</section>')
     body += ('<section id="tools" class="wrap home-section"><div class="section-heading"><div><span class="eyebrow">FIND YOUR TOOL</span>'
              '<h2>Built around the work, not the jargon.</h2><p>Browse the most common workshop measurements and quickly jump to the right calculator.</p></div></div>'
              '<nav class="categories" aria-label="Tool categories">'+categories_nav()+'</nav>'
              '<section id="recent-tools" class="recent-panel" hidden><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h3>Recently used tools</h3><div id="recent-links" class="recent-links"></div></section>'
              '<div class="section-heading compact"><h3>Start with a proven task</h3><span>FEATURED TOOLS</span></div><div class="tool-grid">'+''.join(tool_card(t) for t in featured)+'</div>'
-             '<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>26 TOOL WORKSPACES</span></div>'
+             '<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>28 TOOL WORKSPACES</span></div>'
              '<div class="directory-list">'+''.join(f'<a href="/{esc(t["slug"])}/"><span>{esc(t["title"])}</span><small>{esc(CATS[t["category"]][0])}</small><b>↗</b></a>' for t in TOOLS)+'</div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
             '<div><b>02 / Check</b><p>Visible formulas, explicit assumptions, precise dimensions.</p></div>'
             '<div><b>03 / Export</b><p>Save a locally generated CSV or SVG; print to PDF from your browser.</p></div></section>')
-    return page("Free Woodworking Calculators, Layout & Cutting Geometry","26 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
+    return page("Free Woodworking Calculators, Layout & Cutting Geometry","28 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]

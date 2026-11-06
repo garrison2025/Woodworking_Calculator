@@ -2434,18 +2434,81 @@
     },
     {
       "slug": "gambrel-roof-calculator",
-      "title": "Gambrel Roof Calculator",
+      "title": "Gambrel Roof Two-Pitch Geometry",
       "category": "roof",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "gambrel roof calculator",
       "volume": 480,
       "kd": 5,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Calculate symmetric two-pitch gambrel roof break stations, upper and lower slope lines, ridge height, and sloped roof surface area.",
+      "inputs": [
+        {
+          "key": "width",
+          "label": "Building span between outside walls",
+          "kind": "L",
+          "value": 240
+        },
+        {
+          "key": "length",
+          "label": "Building length",
+          "kind": "L",
+          "value": 360
+        },
+        {
+          "key": "eaveOverhang",
+          "label": "Eave horizontal overhang per side",
+          "kind": "L",
+          "value": 12
+        },
+        {
+          "key": "endOverhang",
+          "label": "End overhang beyond each gable",
+          "kind": "L",
+          "value": 12
+        },
+        {
+          "key": "lowerRun",
+          "label": "Lower steep-slope horizontal run from eave",
+          "kind": "L",
+          "value": 60
+        },
+        {
+          "key": "lowerPitch",
+          "label": "Lower steep-slope rise per 12 run",
+          "kind": "P",
+          "value": 12
+        },
+        {
+          "key": "upperPitch",
+          "label": "Upper shallow-slope rise per 12 run",
+          "kind": "P",
+          "value": 4
+        },
+        {
+          "key": "waste",
+          "label": "Optional surface allowance (%)",
+          "kind": "D",
+          "value": 10
+        }
+      ],
+      "formula": "Roof half-run R=building span/2+horizontal eave overhang. From the eave, lower break run r produces lower rise r×lowerPitch/12. The upper run R−r produces upper rise (R−r)×upperPitch/12. Each true slope line is hypot(horizontal run, rise). Equal mirror-image sides yield sloped roof area 2×(lower slope+upper slope)×(building length+both end overhangs).",
+      "example": "For a 240 in building width with 12 in eave overhangs, a 60 in lower run at 12:12 and a remaining 72 in upper run at 4:12 gives lower-rise 60 in, upper-rise 24 in, and ridge 84 in above the eave datum. Lower and upper true slope lines are approximately 84.85281 and 75.89466 in each.",
+      "limit": "Symmetric geometric gambrel profile only; the steeper lower and shallower upper roof pitches must differ. The break station is a horizontal distance measured from the eave projection, not along the roof slope. This is NOT a structural truss, rafter design, member/fastener sizing, roofing-sheet cutting plan or code-approved load calculation. Illustration is not full-size.",
+      "guidance": [
+        {
+          "heading": "The two pitch runs share one horizontal datum",
+          "text": "Measure lower run from the left outside eave projection to the pitch-break station; upper run continues horizontally to the central ridge. The upper break is mirrored on the right. These two runs sum to half the roof width including eave overhang."
+        },
+        {
+          "heading": "Developed slope differs from roof plan",
+          "text": "For each slope use hypot(horizontal run, vertical rise) to obtain its true sloping line. A roof plan dimension is not the surface length to order. The reported area is gross geometric roof faces, optionally with an entered surface allowance; it is not a complete sheathing layout."
+        },
+        {
+          "heading": "A gambrel roof is not automatically a truss",
+          "text": "No truss joint angles, roof loads, beam forces, bearing or structural member properties are calculated. Search queries containing gambrel truss refer to work beyond this independent roof geometry model."
+        }
+      ]
     },
     {
       "slug": "lumber-price-calculator",
@@ -2464,18 +2527,75 @@
     },
     {
       "slug": "fence-picket-calculator",
-      "title": "Fence Picket Calculator",
+      "title": "Fence Picket Spacing and Count",
       "category": "decks",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "picket spacing calculator",
       "volume": 210,
       "kd": 2,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Calculate fence picket count from a maximum equal clear gap, or lay out an exact count using measured faces and both end gaps.",
+      "inputs": [
+        {
+          "key": "opening",
+          "label": "Clear span between inside post faces",
+          "value": 96,
+          "kind": "L"
+        },
+        {
+          "key": "width",
+          "label": "Actual picket face width",
+          "value": 3.5,
+          "kind": "L"
+        },
+        {
+          "key": "mode",
+          "label": "Picket layout method",
+          "kind": "N",
+          "value": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Maximum equal clear gap → count"
+            },
+            {
+              "value": 1,
+              "label": "Exact picket count → clear gap"
+            }
+          ]
+        },
+        {
+          "key": "maxGap",
+          "label": "Maximum desired equal clear gap",
+          "kind": "L",
+          "value": 4,
+          "showWhen": "mode:0"
+        },
+        {
+          "key": "count",
+          "label": "Exact picket count",
+          "kind": "N",
+          "value": 13,
+          "showWhen": "mode:1"
+        }
+      ],
+      "formula": "With n pickets of actual face width w and n+1 equal clear spaces including both END gaps, opening L=n×w+(n+1)×gap. For maximum target gap G, choose the minimum positive count n=max(1,ceil((L−G)/(w+G))), subject to actual face fit and coordinate resolution. Exact-count mode reports gap=(L−n×w)/(n+1).",
+      "example": "With a 96 in clear opening between INSIDE post faces, actual picket face width 3.5 in and maximum equal gap 4 in, the smallest count is 13. There are 14 gaps of (96−13×3.5)/14=3.607142857 in, including both ends.",
+      "limit": "The opening is INSIDE post faces, not post-center spacing. All end and between-picket gaps are made equal. This is layout geometry only, not a local guardrail or pool-fence safety-code approval, wind load, fastener design or a one-to-one saw/print template.",
+      "guidance": [
+        {
+          "heading": "The opening begins at a post face",
+          "text": "Measure from the inside face of the left support post to the inside face of the right support post. A post center-to-center measurement is for the separate Fence Post tool and cannot be substituted without accounting for face widths."
+        },
+        {
+          "heading": "Picket count and end gaps are related",
+          "text": "The first and last clear spaces are INCLUDED in the equal-gap solution, so n pickets create n+1 gaps. Automatic count mode chooses the least number of pickets under the entered maximum gap; exact-count mode shows the resulting gap even if it differs from a prior unselected target."
+        },
+        {
+          "heading": "Confirm physical faces and code limits",
+          "text": "Independently check that picket widths plus all open spaces close exactly to the entered clear run. The selected maximum gap is user-entered and not a jurisdiction-approved code limit; verify safety and fastening separately."
+        }
+      ]
     },
     {
       "slug": "stave-calculator",

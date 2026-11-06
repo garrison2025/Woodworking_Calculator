@@ -521,6 +521,46 @@
           "why": "Estimate separate deck materials"
         }
       ]
+    },
+    {
+      "slug": "fence-picket-calculator",
+      "seoTitle": "Picket Spacing Calculator for Equal Fence Gaps",
+      "useFor": "Compute picket count and symmetrical clear gaps from a measured inside-post opening and actual picket face widths.",
+      "notFor": "Guardrail safety-code limits, pool-fence compliance, wind-loaded fastener sizing or structural post design.",
+      "next": [
+        {
+          "slug": "fence-post-calculator",
+          "why": "Set post centers before measuring their inside faces"
+        },
+        {
+          "slug": "baluster-spacing-calculator",
+          "why": "Check a different railing-baluster gap layout"
+        },
+        {
+          "slug": "equal-spacing-calculator",
+          "why": "Measure part center positions on a separate workpiece"
+        }
+      ]
+    },
+    {
+      "slug": "gambrel-roof-calculator",
+      "seoTitle": "Gambrel Roof Calculator for Two-Pitch Geometry",
+      "useFor": "Measure a symmetrical gambrel roof's two pitch breaks, four slope segments, eave-to-ridge height and gross face area.",
+      "notFor": "Engineered gambrel truss joints, roof load calculations, sheet cutting plans or structural framing approval.",
+      "next": [
+        {
+          "slug": "roof-pitch-calculator",
+          "why": "Convert each independent pitch to angle or grade"
+        },
+        {
+          "slug": "gable-roof-calculator",
+          "why": "Estimate an ordinary single-pitch gable roof"
+        },
+        {
+          "slug": "roof-sheathing-calculator",
+          "why": "Build a rectangular slope-face sheet takeoff separately"
+        }
+      ]
     }
   ]
 }
