@@ -1002,6 +1002,7 @@ if(slug){
   const specialtyPrintLayouts=[
     ["framing-material-table",1,5],["framing-price-table",2,5],
     ["framing-offer-table",2,5],["framing-proof-table",1,5],
+    ["framing-reuse-table",3,6],["framing-reuse-purchase-table",2,5],
     ["deck-budget-table",1,5],["deck-fastener-table",1,5],
     ["stringer-sawline-table",2,5],["stringer-end-lines-table",2,5],
     ["stringer-end-contact-table",2,5],["shelf-pin-table",3,6],
