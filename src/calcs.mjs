@@ -128,9 +128,16 @@ export function exactFramingStock(ordered,offers,kerf,allowance,seed,settings={}
 
 function roofPolygonArea(poly){
   if(poly.length<3)return 0;
-  return Math.abs(poly.reduce((sum,p,i)=>{
-    const n=poly[(i+1)%poly.length];return sum+p[0]*n[1]-n[0]*p[1];
-  },0))/2;
+  // A triangle fan relative to the first vertex avoids catastrophic
+  // cancellation of large absolute roof-grid X/Y shoelace terms when
+  // an offcut is very small. Still preserves each clipped polygon area.
+  const [ox,oy]=poly[0];
+  let twice=0;
+  for(let i=1;i<poly.length-1;i++){
+    const a=poly[i],b=poly[i+1];
+    twice+=(a[0]-ox)*(b[1]-oy)-(b[0]-ox)*(a[1]-oy);
+  }
+  return Math.abs(twice)/2;
 }
 function roofClipPolygon(poly,u0,v0,u1,v1){
   const clip=(pts,axis,bound,lower)=>{
@@ -201,14 +208,32 @@ function layoutHipSheets(major,minor,factor,sheetAlong,sheetUphill){
     need(cols>=1&&rows>=1&&cols*rows<=900,"Roof sheet grid is too dense; enter a larger sheet or smaller roof.");
     for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
       const u0=col*sheetAlong,v0=row*sheetUphill;
-      const clipped=roofCleanPolygon(roofClipPolygon(plane.poly,u0,v0,u0+sheetAlong,v0+sheetUphill));
+      const raw=roofClipPolygon(plane.poly,u0,v0,u0+sheetAlong,v0+sheetUphill);
+      const rawArea=roofPolygonArea(raw);
+      const clipped=roofCleanPolygon(raw);
       const area=roofPolygonArea(clipped);
-      if(area<=1e-9)continue;
+      if(area===0){
+        // A true tangent with zero area consumes no cut. A positive
+        // polygon erased by cleanup must never disappear silently.
+        need(rawArea<=1e-17,
+          "Hip roof cut contains a sub-resolution polygon; adjust sheet dimensions or slope.");
+        continue;
+      }
       const sheetArea=sheetAlong*sheetUphill;
       need(area<=sheetArea+Math.max(1e-6,sheetArea*1e-9),
         "Clipped hip polygon exceeds the original sheet surface.");
       const localVertices=clipped.map(p=>[q(p[0]-u0),q(p[1]-v0)]);
       const planPoints=clipped.map(p=>plane.toPlan(p[0],p[1]).map(q));
+      const roundedArea=roofPolygonArea(localVertices);
+      const edges=localVertices.map((p,i)=>{
+        const n=localVertices[(i+1)%localVertices.length];
+        return Math.hypot(n[0]-p[0],n[1]-p[1]);
+      });
+      need(localVertices.length>=3&&roundedArea>0&&
+        edges.every(edge=>edge>=1e-7)&&
+        Math.abs(roundedArea-area)<=Math.max(1e-17,area*.05)&&
+        roofPolygonArea(planPoints)>0,
+        "Hip roof clipped polygon is below cut-coordinate resolution; adjust sheet size or slope.");
       panels.push({
         id:"S"+(panels.length+1),plane:plane.name,planeIndex:idx,
         row:row+1,column:col+1,
@@ -235,6 +260,8 @@ function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
     "Reuse plan is bounded to 400 roof cut pieces; use a larger sheet or disable reuse.");
   need(stockWidth>0&&stockHeight>0&&kerf>=0&&kerf<Math.min(stockWidth,stockHeight),
     "Saw kerf must be smaller than both stock sheet dimensions.");
+  need(kerf===0||kerf>=1e-8,
+    "Roof stock saw kerf is below cut-coordinate resolution; enter zero or a measurable width.");
   const ordered=parts.map((p,index)=>({...p,originalOrder:index}))
     .sort((a,b)=>b.width*b.height-a.width*a.height||a.originalOrder-b.originalOrder);
   const boards=[],out=[];
@@ -285,8 +312,10 @@ function packRoofCutBoxes(parts,stockWidth,stockHeight,kerf){
       row:item.row,column:item.column,stockId:board.id,
       stockX:q(free.x),stockY:q(free.y),
       boxWidth:q(item.width),boxHeight:q(item.height),
-      installedAreaFt2:q(item.actualArea/144),
-      rectangularBoxAreaFt2:q((item.width*item.height)/144),
+      // Keep actual numeric areas, even for micro-sized polygon corners.
+      // Quantizing square feet to 1e-8 made positive cut areas export as 0.
+      installedAreaFt2:item.actualArea/144,
+      rectangularBoxAreaFt2:(item.width*item.height)/144,
       stockCutVertices:item.vertices.map(([x,y])=>[q(free.x+x),q(free.y+y)])
     };
     board.placements.push(row);out.push(row);
