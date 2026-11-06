@@ -74,9 +74,8 @@ test("Framing stock-local start/end locations match every exported cut and print
   expect(Math.abs(widths.inch-96)).toBeLessThan(.5);
   await page.emulateMedia({media:"screen"});
   await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
-  await page.locator("#f-studStockLength").fill("1");
-  // Alternate quoted stock offers can still cover the wall; a clearly
-  // invalid geometry instead must disable the stock CSV and clear the table.
+  // An impossible wall height invalidates geometry regardless of which
+  // supplier stock offers can be selected. Keep stock inputs unchanged.
   // The unit selector is still millimeters: 25400 mm is 1000 in.
   await page.locator("#f-wallHeight").fill("25400");
   await expect(page.locator("#calc-error")).toBeVisible();
