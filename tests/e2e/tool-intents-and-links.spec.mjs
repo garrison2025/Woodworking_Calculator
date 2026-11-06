@@ -7,10 +7,10 @@ const fieldChecks=JSON.parse(readFileSync(new URL("../../src/field-verification.
 const active=manifest.filter(t=>t.priority==="P0"||t.priority==="P1");
 const bySlug=new Map(intents.map(t=>[t.slug,t]));
 
-test("All 28 calculator landings explain real search tasks and link only to valid contextual follow-ups",async({page})=>{
+test("All 29 calculator landings explain real search tasks and link only to valid contextual follow-ups",async({page})=>{
   test.setTimeout(110000);
-  expect(active).toHaveLength(28);
-  expect(intents).toHaveLength(28);
+  expect(active).toHaveLength(29);
+  expect(intents).toHaveLength(29);
   for(const t of active){
     const intent=bySlug.get(t.slug);
     expect(intent,"missing intent mapping for "+t.slug).toBeDefined();
@@ -35,7 +35,13 @@ test("All 28 calculator landings explain real search tasks and link only to vali
       expect(dest,"linked to an unreleased P2 or non-tool route").toBeTruthy();
     }
     await expect(page.locator(".intent-query-copy")).toBeVisible();
-    await expect(page.locator(".intent-query-copy")).toContainText(t.keyword);
+    if(t.slug==="lumber-price-calculator"){
+      await expect(page.locator(".intent-query-copy")).not.toContainText(t.keyword);
+      await expect(page.locator(".intent-query-copy")).toContainText("MBF");
+      await expect(page.locator(".intent-query-copy")).toContainText("historical broad research query");
+    }else{
+      await expect(page.locator(".intent-query-copy")).toContainText(t.keyword);
+    }
     await expect(page.locator(".intent-query-copy"))
       .not.toContainText("Closely related search terms include");
     if(t.slug==="framing-calculator"){

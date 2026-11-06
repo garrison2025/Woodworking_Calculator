@@ -22,7 +22,7 @@ assert {k:len(v) for k,v in case_map.items()}=={
     "deck-board-calculator":2,"rafter-calculator":2,"stair-stringer-calculator":2
 }, "Only three audited tools may offer two worked scenarios each"
 assert set(field_checks)==set(intents), "All active tools require task-specific field checks"
-assert len(intent_entries)==len(intents)==len(active)==28, "Exactly 26 unique active intents required"
+assert len(intent_entries)==len(intents)==len(active)==29, "Exactly 29 unique active intents required"
 assert set(intents)=={t["slug"] for t in active}, "Intent metadata missing or holding an unpublished P2 route"
 assert all(len(x["next"])==3 for x in intent_entries), "Exactly three specific next-task links per tool"
 with (root/"research"/"woodworking-keyword-map-152.csv").open(newline="",encoding="utf-8") as source:
@@ -75,8 +75,8 @@ class Checker(html.parser.HTMLParser):
         if self.title:self.title_text+=data
 errors=[]
 pages=sorted(dist.rglob("index.html"))
-assert len(active)==28 and len(hold)==3,(len(active),len(hold))
-assert len(pages)==1+28+len({t["category"] for t in active})+4,len(pages)
+assert len(active)==29 and len(hold)==2,(len(active),len(hold))
+assert len(pages)==1+29+len({t["category"] for t in active})+4,len(pages)
 for p in pages:
     c=Checker();c.feed(p.read_text(encoding="utf8"))
     u="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
@@ -103,7 +103,15 @@ for p in pages:
         if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
             errors.append(f"{u}: SEO title does not match task-specific approved intent")
         if page_tool["keyword"].lower() not in intent["seoTitle"].lower():
-            errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
+            # One historically broad research query is deliberately NOT used
+            # in a title as if it matched a generic pricing intent.
+            if page_tool["slug"]!="lumber-price-calculator" or not (
+                "lumber" in intent["seoTitle"].lower()
+                and "board foot" in intent["seoTitle"].lower()
+                and "mbf" in intent["seoTitle"].lower()):
+                errors.append(f"{u}: primary research keyword missing from human-readable SEO title")
+            elif "historical broad research query" not in body.lower() or "NOT a general" not in body:
+                errors.append(f"{u}: ambiguous historical thousand-price query lacks on-page scope caveat")
         if len(intent["seoTitle"])<25 or len(intent["seoTitle"])>75:
             errors.append(f"{u}: SEO title is too generic or overlong")
         if len(intent["useFor"])<45 or len(intent["notFor"])<42:
@@ -139,8 +147,12 @@ for p in pages:
             rendered_query=html.unescape(nearby.group(0)).lower()
             if "closely related search terms include" in rendered_query:
                 errors.append(f"{u}: generic synonym inventory still present")
-            if page_tool["keyword"].lower() not in rendered_query:
+            if (page_tool["slug"]!="lumber-price-calculator"
+                and page_tool["keyword"].lower() not in rendered_query):
                 errors.append(f"{u}: primary research search task missing")
+            if page_tool["slug"]=="lumber-price-calculator" and (
+                "lumber" not in rendered_query or "mbf" not in rendered_query):
+                errors.append(f"{u}: lumber scope not defined precisely")
             for route,term in flagged:
                 if route==u and term in rendered_query:
                     errors.append(f"{u}: flagged nonmatching search phrase used as a claimed synonym: {term}")
@@ -200,4 +212,4 @@ print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
-print("PASS: static structure, all 28 field labels/guidance, links, metadata, preview noindex, P2 hold")
+print("PASS: static structure, all 29 field labels/guidance, links, metadata, preview noindex, P2 hold")

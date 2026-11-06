@@ -2528,18 +2528,119 @@
     },
     {
       "slug": "lumber-price-calculator",
-      "title": "Lumber Price Calculator",
+      "title": "Lumber Price & Board Foot Calculator",
       "category": "materials",
-      "priority": "P2",
+      "priority": "P1",
       "keyword": "price per thousand calculator",
       "volume": 110,
       "kd": 9,
-      "status": "HOLD",
-      "desc": "Not implemented or published; math and physical layout verification pending.",
-      "inputs": [],
-      "formula": "",
-      "example": "",
-      "limit": "Not approved for release"
+      "status": "BETA_NO_INDEX",
+      "desc": "Measure board-foot volume and estimate whole-piece lumber purchases with explicit per-BF or per-1,000-BF pricing and separate tax.",
+      "inputs": [
+        {
+          "key": "dimensionBasis",
+          "label": "Entered dimension basis (no automatic substitution)",
+          "kind": "N",
+          "value": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Nominal dimensions explicitly entered"
+            },
+            {
+              "value": 1,
+              "label": "Actual measured dimensions explicitly entered"
+            }
+          ]
+        },
+        {
+          "key": "thickness",
+          "label": "Entered board thickness",
+          "kind": "L",
+          "value": 1
+        },
+        {
+          "key": "width",
+          "label": "Entered board width",
+          "kind": "L",
+          "value": 6
+        },
+        {
+          "key": "length",
+          "label": "Entered board length",
+          "kind": "L",
+          "value": 96
+        },
+        {
+          "key": "quantity",
+          "label": "Pieces needed before reserve",
+          "kind": "N",
+          "value": 10
+        },
+        {
+          "key": "waste",
+          "label": "Additional whole-piece purchase reserve %",
+          "kind": "D",
+          "value": 10
+        },
+        {
+          "key": "priceBasis",
+          "label": "Quoted pricing basis",
+          "kind": "N",
+          "value": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Price per board foot"
+            },
+            {
+              "value": 1,
+              "label": "Price per 1,000 board feet (MBF)"
+            }
+          ]
+        },
+        {
+          "key": "boardFootRate",
+          "label": "Entered price per board foot",
+          "kind": "C",
+          "value": 5.5,
+          "showWhen": "priceBasis:0"
+        },
+        {
+          "key": "thousandBoardFootRate",
+          "label": "Entered price per 1,000 board feet",
+          "kind": "C",
+          "value": 5500,
+          "showWhen": "priceBasis:1"
+        },
+        {
+          "key": "tax",
+          "label": "User-entered sales tax %",
+          "kind": "D",
+          "value": 8
+        }
+      ],
+      "formula": "For dimensions entered in inches: board feet per piece = thickness × width × length / 144. Order whole pieces = ceil(entered pieces × (1+reserve%)); purchased board feet = board feet/piece × whole ordered pieces. If price is per MBF (1,000 board feet), effective price per board foot = entered MBF rate ÷ 1000. Subtotal = purchased board feet × BF rate; tax = subtotal × entered tax%; total = subtotal + tax. Enter nominal or actually measured dimensions explicitly: no hidden size conversion.",
+      "example": "Nominal 1 × 6 × 96 in board = 4 board feet. Ten boards with a 10% whole-piece reserve require 11 boards = 44 BF; at 5.50 per BF (or 5500 per MBF), subtotal is 242.00. Entered 8% tax adds 19.36 for a total of 261.36 in your chosen currency.",
+      "limit": "Quantity and quoted price only. A 1×6 nominal designation is NOT automatically converted to finished physical 0.75×5.5: choose which dimensions your seller actually bills and type them. MBF here strictly means 1,000 BOARD FEET, not generic thousand items or linear feet. Tax rates, local currency, supplier invoicing, grading, moisture, stock availability, shipping, freight, milling waste, cutting/seam layouts and actual market prices are not independently checked. No foreign exchange conversion. All input rates are user supplied.",
+      "guidance": [
+        {
+          "heading": "Name the dimension basis before quoting",
+          "text": "Nominal lumber sizes and physical planed sizes often differ. Choose nominal or actual mode as a written reference, then explicitly enter the dimensions used by your supplier's invoice. The mode records what you typed; it never silently guesses nominal-to-actual conversion."
+        },
+        {
+          "heading": "Board feet are cubic measurements, not square feet",
+          "text": "One board foot means 144 cubic inches of wood: 1 inch × 12 inches × 12 inches. In inch inputs, multiply thickness × width × length, divide by 144. A nominal 1×6×8-foot board is 4 board feet; using measured 0.75×5.5×96-inch stock instead produces 2.75 board feet. Which one to bill depends on the actual supplier's policy."
+        },
+        {
+          "heading": "Reserve rounds to whole physical boards",
+          "text": "The reserve percentage raises the number of purchased WHOLE pieces before multiplying by BF. It is not a continuous fractional-board order. The result may be more conservative than a vendor's invoiced volume and does not reuse offcuts or price different stock grades."
+        },
+        {
+          "heading": "MBF means exactly 1,000 board feet",
+          "text": "When a supplier quotes a number per MBF, divide that quoted number by 1,000 before multiplying by ordered BF. This tool does not interpret generic price-per-thousand searches, timber log scaling, cubic meters or thousand linear feet as equivalent to MBF."
+        }
+      ]
     },
     {
       "slug": "fence-picket-calculator",

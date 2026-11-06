@@ -60,7 +60,8 @@ const sourceCount=model=>{
     "sheathing-panels":[".sheathing-cut",model.roofSheets?.length],
     posts:[".post-face",model.faceRows?.length],
     "picket-layout":[".picket-face",model.faceRows?.length],
-    "gambrel-profile":[".gambrel-slope-segment",model.gambrelRows?.length]
+    "gambrel-profile":[".gambrel-slope-segment",model.gambrelRows?.length],
+    "lumber-board":[".lumber-board-face",1]
   };
   const found=shapes[model.shape];
   expect(found,"Missing explicit SVG family assertion for "+model.shape).toBeTruthy();
@@ -194,6 +195,12 @@ async function checkSvg(page,model){
     await common(line,"data-start-y",model.braceCutRows[0].verticalY);
     await common(line,"data-end-x",model.braceCutRows[1].horizontalX);
     await common(line,"data-end-y",model.braceCutRows[1].verticalY);
+  }else if(model.shape==="lumber-board"){
+    const el=root.locator(".lumber-board-face"),b=model.lumberBoard;
+    await common(el,"data-length-in",b.length);
+    await common(el,"data-width-in",b.width);
+    await common(el,"data-thickness-in",b.thickness);
+    approx((await att(el,"width"))/(await att(el,"height")),b.length/b.width,1e-8);
   }else if(model.shape==="triangle"){
     const slope=root.locator(".roof-pitch-slope");
     const dx=(await att(slope,"x2"))-(await att(slope,"x1"));
@@ -266,7 +273,7 @@ for(const tool of active){
   });
 }
 test("all active routes have explicit screenshot-family assertions",()=>{
-  expect(active.length).toBe(28);
-  expect(new Set(active.map(x=>x.slug)).size).toBe(28);
-  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(3);
+  expect(active.length).toBe(29);
+  expect(new Set(active.map(x=>x.slug)).size).toBe(29);
+  expect(registry.tools.filter(x=>x.priority==="P2").length).toBe(2);
 });

@@ -10,10 +10,10 @@ const held=tools.filter(t=>t.priority==="P2");
 const defaults=t=>Object.fromEntries(t.inputs.map(x=>[x.key,x.value]));
 const value=(result,label)=>{const item=result.metrics.find(m=>m.label===label);assert.ok(item,"Missing metric: "+label);return item.value};
 const near=(actual,expected,tolerance=1e-3)=>assert.ok(Math.abs(actual-expected)<=tolerance,"Expected "+expected+", got "+actual);
-test("Manifest has 9 P0, 19 P1 and three held P2 routes",()=>{
+test("Manifest has 9 P0, 20 P1 and two held P2 routes",()=>{
   assert.equal(published.filter(t=>t.priority==="P0").length,9);
-  assert.equal(published.filter(t=>t.priority==="P1").length,19);
-  assert.equal(held.length,3);
+  assert.equal(published.filter(t=>t.priority==="P1").length,20);
+  assert.equal(held.length,2);
   assert.equal(new Set(tools.map(t=>t.slug)).size,31);
   for(const t of held)assert.equal(t.status,"HOLD");
   for(const t of published)assert.ok(t.keyword&&t.kd<=29&&t.example&&t.formula&&t.limit);
@@ -46,7 +46,8 @@ const golden={
   "roof-sheathing-calculator":["Sheet geometric lower bound",5],
   "fence-post-calculator":["Posts",14],
   "fence-picket-calculator":["Pickets",16],
-  "gambrel-roof-calculator":["Ridge elevation above eave datum",84]
+  "gambrel-roof-calculator":["Ridge elevation above eave datum",84],
+  "lumber-price-calculator":["Board feet per piece",4]
 };
 for(const t of published){
   const slug=t.slug, original=defaults(t);
