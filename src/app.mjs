@@ -1,6 +1,8 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
+import {makeFramingReviewVersion,validateFramingReviewVersion,
+  compareFramingReviewVersions,framingReviewVersionNote} from "./framing-review-versions.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -47,6 +49,15 @@ if(slug){
   const purchaseReviewStatus=document.querySelector("#framing-purchase-review-status");
   const purchaseReviewTable=document.querySelector("#framing-purchase-review-table tbody");
   const purchaseReviewExport=document.querySelector("#download-framing-purchase-review-csv");
+  const versionPanel=document.querySelector("#framing-review-versions");
+  const versionIdentifiers=document.querySelector("#framing-version-identifiers");
+  const versionStatus=document.querySelector("#framing-version-status");
+  const versionDiffTable=document.querySelector("#framing-version-diff-table tbody");
+  const versionPin=document.querySelector("#framing-version-pin");
+  const versionJson=document.querySelector("#framing-version-json");
+  const versionDiffCsv=document.querySelector("#framing-version-diff-csv");
+  const versionImport=document.querySelector("#framing-version-import");
+  const versionState={current:null,reference:null,difference:null,importError:null};
   const purchaseReviewDraft={signature:"",quoteSignature:"",stocks:new Map(),
     globals:{sawSafetyReviewed:false,structuralReviewed:false,
       supplierVerified:false,totalCostReviewed:false}};
