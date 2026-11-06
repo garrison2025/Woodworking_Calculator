@@ -26,6 +26,12 @@ if(slug){
   const stockAuditStatus=document.querySelector("#framing-stock-audit-status");
   const stockAuditTable=document.querySelector("#framing-stock-audit-table tbody");
   const stockAuditExport=document.querySelector("#download-stock-audit-csv");
+  const stockReusePanel=document.querySelector("#framing-reuse-plan");
+  const stockReuseStatus=document.querySelector("#framing-reuse-status");
+  const stockReuseTable=document.querySelector("#framing-reuse-table tbody");
+  const stockReusePriceTable=document.querySelector("#framing-reuse-purchase-table tbody");
+  const stockReuseExport=document.querySelector("#download-framing-reuse-csv");
+  const stockReusePriceExport=document.querySelector("#download-framing-reuse-quote-csv");
   const pricingExport=document.querySelector("#download-price-csv");
   const currency=document.querySelector("#framing-currency")||document.querySelector("#deck-currency");
   const framingPriceTable=document.querySelector("#framing-price-table tbody");
@@ -1089,6 +1095,48 @@ if(slug){
         stockAuditTable.innerHTML="";
       }
     }
+    if(stockReusePanel){
+      const alternative=latest?.stockReusePlan;
+      stockReusePanel.hidden=!alternative?.enabled;
+      const hasAlternative=alternative?.enabled&&alternative.rows?.length>0;
+      stockReuseExport.disabled=!hasAlternative;
+      stockReusePriceExport.disabled=!hasAlternative||!alternative.purchaseVariants?.length;
+      if(alternative?.enabled){
+        const statusText={
+          "baseline-shortfall":"NO SAFE COMPARISON — the original layout cannot fit the additional end trims / final kerf. Do not use the base buying ticket as a sufficient order.",
+          "threshold-required":"SET A POSITIVE MINIMUM OFFCUT — zero disables reassignment candidates.",
+          "size-limit":"SEARCH BOUND EXCEEDED — the existing material plan is unchanged.",
+          "no-reduction":"NO LOWER PURCHASE FOUND within this bounded local search. The original quote and cut plan remain unchanged."
+        };
+        stockReuseStatus.textContent=statusText[alternative.status]||
+          ("BOUNDED REASSIGNMENT — "+alternative.removedSourceIds.length+
+            " original sticks removed; "+alternative.originalPurchaseSticks+
+            " originally purchased versus "+alternative.purchaseSticks+
+            " in this alternative (including separately rounded reserves). "+
+            (alternative.canClaimModeledSavings?
+              "Modeled supplier-quote difference: "+money(alternative.quotedDifference)+
+                " LESS, before tax, delivery and physical verification.":
+              "No defensible priced savings claim; verify quotes, profile and actual stock.")+
+            " This is not a globally optimal or construction-certified plan.");
+        stockReuseTable.innerHTML=(alternative.rows||[]).map(row=>'<tr>'+
+          [row.stockGroup,row.originalStockId,row.stockId,
+            row.item,fmt(row.cutLength,"L"),fmt(row.cutStart,"L"),
+            fmt(row.cutEnd,"L"),fmt(row.kerfBefore,"L")]
+          .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+        const oldOffers=new Map((latest?.purchaseVariants||[]).map(v=>
+          [v.stockGroup+"|"+v.offerLabel,v.purchaseSticks]));
+        stockReusePriceTable.innerHTML=(alternative.purchaseVariants||[]).map(row=>'<tr>'+
+          [row.stockGroup,row.offerLabel+" · "+fmt(row.stockLength,"L"),
+            oldOffers.get(row.stockGroup+"|"+row.offerLabel)??0,
+            row.purchaseSticks,row.unitPrice===null?"Quote needed":money(row.unitPrice),
+            row.purchaseCost===null?"Quote needed":money(row.purchaseCost)]
+          .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
+      }else{
+        stockReuseStatus.textContent="Reallocation mode off — original procurement unchanged.";
+        stockReuseTable.innerHTML="";
+        stockReusePriceTable.innerHTML="";
+      }
+    }
     const groups=latest?.materialSummary||[],bars=latest?.stockPlan||[],
       variants=latest?.purchaseVariants||[],comparisons=latest?.stockComparisons||[],
       checks=latest?.optimizerStatus||[];
@@ -1390,6 +1438,10 @@ if(slug){
     for(const button of [copy,csv,svg,print])if(button)button.disabled=!enabled;
     if(stockExport)stockExport.disabled=!latest?.stockCuts?.length;
     if(stockAuditExport)stockAuditExport.disabled=!latest?.stockAudit?.enabled||!latest?.stockAudit?.rows?.length;
+    if(stockReuseExport)stockReuseExport.disabled=!latest?.stockReusePlan?.enabled||
+      !latest?.stockReusePlan?.rows?.length;
+    if(stockReusePriceExport)stockReusePriceExport.disabled=!latest?.stockReusePlan?.enabled||
+      !latest?.stockReusePlan?.purchaseVariants?.length;
     if(pricingExport)pricingExport.disabled=!latest?.purchaseVariants?.length;
     if(deckBudgetExport)deckBudgetExport.disabled=!latest?.deckPurchaseRows?.length;
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
@@ -1520,6 +1572,22 @@ if(slug){
       "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
     save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
     status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
+  });
+  stockReuseExport?.addEventListener("click",()=>{
+    if(!latest?.stockReusePlan?.enabled||!latest.stockReusePlan.rows?.length)return;
+    const body=buildScheduleCsv(latest.stockReusePlan.rows,unit,
+      "ALTERNATIVE, NOT THE ORIGINAL CUT PLAN: local whole-stick-retirement heuristic. Same-stock-profile intact cuts only. Positions include entered end trims and between-piece saw kerf. The source is not certified for construction or machine cutting.");
+    save(slug+"-"+unit+"-offcut-reallocation-plan.csv",body,"text/csv;charset=utf-8");
+    status.textContent="Separate alternative offcut reassignment CSV saved; original cuts unchanged.";
+  });
+  stockReusePriceExport?.addEventListener("click",()=>{
+    if(!latest?.stockReusePlan?.enabled||!latest.stockReusePlan.purchaseVariants?.length)return;
+    const list=latest.stockReusePlan.purchaseVariants.map(r=>({...r,currency:currencyCode()}));
+    const body=buildScheduleCsv(list,unit,
+      "ALTERNATIVE PURCHASE ONLY, independent from the primary buying ticket. Quote differences are modeled for entered supplier prices, not real-world savings or a globally optimal plan. Prices do not include tax, delivery, flaws or labor.");
+    save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-offcut-alternative-quote.csv",
+      body,"text/csv;charset=utf-8");
+    status.textContent="Separate modeled alternative supplier quote saved; original buying ticket unchanged.";
   });
   pricingExport?.addEventListener("click",()=>{
     if(!latest||!latest.materialSummary)return;
