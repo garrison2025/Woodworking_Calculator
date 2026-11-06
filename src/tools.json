@@ -1106,12 +1106,12 @@
           "text": "At each entered joist-center reference, every independent decking piece touching that line is counted once. A row with no butt seams has one contact per joist line. A single proposed butt seam causes TWO separate pieces to contact that same joist reference, so it adds one more contact per row. Multiply the resulting contacts by your own assumed number of fasteners per piece/contact, or enter zero to exclude hardware."
         },
         {
-          "heading": "Build a supplier-priced board and fastener order",
-          "text": "Enter your actual price per purchased decking stock board and per fastener pack, along with fasteners per contact and pack size. The calculator includes separately rounded board reserve stock, whole-pack hardware purchases and partial-price warnings. Enter 0 for an unavailable quote rather than claiming a free material. The price currency selector only changes the displayed label; it does not convert the entered values."
+          "heading": "Build a supplier-priced board, fastener and optional joist order",
+          "text": "Enter the price per purchased decking stock board and per fastener pack. If optional full-width joist stock is enabled, enter its price too. The subtotal includes only these modeled material families, separately rounded reserve stocks and whole-pack hardware; missing quotes make the subtotal explicitly incomplete. Zero price means unquoted, never free material. Currency selection only changes its label, not the numeric amounts."
         },
         {
           "heading": "What the materials budget intentionally excludes",
-          "text": "This is a nonstructural reference purchase estimate for decking pieces and selected fastener packs only. The joist lines are user-entered CENTER references, not designed joists; their width, bearing, spans, blocking, hangers, structural attachments, end trimming and extra fastening at supported edges are unverified. Physically validate the proposed joints, real lumber lengths and manufacturer installation instructions before purchasing."
+          "text": "This is a nonstructural reference purchase estimate for decking pieces, selected fastener packs, and optional full-width straight joist sticks only when their actual purchase length is enabled. The joist CENTER references do not design or certify the joists: their width, span, strength, bearing, blocking, beams, ledger, hangers, posts, footings, attachments, end trimming and extra fastening are unverified and excluded unless expressly listed. Physical validation of joints, lumber lengths and manufacturer instructions is required before purchasing."
         },
         {
           "heading": "Alternate butt seams without inventing support locations",
