@@ -111,7 +111,7 @@ for p in pages:
         # A captured SERP keyword that does not match the actual calculator
         # task is kept in research records but cannot be marketed as a live
         # functionality synonym in the generic nearby-search paragraph.
-        nearby=re.search(r'Other research search phrases.*?</p>',body)
+        nearby=re.search(r'<p class="intent-query-copy">.*?</p>',body)
         if nearby:
             for route,term in flagged:
                 if route==u and term in html.unescape(nearby.group(0)).lower():
