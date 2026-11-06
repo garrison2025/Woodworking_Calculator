@@ -303,7 +303,7 @@ def tool_page(t):
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
            '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
            +currency_picker+
-           f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel
+           f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel+
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally.</p></div>'
            '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
