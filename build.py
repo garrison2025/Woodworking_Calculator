@@ -14,6 +14,13 @@ DEST = ROOT / "dist"
 REGISTRY = json.loads((ROOT / "src" / "tools.json").read_text(encoding="utf-8"))
 TOOLS = [t for t in REGISTRY["tools"] if t["priority"] in {"P0", "P1"}]
 CATS = REGISTRY["categories"]
+# Explicit search-task boundaries and contextual next-tool choices: do NOT
+# choose related links by arbitrary manifest position or include held P2 URLs.
+INTENT_FILE = json.loads((ROOT / "src" / "tool-intents.json").read_text(encoding="utf-8"))
+INTENTS = {entry["slug"]:entry for entry in INTENT_FILE["tools"]}
+assert len(INTENTS) == len(INTENT_FILE["tools"]) == len(TOOLS), "Intent metadata must cover exactly the released tools"
+assert set(INTENTS) == {t["slug"] for t in TOOLS}, "Missing or extra released-tool intent metadata"
+
 with (ROOT / "research" / "woodworking-keyword-map-152.csv").open(encoding="utf-8", newline="") as keyword_file:
     KEYWORDS = list(csv.DictReader(keyword_file))
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
@@ -100,6 +107,7 @@ def home():
     return page("Free Woodworking Calculators, Layout & Cutting Geometry","26 practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
 
 def tool_page(t):
+    intent = INTENTS[t["slug"]]
     cluster = [k["keyword"] for k in KEYWORDS if k["target_route"] == '/' + t['slug'] + '/' and k['keyword'].lower() != t['keyword'].lower()]
     related_search_terms = ', '.join(cluster[:4])
     def field_markup(f):
@@ -123,13 +131,18 @@ def tool_page(t):
         '</details>'
     ) if advanced_fields else ""
     guidance = ''.join(f'<h3>{esc(g["heading"])}</h3><p>{esc(g["text"])}</p>' for g in t.get("guidance",[]))
-    related = [p for p in TOOLS if p["category"]==t["category"] and p["slug"]!=t["slug"]][:4]
-    others = [p for p in TOOLS if p["category"]!=t["category"]][:2]
-    relevant=(related+others)[:6]
+    targets = {p["slug"]:p for p in TOOLS}
+    relevant = [(targets[link["slug"]], link["why"]) for link in intent["next"]]
+    assert len({p["slug"] for p, why in relevant}) == len(relevant), "Duplicate next tools"
+    assert all(p["slug"] != t["slug"] for p, why in relevant), "Self link in next tools"
     catname,catslug=CATS[t["category"]]
     body=(f'<div class="wrap tool-heading"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">All tools</a><span>/</span><a href="/{catslug}/">{esc(catname)}</a><span>/</span>{esc(t["title"])}</nav>'
           f'<span class="eyebrow"><span class="eyebrow-dot"></span> TOOL {esc(t["priority"])} · GEOMETRY WORKSPACE</span>'
           f'<h1>{esc(t["title"])}</h1><p class="tool-lede">{esc(t["desc"])}</p>'
+          '<div class="intent-fit" aria-label="When to use this calculator">'
+          f'<p><strong>Use this calculator for</strong> {esc(intent["useFor"])}</p>'
+          f'<p><strong>Choose a different tool for</strong> {esc(intent["notFor"])}</p>'
+          '</div>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
     quote_currency_id="framing-currency" if t["slug"]=="framing-calculator" else "deck-currency"
     currency_picker=(
@@ -407,7 +420,7 @@ def tool_page(t):
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
            +framing_takeoff+deck_takeoff+stringer_section+roof_reuse_section+shelf_pin_panel+
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
-           f'<p>{esc(t["desc"])}</p><p>This workspace directly addresses <strong>{esc(t["keyword"])}</strong> measurements. '+(f'Related terms in the same measurement task include {esc(related_search_terms)}.' if related_search_terms else 'All measurements use the same dimensional model.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
+           f'<p>{esc(t["desc"])}</p><p>For the <strong>{esc(t["keyword"])}</strong> task, {esc(intent["useFor"][0].lower()+intent["useFor"][1:])} '+(f'Other research search phrases for this task include {esc(related_search_terms)}. They lead to this single calculator, not duplicate pages.' if related_search_terms else 'The results use one explicit dimensional model and set of measurements.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
             '<h3>Assumptions and limits</h3>'
@@ -415,15 +428,15 @@ def tool_page(t):
            f'<p id="print-assumptions">{esc(t["limit"])}</p>'
            '<p class="caution">This tool describes dimensional geometry. It does not certify building-code compliance, structural capacity, fastening, material quality or safe cutting techniques.</p>'
            '<h3>Printing and precision</h3><p>Use Print / PDF to save the worksheet as a PDF. The SVG is a proportional diagram, not a one-to-one cutting template. Before transferring marks to wood, verify units, stock dimensions, kerf, reference faces and printer scaling.</p>'
-           '</div></div><aside class="details-side"><div class="related-box"><span class="eyebrow">NEXT AT THE WORKBENCH</span><h2>Related tools</h2>'
-           +''.join(f'<a href="/{esc(r["slug"])}/">{esc(r["title"])} <span>↗</span></a>' for r in relevant)
-           +'</div><div class="related-box muted-box"><span class="eyebrow">SITE POLICY</span><h3>Local by default</h3><p>No account, no project upload, no paid API. A small local setting may remember recent tools.</p></div></aside></section>')
+           '</div></div><aside class="details-side"><nav class="related-box intent-related" aria-label="Next calculator for a different task"><span class="eyebrow">NEXT AT THE WORKBENCH</span><h2>Choose your next calculation</h2>'
+           +''.join(f'<a href="/{esc(r["slug"])}/" data-intent-target="{esc(r["slug"])}"><strong>{esc(r["title"])}</strong><small>{esc(why)}</small></a>' for r,why in relevant)
+           +'</nav><div class="related-box muted-box"><span class="eyebrow">SITE POLICY</span><h3>Local by default</h3><p>No account, no project upload, no paid API. A small local setting may remember recent tools.</p></div></aside></section>')
     description=t["desc"].strip().rstrip(".")
     if len(description)<=120:
         description+=". Free local calculation with SVG and CSV export."
     else:
         description+="."
-    return page(t["title"],description,body,"/"+t["slug"]+"/","tool")
+    return page(intent["seoTitle"],description,body,"/"+t["slug"]+"/","tool")
 
 def cat_page(key, name, slug):
     subset=[t for t in TOOLS if t["category"]==key]
