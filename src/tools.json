@@ -379,7 +379,7 @@
         },
         {
           "heading": "Fractional-inch worksheet vs numeric CSV",
-          "text": "For inches, the measurement table shows approximate 1/16 or 1/32 inch fractions beside the precise decimal cut length. Print/PDF includes the same fractions; downloadable CSV cut lists and stock plan retain precise numeric lengths in the selected unit. Always measure actual lumber and recheck saw kerf."
+          "text": "For inches, the measurement table shows approximate 1/16 or 1/32 inch fractions beside precise decimal cut lengths. The per-stick stock plan now labels every retained piece with a 0-origin stock-local start and end, not the wall position, and the downloadable stock CSV exports these numeric coordinates in the selected unit. Kerf is charged between successive pieces only; unallocated offcuts are NOT automatically reused. End trim, final separation kerf, defects and actual cutting procedure need separate verification; the worksheet is not a 1:1 template."
         },
         {
           "heading": "Enter supplier quotes rather than simulated market prices",
