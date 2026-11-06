@@ -123,12 +123,24 @@ def home():
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]
-    cluster = [k["keyword"] for k in KEYWORDS
-               if SUPPORTED_REASSIGNMENTS.get(k["keyword"].lower(), k["target_route"]) == '/' + t['slug'] + '/'
-               and k['keyword'].lower() != t['keyword'].lower()
-               and ((k['target_route'], k['keyword'].lower()) not in CAUTIONED_TERMS
-                    or k["keyword"].lower() in SUPPORTED_REASSIGNMENTS)]
-    related_search_terms = ', '.join(cluster[:4])
+    # Historical keyword rankings are EVIDENCE, not a license to call
+    # different search tasks synonyms. Human-facing text describes exactly
+    # the current calculator; only separately approved intent corrections
+    # may add wording beyond the tool's primary research query.
+    task_note = ('<p class="intent-query-copy">Primary measurement task: '
+                 f'<strong>{esc(t["keyword"])}</strong>. '
+                 'The dimensions, SVG and CSV cover this specific layout. '
+                 'Do not infer that a differently named task uses the same model.')
+    reviewed = [word for word,route in SUPPORTED_REASSIGNMENTS.items()
+                if route == '/' + t['slug'] + '/']
+    if reviewed:
+        assert t["slug"] == "framing-calculator" and len(reviewed) == 1, (
+            "Every new editorial query correction needs explicit task-specific copy")
+        task_note += (' For <strong>' + esc(reviewed[0]) + '</strong>, '
+                      'this page actually models user-entered door and window '
+                      'openings with measured sill/header and king/jack stations; '
+                      'the simpler Wall Stud page does not.')
+    task_note += '</p>'
     def field_markup(f):
         field_id = 'f-' + esc(f["key"])
         label = esc(f["label"]) + (' <span data-length-unit>in</span>' if f["kind"] == "L" else '')
@@ -440,7 +452,7 @@ def tool_page(t):
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
            +framing_takeoff+deck_takeoff+stringer_section+roof_reuse_section+shelf_pin_panel+
            '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
-           f'<p>{esc(t["desc"])}</p><p class="intent-query-copy">This tool handles the <strong>{esc(t["keyword"])}</strong> task using the dimensions above. '+(f'Closely related search terms include {esc(related_search_terms)}; the same measurements and geometry apply.' if related_search_terms else 'The results use one explicit dimensional model and set of measurements.')+f'</p><p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
+           f'<p>{esc(t["desc"])}</p>'+task_note+f'<p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
             f'<section class="field-verification" aria-label="Independent measurement review"><h3>How to independently verify your result</h3><p>{esc(FIELD_CHECKS[t["slug"]])}</p><p class="field-caution">Use actual measured reference faces and the numeric CSV. This is a review prompt, not a completed field inspection or structural approval.</p></section>'

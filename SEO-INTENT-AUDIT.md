@@ -92,3 +92,9 @@ The baseline figures above refer to the prior 26/5 release. This update adds two
 ## 2026-11-06 — 28 task-specific field-verification prompts
 
 Each active calculator now contains a distinct, task-aligned independent measurement checklist instruction, separate from its formula and safety disclaimer. The review instructions explicitly identify physical datums, material faces or cut coordinates to compare with CSV; no check is claimed as completed or mechanically safe. Original 152-row Semrush research dataset and preview noindex gate are unchanged.
+
+## 2026-11-06 — remove automatic keyword-synonym marketing
+
+The page builder previously copied up to four uncautioned search query variants from the 152-row historical Semrush export into generic “Closely related search terms include ...; the same measurements and geometry apply” sentences. This conflated *search assignment* with verified functional equivalence, even for queries not yet examined against the current SERP. That automatic copy is now **removed from all 28 active calculator pages**; primary task terms stay visible, while **only one evidence-reviewed reassignment** (“wall framing calculator with windows and doors” → opening-aware Framing) receives explicit task-specific wording. The original Semrush keyword CSV is unchanged.
+
+Current raw route assignment counts: **145 of 152 keywords map to implemented P0/P1 pages; 7 still map to the three held P2 tool pages**. These are **not** traffic forecasts, ranking claims, or proof that 145 search intents have matching features. The 21 editorial caution records are retained; the sitemap/robots production release remains gated, and the Cloudflare pages.dev preview stays noindex,nofollow,noarchive. Static HTML and Chromium route checks explicitly prevent reintroducing generic synonym inventories.
