@@ -897,3 +897,32 @@ tbody tr:nth-child(2n){background:#fafbf8}
  }
  #framing-version-diff-table tr{break-inside:avoid;page-break-inside:avoid}
 }
+
+/* Search-task boundaries are editorial help, not organic traffic claims.
+   Keep them distinct and readable without increasing layout instability. */
+.intent-fit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin-top:16px;max-width:950px}
+.intent-fit p{padding:11px 14px;margin:0;border:1px solid #dae4dc;
+  border-radius:10px;background:#f6faf6;color:#486051;
+  font-size:12px;line-height:1.65}
+.intent-fit p:nth-child(2){background:#faf8f3;border-color:#e7ddcb;color:#655747}
+.intent-fit strong{display:block;color:#235744;letter-spacing:.015em;font-size:11px;
+  margin-bottom:4px}
+.intent-fit p:nth-child(2) strong{color:#725636}
+.related-box.intent-related a{display:flex;align-items:flex-start;
+  flex-direction:column;justify-content:flex-start;
+  gap:5px;padding:13px 2px;font-weight:normal}
+.related-box.intent-related a strong{font-size:13px;line-height:1.45;color:var(--green)}
+.related-box.intent-related a small{font-size:11px;line-height:1.55;
+  color:#64776b;font-weight:450}
+.related-box.intent-related a:hover strong,
+.related-box.intent-related a:focus-visible strong{text-decoration:underline}
+.related-box.intent-related a:focus-visible{outline:2px solid var(--green);
+  outline-offset:3px;border-radius:4px}
+@media(max-width:620px){
+  .intent-fit{grid-template-columns:1fr;gap:8px}
+  .intent-fit p{padding:9px 11px}
+}
+@media print{
+  .intent-fit{display:none!important}
+}
