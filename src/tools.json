@@ -2477,12 +2477,6 @@
           "value": 12
         },
         {
-          "key": "treadThickness",
-          "label": "Tread material thickness (reference, not headroom)",
-          "kind": "L",
-          "value": 1.5
-        },
-        {
           "key": "direction",
           "label": "Top-view rotation direction",
           "kind": "N",
@@ -2849,7 +2843,7 @@
       "volume": 90,
       "kd": 10,
       "status": "BETA_NO_INDEX",
-      "desc": "Exact outer face trapezoid geometry for a regular polygon frustum: top/bottom chords, face slant, true corner edge, taper, theoretical half-dihedral and conservative rough blank.",
+      "desc": "Straight-taper polygon stave geometry: actual top/bottom chords, distinct corner-edge and face slant, angles, and rough blank dimensions.",
       "inputs": [
         {
           "key": "topCornerDiameter",

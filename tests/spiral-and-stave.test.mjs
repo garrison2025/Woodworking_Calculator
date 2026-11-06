@@ -60,7 +60,7 @@ test("spiral: invalid radial widths, sector, integer count, turn and stock fail 
   {totalRise:0},{outerDiameter:4},{poleDiameter:72},{walkInset:34},
   {walkInset:0},{risers:2},{risers:49},{risers:10.5},{direction:2},
   {totalRotation:59},{totalRotation:361},{totalRotation:360,risers:3},
-  {treadThickness:120},{outerDiameter:1e9}
+  {outerDiameter:1e9}
  ])assert.equal(safeCompute(spiral,{...a,...patch}).ok,false,JSON.stringify(patch));
 });
 test("stave: independent face slant, corner-edge, true chords and bevel closure",()=>{

@@ -2777,13 +2777,12 @@ export function compute(slug,a){
   // Only one partial/full turn. The top finished floor accounts for the
   // final riser, never an invented last physical tread.
   case "spiral-staircase-calculator":{
-    positive("totalRise","outerDiameter","poleDiameter","walkInset","treadThickness","totalRotation");
+    positive("totalRise","outerDiameter","poleDiameter","walkInset","totalRotation");
     whole("risers",3,48);whole("direction",0,1);
     need(a.totalRotation>=60&&a.totalRotation<=360,"Only a single 60°–360° spiral turn is supported.");
     const R=a.outerDiameter/2,r=a.poleDiameter/2,clear=R-r;
     need(clear>1e-7&&a.walkInset<clear-1e-7,
       "Walk-line reference must fit strictly between the pole and outside face.");
-    need(a.treadThickness<a.totalRise,"Tread thickness must be below the total floor rise.");
     const count=a.risers-1,delta=a.totalRotation/count;
     need(delta>=1&&delta<=60,"Angular sector per tread must be between 1° and 60°.");
     const h=a.totalRise/a.risers,theta=rad(delta),rw=r+a.walkInset,
