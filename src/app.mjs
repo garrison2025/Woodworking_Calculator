@@ -1120,6 +1120,74 @@ if(slug){
     if(!Number.isFinite(x)||(source?x<=0:x<0))return NaN;
     return convertToInches(x,unit);
   };
+  const refreshReviewVersionPanel=()=>{
+    if(!versionPanel)return;
+    const current=versionState.current;
+    versionPanel.hidden=!current;
+    versionPin.disabled=!current;
+    versionJson.disabled=!current;
+    versionDiffCsv.disabled=!current||!versionState.reference;
+    if(!current){
+      versionIdentifiers.textContent="No current alternative review packet.";
+      versionStatus.textContent=versionState.reference?
+        "Reference retained locally; enable a valid alternative to compare it.":
+        "No review reference saved in this page.";
+      versionDiffTable.innerHTML="";
+      versionState.difference=null;
+      return;
+    }
+    const i=current.versionIds;
+    versionIdentifiers.textContent=
+      "PACKET "+i.packet+"\n"+
+      "LAYOUT "+i.layout+"\n"+
+      "MEASUREMENTS "+i.measurement+"\n"+
+      "SUPPLIER QUOTE "+i.quotation+"\n"+
+      "SELF-DECLARATIONS "+i.declaration;
+    if(versionState.importError){
+      versionStatus.textContent="IMPORT REJECTED — "+versionState.importError+
+        " Previous reference, if any, remains unchanged.";
+      versionState.importError=null;
+    }else if(!versionState.reference){
+      versionStatus.textContent=
+        "No comparison reference pinned. Download the current JSON, "+
+        "or pin this version to compare changes in the current page. "+
+        "No site action authorizes buying.";
+    }
+    if(!versionState.reference){
+      versionState.difference=null;
+      versionDiffTable.innerHTML="";
+      return;
+    }
+    const result=compareFramingReviewVersions(versionState.reference,current);
+    versionState.difference=result;
+    if(!versionStatus.textContent.startsWith("IMPORT REJECTED")){
+      versionStatus.textContent=result.samePacket?
+        "SAME PACKET — "+result.currentId+
+        ". Reference matches all four current components; "+
+        "this is NOT a material certification or order approval.":
+        "CHANGED PACKET — reference "+result.referenceId+
+        " vs current "+result.currentId+"; "+
+        result.changedSections.join(", ")+" changed; "+
+        result.totalChanges+" detailed field differences. "+
+        "Export the complete comparison for the whole change list.";
+    }
+    const display=result.changes.slice(0,30);
+    versionDiffTable.innerHTML=display.length?
+      display.map(row=>'<tr>'+
+        [row.section,row.field,row.before,row.after]
+          .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join(""):
+      '<tr><td colspan="4">No differences between reference and current packet.</td></tr>';
+  };
+  const renderReviewVersion=(ledger,measurements,report)=>{
+    versionState.current=makeFramingReviewVersion({
+      ledger,fieldReview:measurements,fieldInputs:{
+        sawKerf:fieldDraft.sawKerf,endTrim:fieldDraft.endTrim,
+        finalSeverKerf:fieldDraft.finalSeverKerf
+      },purchaseReview:report,alternative:latest?.stockReusePlan,
+      currency:currencyCode()
+    });
+    refreshReviewVersionPanel();
+  };
   const renderPurchaseReview=(ledger,measurements)=>{
     if(!purchaseReviewPanel)return;
     const available=Boolean(ledger?.available);
@@ -1128,6 +1196,7 @@ if(slug){
     if(!available){
       purchaseReviewTable.innerHTML="";
       purchaseReviewStatus.textContent="HOLD — no valid alternative and field review.";
+      renderReviewVersion(null,null,null);
       clearPurchaseReview();
       return;
     }
@@ -1191,6 +1260,7 @@ if(slug){
         "Model quote "+money(report.reviewedQuotedSubtotal)+" (not actual invoice)":
         "Supplier price data incomplete")+
       ". No order authorization is issued by the site.";
+    renderReviewVersion(ledger,measurements,report);
   };
   const renderFieldPreflight=ledger=>{
     if(!fieldPanel)return;
