@@ -90,6 +90,20 @@ for p in pages:
         if " Formula, dimension diagram" in d:errors.append(f"{u}: old broken SEO phrase remains")
     if len(c.robots)!=1 or "noindex" not in c.robots[0]:errors.append(f"{u}: preview must be noindex")
     body=p.read_text(encoding="utf8")
+    if u=="/":
+        category_count=len({t["category"] for t in active})
+        if f"<strong>{len(active)}</strong> working calculator routes" not in body:
+            errors.append("Homepage tool count differs from manifest")
+        if f"<strong>{category_count}</strong> active categories" not in body:
+            errors.append("Homepage category count differs from manifest")
+        if f"DRAWING 01 / {len(active)}" not in body:
+            errors.append("Homepage drawing count differs from manifest")
+        if body.count('class="category-pill"')!=category_count:
+            errors.append("Homepage category navigation differs from manifest")
+        for marker in ('id="tool-search"','id="tool-directory"','id="tool-search-status"','id="clear-recent-tools"'):
+            if body.count(marker)!=1:errors.append("Missing unique local discovery control "+marker)
+        if "Start with a proven task" in body:
+            errors.append("Homepage implies unverified physical workshop validation")
     if '{esc(t[' in body or '{esc(' in body or '{related_search_terms' in body:
         errors.append(f"{u}: unrendered Python template expression leaked to HTML")
     if any(t["slug"]==u.strip("/") for t in active) and 'Geometry rule</strong> {' in body:
