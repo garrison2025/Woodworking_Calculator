@@ -1954,7 +1954,7 @@ if(slug){
   stockAuditExport?.addEventListener("click",()=>{
     if(!latest?.stockAudit?.enabled||!latest.stockAudit.rows.length)return;
     const body=buildScheduleCsv(latest.stockAudit.rows,unit,
-      "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses.");
+      "OPTIONAL POST-PLAN DIAGNOSTIC ONLY. Incomplete fit means baseline purchase count and quote are NOT sufficient. Tail offcuts are candidates, NOT allocated, priced or proven safe for reuse. Inspect actual cuts and saw losses."+optionalVersionNote());
     save(slug+"-"+unit+"-optional-stock-loss-review.csv",body,"text/csv;charset=utf-8");
     status.textContent="Optional stock-loss review CSV saved locally; original purchase plan unchanged.";
   });
@@ -1975,8 +1975,14 @@ if(slug){
       totalCostReviewed:report.globalChecks.totalCostReviewed,
       modelQuoteCost:report.reviewedQuotedSubtotal,
       currency:currencyCode(),
+      layoutVersionId:versionState.current?.versionIds.layout??null,
+      measurementVersionId:versionState.current?.versionIds.measurement??null,
+      quotationVersionId:versionState.current?.versionIds.quotation??null,
+      declarationVersionId:versionState.current?.versionIds.declaration??null,
+      packetVersionId:versionState.current?.versionIds.packet??null,
+      comparedReferenceId:versionState.reference?.versionIds.packet??null,
       humanApprovalRequired:true,automaticPurchaseAuthorized:false}));
-    const note="SELF-REPORTED PRE-PURCHASE REVIEW, NOT AN APPROVAL. No checkout, stock grade certification, professional structural signoff, blade safety check or actual savings confirmation. A completed review requires independent human purchasing authorization.";
+    const note="SELF-REPORTED PRE-PURCHASE REVIEW, NOT AN APPROVAL. No checkout, stock grade certification, professional structural signoff, blade safety check or actual savings confirmation. A completed review requires independent human purchasing authorization."+optionalVersionNote();
     save(slug+"-"+unit+"-self-reported-purchase-review.csv",
       buildScheduleCsv(detail,unit,note),"text/csv;charset=utf-8");
     status.textContent="Unapproved self-reported purchasing review exported; no order placed.";
@@ -1991,7 +1997,7 @@ if(slug){
       enteredBladeKerf:fieldDraft.sawKerf,
       enteredEndTrim:fieldDraft.endTrim,
       enteredFinalSeverKerf:fieldDraft.finalSeverKerf}));
-    const note="MANUAL USER ENTRIES ONLY. Blank means not measured. DIMENSION FIT ONLY does not certify physical stock, grade, saw safety, structure or actual savings. Purchase and cut plan unchanged.";
+    const note="MANUAL USER ENTRIES ONLY. Blank means not measured. DIMENSION FIT ONLY does not certify physical stock, grade, saw safety, structure or actual savings. Purchase and cut plan unchanged."+optionalVersionNote();
     save(slug+"-"+unit+"-manual-source-preflight.csv",
       buildScheduleCsv(rows,unit,note),"text/csv;charset=utf-8");
     status.textContent="User-entered dimensional preflight exported; no physical inspection or safe cutting has been certified.";
@@ -2001,7 +2007,7 @@ if(slug){
     const ledger=makeFramingStationLedger(latest.stockReusePlan,latest.stockPlan);
     if(!ledger.available)return;
     const body=buildScheduleCsv(ledger.rows,unit,
-      "DIMENSIONAL ACCOUNTING ONLY, NOT A CUTTING ORDER OR MACHINE TOOLPATH. Every physical stock length, grade, defects, saw kerf, trims, clamping and structural suitability require independent verification. No site-verified cost savings.");
+      "DIMENSIONAL ACCOUNTING ONLY, NOT A CUTTING ORDER OR MACHINE TOOLPATH. Every physical stock length, grade, defects, saw kerf, trims, clamping and structural suitability require independent verification. No site-verified cost savings."+optionalVersionNote());
     save(slug+"-"+unit+"-reallocation-station-ledger.csv",
       body,"text/csv;charset=utf-8");
     status.textContent="Independent stock-local dimensional ledger saved; physical inspection required.";
@@ -2009,7 +2015,7 @@ if(slug){
   stockReuseExport?.addEventListener("click",()=>{
     if(!latest?.stockReusePlan?.enabled||!latest.stockReusePlan.rows?.length)return;
     const body=buildScheduleCsv(latest.stockReusePlan.rows,unit,
-      "ALTERNATIVE, NOT THE ORIGINAL CUT PLAN: local whole-stick-retirement heuristic. Same-stock-profile intact cuts only. Positions include entered end trims and between-piece saw kerf. The source is not certified for construction or machine cutting.");
+      "ALTERNATIVE, NOT THE ORIGINAL CUT PLAN: local whole-stick-retirement heuristic. Same-stock-profile intact cuts only. Positions include entered end trims and between-piece saw kerf. The source is not certified for construction or machine cutting."+optionalVersionNote());
     save(slug+"-"+unit+"-offcut-reallocation-plan.csv",body,"text/csv;charset=utf-8");
     status.textContent="Separate alternative offcut reassignment CSV saved; original cuts unchanged.";
   });
@@ -2017,7 +2023,7 @@ if(slug){
     if(!latest?.stockReusePlan?.enabled||!latest.stockReusePlan.purchaseVariants?.length)return;
     const list=latest.stockReusePlan.purchaseVariants.map(r=>({...r,currency:currencyCode()}));
     const body=buildScheduleCsv(list,unit,
-      "ALTERNATIVE PURCHASE ONLY, independent from the primary buying ticket. Quote differences are modeled for entered supplier prices, not real-world savings or a globally optimal plan. Prices do not include tax, delivery, flaws or labor.");
+      "ALTERNATIVE PURCHASE ONLY, independent from the primary buying ticket. Quote differences are modeled for entered supplier prices, not real-world savings or a globally optimal plan. Prices do not include tax, delivery, flaws or labor."+optionalVersionNote());
     save(slug+"-"+unit+"-"+currencyCode().toLowerCase()+"-offcut-alternative-quote.csv",
       body,"text/csv;charset=utf-8");
     status.textContent="Separate modeled alternative supplier quote saved; original buying ticket unchanged.";
