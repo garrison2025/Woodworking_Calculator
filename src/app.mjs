@@ -1061,7 +1061,8 @@ if(slug){
        r.plannedSticks,r.allowanceSticks,r.purchaseSticks,takeoffLength(r.offcutLength)]
         .map(v=>'<td>'+esc(v)+'</td>').join("")+'</tr>').join("");
     framingStock.innerHTML=bars.map(bar=>'<tr><td>'+esc(bar.stockId+' · '+bar.offerLabel+' · '+takeoffLength(bar.stockLength))+'</td><td>'+
-      bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))).join("<br>")+
+      bar.cuts.map(p=>esc(p.item)+" · "+esc(takeoffLength(p.cutLength))+
+        " · ["+esc(fmt(p.cutStart,"L"))+" – "+esc(fmt(p.cutEnd,"L"))+"]").join("<br>")+
       '</td><td>'+esc(takeoffLength(bar.kerfLoss))+'</td><td>'+
       esc(takeoffLength(bar.offcutLength))+'</td></tr>').join("");
     const summary=latest?.costSummary;
