@@ -454,7 +454,7 @@ def cat_page(key, name, slug):
           f'<span class="eyebrow">WORKSHOP DIRECTORY / {len(subset):02d} TOOLS</span><h1>{esc(name)}</h1>'
           '<p>Choose a dedicated measurement tool. Every calculator has explicit inputs, a geometric result, a printable diagram and its own calculation explanation.</p>'
           '<div class="tool-grid">'+''.join(tool_card(t) for t in subset)+'</div></section>')
-    return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body)
+    return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body,"/"+slug+"/")
 
 def info_page(title, paragraphs, url):
     body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WORKSHOP GEOMETRY TOOLS</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)+'</article>'
