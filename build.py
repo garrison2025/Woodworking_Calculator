@@ -122,7 +122,7 @@ def home():
             '<p>Woodworking calculators for practical layouts, cut lengths, spacing and material takeoffs. Enter dimensions, inspect an annotated drawing, then export your work.</p>'
             f'<div class="hero-actions"><a class="btn primary" href="/#tools">Explore {len(TOOLS)} free tools <span aria-hidden="true">↗</span></a>'
             '<a class="btn subtle" href="/stud-calculator/">Try the stud calculator</a></div>'
-            ff'<div class="hero-facts"><span><strong>{len(TOOLS)}</strong> working calculator routes</span><span><strong>{category_count}</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
+            f'<div class="hero-facts"><span><strong>{len(TOOLS)}</strong> working calculator routes</span><span><strong>{category_count}</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
             '</div>' + hero_graphic() + '</section>')
     body += ('<section id="tools" class="wrap home-section"><div class="section-heading"><div><span class="eyebrow">FIND YOUR TOOL</span>'
              '<h2>Built around the work, not the jargon.</h2><p>Browse the most common workshop measurements and quickly jump to the right calculator.</p></div></div>'
