@@ -77,7 +77,7 @@ test("Optional source stations account for all stock and persist in metric CSV /
   await expect(printed.locator(".print-specialty-part")).toHaveCount(2);
   const printText=await printed.innerText();
   expect(printText).toContain("Station");
-  expect(printText).toContain("Segment kind");
+  expect(printText).toContain("Segment Kind");
   const pdf=await page.pdf({format:"Letter",printBackground:true});
   expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
   expect(pdf.length).toBeGreaterThan(10000);
