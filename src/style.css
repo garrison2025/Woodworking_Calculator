@@ -801,3 +801,43 @@ tbody tr:nth-child(2n){background:#fafbf8}
    visually hidden table labels lengthen the work-order print layout. */
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;
   margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Human declaration gate is not an order approval. All untouched controls
+   remain visible as NOT DECLARED in print, never as implied signoffs. */
+.framing-purchase-review{margin:20px 0;padding:16px 18px;
+  border:1px solid #d8c5a6;border-left:5px solid #9c6c36;
+  border-radius:10px;background:#fffcf5}
+.framing-purchase-review[hidden]{display:none!important}
+.framing-purchase-review h4{margin:0 0 8px;font-size:17px}
+.framing-purchase-review>p{font-size:12px;line-height:1.65}
+.framing-purchase-review .framing-price-status{
+  font-size:12px;line-height:1.65;background:#f8f0de}
+#framing-purchase-review-table{min-width:745px;font-size:12px}
+#framing-purchase-review-table input,.review-global-checks input{
+  width:19px;height:19px;accent-color:#346a52;flex-shrink:0}
+#framing-purchase-review-table label{display:inline-flex;align-items:center;gap:7px}
+.review-global-checks{display:grid;gap:10px;margin:15px 0}
+.review-global-checks label{display:flex;align-items:flex-start;gap:10px;
+  font-size:12px;line-height:1.65}
+.review-global-checks label input{margin:2px 0}
+.review-print-value{display:none;font-size:10px;font-weight:700}
+@media(max-width:620px){
+ .framing-purchase-review{padding:12px}
+ #framing-purchase-review-table{min-width:730px}
+}
+@media print{
+ .framing-purchase-review[hidden]{display:none!important}
+ .framing-purchase-review{margin:10pt 0;padding:9pt;border:1px solid #999;
+   background:white;break-inside:auto}
+ .framing-purchase-review .framing-price-status{font-size:8pt;background:white}
+ #framing-purchase-review-table{min-width:0!important;width:100%;
+   table-layout:auto;font-size:7pt}
+ #framing-purchase-review-table td,
+ #framing-purchase-review-table th{padding:3pt 3pt;overflow-wrap:anywhere}
+ #framing-purchase-review-table tr{break-inside:avoid}
+ .framing-purchase-review input[type="checkbox"]{display:none!important}
+ .review-print-value{display:inline!important}
+ .review-global-checks{gap:4pt;margin:5pt 0}
+ .review-global-checks label{display:block;font-size:8pt}
+ .review-global-checks label .review-print-value{margin-right:8pt}
+}
