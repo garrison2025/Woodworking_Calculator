@@ -30,6 +30,12 @@ CAUTION_DATA = json.loads((ROOT / "research" / "keyword-intent-cautions.json").r
 CAUTIONED_TERMS = {(item["originalRoute"], item["keyword"].lower()) for item in CAUTION_DATA["flagged"]}
 assert len(CAUTIONED_TERMS) == len(CAUTION_DATA["flagged"]), "Duplicate intent cautions"
 assert CAUTIONED_TERMS <= {(k["target_route"], k["keyword"].lower()) for k in KEYWORDS}, "Intent caution is not traceable to source keyword data"
+# Correct only a query whose REAL implemented tool now matches the intent.
+# This is an editorial presentation overlay; never rewrite the Semrush CSV.
+SUPPORTED_REASSIGNMENTS = {item["keyword"].lower():item["supportedRoute"]
+                           for item in CAUTION_DATA["flagged"] if item.get("supportedRoute")}
+assert len(SUPPORTED_REASSIGNMENTS) == sum(bool(x.get("supportedRoute")) for x in CAUTION_DATA["flagged"])
+assert set(SUPPORTED_REASSIGNMENTS.values()) <= {"/" + t["slug"] + "/" for t in TOOLS}, "SEO reassignment targets unpublished or unknown tools"
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
@@ -116,9 +122,10 @@ def home():
 def tool_page(t):
     intent = INTENTS[t["slug"]]
     cluster = [k["keyword"] for k in KEYWORDS
-               if k["target_route"] == '/' + t['slug'] + '/'
+               if SUPPORTED_REASSIGNMENTS.get(k["keyword"].lower(), k["target_route"]) == '/' + t['slug'] + '/'
                and k['keyword'].lower() != t['keyword'].lower()
-               and (k['target_route'], k['keyword'].lower()) not in CAUTIONED_TERMS]
+               and ((k['target_route'], k['keyword'].lower()) not in CAUTIONED_TERMS
+                    or k["keyword"].lower() in SUPPORTED_REASSIGNMENTS)]
     related_search_terms = ', '.join(cluster[:4])
     def field_markup(f):
         field_id = 'f-' + esc(f["key"])

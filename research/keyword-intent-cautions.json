@@ -1,12 +1,13 @@
 {
   "basis": "User-supplied 2026-11-04 Semrush 400-row sample / 152 selected terms. Original research rows preserved unchanged.",
-  "purpose": "Flag search phrases whose underlying task is broader or materially different from the implemented calculator. Do not show as claimed synonyms on user-facing pages without a task-specific feature and fresh SERP review.",
+  "purpose": "Flag research phrases that overclaim the implemented task. One clear doors/windows mismatch is reassigned to an existing matching tool for on-page keyword copy; all other flagged phrases remain withheld from claimed search synonyms. Keep source CSV intact.",
   "flagged": [
     {
       "keyword": "wall framing calculator with windows and doors",
       "originalRoute": "/wall-stud-calculator/",
       "reason": "Door/window opening layouts belong to the separate framing calculator, not the straight-wall stud counter.",
-      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+      "status": "reassigned-to-implemented-doors-and-windows-tool",
+      "supportedRoute": "/framing-calculator/"
     },
     {
       "keyword": "wall framing calculator",
@@ -60,6 +61,24 @@
       "keyword": "staircase spindle spacing calculator",
       "originalRoute": "/baluster-spacing-calculator/",
       "reason": "Straight-reference baluster gap geometry does not calculate stair-slope-specific rail installation.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "rafter spacing calculator",
+      "originalRoute": "/rafter-calculator/",
+      "reason": "Common-rafter cut geometry does not calculate a series of on-center rafter spacings or an engineering-approved rafter spacing.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "deck post spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "reason": "Material takeoff/joist center references do not determine deck post or footing center locations or a structural post spacing.",
+      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+    },
+    {
+      "keyword": "hip roof construction",
+      "originalRoute": "/hip-rafter-calculator/",
+      "reason": "Hip rafter line geometry is not a complete hip roof construction guide or structural framing plan.",
       "status": "not-to-claim-in-copy-without-separate-intent-validation"
     }
   ]
