@@ -23,6 +23,13 @@ assert set(INTENTS) == {t["slug"] for t in TOOLS}, "Missing or extra released-to
 
 with (ROOT / "research" / "woodworking-keyword-map-152.csv").open(encoding="utf-8", newline="") as keyword_file:
     KEYWORDS = list(csv.DictReader(keyword_file))
+# Original keyword rows remain fully preserved as historical Semrush data.
+# An editorial caution excludes misleading query intents from the visible
+# synonym paragraph; it never rewrites research evidence or creates new URLs.
+CAUTION_DATA = json.loads((ROOT / "research" / "keyword-intent-cautions.json").read_text(encoding="utf-8"))
+CAUTIONED_TERMS = {(item["originalRoute"], item["keyword"].lower()) for item in CAUTION_DATA["flagged"]}
+assert len(CAUTIONED_TERMS) == len(CAUTION_DATA["flagged"]), "Duplicate intent cautions"
+assert CAUTIONED_TERMS <= {(k["target_route"], k["keyword"].lower()) for k in KEYWORDS}, "Intent caution is not traceable to source keyword data"
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
@@ -108,7 +115,10 @@ def home():
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]
-    cluster = [k["keyword"] for k in KEYWORDS if k["target_route"] == '/' + t['slug'] + '/' and k['keyword'].lower() != t['keyword'].lower()]
+    cluster = [k["keyword"] for k in KEYWORDS
+               if k["target_route"] == '/' + t['slug'] + '/'
+               and k['keyword'].lower() != t['keyword'].lower()
+               and (k['target_route'], k['keyword'].lower()) not in CAUTIONED_TERMS]
     related_search_terms = ', '.join(cluster[:4])
     def field_markup(f):
         field_id = 'f-' + esc(f["key"])
