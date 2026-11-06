@@ -2,7 +2,8 @@ import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inch
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
 import {makeFramingReviewVersion,validateFramingReviewVersion,
-  compareFramingReviewVersions,framingReviewVersionNote} from "./framing-review-versions.mjs";
+  compareFramingReviewVersions,framingReviewVersionNote,
+  proposeFramingMeasurementRestore} from "./framing-review-versions.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
@@ -55,6 +56,8 @@ if(slug){
   const versionDiffTable=document.querySelector("#framing-version-diff-table tbody");
   const versionPin=document.querySelector("#framing-version-pin");
   const versionJson=document.querySelector("#framing-version-json");
+  const versionRestore=document.querySelector("#framing-version-restore");
+  const versionRestoreWarning=document.querySelector("#framing-version-restore-warning");
   const versionDiffCsv=document.querySelector("#framing-version-diff-csv");
   const versionImport=document.querySelector("#framing-version-import");
   const versionState={current:null,reference:null,difference:null,importError:null};
@@ -1127,6 +1130,8 @@ if(slug){
     versionPin.disabled=!current;
     versionJson.disabled=!current;
     versionDiffCsv.disabled=!current||!versionState.reference;
+    versionRestore.disabled=!current||!versionState.reference;
+    if(versionRestoreWarning&&!current)versionRestoreWarning.hidden=true;
     if(!current){
       versionIdentifiers.textContent="No current alternative review packet.";
       versionStatus.textContent=versionState.reference?
@@ -1161,6 +1166,8 @@ if(slug){
     const result=compareFramingReviewVersions(versionState.reference,current);
     versionState.difference=result;
     versionDiffCsv.disabled=result.changes.length===0;
+    versionRestore.disabled=
+      versionState.reference.versionIds.layout!==current.versionIds.layout;
     if(!versionStatus.textContent.startsWith("IMPORT REJECTED")){
       versionStatus.textContent=result.samePacket?
         "SAME PACKET — "+result.currentId+
@@ -1410,6 +1417,33 @@ if(slug){
       refreshReviewVersionPanel();
     }finally{
       event.target.value="";
+    }
+  });
+  versionRestore?.addEventListener("click",()=>{
+    if(!versionState.reference||!versionState.current)return;
+    try{
+      const proposal=proposeFramingMeasurementRestore(
+        versionState.reference,versionState.current);
+      // Historical values can never reinstate inspection declarations,
+      // supplier prices, structural/saw checks, or any purchasing status.
+      clearPurchaseReview();
+      fieldDraft.sources=new Map(proposal.sourceEntries);
+      fieldDraft.sawKerf=proposal.sawKerf;
+      fieldDraft.endTrim=proposal.endTrim;
+      fieldDraft.finalSeverKerf=proposal.finalSeverKerf;
+      // Force exact visible input regeneration at current display units.
+      fieldDraft.unit="";
+      renderFieldPreflight(makeFramingStationLedger(
+        latest?.stockReusePlan,latest?.stockPlan));
+      versionRestoreWarning.hidden=false;
+      versionRestoreWarning.textContent=proposal.warning+
+        " All source/global inspection confirmations are now cleared. "+
+        "No source was remeasured by this website.";
+      status.textContent="Only historical user-entered dimensions restored; "+
+        "all review declarations cleared. Reinspect actual materials.";
+    }catch(err){
+      status.textContent="Restore blocked: "+String(err?.message||err);
+      versionRestoreWarning.hidden=true;
     }
   });
   versionDiffCsv?.addEventListener("click",()=>{
