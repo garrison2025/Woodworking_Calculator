@@ -109,7 +109,7 @@ for asset in ("assets/app.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/
 # An omitted import breaks every live calculator at module-load time despite
 # correct HTML and numeric unit tests.
 for module in (dist/"assets").glob("*.mjs"):
-    for relative in re.findall(r'\\bfrom\\s*["\\\'](\\./[^"\\\']+)["\\\']',module.read_text(encoding="utf8")):
+    for relative in re.findall(r"""from\s+['"](\./[^'"]+)['"]""",module.read_text(encoding="utf8")):
         if not (module.parent/relative).is_file():
             errors.append(f"{module.name}: unresolved published ESM import {relative}")
 titles=[]
