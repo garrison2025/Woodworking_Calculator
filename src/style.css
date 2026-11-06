@@ -924,5 +924,5 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .intent-fit p{padding:9px 11px}
 }
 @media print{
-  .intent-fit{display:none!important}
+  .intent-fit,.intent-query-copy{display:none!important}
 }
