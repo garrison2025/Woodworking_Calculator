@@ -1350,6 +1350,16 @@ export function compute(slug,a){
       slotLeft:q(x-a.kerf/2),slotRight:q(x+a.kerf/2),
       cutDepth:q(depth),retainedWeb:q(a.web),maxClosureDeg:q(deg(maxClosure))
     }));
+    // Physical kerf edges are stored on the exported 1e-8-inch grid.
+    // Reject quantization that collapses or crosses an actual slot.
+    const stockRight=q(arc);
+    need(rows.every(row=>
+      row.slotLeft>=0&&row.slotRight>row.slotLeft&&
+      row.slotLeft<=row.position&&row.position<=row.slotRight&&
+      row.slotRight<=stockRight),
+      "Kerf slot edges cannot be represented within the flat stock at cut-coordinate resolution.");
+    need(rows.every((row,i)=>i===0||row.slotLeft>rows[i-1].slotRight),
+      "Kerf mouths overlap after cut-coordinate rounding; adjust radius or saw kerf.");
     return result([
       M("Arc length",arc),M("Proposed cuts",count,"N"),
       M("Proposed spacing",spacing),M("Uncut land between kerfs",remaining),
