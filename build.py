@@ -117,8 +117,8 @@ def tool_page(t):
     advanced_fields = ''.join(field_markup(f) for f in t["inputs"] if f.get("advanced"))
     advanced_options = (
         '<details class="framing-stock-options" id="framing-stock-options">'
-        '<summary>Compare other lumber lengths (10 ft / 12 ft)</summary>'
-        '<p>Optional supplier quotes for each profile. Prices of 0 disable that length; keep base stock untouched for the original estimate. All prices use the selected currency.</p>'
+        '<summary>Advanced lumber offers and stock-loss review</summary>'
+        '<p>Optional supplier prices and independent trim / saw-kerf / candidate-offcut diagnostics. Review mode never changes the original procurement count or quotation. A failing audit means the base order is NOT a verified sufficient order. Zero supplier price disables that offer.</p>'
         f'<div class="stock-offer-grid">{advanced_fields}</div>'
         '</details>'
     ) if advanced_fields else ""
@@ -285,6 +285,15 @@ def tool_page(t):
         '<p>Every bracketed start–end interval is measured from the SAME 0 end of its purchased stick, not from the wall datum. Between successive pieces, the entered saw kerf occupies the intervening interval. Unallocated offcut starts after the last listed piece and is not automatically reused. Display fractions are approximate; CSV preserves numeric positions.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-stock-table" aria-label="Suggested stock cuts">'
         '<thead><tr><th>Stock ID</th><th>Piece · cut length · stock-local start–end</th><th>Between-cut kerf</th><th>Unallocated offcut</th></tr></thead><tbody></tbody></table></div>'
+        '<section id="framing-stock-audit" class="framing-stock-audit" aria-label="Optional stock loss and possible offcut reuse check" hidden>'
+        '<h3>Optional physical trim &amp; offcut assessment</h3>'
+        '<p id="framing-stock-audit-status" class="framing-price-status" role="status" aria-live="polite">Review mode is off.</p>'
+        '<p>For each original source stick, this separate review reserves the entered trim at BOTH ends and an extra final-sever kerf if a tail remains. It checks the EXISTING selected cut plan only: no new packing, purchases, discounts, or offcut assignments are inferred. Candidate scraps still require measured stock profile, condition and safe cutting checks.</p>'
+        '<div class="table-scroll framing-table-scroll"><table id="framing-stock-audit-table" aria-label="Optional physical stock-fit and candidate tail offcut assessment">'
+        '<thead><tr><th>Original stick</th><th>Raw stock length</th><th>Last modeled cut ends</th><th>Extra final kerf</th><th>Available tail after end trim</th><th>Shortfall</th><th>Result</th></tr></thead><tbody></tbody></table></div>'
+        '<div class="takeoff-actions"><button id="download-stock-audit-csv" type="button" class="btn secondary" disabled>↓ Download optional stock-loss audit CSV</button></div>'
+        '<p class="caution">A failing stick means the original price / purchase plan is NOT enough for these additional allowances. The review does not recalculate a replacement order or validate actual reclaim value. Before cutting: independently verify both end trims, actual blade kerf, cross-section, defects, clamps and separation procedure. No structural approval or machine-ready toolpath.</p>'
+        '</section>'
         '<div class="takeoff-actions"><button id="download-stock-csv" type="button" class="btn secondary">↓ Download stock cut plan CSV</button>'
         '<button id="download-price-csv" type="button" class="btn secondary">↓ Download quoted materials CSV</button></div>'
         '<p class="caution">Stock-local placement intervals are NOT a certified saw sequence or full-scale cutting template. The model charges kerf ONLY between retained cuts; final end separation, rough-end trimming, defects, blade setup, clamps and stock profile checks require site verification and may consume extra material. Never assume unused offcuts have been reused or structurally approved.</p>'
