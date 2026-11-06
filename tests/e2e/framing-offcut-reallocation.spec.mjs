@@ -43,6 +43,21 @@ test("Independent same-profile offcut alternative never changes original cutting
   expect(await downloadCsv(page,"#download-stock-csv")).toBe(baselineCuts);
   expect(await downloadCsv(page,"#download-price-csv")).toBe(baselineQuote);
   expect(await page.locator("#framing-ticket-list").innerText()).toBe(beforeTicket);
+  // Activated alternatives must be printable without dropping the wide
+  // stock-origin/source-ID and recalculated quote columns.
+  await page.evaluate(()=>window.dispatchEvent(new Event("beforeprint")));
+  await page.emulateMedia({media:"print"});
+  await expect(page.locator('.print-specialty-groups[data-source="framing-reuse-table"] .print-specialty-part')).toHaveCount(2);
+  await expect(page.locator('.print-specialty-groups[data-source="framing-reuse-purchase-table"] .print-specialty-part')).toHaveCount(2);
+  const printText=await page.locator('.print-specialty-groups[data-source="framing-reuse-table"]').innerText();
+  expect(printText).toContain("Original stock");
+  expect(printText).toContain("Alternative stock");
+  const pdf=await page.pdf({format:"Letter",printBackground:true});
+  expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+  expect(pdf.length).toBeGreaterThan(10000);
+  await page.emulateMedia({media:"screen"});
+  await page.evaluate(()=>window.dispatchEvent(new Event("afterprint")));
+  await expect(page.locator('.print-specialty-groups[data-source="framing-reuse-table"]')).toHaveCount(0);
 
   // With extra trims the current plan can no longer be certified as enough.
   await page.locator("#f-stockAuditEndTrim").fill("5");
