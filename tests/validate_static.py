@@ -125,6 +125,10 @@ for p in pages:
         nearby=re.search(r'<p class="intent-query-copy">.*?</p>',body)
         if nearby:
             rendered_query=html.unescape(nearby.group(0)).lower()
+            if "closely related search terms include" in rendered_query:
+                errors.append(f"{u}: generic synonym inventory still present")
+            if page_tool["keyword"].lower() not in rendered_query:
+                errors.append(f"{u}: primary research search task missing")
             for route,term in flagged:
                 if route==u and term in rendered_query:
                     errors.append(f"{u}: flagged nonmatching search phrase used as a claimed synonym: {term}")

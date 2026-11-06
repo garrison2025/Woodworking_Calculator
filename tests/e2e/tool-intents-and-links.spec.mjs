@@ -35,6 +35,17 @@ test("All 28 calculator landings explain real search tasks and link only to vali
       expect(dest,"linked to an unreleased P2 or non-tool route").toBeTruthy();
     }
     await expect(page.locator(".intent-query-copy")).toBeVisible();
+    await expect(page.locator(".intent-query-copy")).toContainText(t.keyword);
+    await expect(page.locator(".intent-query-copy"))
+      .not.toContainText("Closely related search terms include");
+    if(t.slug==="framing-calculator"){
+      await expect(page.locator(".intent-query-copy"))
+        .toContainText("wall framing calculator with windows and doors");
+      await expect(page.locator(".intent-query-copy")).toContainText("king/jack stations");
+    }else{
+      await expect(page.locator(".intent-query-copy"))
+        .not.toContainText("wall framing calculator with windows and doors");
+    }
     await expect(page.locator(".field-verification")).toContainText(fieldChecks[t.slug]);
     await expect(page.locator(".field-verification")).toContainText("not a completed field inspection");
   }
