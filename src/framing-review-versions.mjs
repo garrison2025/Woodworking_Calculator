@@ -150,6 +150,37 @@ export function validateFramingReviewVersion(version){
     ["measurement","stocks"],["quotation","supplierRows"],
     ["declaration","sourceRows"]
   ])sane(version.parts[key][field],key+"."+field);
+  // A map-based diff would silently overwrite duplicate identities. Reject
+  // them before flattening, even if someone recomputed weak version IDs.
+  const unique=(records,key,what)=>{
+    const values=new Set();
+    for(const row of records){
+      if(!row||typeof row!=="object"||Array.isArray(row))
+        throw Error("Malformed Framing reference "+what+" record.");
+      const id=key(row);
+      if(typeof id!=="string"||!id.length||id.length>256)
+        throw Error("Invalid Framing reference "+what+" identity.");
+      if(values.has(id))throw Error("Duplicate Framing reference "+what+" identity.");
+      values.add(id);
+    }
+    return values;
+  };
+  const p=version.parts;
+  const barIds=unique(p.layout.bars,r=>r.stockId,"stock");
+  unique(p.layout.members,r=>r.stockGroup+"|"+r.item,"member");
+  unique(p.layout.stations,r=>r.stockId+"|"+r.index,"station");
+  const measuredIds=unique(p.measurement.stocks,r=>r.stockId,"measurement");
+  const declaredIds=unique(p.declaration.sourceRows,r=>r.stockId,"declaration");
+  unique(p.quotation.supplierRows,r=>r.stockGroup+"|"+r.offerCode,"SKU");
+  for(const group of [measuredIds,declaredIds]){
+    if(group.size!==barIds.size||[...barIds].some(id=>!group.has(id)))
+      throw Error("Framing reference measurement/declaration source IDs differ.");
+  }
+  for(const row of p.measurement.stocks){
+    if(row.enteredLength!==null&&(!Number.isFinite(row.enteredLength)||
+      row.enteredLength<=0||row.enteredLength>=1e8))
+      throw Error("Framing reference contains an invalid entered length.");
+  }
   if(version.parts.declaration.automaticPurchaseAuthorized!==false||
     version.parts.declaration.humanApprovalRequired!==true)
     throw Error("Imported reference must never authorize buying.");
@@ -244,6 +275,47 @@ export function compareFramingReviewVersions(reference,current){
     referenceId:reference.versionIds.packet,currentId:current.versionIds.packet,
     changedSections,changes,totalChanges:changes.length,
     warning:"These IDs identify local comparison versions only; neither file is a signed record or purchase authorization."};
+}
+/**
+ * Explicit recovery PROPOSAL ONLY, never automatic import. Restore raw
+ * historical dimensions only if the exact CURRENT source layout matches
+ * the reference. Calling code must discard all human inspection declarations
+ * and must not change prices, stock arrangements or procurement actions.
+ */
+export function proposeFramingMeasurementRestore(reference,current){
+  validateFramingReviewVersion(reference);
+  validateFramingReviewVersion(current);
+  if(reference.versionIds.layout!==current.versionIds.layout)
+    throw Error("RESTORE BLOCKED — source layout differs from the reference.");
+  const sourceIds=new Set(current.parts.layout.bars.map(b=>b.stockId));
+  const previous=reference.parts.measurement;
+  const values={sawKerf:previous.sawKerf,
+    endTrim:previous.endTrim,finalSeverKerf:previous.finalSeverKerf};
+  for(const [key,value] of Object.entries(values)){
+    if(value!==null&&(!Number.isFinite(value)||value<0||
+      (value>0&&value<1e-8)||value>=1e8))
+      throw Error("RESTORE BLOCKED — invalid historical "+key+".");
+  }
+  const entries=previous.stocks.map(row=>{
+    if(!sourceIds.has(row.stockId))
+      throw Error("RESTORE BLOCKED — unknown historical source.");
+    return [row.stockId,row.enteredLength];
+  });
+  if(entries.length!==sourceIds.size)
+    throw Error("RESTORE BLOCKED — missing historical source measurements.");
+  // Only physical measurements are recovered. The original record may
+  // contain self-declared checked flags; deliberately ignore every one.
+  return {
+    layoutId:current.versionIds.layout,
+    referenceId:reference.versionIds.packet,
+    measurementId:reference.versionIds.measurement,
+    sourceEntries:entries,
+    ...values,
+    restoresInspectionDeclarations:false,
+    restoresSupplierPrices:false,
+    restoresPurchaseAuthorization:false,
+    warning:"HISTORICAL USER ENTRIES — remeasure every actual stick and independently reconfirm all inspection declarations before purchase."
+  };
 }
 export function framingReviewVersionNote(version,reference=null){
   validateFramingReviewVersion(version);
