@@ -710,3 +710,32 @@ tbody tr:nth-child(2n){background:#fafbf8}
    font-size:8.5pt;line-height:1.28
  }
 }
+
+/* Separate, opt-in offcut reassignment — never visually replace the
+   original buying ticket. Invalid/blocked cases keep an explicit status. */
+.framing-reuse-plan{
+  margin:26px 0;padding:20px 22px;border:1px solid #bed5c6;
+  border-left:5px solid #326b55;border-radius:11px;background:#f6faf7
+}
+.framing-reuse-plan[hidden]{display:none!important}
+.framing-reuse-plan>.eyebrow{color:#38725a;font-weight:750;letter-spacing:.09em}
+.framing-reuse-plan>h3{margin:7px 0 10px;color:#214d3d}
+.framing-reuse-plan>p:not(.framing-price-status){font-size:12px;line-height:1.7}
+.framing-reuse-plan .framing-price-status{background:#e9f2ed}
+.framing-reuse-plan table{min-width:770px}
+.framing-reuse-plan td:nth-child(2),.framing-reuse-plan td:nth-child(3){font-variant-numeric:tabular-nums}
+.framing-reuse-plan .takeoff-actions{margin:13px 0 18px}
+@media(max-width:620px){
+  .framing-reuse-plan{padding:15px 12px}
+  .framing-reuse-plan table{min-width:760px}
+}
+@media print{
+  .framing-reuse-plan[hidden]{display:none!important}
+  .framing-reuse-plan{background:white;border:1px solid #888;padding:8pt 9pt;margin:10pt 0}
+  .framing-reuse-plan .framing-price-status{font-size:8pt;line-height:1.3}
+  .framing-reuse-plan>p:not(.framing-price-status){font-size:7.5pt}
+  .framing-reuse-plan table{min-width:0;table-layout:fixed;width:100%;font-size:7pt}
+  .framing-reuse-plan th,.framing-reuse-plan td{padding:4pt 3pt;overflow-wrap:anywhere}
+  .framing-reuse-plan tr{break-inside:avoid;page-break-inside:avoid}
+  .framing-reuse-plan .takeoff-actions{display:none!important}
+}
