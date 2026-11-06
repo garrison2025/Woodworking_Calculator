@@ -1213,7 +1213,16 @@ export function compute(slug,a){
     const slope=ref.slope,angle=rad(ref.angle);
     const rise=ref.rise,line=ref.line,over=tail.line;
     const heel=a.seat*slope,notchNormal=a.seat*Math.sin(angle),remaining=a.depth-notchNormal;
+    // A positive birdsmouth must have two independently representable cut
+    // legs. Otherwise the UI may show a nonzero notch metric but omit both
+    // coordinate rows after rounding (1e-8 inch CSV/SVG coordinate grid).
+    // A zero-pitch or zero-seat reference intentionally has no removed wood.
+    if(a.seat>0&&a.pitch>0)
+      need(a.seat>=1e-7&&heel>=1e-7&&notchNormal>=1e-7,
+        "Birdsmouth seat or heel is below cut-coordinate resolution; enter a measurable seat and slope.");
     need(remaining>0,"The nominal seat-notch depth consumes the full rafter depth; reduce the seat or slope.");
+    need(remaining>=1e-7,
+      "Remaining rafter stock is below cut-coordinate resolution; reduce the notch or increase stock depth.");
     // X: horizontal from ridge top, +x down roof toward tail.
     // Y: vertical DROP from ridge top, +y toward the lower edge.
     // Rafter depth D is NORMAL to slope; the lower edge therefore lies at
@@ -2223,7 +2232,11 @@ export function compute(slug,a){
     const throat=a.depth-normalNotch;
     const bottomLayoutRise=h-a.treadThickness+a.lowerFinish;
     need(throat>0,"The geometric step notch consumes the full stock depth; increase board depth or revise the stairs.");
+    need(throat>=1e-7,
+      "Remaining stringer throat is below cut-coordinate resolution; increase board depth or revise rise/run.");
     need(bottomLayoutRise>0,"The bottom riser cut reference is not positive; review tread and finished floor thickness.");
+    need(bottomLayoutRise>=1e-7,
+      "Bottom riser cut is below cut-coordinate resolution; review tread and finished floor thickness.");
     // Pitch line connects first tread/upper riser reference (0,h) to the
     // upper landing (run,rise). A floor-to-floor (0,0)->(run,rise)
     // diagonal has DIFFERENT slope and is not a stringer cut length.

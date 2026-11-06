@@ -25,3 +25,9 @@ Current implementation: **31 geometry calculators** (9 P0 + 22 P1), **six popula
 For each field test log the URL/tool, Git SHA, reviewer and competency, date, units/inputs, CSV and SVG filename, paper/print driver, measured real material, instrument, independent calculation, tolerance, discrepancy, PASS/FAIL and any second-reviewer approval.
 
 Preview Cloudflare Pages must continue returning noindex,nofollow,noarchive and robots.txt Disallow: /. Production canonical/sitemap remains gated on an owned HTTPS domain and explicit approval.
+
+## Software cut-coordinate precision review — 2026-11-07 (pending new PR CI)
+
+The rafter birdsmouth model previously admitted a **nonzero seat / near-flat pitch** whose two cut segments could disappear from the coordinate schedule when the heel rounded below display resolution. The stair stringer accepted a strictly positive but sub-resolution remaining throat or bottom riser correction that could be reported as zero. The new source guards reject these inputs with an explicit `cut-coordinate resolution` error, clear the old drawing/CSV until correction, and preserve the intentional **zero-pitch/zero-seat no-material-cut** reference. Positive accepted cuts are bounded above the exported 1e-8 inch quantum, tested against the SVG/CSV contract and independent trigonometric reference examples.
+
+Evidence proposed: `tests/critical-cut-resolution.test.mjs`, `tests/e2e/critical-cut-resolution.spec.mjs`, existing 31-tool browser contract and A4/Letter printable schedules. **This is a software representability safeguard, not proof of minimum safe remaining lumber, valid structural notch size, code compliance or a physical saw trial.** Mark this PASS only after the new PR commit's full Actions run succeeds.
