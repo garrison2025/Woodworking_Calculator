@@ -2057,6 +2057,16 @@ if(slug){
       wrapper.hidden=!parent||String(parent.value)!==requiredValue;
     }
   };
+  // The visible percentage and accessible reset name describe the actual
+  // schematic zoom, not the physical print scale (which is never 1:1).
+  const applyDiagramZoom=()=>{
+    const percent=Math.round(zoom*100);
+    diagram.querySelector("svg")?.style.setProperty("width",percent+"%");
+    zoomReset.textContent=percent+"%";
+    zoomReset.setAttribute("aria-label","Reset diagram zoom to 100% (current "+percent+"%)");
+    zoomMinus.disabled=percent<=60;
+    zoomPlus.disabled=percent>=250;
+  };
   function render(){
     refreshConditionalFields();
     // Clear field-specific validation before re-reading the current inputs.
@@ -2085,7 +2095,7 @@ if(slug){
       if(printFullSchedule)renderReadablePrintSchedule();
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       if(printFullSchedule)renderSpecialtyPrintTables();
-      diagram.innerHTML=drawing(latest);diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");
+      diagram.innerHTML=drawing(latest);applyDiagramZoom();
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
       syncResultActions();
@@ -2289,8 +2299,13 @@ if(slug){
     if(event.target===diagram.querySelector("svg")&&event.propertyName==="width")
       syncKeyboardScrollRegions();
   });
-  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{zoom=Math.min(2.5,Math.max(.6,zoom+delta));diagram.querySelector("svg")?.style.setProperty("width",zoom*100+"%");requestAnimationFrame(syncKeyboardScrollRegions);});
-  zoomReset.addEventListener("click",()=>{zoom=1;diagram.querySelector("svg")?.style.setProperty("width","100%");requestAnimationFrame(syncKeyboardScrollRegions);});
+  for(const [el,delta] of [[zoomPlus,.2],[zoomMinus,-.2]])el.addEventListener("click",()=>{
+    zoom=Math.min(2.5,Math.max(.6,Math.round((zoom+delta)*100)/100));
+    applyDiagramZoom();requestAnimationFrame(syncKeyboardScrollRegions);
+  });
+  zoomReset.addEventListener("click",()=>{
+    zoom=1;applyDiagramZoom();requestAnimationFrame(syncKeyboardScrollRegions);
+  });
   copy.addEventListener("click",async()=>{
     if(!latest)return;
     const text=tool.title+"\n"+latest.metrics.map(m=>m.label+": "+fmt(m.value,m.kind)).join("\n")+"\n"+tool.limit;
