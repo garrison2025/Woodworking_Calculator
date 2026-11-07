@@ -54,23 +54,14 @@ SUPPORTED_REASSIGNMENTS = {item["keyword"].lower():item["supportedRoute"]
                            for item in CAUTION_DATA["flagged"] if item.get("supportedRoute")}
 assert len(SUPPORTED_REASSIGNMENTS) == sum(bool(x.get("supportedRoute")) for x in CAUTION_DATA["flagged"])
 assert set(SUPPORTED_REASSIGNMENTS.values()) <= {"/" + t["slug"] + "/" for t in TOOLS}, "SEO reassignment targets unpublished or unknown tools"
-# V3 originally held these five P2 search intents. The code was later
-# implemented and preview-enabled, but this is NOT index publication approval.
-# Keep the whitelist explicit and audited: a production build must opt in
-# separately after the intended search tasks/geometry have been reviewed.
-V3_P2_ORIGIN = frozenset({
-    "spiral-staircase-calculator", "gambrel-roof-calculator",
-    "lumber-price-calculator", "fence-picket-calculator", "stave-calculator",
-})
-assert len(V3_P2_ORIGIN) == 5 and V3_P2_ORIGIN <= {t["slug"] for t in TOOLS}
-P2_RELEASE_APPROVED = os.environ.get("RELEASE_V3_P2_APPROVED") == "1"
-# An indexable category needs at least one approved search-eligible tool.
-# /materials/ currently holds only the original V3 P2 lumber-price intent.
-CATEGORY_PATHS = {"/" + slug + "/" for _, slug in CATS.values()}
-ELIGIBLE_CATEGORY_PATHS = {
+# 2026-11-07 owner approval: all 31 completed P0/P1 tools, including the
+# five originally listed as P2 in the V3 plan, share the ONE production gate.
+# Historical planning priority is not a quality or SEO publication veto.
+# Without an owned custom HTTPS domain and RELEASE_APPROVED=1, every page
+# remains noindex. RELEASE_V3_P2_APPROVED is obsolete and intentionally ignored.
+ACTIVE_CATEGORIES = {
     "/" + slug + "/" for key, (_, slug) in CATS.items()
-    if any(t["category"] == key and
-           (t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED) for t in TOOLS)
+    if any(t["category"] == key for t in TOOLS)
 }
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
@@ -87,9 +78,7 @@ def href(path):
 
 def page(title, description, body, path="/", type_="website"):
     desc = description[:180]
-    eligible = INDEXABLE and path != "/404/" and (
-        (type_ != "tool" or path.strip("/") not in V3_P2_ORIGIN or P2_RELEASE_APPROVED)
-        and (path not in CATEGORY_PATHS or path in ELIGIBLE_CATEGORY_PATHS))
+    eligible = INDEXABLE and path != "/404/"
     canon = SITE_URL + path if eligible else None
     canonical = f'<link rel="canonical" href="{esc(canon)}">' if canon else ""
     robots = "index,follow" if eligible else "noindex,nofollow,noarchive"
@@ -626,20 +615,15 @@ def build():
         # Pages aliases WITHOUT suppressing approved custom-domain URLs.
         headers += "\nhttps://woodworking-calculator.pages.dev/*\n" + nonindex
         headers += "\nhttps://:version.woodworking-calculator.pages.dev/*\n" + nonindex
-        if not P2_RELEASE_APPROVED:
-            for slug in sorted(V3_P2_ORIGIN):
-                headers += f"\n/{slug}/\n" + nonindex
-            headers += "\n/materials/\n" + nonindex
     (DEST/"_headers").write_text(headers, encoding="utf-8")
     if INDEXABLE:
-        urls=["/"]+[f"/{t['slug']}/" for t in TOOLS
-                    if t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED]+["/"+slug+"/" for _,(_,slug) in CATS.items() if "/"+slug+"/" in ELIGIBLE_CATEGORY_PATHS]+list(pages)
+        urls=["/"]+[f"/{t['slug']}/" for t in TOOLS]+sorted(ACTIVE_CATEGORIES)+list(pages)
         xml='<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(SITE_URL+url)+'</loc></url>' for url in urls)+'</urlset>'
         (DEST/"sitemap.xml").write_text(xml,encoding="utf-8")
         (DEST/"robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: "+SITE_URL+"/sitemap.xml\n")
     else:
         (DEST/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
-    print(f"Built {len(TOOLS)} calculator pages; indexable={INDEXABLE}; original V3 P2 index release={P2_RELEASE_APPROVED}; output={DEST}")
+    print(f"Built {len(TOOLS)} calculator pages; indexable={INDEXABLE}; production SEO scope={len(TOOLS)} tools / {len(ACTIVE_CATEGORIES)} categories; output={DEST}")
 
 if __name__ == "__main__":
     build()
