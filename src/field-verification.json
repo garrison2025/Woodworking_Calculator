@@ -12,7 +12,7 @@
     "wainscoting-calculator": "Add physical panel faces, all between-panel gaps and both margins to close exactly to wall width.",
     "stair-calculator": "Count N risers, N−1 separate treads, and check that the landing is not counted as an extra tread.",
     "rise-run-calculator": "Verify the diagonal by hypot(rise, horizontal run); percentage grade divides by horizontal run.",
-    "deck-material-calculator": "Check board seams against joist center references, and review actual end gaps and unmodeled saw kerf.",
+    "deck-material-calculator": "Confirm the physically measured FIRST-to-LAST joist CENTER run, independently approved maximum OC and correct fixed/equalized mode before using the numeric layout; check every exported center, board seam, joist face and end-gap against the actual deck. No selection of code-permitted spacing or span is made.",
     "segmented-bowl-calculator": "Compare straight physical chord lengths, not curved arcs, and distinguish polygon from turned-ring diameter.",
     "roof-pitch-calculator": "Select the source ratio, angle, grade or measured rise/run explicitly; hip elevation is a separate angle.",
     "equal-spacing-calculator": "Check first/last physical face positions, then verify the chosen integer count yields the reported REAL pitch.",
