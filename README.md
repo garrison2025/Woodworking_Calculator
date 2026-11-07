@@ -1,10 +1,18 @@
-# Workshop Geometry Tools
+# WoodLayout
 
 **Woodworking Calculator V3 implementation · US English · Cloudflare Pages static site**
 
 A free browser-only woodworking workspace with **31 active geometry calculators (9 P0 + 22 P1), six populated categories and zero held P2**. Includes proportional SVG drawings, fractional inch display, five length units (in/ft/mm/cm/m), local-only tool search and recent-history controls, typed CSV exports and browser Print / Save as PDF. Geometry references are not certified structural designs or saw-cut instructions.
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
+
+## 2026-11-08 — Responsive calculator workbench navigation
+
+- Each of the **31** calculator pages now has a keyboard-accessible, sticky section navigator with **Measurements / Results / Drawing** shortcuts linked to actual panel anchors. On narrow screens it stays immediately below the existing header while long measurement fields scroll.
+- The navigator displays the exact *first calculated metric and formatted value* returned by the local engine; if input becomes invalid it says **Review measurements —** and never retains a stale number. There is no numeric count-up, no external API request, no duplication of calculator logic and no new SEO route.
+- Anchor targets are `tabindex=-1` so they can receive programmatic focus without adding unnecessary Tab stops. `aria-current=location` reflects the selected link fragment, not a claim of validated work. `#measure=` sharing fragments remain supported independently.
+- Short entry and result-value color motions are nonessential, opt out under `prefers-reduced-motion: reduce`, and disappear from printed sheets. 320px–1280px browser tests and 31-route static checks protect narrow screens, values and links.
+- Live Cloudflare source-parity checks now explicitly test each tool's workbench navigation in addition to the original assets, forms and configurations. **No registered custom domain exists and Pages remains noindex.**
 
 ## 2026-11-07 — WoodLayout identity and logo
 
