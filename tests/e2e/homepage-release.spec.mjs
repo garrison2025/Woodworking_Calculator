@@ -11,6 +11,14 @@ test("home counts, six categories and searchable 31-tool directory",async({page}
   await page.getByLabel("Find a calculator").fill("wainscoting");
   await expect(page.locator("#tool-directory a:visible")).toHaveCount(1);
   await expect(page.locator("#tool-search-status")).toHaveText("Showing 1 of 31 tools");
+  for(const [query,slug] of [
+    ["wall framing calculator","framing-calculator"],
+    ["deck board calculator","deck-board-calculator"]
+  ]){
+    await page.getByLabel("Find a calculator").fill(query);
+    await expect(page.locator("#tool-directory a:visible")).toHaveCount(1);
+    await expect(page.locator("#tool-directory a:visible")).toHaveAttribute("href","/"+slug+"/");
+  }
   await page.getByLabel("Find a calculator").fill("unlikely-zzzz-geometry");
   await expect(page.locator("#tool-directory a:visible")).toHaveCount(0);
   await expect(page.locator("#tool-search-status")).toContainText("No matching calculator");

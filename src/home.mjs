@@ -35,11 +35,15 @@ if(directory){
     });
   }
   if(search&&searchStatus){
+    const words=text=>text.toLowerCase().match(/[a-z0-9]+/g)||[];
+    const index=entries.map(item=>({
+      item,terms:item.dataset.searchTerms.split("|").map(words)
+    }));
     const filterTools=()=>{
-      const query=search.value.trim().toLocaleLowerCase("en");
+      const query=words(search.value);
       let visible=0;
-      for(const item of entries){
-        const matched=!query||item.textContent.toLocaleLowerCase("en").includes(query);
+      for(const {item,terms} of index){
+        const matched=terms.some(term=>query.every(word=>term.some(token=>token.startsWith(word))));
         item.hidden=!matched;
         if(matched)visible++;
       }
