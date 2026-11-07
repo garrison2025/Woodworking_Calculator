@@ -40,30 +40,30 @@ test("inch ruler fractions produce identical calculations, rows and CSV to decim
 test("share URLs and local JSON backups serialize fractional inches as canonical decimals",async({page,context})=>{
   await context.grantPermissions(["clipboard-read","clipboard-write"]);
   await page.goto("/deck-board-calculator/");
-  const input=page.locator("#f-coverage");
+  const input=page.locator("#f-width");
   // Verify the actual field name exists rather than rely on appearance.
   await expect(input).toHaveCount(1);
   await input.fill("120 1/2");
   await expect(page.locator("#calc-error")).toBeHidden();
   const csv=await downloadCutList(page);
   const saved=await downloadBackup(page);
-  expect(saved.inputs.find(row=>row.key==="coverage").value).toBe("120.5");
+  expect(saved.inputs.find(row=>row.key==="width").value).toBe("120.5");
   await page.locator("#share-measurements").click();
   await expect(page.locator("#action-status")).toContainText("Measurement link copied");
   const link=await page.evaluate(()=>navigator.clipboard.readText());
-  expect(link).toContain("f.coverage=120.5");
+  expect(link).toContain("f.width=120.5");
   expect(link).not.toContain("120+1%2F2");
   await page.goto(link);
-  await expect(page.locator("#f-coverage")).toHaveValue("120.5");
+  await expect(page.locator("#f-width")).toHaveValue("120.5");
   await expect(page.locator("#calc-error")).toBeHidden();
   expect(await downloadCutList(page)).toBe(csv);
-  await page.locator("#f-coverage").fill("100");
+  await page.locator("#f-width").fill("100");
   await page.locator("#load-measurements-json").setInputFiles({
     name:"saved-measurements.json",mimeType:"application/json",
     buffer:Buffer.from(JSON.stringify(saved))
   });
   await expect(page.locator("#action-status")).toContainText("Local measurements restored");
-  await expect(page.locator("#f-coverage")).toHaveValue("120.5");
+  await expect(page.locator("#f-width")).toHaveValue("120.5");
   await expect(page.locator("#calc-error")).toBeHidden();
 });
 
