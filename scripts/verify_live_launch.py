@@ -187,6 +187,13 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
         approved = path in index_routes
         robots = "index,follow" if approved else "noindex,nofollow,noarchive"
         check(p.meta.get("robots") == robots, path + ": incorrect robots meta")
+        xrobots = headers.get("x-robots-tag", "").lower()
+        if mode == "preview":
+            check("noindex" in xrobots,
+                  path + ": Pages preview missing response X-Robots-Tag noindex")
+        elif approved:
+            check("noindex" not in xrobots,
+                  path + ": approved custom-domain route has HTTP noindex")
         expected_canonical = [origin + path] if approved else []
         check(p.canonical == expected_canonical, path + ": canonical not aligned with release gate")
         check(len(p.schema) == (1 if approved else 0),
@@ -287,8 +294,15 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
             location = headers.get("location", "")
             check(status in (301, 308) and location == origin + path,
                   "pages.dev" + path + ": expected exact permanent redirect to custom domain")
-    status, _, _ = request("/nonexistent-woodworking-release-audit-404/")
+    status, body, _ = request("/nonexistent-woodworking-release-audit-404/")
     check(status == 404, "Unknown URL must return HTTP 404")
+    if status == 404:
+        missing = Head()
+        missing.feed(body)
+        check(missing.meta.get("robots") == "noindex,nofollow,noarchive",
+              "Custom 404 body must remain noindex")
+        check(not missing.canonical and not missing.schema,
+              "Custom 404 body must not contain canonical or JSON-LD")
     results["status"] = "PASS" if not results["failures"] else "FAIL"
     results["indexable_routes_expected"] = len(index_routes)
     return results
