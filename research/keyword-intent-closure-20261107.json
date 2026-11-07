@@ -202,7 +202,7 @@
     {
       "slug": "lumber-price-calculator",
       "keyword": "price per thousand calculator",
-      "class": "research-query-mismatch",
+      "class": "research-query-ambiguous",
       "scope": "Historical 'price per thousand calculator' lacks a lumber/MBF qualifier and may refer to generic per-1000 unit prices. The live page correctly only covers BF/MBF lumber quotes; do not claim the broad query is served. Verify a lumber-qualified target term separately.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order."
     },
@@ -319,7 +319,7 @@
     {
       "keyword": "pointing calculator",
       "originalRoute": "/equal-spacing-calculator/",
-      "decision": "exclude-off-topic",
+      "decision": "exclude-as-target-keyword",
       "reason": "Web spot-check returned masonry mortar/repointing calculators, not woodworking equal-spacing. Remove from target claims; preserve only historical CSV.",
       "sampledPublicResults": [
         "https://www.lime-mortars.co.uk/lime-mortar/calculators/pointing-calculator?product=MRN-003-012"
@@ -328,13 +328,13 @@
     {
       "keyword": "calculator center",
       "originalRoute": "/equal-spacing-calculator/",
-      "decision": "exclude-off-topic",
+      "decision": "exclude-as-target-keyword",
       "reason": "Generic calculator-service/navigation phrase; no evidence of wood-part center positions. Exclude."
     },
     {
       "keyword": "center calculator",
       "originalRoute": "/equal-spacing-calculator/",
-      "decision": "exclude-off-topic",
+      "decision": "exclude-as-target-keyword",
       "reason": "Generic ambiguous phrase; no evidence of timber center-spacing search intent. Exclude."
     },
     {
@@ -380,8 +380,12 @@
     {
       "keyword": "price per thousand calculator",
       "originalRoute": "/lumber-price-calculator/",
-      "decision": "exclude-off-topic",
-      "reason": "As a generic per-1,000-price term it is not synonymous with board-feet MBF lumber quotes; the lumber page already uses a constrained description. Independently research lumber-qualified keywords."
+      "decision": "exclude-as-target-keyword",
+      "reason": "Generic per-thousand pricing may mean unit counts or lumber MBF. The live tool covers BF/MBF only; preserve the historical competitor association but do not target the unqualified phrase without current US-intent evidence.",
+      "sampledPublicResults": [
+        "https://pricecalculator.org/per/price-per-thousand-calculator.html",
+        "https://molecalculator.com/Lumber-Cost-Per-Thousand-Calculator.php"
+      ]
     }
   ]
 }
