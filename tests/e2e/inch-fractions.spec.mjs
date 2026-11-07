@@ -104,3 +104,42 @@ test("malformed/improper fractions reject stale drawings and disable every expor
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(page.locator("#download-csv")).toBeEnabled();
 });
+
+
+test("explicit feet-inch ruler entries agree with decimal results, exports and unit conversions",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const length=page.locator("#f-length");
+  await length.fill("99.5");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  const cards=await page.locator("#result-cards").innerText();
+  const csvDecimal=await downloadCutList(page);
+  await length.fill("8' 3 1/2\"");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  expect(await page.locator("#result-cards").innerText()).toBe(cards);
+  expect(await downloadCutList(page)).toBe(csvDecimal);
+  await expect(page.locator("#print-input-table")).toContainText("8' 3 1/2");
+  const backup=await downloadBackup(page);
+  expect(backup.inputs.find(row=>row.key==="length").value).toBe("99.5");
+  await page.locator("#unit-select").selectOption("mm");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  expect(Number(await length.inputValue())).toBeCloseTo(2527.3,4);
+  await page.locator("#unit-select").selectOption("in");
+  expect(Number(await length.inputValue())).toBeCloseTo(99.5,5);
+});
+
+test("invalid feet-inch marks cannot leave stale results or be exported",async({page})=>{
+  await page.goto("/stud-calculator/");
+  const input=page.locator("#f-length");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  for(const malformed of ["8' 12\"", "8' 1/3\"", "8' 3", "8' -1/2\"", "8' +2\""]){
+    await input.fill(malformed);
+    await expect(page.locator("#calc-error")).toBeVisible();
+    await expect(input).toHaveAttribute("aria-invalid","true");
+    await expect(page.locator("#dimension-svg svg")).toHaveCount(0);
+    await expect(page.locator("#download-csv")).toBeDisabled();
+    await expect(page.locator("#download-measurements-json")).toBeDisabled();
+  }
+  await input.fill("8' 3\"");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#download-csv")).toBeEnabled();
+});

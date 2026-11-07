@@ -184,7 +184,7 @@ def tool_page(t):
             # A strict parser converts accepted entries to decimal inches
             # before all calculations, exports and measurement sharing.
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="text" inputmode="text" maxlength="64" autocomplete="off" spellcheck="false" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
-            note = "Use selected units. In inches: 5.5, 5 1/2, 5-1/2, or 3/4. Other units: decimals only."
+            note = "Use selected units. In inches: 5.5, 5 1/2, 3/4, or feet-and-inches written as 8' 3 1/2\". Other units: decimals only."
         else:
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = "Enter a number using the described measurement"
