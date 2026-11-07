@@ -29,7 +29,11 @@ def fake_site(mode, p2=False, broken=None, source_sync=False):
                 return 200, "Old public HTML", {}
             return 301, "", {"location": DOMAIN + path}
         if path.startswith("/nonexistent-woodworking-release-audit"):
-            return 404, "Not found", {}
+            robots = ("index,follow" if "indexed_404" in broken
+                      else "noindex,nofollow,noarchive")
+            return (404, '<html><head><meta name="robots" content="' +
+                    robots + '"></head><body>Not found</body></html>',
+                    {"x-robots-tag": "noindex"} if mode == "preview" else {})
         if path == "/robots.txt":
             return (200, "User-agent: *\nDisallow: /\n", {}) if mode == "preview" else (
                 200, "User-agent: *\nAllow: /\nSitemap: " + DOMAIN + "/sitemap.xml\n", {})
@@ -91,7 +95,11 @@ def fake_site(mode, p2=False, broken=None, source_sync=False):
                '</title><meta name="description" content="Useful geometry calculator">'
                '<meta name="robots" content="' + robot + '">' + canonical + schema +
                '</head><body>' + h1 + form + "</body></html>")
-        return 200, doc, {}
+        response_headers = ({"x-robots-tag": "noindex, nofollow, noarchive"}
+                            if mode == "preview" and
+                            not ("missing_preview_header" in broken and path == "/")
+                            else {})
+        return 200, doc, response_headers
     return get
 
 
@@ -108,6 +116,18 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "PASS", result["failures"])
         self.assertEqual(result["http_pages_checked"], 42)
         self.assertEqual(result["indexable_routes_expected"], 0)
+
+    def test_missing_preview_http_noindex_blocks_acceptance(self):
+        result = launch.audit(PAGES, "preview",
+                              get=fake_site("preview", broken={"missing_preview_header"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("X-Robots-Tag" in x for x in result["failures"]))
+
+    def test_indexable_404_body_blocks_acceptance(self):
+        result = launch.audit(PAGES, "preview",
+                              get=fake_site("preview", broken={"indexed_404"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("404 body" in x for x in result["failures"]))
 
     def test_production_keeps_p2_and_materials_noindex_until_approval(self):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
