@@ -4,7 +4,7 @@
 
 ## 本轮可独立执行的改进
 
-1. 新增 **macOS 15 托管运行器 + Playwright WebKit** 独立 GitHub Actions job，执行跨浏览器几何、导出、键盘访问和 31 页 320/390/768px 响应性测试。先通过主分支 `verify` 和 `macos-webkit` 两项，才触发 `deployed-preview` 实站版本与 noindex 门禁。**这仍不是 Apple Safari 品牌浏览器、iPhone 真机或 VoiceOver 真正朗读测试**。
+1. 新增**按需手动触发**的 GitHub Actions `macos-webkit-qa.yml`（macOS 15 + Playwright WebKit），执行跨浏览器几何、导出、键盘访问和 31 页 320/390/768px 响应性测试。PR #30 开发期曾在 macOS 托管运行器实测通过；因为 Mac CI 可能额外计费，它不在每次 push/PR 上重复运行。常规 `verify` 通过后会触发 `deployed-preview` 实站版本与 noindex 门禁。**这仍不是 Apple Safari 品牌浏览器、iPhone 真机或 VoiceOver 真正朗读测试**。
 2. 新增 `scripts/export_keyword_review_register.py` 和 [152 条单词可追溯审查表](keyword-decision-register-152.csv)。每条保留原始美国估算 Volume/KD/CPC、历史对手页面、原始归属、疑点决定、允许文案范围、候选目标，并显式标记 **`NOT VERIFIED (US GEO)`**。152 行 = **22 条已标注风险/边界的历史疑点 + 30 条非重叠主关键词 + 100 条尚未经逐词独立验证的次级词**；第 31 个主关键词与疑点词重合（`price per thousand calculator`）。
 3. 原 152 行来源文件保持原样；新脚本 `--check` 进入 CI，来源或审查状态漂移必须 FAIL，不能在页面上悄悄认领未经审查的长尾词。
 4. 配备**独立 A4 和 US Letter 矢量标尺校准 PDF**以及空白纸面和木料实测记录（本次 ChatGPT 对话附件）；其 100 mm 与 1.000 in 线段长度在 PDF 向量单位上可检验，**打印机真实比例不能远程测量**。站内浏览器原有 100mm/1in 标尺和 CI 导出 PDF 继续保留。
