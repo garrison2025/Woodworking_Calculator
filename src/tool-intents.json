@@ -225,8 +225,8 @@
     {
       "slug": "deck-material-calculator",
       "seoTitle": "Deck Estimator – Deck Material Calculator",
-      "useFor": "Estimate deck material quantities and modeled joist or board layouts.",
-      "notFor": "Engineered joist-span capacity, footings, approved beams or fasteners.",
+      "useFor": "Estimate deck material quantities and modeled decking cuts, with optional equalized joist-center spacing from a user-verified maximum OC.",
+      "notFor": "Selecting structurally permitted joist spacing or span, engineer-approved post/footing/beam loads, deck certification or prescribed fastener attachment.",
       "next": [
         {
           "slug": "deck-board-calculator",

@@ -668,7 +668,7 @@ export function inchFraction(value,denominator=16){
   return sign+(whole?whole+" ":"")+(numerator/div)+"/"+(denominator/div)+" in";
 }
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,boardEndTrim:0,boardCrosscutKerf:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,joistLayoutMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,boardEndTrim:0,boardCrosscutKerf:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -1479,7 +1479,7 @@ export function compute(slug,a){
   case "deck-material-calculator":{
     positive("width","length","board","joists","stock");nonnegative("gap","waste","boardUnitPrice","fastenerPackPrice",
       "joistStockLength","joistUnitPrice");
-    whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);whole("seamMode",0,1);
+    whole("fastenersPerContact",0,20);whole("fastenerPackSize",1,100000);whole("seamMode",0,1);whole("joistLayoutMode",0,1);
     nonnegative("buttEndGap","minEndBearing");positive("joistFaceWidth");
     // Each butt joint uses half of the entered gap on each adjoining end.
     // Less than two 1e-8 inch steps cannot survive coordinate quantization.
@@ -1492,15 +1492,30 @@ export function compute(slug,a){
       Math.abs(price*100-Math.round(price*100))<1e-6),
       "Supplier quotes must use at most two decimal places.");
     // Surface board rows run along deck length; joist reference lines run across the width.
-    // Ends include a final shortened bay. This is geometry, not a structural span design.
+    // Fixed-OC legacy mode ends with a shorter bay; equalized mode divides the
+    // measured FIRST-to-LAST centerline distance into uniform bays no greater
+    // than a maximum independently obtained from the construction design.
+    // Neither mode recommends permitted spacing or determines structural span.
     const boards=ceilStable((a.width+a.gap)/(a.board+a.gap));
     const finalRip=a.width-(boards-1)*(a.board+a.gap);
     need(boards>=1&&boards<=900&&finalRip>0&&finalRip<=a.board+1e-7,"Board width or gap cannot cover this deck safely within the layout limit.");
     need(a.board>=1e-7&&finalRip>=1e-7,
       "Decking board face or final rip is below cut-coordinate resolution.");
     if(boards>1)measurableGap(a.gap,"Deck material board gap");
-    const joistGrid=positions(a.length,a.joists);
-    need(joistGrid.length<=900,"Too many joist layout lines.");
+    const equalizedJoistLayout=a.joistLayoutMode===1;
+    const requiredBays=equalizedJoistLayout?ceilStable(a.length/a.joists):null;
+    if(equalizedJoistLayout)need(requiredBays>=1&&requiredBays<=899,
+      "Too many equalized joist bays; increase the independently verified maximum OC or reduce the deck length.");
+    const actualEqualOC=equalizedJoistLayout?a.length/requiredBays:null;
+    if(equalizedJoistLayout)need(actualEqualOC>=1e-7&&
+      actualEqualOC<=a.joists+1e-7,
+      "Equalized joist OC is below cut-coordinate resolution or exceeds the independently verified maximum OC.");
+    const joistGrid=equalizedJoistLayout?
+      Array.from({length:requiredBays+1},(_,i)=>
+        i===requiredBays?a.length:q(i*actualEqualOC)):positions(a.length,a.joists);
+    need(joistGrid.length<=900&&
+      joistGrid.every((x,i)=>i===0||x-joistGrid[i-1]>=1e-8),
+      "Joist centers must remain separate at the exported cut-coordinate resolution.");
     // Optional full-deck-width joist procurement ONLY; support spacing
     // remains user-entered and does not imply structural span approval.
     const quoteJoists=a.joistStockLength>0;
@@ -1677,6 +1692,11 @@ export function compute(slug,a){
     return result([
       M("Deck area",a.width*a.length/144,"FT2"),M("Deck rows",boards,"N"),
       M("Last rip width",finalRip),M("Joist reference lines",joistGrid.length,"N"),
+      ...(equalizedJoistLayout?[
+        M("Equalized joist bays",requiredBays,"N"),
+        M("Entered verified maximum OC",a.joists),
+        M("Actual equalized joist OC",actualEqualOC)
+      ]:[]),
       M("Final joist bay",joistGrid.at(-1)-joistGrid.at(-2)),
       ...(quoteJoists?[
         M("Straight joist cuts",joistGrid.length,"N"),
@@ -1704,7 +1724,10 @@ export function compute(slug,a){
         [M("Quoted deck materials total",deckCostSummary.quotedSubtotal,"C")]:[])
     ],deckRows.map(row=>P(row.acrossStart,row.item)),a.width,schedule,"deck-plan",
     {deckWidth:a.width,deckLength:a.length,deckRows,joistGrid,seamCenters,stockLength:a.stock,
-      deckSeamMode:a.seamMode,staggeredRows,distinctSeamPatterns:seamSet.length,
+      deckSeamMode:a.seamMode,deckJoistLayoutMode:a.joistLayoutMode,
+      deckVerifiedMaxJoistOC:equalizedJoistLayout?a.joists:null,
+      deckActualEqualJoistOC:actualEqualOC,
+      staggeredRows,distinctSeamPatterns:seamSet.length,
       deckButtEndGap:a.buttEndGap,deckJoistFaceWidth:a.joistFaceWidth,
       deckFaceOverlap:hasSeams?faceOverlap:null,
       deckJoistStockEnabled:quoteJoists,deckJoistStockLength:a.joistStockLength,

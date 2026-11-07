@@ -108,14 +108,14 @@
     {
       "keyword": "decking joist spacing calculator",
       "originalRoute": "/deck-material-calculator/",
-      "reason": "User enters reference joist centers; tool does not determine compliant joist spacing.",
-      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+      "reason": "The existing Deck Material Estimator now includes an optional geometric equalized-center mode using a separately verified MAX OC entered by the user, but it does NOT choose code-allowed spacing, joist span, load capacity or recommended construction spacing. Unqualified generic query intent remains unverified and cannot be claimed as an SEO synonym.",
+      "status": "qualified-geometry-mode-implemented-not-general-structural-search-claim"
     },
     {
       "keyword": "deck joist spacing calculator",
       "originalRoute": "/deck-material-calculator/",
-      "reason": "Entered joist spacing is a reference input, not a calculated engineering spacing recommendation.",
-      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+      "reason": "The existing Deck Material Estimator now includes an optional geometric equalized-center mode using a separately verified MAX OC entered by the user, but it does NOT choose code-allowed spacing, joist span, load capacity or recommended construction spacing. Unqualified generic query intent remains unverified and cannot be claimed as an SEO synonym.",
+      "status": "qualified-geometry-mode-implemented-not-general-structural-search-claim"
     },
     {
       "keyword": "gambrel roof truss calculator",
