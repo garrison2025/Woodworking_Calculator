@@ -98,6 +98,17 @@ def fake_site(mode, broken=None, source_sync=False):
                 fields.remove("joistLayoutMode")
             form = '<form id="calculator-form">' + "".join(
                 '<input id="f-' + key + '">' for key in fields) + "</form>"
+        if source_sync and path in launch.TOOL_PATHS and "stale_workbench" not in broken:
+            form = ('<nav aria-label="Jump between calculator sections">'
+                    '<a href="#workbench-input">Measurements</a>'
+                    '<a href="#workbench-results">Results</a>'
+                    '<a href="#workbench-drawing">Drawing</a>'
+                    '<span id="dock-primary-label"></span>'
+                    '<strong id="dock-primary-value"></strong>'
+                    '</nav>'
+                    '<div id="workbench-input"></div>'
+                    '<div id="workbench-results"></div>'
+                    '<div id="workbench-drawing"></div>') + form
         doc = ('<!doctype html><html><head><title>Page: ' + path +
                (' | WoodLayout' if source_sync else '') +
                '</title><meta name="description" content="Useful geometry calculator">'
@@ -177,7 +188,7 @@ class LiveAuditTests(unittest.TestCase):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
                               get=fake_site("preview", source_sync=True))
         self.assertEqual(result["status"], "PASS", result["failures"])
-        self.assertEqual(result["source_parity_checks"], 118)
+        self.assertEqual(result["source_parity_checks"], 149)
         self.assertEqual(result["http_pages_checked"], 42)
 
     def test_deployed_deck_config_mismatch_detected_even_when_slug_is_correct(self):
@@ -195,6 +206,14 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/deck-material-calculator/" in x and
                             "form fields" in x for x in result["failures"]))
+
+    def test_deployed_workbench_navigation_missing_is_not_accepted(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True,
+                                            broken={"stale_workbench"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("workbench navigator" in failure
+                            for failure in result["failures"]))
 
     def test_deployed_calculator_engine_mismatch_detected(self):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
