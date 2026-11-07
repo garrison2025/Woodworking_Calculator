@@ -42,6 +42,10 @@ def check(folder:Path):
                 plain=" ".join((page.extract_text() or "").split())
                 assert plain,(file,page_no,"unexpected blank PDF page")
                 pages.append(plain)
+            # Regression: Letter once wasted its first entire sheet on the title,
+            # then clipped the final safety assumptions after nine pages.
+            if slug=="stair-stringer-calculator" and paper=="letter":
+                assert len(pages[0])>=500,(file,"near-empty first worksheet page")
             text=" ".join(pages)
             assert "Physical print scale check" in text,(file,"missing rulers")
             assert "100 mm reference" in text and "1 in reference" in text,(file,"missing ruler labels")
