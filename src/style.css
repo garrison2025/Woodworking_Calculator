@@ -582,7 +582,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .topbar-inner{padding:0 12px;gap:10px}
  .brand{min-width:0;gap:8px}
  .brand>span:last-child{font-size:10px;letter-spacing:.02em;overflow-wrap:anywhere}
- .brand small{font-size:8px;letter-spacing:.08em}
+ .brand small{font-size:10px;letter-spacing:.04em}
  .brand-icon{flex:0 0 37px;width:37px;height:37px}
  .tool-heading{padding-top:16px;padding-bottom:18px}
  .tool-heading h1{font-size:clamp(1.65rem,7.7vw,1.95rem);overflow-wrap:anywhere}
