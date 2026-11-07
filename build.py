@@ -54,6 +54,16 @@ SUPPORTED_REASSIGNMENTS = {item["keyword"].lower():item["supportedRoute"]
                            for item in CAUTION_DATA["flagged"] if item.get("supportedRoute")}
 assert len(SUPPORTED_REASSIGNMENTS) == sum(bool(x.get("supportedRoute")) for x in CAUTION_DATA["flagged"])
 assert set(SUPPORTED_REASSIGNMENTS.values()) <= {"/" + t["slug"] + "/" for t in TOOLS}, "SEO reassignment targets unpublished or unknown tools"
+# V3 originally held these five P2 search intents. The code was later
+# implemented and preview-enabled, but this is NOT index publication approval.
+# Keep the whitelist explicit and audited: a production build must opt in
+# separately after the intended search tasks/geometry have been reviewed.
+V3_P2_ORIGIN = frozenset({
+    "spiral-staircase-calculator", "gambrel-roof-calculator",
+    "lumber-price-calculator", "fence-picket-calculator", "stave-calculator",
+})
+assert len(V3_P2_ORIGIN) == 5 and V3_P2_ORIGIN <= {t["slug"] for t in TOOLS}
+P2_RELEASE_APPROVED = os.environ.get("RELEASE_V3_P2_APPROVED") == "1"
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
@@ -64,11 +74,13 @@ def href(path):
 
 def page(title, description, body, path="/", type_="website"):
     desc = description[:180]
-    canon = SITE_URL + path if INDEXABLE else None
+    eligible = INDEXABLE and (type_ != "tool" or
+                              path.strip("/") not in V3_P2_ORIGIN or P2_RELEASE_APPROVED)
+    canon = SITE_URL + path if eligible else None
     canonical = f'<link rel="canonical" href="{esc(canon)}">' if canon else ""
-    robots = "index,follow" if INDEXABLE else "noindex,nofollow,noarchive"
+    robots = "index,follow" if eligible else "noindex,nofollow,noarchive"
     schema = ""
-    if INDEXABLE:
+    if eligible:
         item = {"@context":"https://schema.org","@type":"WebApplication" if type_ == "tool" else "WebSite","name":title if type_ == "tool" else "Workshop Geometry Tools","description":desc,"url":canon}
         if type_ == "tool":
             item["applicationCategory"] = "UtilitiesApplication"
@@ -584,13 +596,14 @@ def build():
     (DEST/"404.html").write_text(page("Page not found","This tool URL is not available.","<section class='wrap legal-page'><h1>That tool isn't here.</h1><p>Try the complete calculator directory.</p><a class='btn primary' href='/#tools'>Find a tool ↗</a></section>","/404/"))
     (DEST/"_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n")
     if INDEXABLE:
-        urls=["/"]+[f"/{t['slug']}/" for t in TOOLS]+["/"+slug+"/" for key,(name,slug) in CATS.items() if any(t["category"]==key for t in TOOLS)]+list(pages)
+        urls=["/"]+[f"/{t['slug']}/" for t in TOOLS
+                    if t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED]+["/"+slug+"/" for key,(name,slug) in CATS.items() if any(t["category"]==key for t in TOOLS)]+list(pages)
         xml='<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(SITE_URL+url)+'</loc></url>' for url in urls)+'</urlset>'
         (DEST/"sitemap.xml").write_text(xml,encoding="utf-8")
         (DEST/"robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: "+SITE_URL+"/sitemap.xml\n")
     else:
         (DEST/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
-    print(f"Built {len(TOOLS)} calculator pages; indexable={INDEXABLE}; output={DEST}")
+    print(f"Built {len(TOOLS)} calculator pages; indexable={INDEXABLE}; original V3 P2 index release={P2_RELEASE_APPROVED}; output={DEST}")
 
 if __name__ == "__main__":
     build()

@@ -242,14 +242,19 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .topbar,.footer,.hero-actions,.breadcrumbs,.input-pane,.zoom-controls,.diagram-tools,
   .export-stack,.action-status,.tool-hints,.details-side,.related-box,.sidebar-note{display:none!important}
   .tool-heading{padding:0 0 12px!important}.tool-heading h1{font-size:21pt}
-  .workspace{display:block;padding:0}.result-pane,.drawing-pane{border:0;box-shadow:none;page-break-inside:avoid}
+  .workspace{display:block;padding:0}
+  /* A pane with overflow:hidden plus break-inside:avoid can consume an almost
+     empty Letter page and silently clip final safety notes. Let print flow
+     through normal blocks; keep individual metrics and drawing internals intact. */
+  .result-pane,.drawing-pane{border:0;box-shadow:none;overflow:visible!important;page-break-inside:auto;break-inside:auto}
   .drawing-pane .pane-head,.result-pane .pane-head{padding:4px 0;border:0}
   .drawing-grid{height:auto;overflow:visible;max-height:none;padding:0}
   .drawing-grid svg{width:100%!important;max-width:100%}
   .result-stack{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 0}
   .metric,.metric.main-metric{border:1px solid #aaa;background:#fff;break-inside:avoid;padding:7px}
   .metric strong{font-size:12pt;color:black}
-  .detail-layout{display:block;padding:0}.content-block{border:0;padding:12px 0;page-break-inside:auto}
+  .detail-layout,.detail-main{display:block;padding:0}
+  .content-block{border:0;padding:12px 0;overflow:visible!important;page-break-inside:auto;break-inside:auto}
   .content-block h2{font-size:15pt}
   .table-scroll{max-height:none;overflow:visible;border:1px solid #aaa}
   table{font-size:9pt}th{position:static}

@@ -16,6 +16,25 @@ if(slug){
   if(!tool||tool.slug!==slug||!["P0","P1"].includes(tool.priority))
     throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),share=document.querySelector("#share-measurements"),measurementSave=document.querySelector("#download-measurements-json"),measurementImport=document.querySelector("#load-measurements-json"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
+  // Keep the DOM, Tab sequence and screen-reader reading order consistent with
+  // the actual responsive grid. Wide screens read input -> diagram -> results;
+  // compact/two-column screens read input -> results -> diagram. Grid-area CSS
+  // alone can visually reorder panes but leaves keyboard users in a different
+  // sequence. Reparent the existing nodes, never clone them or their listeners.
+  const workspace=document.querySelector("[data-workspace]");
+  const drawingPane=workspace.querySelector(".drawing-pane");
+  const resultPane=workspace.querySelector(".result-pane");
+  const compactReadingOrder=window.matchMedia("(max-width: 1220px)");
+  const syncWorkspaceReadingOrder=()=>{
+    const next=compactReadingOrder.matches?resultPane:drawingPane;
+    if(workspace.children[1]===next)return;
+    const focused=document.activeElement;
+    const restoreFocus=next.contains(focused);
+    workspace.insertBefore(next,workspace.children[1]);
+    if(restoreFocus&&focused.isConnected)focused.focus({preventScroll:true});
+  };
+  syncWorkspaceReadingOrder();
+  compactReadingOrder.addEventListener("change",syncWorkspaceReadingOrder);
   let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
   const schedulePager=document.querySelector("#schedule-pager");
