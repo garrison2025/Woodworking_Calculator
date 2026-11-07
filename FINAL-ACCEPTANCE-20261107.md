@@ -68,6 +68,14 @@
 | `/fence-picket-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
 | `/stave-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
 
+## 2026-11-07 Cloudflare 全站真实预览复核（新增）
+
+实际访问 `https://woodworking-calculator.pages.dev/`，逐一取回 42 个预览 URL 的服务器可读 HTML（不是只读构建源码）：**1 首页 + 31 个工具页 + 6 个分类页 + 4 个政策页**。全部可检索到一个 H1、各自标题及 `noindex,nofollow,noarchive`；31 个工具页含实际输入表单、可读公式正文。导航分类分别为 `/framing/`、`/decks-and-railings/`、`/roof-and-stairs/`、`/interior-finish/`、`/woodworking/`、`/materials/`。任意不存在的测试路径实际返回 HTTP **404**，`/sitemap.xml` 在预览环境返回 HTTP **404**，`/robots.txt` 实际为 `Disallow: /`。取回新版 `app.mjs`、`style.css`、`calcs.mjs` 和两份独立工具 JSON，未见资源提取错误。
+
+**严格边界：** 本次是线上 HTML/资源取回及基本元数据检查，不是对 31 个线上页面逐一进行触屏、JavaScript 点击或实体打印的人工操作。浏览器交互、CSV 和图纸一致性仍引用主分支 CI #715；用户设备与专业物理施工仍是 NOT RUN。正式上线所需 canonical/sitemap/index 是离线构建模拟，不是已购域名的真实爬取与收录。
+
+**本次发现的实际发布风险：** `/materials/` 仅有原 V3 P2 `lumber-price-calculator`。修复前，当 `RELEASE_APPROVED=1` 且 P2 未批准时，`/materials/` 仍可能被标记 index 并加入 sitemap，成为没有可索引子工具的分类页。本次修复：仅当分类内至少有一个独立通过搜索发布审批的工具，才生成该分类的 canonical/JSON-LD/index/sitemap 条目。**预览仍保持原 42 页均 noindex**；这项正式发布修复须由新 PR/head + 合并 main 的 CI 重新验证。
+
 ## 发布前唯一保留的外部动作
 
 1. **专业/实体抽查（NOT RUN）：** 由有设备和木料的人执行 `FIELD-ACCEPTANCE-CHECKLIST.md`。先覆盖 P0 九项中的典型尺寸与首尾边界、椽木鸟嘴/角线正负方向、墙体洞口、露台末排裁宽；再覆盖高复杂度楼梯、屋顶、钻孔、分段木碗和原 P2 的加工条件。若出现失败，提供工具 URL、输入、CSV 行和实际测量记录，再修复。
