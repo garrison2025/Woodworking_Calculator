@@ -611,25 +611,25 @@ def build():
     # Cloudflare Pages static response headers. 404.html must never be a
     # canonical search result; the page() gate above separately keeps its
     # HTML robots meta noindex in every mode.
-    headers = ("/*\\n  X-Content-Type-Options: nosniff\\n"
-               "  Referrer-Policy: strict-origin-when-cross-origin\\n"
-               "  X-Frame-Options: DENY\\n"
-               "  Permissions-Policy: camera=(), microphone=(), geolocation=()\\n")
-    nonindex = "  X-Robots-Tag: noindex, nofollow, noarchive\\n"
+    headers = ("/*\n  X-Content-Type-Options: nosniff\n"
+               "  Referrer-Policy: strict-origin-when-cross-origin\n"
+               "  X-Frame-Options: DENY\n"
+               "  Permissions-Policy: camera=(), microphone=(), geolocation=()\n")
+    nonindex = "  X-Robots-Tag: noindex, nofollow, noarchive\n"
     if not INDEXABLE:
         # Both default Pages and custom-domain previews must remain noindex,
         # including non-HTML resources without a robots meta tag.
-        headers += "\\n/*\\n" + nonindex
+        headers += "\n/*\n" + nonindex
     else:
         # Production assets may still be reachable on the Pages origin before
         # the owner activates the host-level 301 redirect. Fail closed for
         # Pages aliases WITHOUT suppressing approved custom-domain URLs.
-        headers += "\\nhttps://woodworking-calculator.pages.dev/*\\n" + nonindex
-        headers += "\\nhttps://:version.woodworking-calculator.pages.dev/*\\n" + nonindex
+        headers += "\nhttps://woodworking-calculator.pages.dev/*\n" + nonindex
+        headers += "\nhttps://:version.woodworking-calculator.pages.dev/*\n" + nonindex
         if not P2_RELEASE_APPROVED:
             for slug in sorted(V3_P2_ORIGIN):
-                headers += f"\\n/{slug}/\\n" + nonindex
-            headers += "\\n/materials/\\n" + nonindex
+                headers += f"\n/{slug}/\n" + nonindex
+            headers += "\n/materials/\n" + nonindex
     (DEST/"_headers").write_text(headers, encoding="utf-8")
     if INDEXABLE:
         urls=["/"]+[f"/{t['slug']}/" for t in TOOLS
