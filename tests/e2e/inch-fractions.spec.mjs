@@ -26,15 +26,15 @@ test("inch ruler fractions produce identical calculations, rows and CSV to decim
   const svg=await page.locator("#dimension-svg svg").getAttribute("data-model-span-in");
   await length.fill("120 1/2");
   await expect(page.locator("#calc-error")).toBeHidden();
-  await expect(page.locator("#result-cards")).toHaveText(metrics);
-  await expect(page.locator("#cut-table tbody")).toHaveText(rows);
+  expect(await page.locator("#result-cards").innerText()).toBe(metrics);
+  expect(await page.locator("#cut-table tbody").innerText()).toBe(rows);
   expect(await downloadCutList(page)).toBe(decimalCsv);
   expect(await page.locator("#dimension-svg svg").getAttribute("data-model-span-in")).toBe(svg);
   await expect(page.locator("#print-input-table")).toContainText("120 1/2 in");
   await length.fill("120-1/2");
-  await expect(page.locator("#result-cards")).toHaveText(metrics);
+  expect(await page.locator("#result-cards").innerText()).toBe(metrics);
   await length.fill("120.5");
-  await expect(page.locator("#result-cards")).toHaveText(metrics);
+  expect(await page.locator("#result-cards").innerText()).toBe(metrics);
 });
 
 test("share URLs and local JSON backups serialize fractional inches as canonical decimals",async({page,context})=>{
