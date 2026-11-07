@@ -226,6 +226,18 @@ for t in hold:
     if (dist/t["slug"]).exists():errors.append(f"P2 unexpectedly published: {t['slug']}")
 if (dist/"sitemap.xml").exists():errors.append("Preview must not expose an XML sitemap")
 if "Disallow: /" not in (dist/"robots.txt").read_text():errors.append("Preview robots.txt must disallow crawling")
+# The physical 404 file must remain noindex even when later built for release.
+# Preview HTTP headers must also protect non-HTML resources.
+notfound=(dist/"404.html").read_text(encoding="utf8")
+notfound_head=Checker();notfound_head.feed(notfound)
+if notfound_head.robots!=["noindex,nofollow,noarchive"] or notfound_head.canon:
+    errors.append("404.html must be noindex without a canonical")
+if 'type="application/ld+json"' in notfound:
+    errors.append("404.html must not advertise structured data")
+pages_headers=(dist/"_headers").read_text(encoding="utf8")
+if "\\n/*\\n  X-Robots-Tag: noindex, nofollow, noarchive\\n" not in "\\n"+pages_headers:
+    errors.append("Preview must send X-Robots-Tag noindex on all static assets")
+
 for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/length-entry.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
 # All 31 separately hydrated calculator configs must exactly match the
