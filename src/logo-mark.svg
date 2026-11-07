@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="logo-title logo-desc">
+  <title id="logo-title">WoodLayout</title>
+  <desc id="logo-desc">A carpenter's square beneath a pitched roof, with ruler graduations.</desc>
+  <rect width="64" height="64" rx="14" fill="#203b34"/>
+  <path d="M11.5 29 32 13 52.5 29" fill="none" stroke="#e0ae72" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17.5 32.5V49H49.5" fill="none" stroke="#fffaf3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M29.5 40.5V49M39.5 43.5V49" fill="none" stroke="#e0ae72" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
