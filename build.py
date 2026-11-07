@@ -64,6 +64,14 @@ V3_P2_ORIGIN = frozenset({
 })
 assert len(V3_P2_ORIGIN) == 5 and V3_P2_ORIGIN <= {t["slug"] for t in TOOLS}
 P2_RELEASE_APPROVED = os.environ.get("RELEASE_V3_P2_APPROVED") == "1"
+# An indexable category needs at least one approved search-eligible tool.
+# /materials/ currently holds only the original V3 P2 lumber-price intent.
+CATEGORY_PATHS = {"/" + slug + "/" for _, slug in CATS.values()}
+ELIGIBLE_CATEGORY_PATHS = {
+    "/" + slug + "/" for key, (_, slug) in CATS.items()
+    if any(t["category"] == key and
+           (t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED) for t in TOOLS)
+}
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
@@ -74,8 +82,9 @@ def href(path):
 
 def page(title, description, body, path="/", type_="website"):
     desc = description[:180]
-    eligible = INDEXABLE and (type_ != "tool" or
-                              path.strip("/") not in V3_P2_ORIGIN or P2_RELEASE_APPROVED)
+    eligible = INDEXABLE and (
+        (type_ != "tool" or path.strip("/") not in V3_P2_ORIGIN or P2_RELEASE_APPROVED)
+        and (path not in CATEGORY_PATHS or path in ELIGIBLE_CATEGORY_PATHS))
     canon = SITE_URL + path if eligible else None
     canonical = f'<link rel="canonical" href="{esc(canon)}">' if canon else ""
     robots = "index,follow" if eligible else "noindex,nofollow,noarchive"
@@ -597,7 +606,7 @@ def build():
     (DEST/"_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n")
     if INDEXABLE:
         urls=["/"]+[f"/{t['slug']}/" for t in TOOLS
-                    if t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED]+["/"+slug+"/" for key,(name,slug) in CATS.items() if any(t["category"]==key for t in TOOLS)]+list(pages)
+                    if t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED]+["/"+slug+"/" for _,(_,slug) in CATS.items() if "/"+slug+"/" in ELIGIBLE_CATEGORY_PATHS]+list(pages)
         xml='<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(SITE_URL+url)+'</loc></url>' for url in urls)+'</urlset>'
         (DEST/"sitemap.xml").write_text(xml,encoding="utf-8")
         (DEST/"robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: "+SITE_URL+"/sitemap.xml\n")
