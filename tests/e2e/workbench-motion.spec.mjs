@@ -13,8 +13,8 @@ test("home makes tool families recognizable and supports slash-to-search",async(
   const search=page.getByLabel("Find a calculator");
   await page.keyboard.press("/");
   await expect(search).toBeFocused();
-  await page.keyboard.type("rafter");
-  await expect(page.locator("#tool-directory a:visible")).toHaveCount(2);
+  await page.keyboard.type("wainscoting");
+  await expect(page.locator("#tool-directory a:visible")).toHaveCount(1);
   await page.keyboard.press("Escape");
   await expect(search).toHaveValue("");
   await expect(page.locator("#tool-directory a:visible")).toHaveCount(31);
@@ -56,8 +56,8 @@ test("prefers-reduced-motion disables decorative animation while retaining visib
   expect(await page.locator(".reveal-ready").count()).toBe(0);
   expect(await page.evaluate(()=>getComputedStyle(document.querySelector(".blueprint-trace")).strokeDashoffset))
     .toBe("0px");
-  await page.getByLabel("Find a calculator").fill("deck");
-  await expect(page.locator("#tool-directory a:visible")).toHaveCount(2);
+  await page.getByLabel("Find a calculator").fill("wainscoting");
+  await expect(page.locator("#tool-directory a:visible")).toHaveCount(1);
 });
 
 test("motion-allowed homepage uses one-shot geometry tracing and progressive reveal",async({page})=>{
