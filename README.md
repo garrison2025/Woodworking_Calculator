@@ -6,6 +6,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — All 31 calculators approved for future custom-domain SEO release
+
+- Owner approved opening the **five original V3 P2 tools** for Google indexing in the **future authorized custom-domain release**. The historical `RELEASE_V3_P2_APPROVED` flag is obsolete: all **31 calculators + 6 categories + home + 4 legal/about pages = 42 canonical/sitemap URLs** in a real approved production build. [Approval and scoped keyword intents](research/V3-P2-SEO-APPROVAL-20261107.md).
+- **Not yet live in Google**: `woodworking-calculator.pages.dev` is a deliberately noindex preview because no `.com` has been purchased or connected. Only a real owned HTTPS `SITE_URL` plus `RELEASE_APPROVED=1` and production main branch can enable public indexing. No GSC data is claimed.
+- Keep the 152 original keyword evidence rows and 22 cautioned intents intact; opening a tool page does not magically make every broad keyword an exact intent match.
+
 ## 2026-11-07 — Owner decision: online-only software acceptance
 
 - **Acceptance scope amended by the user**: no owner-operated printer/ruler measurement, timber trial cuts, or real iOS/Android/assistive-technology session is required to close software QA. See the dated [online-only software acceptance record](research/ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md). All three remain **NOT RUN / OUT OF SCOPE**, not independently verified or certified.
