@@ -2182,10 +2182,11 @@ test("Printed input-provenance table captures every typed dimension, enum, curre
   const sheet=page.locator("#print-input-snapshot");
   const row=key=>page.locator('#print-input-table tbody tr[data-print-field="'+key+'"]');
   await expect(sheet).toBeHidden();
-  await expect(page.locator("#print-input-table tbody tr")).toHaveCount(17);
+  await expect(page.locator("#print-input-table tbody tr")).toHaveCount(18);
   await page.locator("#f-width").fill("121.25");
   await page.locator("#f-boardUnitPrice").fill("8.75");
   await page.locator("#f-seamMode").selectOption("1");
+  await page.locator("#f-joistLayoutMode").selectOption("1");
   await page.locator("#deck-currency").selectOption("EUR");
   await page.locator("#unit-select").selectOption("mm");
   await expect(page.locator("#calc-error")).toBeHidden();
@@ -2193,6 +2194,7 @@ test("Printed input-provenance table captures every typed dimension, enum, curre
   await expect(row("width").locator("td")).toHaveText("3079.75 mm");
   await expect(row("boardUnitPrice").locator("td")).toHaveText("EUR 8.75");
   await expect(row("seamMode")).toContainText("Alternate forward/reverse joist-center seams");
+  await expect(row("joistLayoutMode")).toContainText("Equalize first-to-last centers within verified MAX OC");
   await expect(row("joistStockLength").locator("td")).toHaveText("0 mm");
   await expect(page.locator("#print-input-context")).toContainText("input units mm");
   await expect(page.locator("#print-input-context")).toContainText("price currency EUR");
