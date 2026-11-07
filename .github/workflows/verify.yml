@@ -33,6 +33,8 @@ jobs:
         run: python3 tests/validate_static.py
       - name: Validate final 31-route task intents and 22 historical keyword cautions
         run: python3 tests/validate_keyword_closure.py
+      - name: Check all 152 historical keyword research decisions against reviewed sources
+        run: python3 scripts/export_keyword_review_register.py --check
       - name: Test deployment acceptance script without touching the public site
         run: python3 -m unittest discover -s tests -p "test_live_launch_audit.py" -v
       - name: Install browser test dependency
