@@ -56,3 +56,45 @@ if(directory){
     filterTools();
   }
 }
+
+
+// Quick calculator lookup: '/' focuses search; Escape clears the active
+// query. Never hijack keystrokes inside text fields or contenteditable nodes.
+if(search){
+  document.addEventListener("keydown",event=>{
+    if(event.altKey||event.ctrlKey||event.metaKey||event.defaultPrevented)return;
+    const target=event.target;
+    const typing=target instanceof Element &&
+      Boolean(target.closest('input,textarea,select,[contenteditable="true"]'));
+    if(event.key==="/"&&!typing){
+      event.preventDefault();
+      search.focus();
+      search.select();
+    }else if(event.key==="Escape"&&document.activeElement===search&&search.value){
+      event.preventDefault();
+      search.value="";
+      search.dispatchEvent(new Event("input",{bubbles:true}));
+    }
+  });
+}
+
+// Scroll reveals apply only with motion consent, IntersectionObserver support
+// and visible page elements; content stays fully readable without JavaScript.
+// No scroll listener, timers, external libraries or layout-changing animations.
+if(typeof IntersectionObserver!=="undefined" &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+  const targets=document.querySelectorAll(
+    ".home-section .section-heading, .home-section .tool-card, .trust-strip > div, .hero-graphic"
+  );
+  const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      if(!entry.isIntersecting)continue;
+      entry.target.classList.add("is-revealed");
+      observer.unobserve(entry.target);
+    }
+  },{threshold:.06,rootMargin:"0px 0px -12px 0px"});
+  for(const element of targets){
+    element.classList.add("reveal-ready");
+    observer.observe(element);
+  }
+}
