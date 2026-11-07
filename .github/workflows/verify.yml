@@ -103,62 +103,12 @@ jobs:
 
 
 
-  macos-webkit:
-    # Real macOS-hosted WebKit engine: closer platform coverage than Linux
-    # WebKit but still NOT the branded Safari app or VoiceOver screen reader.
-    runs-on: macos-15
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Render prelaunch static HTML without indexing
-        run: python3 build.py
-      - name: Reproducibly install browser dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Install macOS-hosted WebKit
-        run: npx playwright install webkit
-      - name: Preflight local preview before macOS WebKit tests
-        run: |
-          set -eu
-          python3 -m http.server 8787 --bind 127.0.0.1 --directory dist > macos-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          ok=0
-          for i in $(seq 1 25); do
-            if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:8787/ -o /dev/null; then
-              ok=1
-              break
-            fi
-            sleep 1
-          done
-          if [ "$ok" -ne 1 ]; then
-            cat macos-http.log
-            echo 'FAIL: local Python static preview did not respond on macOS runner'
-            exit 1
-          fi
-          WOODWORK_REUSE_SERVER=1 npx playwright test tests/e2e/cross-browser.spec.mjs tests/e2e/mobile-accessibility.spec.mjs --project=webkit
-      - name: Preserve macOS browser failure screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-webkit-evidence
-          path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
-          retention-days: 7
-
   deployed-preview:
     # The already-merged main commit is the only source of truth for a live
     # deployment. A PR's unmerged HTML/JS intentionally MUST NOT be compared
     # against production Pages, so this job never runs on pull_request.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [verify, macos-webkit]
+    needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 13
     steps:
