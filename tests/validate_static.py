@@ -121,7 +121,7 @@ for p in pages:
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
         for marker in ('id="share-measurements"', 'id="download-measurements-json"',
-                       'id="load-measurements-json"', 'type="file" accept=".json,application/json"'):
+                       'id="load-measurements-json"', 'id="load-measurements-json" type="file" accept=".json,application/json"'):
             if body.count(marker)!=1:
                 errors.append(f"{u}: missing or duplicate local input-backup control {marker}")
     if page_tool:
