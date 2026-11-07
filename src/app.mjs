@@ -156,7 +156,7 @@ if(slug){
       const v=f.kind==="L"?parseEditableLength(el.value,unit):Number(el.value);
       if(v===null||!Number.isFinite(v)){
         const issue=new Error(f.label+(f.kind==="L"&&unit==="in"?
-          " must be a decimal or a fractional-inch measurement (e.g. 5 1/2).":
+          " must be a decimal, an inch fraction (5 1/2), or quoted feet and inches.":
           " must be a valid number."));
         issue.fieldKey=f.key;
         throw issue;
