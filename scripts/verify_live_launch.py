@@ -21,12 +21,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = json.loads((ROOT / "src" / "tools.json").read_text(encoding="utf-8"))
 TOOLS = [t for t in MANIFEST["tools"] if t["priority"] in ("P0", "P1")]
-ORIGINAL_P2 = frozenset({
-    "spiral-staircase-calculator", "gambrel-roof-calculator",
-    "lumber-price-calculator", "fence-picket-calculator", "stave-calculator",
-})
-assert len(TOOLS) == 31 and len(ORIGINAL_P2) == 5
-assert ORIGINAL_P2 <= {t["slug"] for t in TOOLS}
+assert len(TOOLS) == 31
 TOOL_PATHS = {"/" + t["slug"] + "/" for t in TOOLS}
 CATEGORIES = {
     "/" + c[1] + "/": {t["slug"] for t in TOOLS if t["category"] == key}
@@ -109,12 +104,14 @@ def http_get(url: str):
     return status, body.decode("utf-8", "replace"), headers
 
 
-def expected_index_routes(allow_p2: bool):
-    approved_tools = {t["slug"] for t in TOOLS
-                      if t["slug"] not in ORIGINAL_P2 or allow_p2}
-    return (OTHER | {"/" + slug + "/" for slug in approved_tools} |
+def expected_index_routes():
+    """All completed tool and category routes in an approved custom-domain build."""
+    approved_tools = {t["slug"] for t in TOOLS}
+    urls = (OTHER | {"/" + slug + "/" for slug in approved_tools} |
             {path for path, children in CATEGORIES.items()
              if children & approved_tools})
+    assert len(urls) == 42
+    return urls
 
 
 def validate_base(url: str, mode: str):
@@ -133,20 +130,18 @@ def validate_base(url: str, mode: str):
     return url.rstrip("/")
 
 
-def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None = None,
+def audit(base: str, mode: str, pages_origin: str | None = None,
           get=http_get, verify_source_parity: bool = False):
     """Return a machine-readable result. An injected get() supports offline tests."""
     origin = validate_base(base, mode)
     if mode not in ("preview", "production"):
         raise ValueError("mode must be preview or production")
-    if mode == "preview" and allow_p2:
-        raise ValueError("P2 approval is relevant only to a production audit")
     if mode == "production":
         if not pages_origin:
             raise ValueError("Production audit requires --pages-origin to check the old host redirect")
         pages_origin = validate_base(pages_origin, "preview")
     results = {"checked_at_utc": datetime.now(timezone.utc).isoformat(),
-               "base": origin, "mode": mode, "original_v3_p2_approved": allow_p2,
+               "base": origin, "mode": mode, "production_seo_scope": "all_31_tools",
                "checks": 0, "failures": [],
                "http_pages_checked": 0,
                "verify_source_parity": verify_source_parity,
@@ -167,7 +162,7 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
             check(False, "HTTP exception: " + host + path + ": " + str(exc))
             return 0, "", {}
 
-    index_routes = expected_index_routes(allow_p2) if mode == "production" else set()
+    index_routes = expected_index_routes() if mode == "production" else set()
     seen_titles = {}
     for path in sorted(ALL_PAGES):
         status, body, headers = request(path)
@@ -312,8 +307,6 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="Site HTTPS origin, no path")
     parser.add_argument("--mode", required=True, choices=("preview", "production"))
-    parser.add_argument("--approve-v3-p2", action="store_true",
-                        help="Only if RELEASE_V3_P2_APPROVED=1 was approved and deployed")
     parser.add_argument("--pages-origin",
                         help="Required for production: https://woodworking-calculator.pages.dev")
     parser.add_argument("--report", help="Write JSON verification evidence to this file")
@@ -321,7 +314,7 @@ def main(argv=None):
                         help="Compare deployed 31 form-field sets, 31 tool configs and 11 source assets with current checked-out source; run after deployment")
     args = parser.parse_args(argv)
     try:
-        result = audit(args.base, args.mode, args.approve_v3_p2, args.pages_origin,
+        result = audit(args.base, args.mode, args.pages_origin,
                        verify_source_parity=args.verify_source_parity)
     except ValueError as error:
         parser.error(str(error))
