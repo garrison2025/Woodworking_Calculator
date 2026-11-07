@@ -111,6 +111,13 @@ for p in pages:
 
     if c.canon:errors.append(f"{u}: preview must not claim a custom-domain canonical")
     page_tool=next((t for t in active if t["slug"]==u.strip("/")),None)
+    # A homepage must not load 160 KB of calculator logic; static directory and
+    # information pages need no calculator runtime at all.
+    expected_script=("/assets/app.mjs" if page_tool else
+                     "/assets/home.mjs" if u=="/" else None)
+    live_scripts=re.findall(r'<script type="module" src="([^"]+)"',body)
+    if live_scripts!=([expected_script] if expected_script else []):
+        errors.append(f"{u}: unexpected JavaScript entry point {live_scripts}")
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
         intent=intents[page_tool["slug"]]
@@ -205,8 +212,32 @@ for t in hold:
     if (dist/t["slug"]).exists():errors.append(f"P2 unexpectedly published: {t['slug']}")
 if (dist/"sitemap.xml").exists():errors.append("Preview must not expose an XML sitemap")
 if "Disallow: /" not in (dist/"robots.txt").read_text():errors.append("Preview robots.txt must disallow crawling")
-for asset in ("assets/app.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
+for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
+# All 31 separately hydrated calculator configs must exactly match the
+# source registry. A stale or partial config could silently change quantities.
+config_dir=dist/"assets"/"tool-config"
+actual_configs=list(config_dir.glob("*.json"))
+if len(actual_configs)!=len(active):
+    errors.append(f"Expected {len(active)} per-tool configs, got {len(actual_configs)}")
+full_registry_bytes=(dist/"assets"/"tools.json").stat().st_size
+for tool in active:
+    file=config_dir/(tool["slug"]+".json")
+    if not file.exists():
+        errors.append(f"Missing runtime config for {tool['slug']}")
+        continue
+    try:
+        served=json.loads(file.read_text(encoding="utf8"))
+        if served != tool:errors.append(f"Config disagrees with source registry: {tool['slug']}")
+    except (OSError,ValueError) as exc:
+        errors.append(f"Unreadable config for {tool['slug']}: {exc}")
+    if file.stat().st_size>=full_registry_bytes//2:
+        errors.append(f"Not a compact per-tool config: {tool['slug']}")
+if 'fetch("/assets/tools.json")' in (dist/"assets"/"app.mjs").read_text():
+    errors.append("Calculator runtime still loads the complete registry")
+home_js=(dist/"assets"/"home.mjs").read_text()
+if "fetch(" in home_js or "import " in home_js:
+    errors.append("Homepage module must use prerendered directory only")
 # Validate local ESM import graph against BUILT assets, not only src files.
 # An omitted import breaks every live calculator at module-load time despite
 # correct HTML and numeric unit tests.
