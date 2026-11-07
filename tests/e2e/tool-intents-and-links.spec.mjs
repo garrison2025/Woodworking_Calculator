@@ -17,7 +17,7 @@ test("All 31 calculator landings explain real search tasks and link only to vali
     await page.goto("/"+t.slug+"/",{waitUntil:"domcontentloaded"});
     await expect(page.locator("#calc-error")).toBeHidden();
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await page.title()).toBe(intent.seoTitle+" | Workshop Geometry Tools");
+    expect(await page.title()).toBe(intent.seoTitle+" | WoodLayout");
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content","noindex,nofollow,noarchive");
     const fit=page.locator(".intent-fit");
