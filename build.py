@@ -113,11 +113,32 @@ def write(url, content):
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
 
+# Purposeful line icons distinguish real tool families. No remote icon/font fetch.
+TOOL_FAMILY_ICONS = {
+    "framing": '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M9 5v14M15 5v14M4 10h16"/>',
+    "decks": '<path d="M4 6h16M4 12h16M4 18h16M8 6v6M16 12v6"/>',
+    "roof": '<path d="m3 14 9-9 9 9M6 12v8h12v-8M12 8v12"/>',
+    "interior": '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 4v16M16 4v16M4 14h16"/>',
+    "wood": '<path d="M5 19V9l7-5 7 5v10M5 19h14M8 11h8M8 15h8"/>',
+    "materials": '<path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/>',
+}
+TOOL_FAMILY_NAMES = {
+    "framing": "Framing", "decks": "Decking", "roof": "Roofs & stairs",
+    "interior": "Interior", "wood": "Woodworking", "materials": "Materials",
+}
+assert set(TOOL_FAMILY_ICONS) == set(TOOL_FAMILY_NAMES) == set(CATS)
+
 def tool_card(t):
-    return (f'<a class="tool-card" href="/{esc(t["slug"])}/">'
-            f'<span class="tool-card-top"><span class="tool-icon" aria-hidden="true">⌁</span><span class="tool-priority">{esc(t["priority"])}</span></span>'
+    family = t["category"]
+    icon = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+            'fill="none" stroke="currentColor" stroke-width="1.65" '
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + TOOL_FAMILY_ICONS[family] + '</svg>')
+    return (f'<a class="tool-card" data-category="{esc(family)}" href="/{esc(t["slug"])}/">'
+            f'<span class="tool-card-top"><span class="tool-icon" aria-hidden="true">{icon}</span>'
+            f'<span class="tool-priority">{esc(TOOL_FAMILY_NAMES[family])}</span></span>'
             f'<strong>{esc(t["title"])}</strong><span>{esc(t["desc"])}</span>'
-            f'<span class="tool-card-bottom">Open calculator <span aria-hidden="true">↗</span></span></a>')
+            '<span class="tool-card-bottom">Open calculator <span aria-hidden="true">↗</span></span></a>')
 
 def categories_nav():
     out = []
@@ -129,7 +150,7 @@ def categories_nav():
     return ''.join(out)
 
 def hero_graphic():
-    return f'''<div class="hero-graphic" aria-hidden="true"><svg viewBox="0 0 590 350"><defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#d0d8d0" stroke-width=".7"/></pattern></defs><rect x="0" y="0" width="590" height="350" fill="url(#p)"/><g transform="translate(75 48)"><path d="M35 228L395 228 395 38Z" fill="#e5eee6" stroke="#1e6454" stroke-width="3"/><path d="M35 228V70L395 38" fill="none" stroke="#b48456" stroke-dasharray="9 6" stroke-width="2"/><path d="M35 228L395 38" stroke="#1e6454" stroke-width="5"/><g stroke="#bd8d54" stroke-width="4"><path d="M85 228V202M145 228V170M205 228V139M265 228V107M325 228V75"/></g><path d="M35 245V262M395 245V262M35 256H395" stroke="#64736c" stroke-width="1.5"/><path d="M25 228L35 228 35 218" fill="none" stroke="#64736c" stroke-width="1.5"/><g fill="#34554b" font-family="monospace" font-size="14"><text x="185" y="280">12′-0″  /  144 IN</text><text x="400" y="38">6:12</text><text x="46" y="58">R A K E  W A L L</text></g></g></svg><div class="graphic-caption"><span class="graphic-dot"></span> LIVE GEOMETRY WORKSPACE <span>DRAWING 01 / {len(TOOLS)}</span></div></div>'''
+    return f'''<div class="hero-graphic" aria-hidden="true"><svg class="blueprint-illustration" viewBox="0 0 590 350"><defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#d0d8d0" stroke-width=".7"/></pattern></defs><rect x="0" y="0" width="590" height="350" fill="url(#p)"/><g transform="translate(75 48)"><path d="M35 228L395 228 395 38Z" fill="#e5eee6" stroke="#1e6454" stroke-width="3"/><path d="M35 228V70L395 38" fill="none" stroke="#b48456" stroke-dasharray="9 6" stroke-width="2"/><path class="blueprint-trace" d="M35 228L395 38" stroke="#1e6454" stroke-width="5"/><g stroke="#bd8d54" stroke-width="4"><path d="M85 228V202M145 228V170M205 228V139M265 228V107M325 228V75"/></g><path d="M35 245V262M395 245V262M35 256H395" stroke="#64736c" stroke-width="1.5"/><path d="M25 228L35 228 35 218" fill="none" stroke="#64736c" stroke-width="1.5"/><g fill="#34554b" font-family="monospace" font-size="14"><text x="185" y="280">12′-0″  /  144 IN</text><text x="400" y="38">6:12</text><text x="46" y="58">R A K E  W A L L</text></g></g></svg><div class="graphic-caption"><span class="graphic-dot"></span> GEOMETRY WORKSPACE <span>DRAWING 01 / {len(TOOLS)}</span></div></div>'''
 
 def directory_link(t):
     route = '/' + t['slug'] + '/'
@@ -156,7 +177,7 @@ def home():
              '<section id="recent-tools" class="recent-panel" hidden><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><div class="recent-header"><h3>Recently used tools</h3><button id="clear-recent-tools" class="recent-clear" type="button">Clear history</button></div><div id="recent-links" class="recent-links"></div></section>'
              '<div class="section-heading compact"><h3>Start with a common task</h3><span>FEATURED TOOLS</span></div><div class="tool-grid">'+''.join(tool_card(t) for t in featured)+'</div>'
              f'<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>{len(TOOLS)} TOOL WORKSPACES</span></div>'
-             f'<div class="tool-search-panel"><label for="tool-search">Find a calculator</label><div class="tool-search-row"><input id="tool-search" type="search" autocomplete="off" aria-controls="tool-directory" placeholder="Search {len(TOOLS)} tools by task or category"><output id="tool-search-status" for="tool-search" role="status" aria-live="polite">Showing {len(TOOLS)} tools</output></div></div>'
+             f'<div class="tool-search-panel"><label for="tool-search">Find a calculator</label><div class="tool-search-row"><div class="tool-search-field"><input id="tool-search" type="search" autocomplete="off" aria-controls="tool-directory" aria-describedby="tool-search-status" placeholder="Search {len(TOOLS)} tools by task or category"><kbd aria-hidden="true">/</kbd></div><output id="tool-search-status" for="tool-search" role="status" aria-live="polite">Showing {len(TOOLS)} tools</output></div></div>'
              '<div class="directory-list" id="tool-directory">'+''.join(directory_link(t) for t in TOOLS)+'</div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
@@ -250,7 +271,7 @@ def tool_page(t):
     assert all(p["slug"] != t["slug"] for p, why in relevant), "Self link in next tools"
     catname,catslug=CATS[t["category"]]
     body=(f'<div class="wrap tool-heading"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">All tools</a><span>/</span><a href="/{catslug}/">{esc(catname)}</a><span>/</span>{esc(t["title"])}</nav>'
-          f'<span class="eyebrow"><span class="eyebrow-dot"></span> TOOL {esc(t["priority"])} · GEOMETRY WORKSPACE</span>'
+          f'<span class="eyebrow"><span class="eyebrow-dot"></span> WOODLAYOUT · {esc(catname).upper()} WORKBENCH</span>'
           f'<h1>{esc(t["title"])}</h1><p class="tool-lede">{esc(t["desc"])}</p>'
           '<div class="intent-fit" aria-label="When to use this calculator">'
           f'<p><strong>Typical task</strong> {esc(intent["useFor"])}</p>'
