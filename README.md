@@ -6,6 +6,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — Opt-in deck joist equalized-center layout (no extra URL)
+
+- The existing `deck-material-calculator` now has an **optional** joist-layout selector: the unchanged default fixes entered OC stations from the first edge, while equalized mode divides the user-measured first-to-last CENTER run into `ceil(run / independently verified MAX OC)` identical bays. Output includes actual equalized OC, count, the same centers in SVG and CSV, and dependent decking seam/material estimates.
+- An example 140 in measured CENTER run with a separately approved 16 in maximum yields **9 equal bays**, **10 center stations** and theoretical **15.55555556 in** OC. These are layout calculations only: the site neither selects a permitted max OC nor sizes any joist, beam, ledger, post or structural load. No new route, indexing permission or extrapolated search traffic is claimed. Both original 152 keyword data and the 22-term caution ledger remain preserved, with two spacing keywords now marked as narrow geometry only, not unqualified SEO synonyms.
+- New Node and real-browser tests check legacy parity, changed SVG/CSV centers, metric exports, edge cases and invalid input clearing. Physical verification and present US SERP study are still outside automated acceptance.
+
 ## 2026-11-07 — 31-tool / 152-keyword final intent closure
 
 - [Final 31-page / 22 flagged-query SEO intent audit](research/KEYWORD-INTENT-FINAL-AUDIT-20261107.md) compares all 31 implemented task inputs, titles, historical US Volume/KD/CPC from the original 152-row Semrush export, and explicitly triages the 22 suspect historical keyword assignments. **21 specific task scopes, nine broad qualifiers and one ambiguous original primary** are recorded; these engineering classifications are not claims of measured current US SERP ranking.
