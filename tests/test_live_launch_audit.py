@@ -58,7 +58,14 @@ def fake_site(mode, broken=None, source_sync=False):
                     tool = {**tool, "desc": "Outdated version with same slug"}
                 return 200, json.dumps(tool), {}
             return 200, json.dumps({"slug": slug}), {}
-        if path.startswith("/assets/") or path == "/favicon.svg":
+        if path in ("/favicon.svg", "/logo-mark.svg", "/logo-lockup.svg"):
+            if source_sync:
+                icon = "logo-lockup.svg" if path == "/logo-lockup.svg" else "logo-mark.svg"
+                if "stale_logo" in broken and path == "/logo-mark.svg":
+                    return 200, "<svg>stale brand</svg>", {}
+                return 200, (launch.ROOT / "src" / icon).read_text(encoding="utf-8"), {}
+            return 200, "<svg/>", {}
+        if path.startswith("/assets/"):
             if source_sync and path.startswith("/assets/"):
                 name = path[len("/assets/"):]
                 asset = launch.ROOT / "src" / name
@@ -92,9 +99,14 @@ def fake_site(mode, broken=None, source_sync=False):
             form = '<form id="calculator-form">' + "".join(
                 '<input id="f-' + key + '">' for key in fields) + "</form>"
         doc = ('<!doctype html><html><head><title>Page: ' + path +
+               (' | WoodLayout' if source_sync else '') +
                '</title><meta name="description" content="Useful geometry calculator">'
                '<meta name="robots" content="' + robot + '">' + canonical + schema +
-               '</head><body>' + h1 + form + "</body></html>")
+               '</head><body>' +
+               ('<a class="brand" href="/"><img src="/logo-mark.svg">'
+                '<span class="brand-wordmark">Wood<span>Layout</span></span></a>'
+                if source_sync and "stale_brand" not in broken else '') +
+               h1 + form + "</body></html>")
         response_headers = ({"x-robots-tag": "noindex, nofollow, noarchive"}
                             if mode == "preview" and
                             not ("missing_preview_header" in broken and path == "/")
@@ -165,7 +177,7 @@ class LiveAuditTests(unittest.TestCase):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
                               get=fake_site("preview", source_sync=True))
         self.assertEqual(result["status"], "PASS", result["failures"])
-        self.assertEqual(result["source_parity_checks"], 73)
+        self.assertEqual(result["source_parity_checks"], 118)
         self.assertEqual(result["http_pages_checked"], 42)
 
     def test_deployed_deck_config_mismatch_detected_even_when_slug_is_correct(self):
@@ -191,6 +203,15 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/assets/calcs.mjs" in x and
                             "differs" in x for x in result["failures"]))
+
+    def test_stale_logo_and_brand_cannot_pass_live_source_parity(self):
+        for broken, marker in [("stale_logo", "/logo-mark.svg"),
+                               ("stale_brand", "WoodLayout navigation logo")]:
+            result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                                  get=fake_site("preview", source_sync=True,
+                                                broken={broken}))
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(marker in failure for failure in result["failures"]))
 
     def test_fake_or_preview_hosts_cannot_be_production(self):
         for origin in (PAGES, "https://woodworking.example",
