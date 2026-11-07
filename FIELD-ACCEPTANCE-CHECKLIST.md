@@ -2,6 +2,8 @@
 
 **Status at creation: NOT RUN (physical).** This is a blank, field-completion worksheet. No measurements, material inspections, saw trials, structural signoffs, supplier invoices or printer-scale checks have been performed by these automated changes.
 
+**2026-11-07 scope update:** The owner has opted for **online-only software QA** and does not have to perform or commission any of the physical measurements or actual-device checks below for the reference calculator website to be considered software-tested. This worksheet is **optional field evidence only**; it remains blank and **NOT RUN**, not a certificate or a software release blocker. See [online-only software acceptance](research/ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md). It is still unsafe to claim printed 1:1 cutting accuracy, machining/structural safety or actual screen-reader conformance without the corresponding independent evidence.
+
 **Current implementation scope (2026-11-07):** 31 active geometry calculators (9 P0 + 22 P1), with zero held P2. All real cutting, physical printer measurements and professional acceptance remain NOT RUN unless independently recorded. An SVG screenshot is a **proportional reference**, never a 1:1 cutting template or machine-ready saw path. Human review must use the **numeric cut list** and independently measured references.
 
 ## Required provenance for every session
