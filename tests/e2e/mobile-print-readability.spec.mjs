@@ -130,3 +130,67 @@ test.describe("320px touch and keyboard-height simulation",()=>{
     expect(coords.overflow).toBeLessThanOrEqual(1);
   });
 });
+
+
+test.describe("320px diagram zoom and local file-picking accessibility",()=>{
+  test.use({viewport:{width:320,height:740},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+
+  test("finger-size zoom controls and readable local JSON chooser fit narrow screens",async({page})=>{
+    await page.goto("/stud-calculator/");
+    const zoom=page.locator(".zoom-controls");
+    await expect(zoom).toHaveAttribute("role","group");
+    await expect(zoom).toHaveAttribute("aria-label","Diagram zoom controls");
+    for(const id of ["#zoom-out","#zoom-reset","#zoom-in"]){
+      const button=page.locator(id);
+      await expect(button).toHaveAttribute("aria-controls","dimension-svg");
+      const box=await button.boundingBox();
+      expect(box.width,id+" width").toBeGreaterThanOrEqual(44);
+      expect(box.height,id+" height").toBeGreaterThanOrEqual(44);
+      const bounds=await button.evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right}});
+      expect(bounds.left,id+" left edge").toBeGreaterThanOrEqual(-1);
+      expect(bounds.right,id+" right edge").toBeLessThanOrEqual(321);
+    }
+    const chooser=page.locator("#load-measurements-json");
+    const read=await chooser.evaluate(el=>({
+      font:parseFloat(getComputedStyle(el).fontSize),
+      height:el.getBoundingClientRect().height
+    }));
+    expect(read.font,"avoid iOS file-picker focus zoom").toBeGreaterThanOrEqual(16);
+    expect(read.height,"file picker tap area").toBeGreaterThanOrEqual(52);
+    expect(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,
+      document.body.scrollWidth)-innerWidth)).toBeLessThanOrEqual(1);
+  });
+
+  test("zoom percentage stays accurate through touch, keyboard, redraw and limits",async({page})=>{
+    await page.goto("/stud-calculator/");
+    const plus=page.locator("#zoom-in"),minus=page.locator("#zoom-out");
+    const reset=page.locator("#zoom-reset"),svg=page.locator("#dimension-svg svg");
+    await expect(reset).toHaveText("100%");
+    await plus.tap();
+    await expect(reset).toHaveText("120%");
+    await expect(reset).toHaveAttribute("aria-label",
+      "Reset diagram zoom to 100% (current 120%)");
+    expect(await svg.evaluate(el=>el.style.width)).toBe("120%");
+    await page.locator("#f-length").fill("125");
+    await expect(page.locator("#calc-error")).toBeHidden();
+    await expect(reset).toHaveText("120%");
+    expect(await svg.evaluate(el=>el.style.width)).toBe("120%");
+    await reset.focus();
+    await page.keyboard.press("Space");
+    await expect(reset).toHaveText("100%");
+    expect(await svg.evaluate(el=>el.style.width)).toBe("100%");
+    await minus.tap();await minus.tap();
+    await expect(reset).toHaveText("60%");
+    await expect(minus).toBeDisabled();
+    for(let i=0;i<10;i++)if(await plus.isEnabled())await plus.tap();
+    await expect(reset).toHaveText("250%");
+    await expect(plus).toBeDisabled();
+    expect(await svg.evaluate(el=>el.style.width)).toBe("250%");
+    expect(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,
+      document.body.scrollWidth)-innerWidth)).toBeLessThanOrEqual(1);
+    await reset.tap();
+    await expect(reset).toHaveText("100%");
+    await expect(minus).toBeEnabled();
+    await expect(plus).toBeEnabled();
+  });
+});
