@@ -1,10 +1,10 @@
 # Woodworking Calculator — Release Readiness Gate (2026-11-07)
 
-Current implementation: **31 geometry calculators** (9 P0 + 22 P1), **six populated categories**, **zero unimplemented P2**, and 152 historical KD<=29 Semrush research entries. These counts come from src/tools.json. This document describes verifications still needed, not proof of real-world field acceptance.
+Current implementation: **31 geometry calculators** (9 P0 + 22 P1), **six populated categories**, **zero unimplemented P2**, and 152 historical KD<=29 Semrush research entries. These counts come from src/tools.json. **Current software acceptance: 2026-11-07 main CI #717 PASS, merged SHA `95e8b81`; 42 publicly fetched preview HTML pages PASS, no real domain.** All original five P2 intents require independent release approval; the Materials category stays noindex until Lumber Price is approved. This document describes verifications still needed, not proof of real-world field acceptance. [Executable launch handoff](DOMAIN-LAUNCH-HANDOFF-20261107.md).
 
 | Gate | Prior evidence | Required acceptance | State |
 |---|---|---|---|
-| Source and regression | PR #15 CI #42314475052: 563 Node, 198 Chromium, 18 Firefox/WebKit passed + 42 pages/PDFs | PR #16 must pass fresh whole-suite checks for spiral/gambrel/stave precision | LAST PASS / CURRENT PR PENDING |
+| Source and regression | Merged main [CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) PASSED; all 31 tools, 42 HTML, Node/Chromium/Firefox/WebKit, A4/Letter PDFs and offline release gates | Preserve full CI gate and freeze scope; check actual new custom domain only after purchase | AUTOMATED PASS; PHYSICAL/DOMAIN NOT RUN |
 | Homepage UX | PR #13 passed 31/6 counts, tool search, local history clearing, 390px browser checks | Keep behavior stable; manual touch / assistive tech review still required | AUTOMATED PASS / DEVICES NOT RUN |
 | Independent geometry | 31 tool models and numeric / SVG / CSV tests | Second-source hand calculation and independent measurement on high-risk trade geometry | HUMAN NOT RUN |
 | Print/PDF | Browser A4/Letter and complete long schedule checks | Physically measure 100mm rule between 99.5–100.5mm and 1in rule between 0.995–1.005in at actual print scale; check all rows | PHYSICAL NOT RUN |
@@ -32,6 +32,6 @@ The rafter birdsmouth model previously admitted a **nonzero seat / near-flat pit
 
 Automated evidence passed in [PR #14 CI #42312144812](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42312144812): `tests/critical-cut-resolution.test.mjs`, `tests/e2e/critical-cut-resolution.spec.mjs`, the 31-tool browser contract and A4/Letter print checks. **This is a software representability safeguard, not proof of minimum safe remaining lumber, structural notch compliance or a physical saw trial.**
 
-## PR #16 specialty geometry cross-surface gate — pending fresh CI
+## Historical PR #16 specialty geometry cross-surface gate — merged and superseded by main CI #717
 
-Spiral staircase: theoretical curved annular sector area is **not** the same as the four-corner straight-chord tread polygon shown by SVG and exported to CSV. Both values are now separate. Sub-resolution nonzero riser/wedge inputs are rejected. Gambrel: positive but nonrepresentable horizontal runs, rises and endpoint coordinates must fail safely. Polygon frustum stave: physical SVG corners are checked against millimeter CSV and independent shoelace area. See [specialty precision evidence](SPECIALTY-GEOMETRY-PRECISION-20261107.md). The PR #16 tests do NOT constitute real-world stair/roof/barrel cutting or structural signoff.
+Spiral staircase: theoretical curved annular sector area is **not** the same as the four-corner straight-chord tread polygon shown by SVG and exported to CSV. Both values are now separate. Sub-resolution nonzero riser/wedge inputs are rejected. Gambrel: positive but nonrepresentable horizontal runs, rises and endpoint coordinates must fail safely. Polygon frustum stave: physical SVG corners are checked against millimeter CSV and independent shoelace area. See [specialty precision evidence](SPECIALTY-GEOMETRY-PRECISION-20261107.md). The PR #16 tests were merged and covered by later full-suite main CI; they do NOT constitute real-world stair/roof/barrel cutting or structural signoff.
