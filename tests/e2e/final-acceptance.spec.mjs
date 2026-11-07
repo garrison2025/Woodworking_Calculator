@@ -53,6 +53,7 @@ test("resizing while result action is focused preserves focus and an intact resu
   await page.setViewportSize({width:1440,height:900});
   await expect.poll(()=>paneNames(page)).toEqual(["input","diagram","results"]);
   await expect(action).toBeFocused();
-  await expect(page.locator("#result-cards .metric").first()).toHaveText(metric);
+  expect((await page.locator("#result-cards .metric").first().innerText()).replace(/\s+/g," ").trim())
+    .toBe(metric.replace(/\s+/g," ").trim());
   await expect(page.locator("#calc-error")).toBeHidden();
 });
