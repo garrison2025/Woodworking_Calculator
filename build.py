@@ -321,8 +321,11 @@ def tool_page(t):
            +currency_picker+
            f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel+
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button>'
-           '<button class="btn secondary" id="share-measurements" type="button" disabled>Copy measurement link ↗</button></div>'
-           '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally. Sharing is optional: copied links include entered measurements in a URL fragment, not any review approvals.</p></div>'
+           '<button class="btn secondary" id="share-measurements" type="button" disabled>Copy measurement link ↗</button>'
+           '<button class="btn secondary" id="download-measurements-json" type="button" disabled>↓ Save measurements JSON</button>'
+           '<label class="measurement-import-label" for="load-measurements-json">Restore a local measurements JSON file</label>'
+           '<input id="load-measurements-json" type="file" accept=".json,application/json" aria-label="Restore saved measurements from local JSON file"></div>'
+           '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally. Sharing and local JSON backups are optional. Both preserve numeric inputs, units and quote currency, but NOT material inspections or purchasing approvals. Local files are read only in your browser.</p></div>'
            '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
            '<div class="zoom-controls"><button type="button" id="zoom-out" aria-label="Zoom out">−</button><button type="button" id="zoom-reset" aria-label="Reset zoom">100%</button><button type="button" id="zoom-in" aria-label="Zoom in">+</button></div></div>'
            '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
@@ -552,6 +555,7 @@ def build():
     shutil.copyfile(ROOT/"src"/"app.mjs",assets/"app.mjs")
     shutil.copyfile(ROOT/"src"/"home.mjs",assets/"home.mjs")
     shutil.copyfile(ROOT/"src"/"measurement-links.mjs",assets/"measurement-links.mjs")
+    shutil.copyfile(ROOT/"src"/"measurement-files.mjs",assets/"measurement-files.mjs")
     shutil.copyfile(ROOT/"src"/"calcs.mjs",assets/"calcs.mjs")
     shutil.copyfile(ROOT/"src"/"cut-list.mjs",assets/"cut-list.mjs")
     shutil.copyfile(ROOT/"src"/"framing-stations.mjs",assets/"framing-stations.mjs")
@@ -564,7 +568,7 @@ def build():
     pages={
     "/about/":("About",["Workshop Geometry Tools is an independent collection of browser-based woodworking geometry calculators. It gives DIY builders reproducible measurements, diagrams and local exports.","These tools are educational dimension aids only; they do not provide structural engineering, safe spans, or building-code certification."]),
     "/contact/":("Contact",["For feedback, corrections or questions, please open an issue in the public GitHub repository: github.com/garrison2025/Woodworking_Calculator.","We do not collect contact messages through this website or maintain a user account system."]),
-    "/privacy/":("Privacy",["This preview does not run analytics, advertising scripts, third-party APIs, or form submissions. Calculator values are processed in your browser; no measurements are uploaded by the site.","The website may store a short list of recently visited tools in your browser localStorage. You can remove that item by clearing site storage. Optional copied measurement links encode numeric inputs in the URL fragment (after #), which is not included in HTTP requests, but anyone you share the link with can see these measurements. The web host can still process standard HTTP requests and access logs. If analytics or ads are added, this policy must be revised before those scripts are enabled."]),
+    "/privacy/":("Privacy",["This preview does not run analytics, advertising scripts, third-party APIs, or form submissions. Calculator values are processed in your browser; no measurements are uploaded by the site.","The website may store a short list of recently visited tools in your browser localStorage. You can remove that item by clearing site storage. Optional copied measurement links encode numeric inputs in the URL fragment (after #), which is not included in HTTP requests, but anyone you share the link with can see these measurements. Optional local JSON backups are downloaded to and read from your own device with no file upload. The web host can still process standard HTTP requests and access logs. If analytics or ads are added, this policy must be revised before those scripts are enabled."]),
     "/terms/":("Terms & Safety",["All tools are supplied as free dimensional reference aids without warranties. Verify actual cuts against a physical sample, chosen stock and applicable local codes.","No computed number constitutes structural certification or a guarantee of workmanship. Avoid using a diagram as a full-size printed cutting template unless its physical scale has been verified."])
     }
     for path,(title,paragraphs) in pages.items():write(path,info_page(title,paragraphs,path))

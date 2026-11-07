@@ -120,6 +120,11 @@ for p in pages:
         errors.append(f"{u}: unexpected JavaScript entry point {live_scripts}")
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
+        for marker in ('id="share-measurements"', 'id="download-measurements-json"',
+                       'id="load-measurements-json"', 'id="load-measurements-json" type="file" accept=".json,application/json"'):
+            if body.count(marker)!=1:
+                errors.append(f"{u}: missing or duplicate local input-backup control {marker}")
+    if page_tool:
         intent=intents[page_tool["slug"]]
         if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
             errors.append(f"{u}: SEO title does not match task-specific approved intent")
@@ -212,7 +217,7 @@ for t in hold:
     if (dist/t["slug"]).exists():errors.append(f"P2 unexpectedly published: {t['slug']}")
 if (dist/"sitemap.xml").exists():errors.append("Preview must not expose an XML sitemap")
 if "Disallow: /" not in (dist/"robots.txt").read_text():errors.append("Preview robots.txt must disallow crawling")
-for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
+for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
 # All 31 separately hydrated calculator configs must exactly match the
 # source registry. A stale or partial config could silently change quantities.
