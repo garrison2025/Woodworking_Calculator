@@ -84,26 +84,26 @@ def page(title, description, body, path="/", type_="website"):
     robots = "index,follow" if eligible else "noindex,nofollow,noarchive"
     schema = ""
     if eligible:
-        item = {"@context":"https://schema.org","@type":"WebApplication" if type_ == "tool" else "WebSite","name":title if type_ == "tool" else "Workshop Geometry Tools","description":desc,"url":canon}
+        item = {"@context":"https://schema.org","@type":"WebApplication" if type_ == "tool" else "WebSite","name":title if type_ == "tool" else "WoodLayout","description":desc,"url":canon}
         if type_ == "tool":
             item["applicationCategory"] = "UtilitiesApplication"
             item["operatingSystem"] = "Any"
             item["isAccessibleForFree"] = True
         schema = '<script type="application/ld+json">' + json.dumps(item, ensure_ascii=False).replace("<","\\u003c") + '</script>'
-    nav = '<a class="brand" href="/" aria-label="Workshop Geometry Tools home"><span class="brand-icon">W<span>G</span></span><span>WORKSHOP <b>GEOMETRY</b><small>MEASURE. LAYOUT. BUILD.</small></span></a>'
+    nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
     script = ('<script type="module" src="/assets/home.mjs"></script>' if path == "/"
               else '<script type="module" src="/assets/app.mjs"></script>' if type_ == "tool"
               else "")
-    footer = ('<footer class="footer"><div class="footer-inner"><p><strong>Workshop Geometry Tools</strong> · Draft useful measurements, not engineering approvals.</p>'
+    footer = ('<footer class="footer"><div class="footer-inner"><p><strong>WoodLayout</strong> · Draft useful measurements, not engineering approvals.</p>'
               '<nav aria-label="Legal"><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>'
               '<small>All diagrams are illustrative unless separately verified for full-size printing. No login, paid API or cloud data storage.</small></div></footer>')
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<meta name="color-scheme" content="light"><meta name="robots" content="{robots}">'
-            f'<title>{esc(title)} | Workshop Geometry Tools</title><meta name="description" content="{esc(desc)}">{canonical}'
-            f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/assets/style.css">'
-            f'<meta property="og:type" content="website"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
+            f'<title>{esc(title)} | WoodLayout</title><meta name="description" content="{esc(desc)}">{canonical}'
+            f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
+            f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
             f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav><a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
@@ -567,7 +567,7 @@ def cat_page(key, name, slug):
     return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body,"/"+slug+"/")
 
 def info_page(title, paragraphs, url):
-    body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WORKSHOP GEOMETRY TOOLS</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)+'</article>'
+    body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WOODLAYOUT</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)+'</article>'
     return page(title,paragraphs[0],body,url)
 
 def build():
@@ -599,13 +599,17 @@ def build():
     for k,(name,slug) in CATS.items():
         if any(t["category"]==k for t in TOOLS):write("/"+slug+"/",cat_page(k,name,slug))
     pages={
-    "/about/":("About",["Workshop Geometry Tools is an independent collection of browser-based woodworking geometry calculators. It gives DIY builders reproducible measurements, diagrams and local exports.","These tools are educational dimension aids only; they do not provide structural engineering, safe spans, or building-code certification."]),
+    "/about/":("About",["WoodLayout is an independent collection of browser-based woodworking geometry calculators. It gives DIY builders reproducible measurements, diagrams and local exports.","These tools are educational dimension aids only; they do not provide structural engineering, safe spans, or building-code certification."]),
     "/contact/":("Contact",["For feedback, corrections or questions, please open an issue in the public GitHub repository: github.com/garrison2025/Woodworking_Calculator.","We do not collect contact messages through this website or maintain a user account system."]),
     "/privacy/":("Privacy",["This preview does not run analytics, advertising scripts, third-party APIs, or form submissions. Calculator values are processed in your browser; no measurements are uploaded by the site.","The website may store a short list of recently visited tools in your browser localStorage. You can remove that item by clearing site storage. Optional copied measurement links encode numeric inputs in the URL fragment (after #), which is not included in HTTP requests, but anyone you share the link with can see these measurements. Optional local JSON backups are downloaded to and read from your own device with no file upload. The web host can still process standard HTTP requests and access logs. If analytics or ads are added, this policy must be revised before those scripts are enabled."]),
     "/terms/":("Terms & Safety",["All tools are supplied as free dimensional reference aids without warranties. Verify actual cuts against a physical sample, chosen stock and applicable local codes.","No computed number constitutes structural certification or a guarantee of workmanship. Avoid using a diagram as a full-size printed cutting template unless its physical scale has been verified."])
     }
     for path,(title,paragraphs) in pages.items():write(path,info_page(title,paragraphs,path))
-    (DEST/"favicon.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#1e6454"/><path d="M14 21l10 39h9l7-25 7 25h9l10-39H55l-4 20-6-20H35l-6 20-4-20z" fill="#f8f7f4"/></svg>')
+    # One icon source for the navigation mark, browser tab and external lockup.
+    # Do not regress to mismatched hand-drawn WG/W logos in different contexts.
+    shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"logo-mark.svg")
+    shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"favicon.svg")
+    shutil.copyfile(ROOT/"src"/"logo-lockup.svg", DEST/"logo-lockup.svg")
     (DEST/"404.html").write_text(page("Page not found","This tool URL is not available.","<section class='wrap legal-page'><h1>That tool isn't here.</h1><p>Try the complete calculator directory.</p><a class='btn primary' href='/#tools'>Find a tool ↗</a></section>","/404/"))
     # Cloudflare Pages static response headers. 404.html must never be a
     # canonical search result; the page() gate above separately keeps its

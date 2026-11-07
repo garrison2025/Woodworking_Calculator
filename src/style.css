@@ -1,4 +1,4 @@
-/* Workshop Geometry · measured, tool-first visual system.
+/* WoodLayout · measured, tool-first visual system.
    Light by design, no remote fonts, no decorative continuous animation. */
 :root{
   color-scheme:light;--canvas:#f8f7f4;--surface:#fffefd;--surface-2:#f2f2eb;
@@ -26,12 +26,13 @@ p{color:var(--body)}
 .skip:focus{left:8px}
 .topbar{position:relative;background:#fefefc;border-bottom:1px solid var(--line);z-index:12}
 .topbar-inner{max-width:1536px;margin:auto;padding:0 clamp(18px,3.4vw,52px);height:86px;display:flex;align-items:center;gap:48px}
-.brand{display:inline-flex;align-items:center;gap:13px;flex-shrink:0;min-width:255px}
-.brand-icon{width:44px;height:44px;border-radius:12px;display:grid;place-content:center;background:#1e6454;color:white;font-size:19px;font-weight:850;letter-spacing:-5px;padding-right:6px}
-.brand-icon span{color:#e2b581}
-.brand>span:last-child{font-size:13px;font-weight:800;letter-spacing:.08em;line-height:1.24}
-.brand b{font-weight:800;color:var(--green)}
-.brand small{display:block;font-size:10px;font-weight:700;color:#526458;letter-spacing:.17em;margin-top:6px}
+.brand{display:inline-flex;align-items:center;gap:12px;flex-shrink:0;min-width:255px}
+.brand-icon{display:inline-flex;flex:0 0 44px;width:44px;height:44px;align-items:center;justify-content:center}
+.brand-icon img{display:block;width:100%;height:100%;border-radius:10px}
+.brand-wordmark{display:block;min-width:0;line-height:1.2}
+.brand-wordmark strong{display:block;font-size:21px;font-weight:820;letter-spacing:-.055em;color:#203b34;white-space:nowrap}
+.brand-wordmark strong span{color:#a36835}
+.brand small{display:block;font-size:10px;font-weight:750;color:#526458;letter-spacing:.09em;margin-top:4px;white-space:nowrap}
 .topbar nav{display:flex;align-items:center;gap:clamp(15px,1.6vw,28px);font-size:13px;font-weight:600;color:#4e5e55;flex:1}
 .topbar nav a{white-space:nowrap}
 .nav-cta{border:1px solid #cddbd2;padding:11px 15px;border-radius:9px;font-size:12px;font-weight:700;color:var(--green);white-space:nowrap}
@@ -200,7 +201,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .workspace{grid-template-columns:1fr 1fr;grid-template-areas:"input result" "drawing drawing"}
 }
 @media(max-width:680px){
-  .brand{min-width:0}.brand>span:last-child{font-size:11px}.nav-cta{display:none}
+  .brand{min-width:0}.brand-wordmark strong{font-size:19px}.nav-cta{display:none}
   .hero-copy h1{font-size:clamp(2.5rem,10.4vw,3.7rem)}
   .hero-copy>p{font-size:15px}.hero-facts{gap:17px}
   .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -231,7 +232,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
   #calculator-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .field label{min-height:39px;font-size:11px}
   .tool-card{padding:12px}
-  .tool-hints{font-size:10px}.brand-icon{width:39px;height:39px}
+  .tool-hints{font-size:10px}.brand-icon{flex-basis:39px;width:39px;height:39px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
@@ -581,8 +582,8 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .wrap{padding-left:12px;padding-right:12px}
  .topbar-inner{padding:0 12px;gap:10px}
  .brand{min-width:0;gap:8px}
- .brand>span:last-child{font-size:10px;letter-spacing:.02em;overflow-wrap:anywhere}
- .brand small{font-size:10px;letter-spacing:.04em}
+ .brand-wordmark strong{font-size:18px;letter-spacing:-.05em}
+ .brand small{font-size:10px;letter-spacing:.01em}
  .brand-icon{flex:0 0 37px;width:37px;height:37px}
  .tool-heading{padding-top:16px;padding-bottom:18px}
  .tool-heading h1{font-size:clamp(1.65rem,7.7vw,1.95rem);overflow-wrap:anywhere}

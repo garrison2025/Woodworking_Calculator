@@ -174,6 +174,13 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
         p.feed(body)
         check(p.h1 == 1, path + ": expected exactly one H1")
         check(bool(p.title.strip()), path + ": missing document title")
+        if verify_source_parity:
+            results["source_parity_checks"] += 1
+            check('src="/logo-mark.svg"' in body and
+                  'class="brand-wordmark"' in body and
+                  'Wood<span>Layout</span>' in body and
+                  p.title.endswith(" | WoodLayout"),
+                  path + ": deployed WoodLayout navigation logo/brand differs from source")
         check(bool(p.meta.get("description", "").strip()), path + ": missing meta description")
         if p.title in seen_titles:
             check(False, path + ": duplicate title with " + seen_titles[p.title])
@@ -209,8 +216,8 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                 check(len(p.tool_field_ids) == len(expected_fields) and
                       set(p.tool_field_ids) == expected_fields,
                       path + ": deployed form fields differ from the current source manifest")
-    for asset in ("favicon.svg", "assets/app.mjs", "assets/calcs.mjs",
-                  "assets/style.css"):
+    for asset in ("favicon.svg", "logo-mark.svg", "logo-lockup.svg",
+                  "assets/app.mjs", "assets/calcs.mjs", "assets/style.css"):
         status, _, _ = request("/" + asset)
         check(status == 200, "/" + asset + ": missing static asset")
     for t in TOOLS:
@@ -244,6 +251,9 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
             "assets/framing-stations.mjs": "framing-stations.mjs",
             "assets/framing-review-versions.mjs": "framing-review-versions.mjs",
             "assets/style.css": "style.css",
+            "logo-mark.svg": "logo-mark.svg",
+            "logo-lockup.svg": "logo-lockup.svg",
+            "favicon.svg": "logo-mark.svg",
         }
         for asset, source in source_assets.items():
             status, actual, _ = request("/" + asset)

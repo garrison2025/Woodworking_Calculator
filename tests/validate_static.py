@@ -127,7 +127,7 @@ for p in pages:
                 errors.append(f"{u}: missing or duplicate local input-backup control {marker}")
     if page_tool:
         intent=intents[page_tool["slug"]]
-        if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
+        if c.title_text != intent["seoTitle"]+" | WoodLayout":
             errors.append(f"{u}: SEO title does not match task-specific approved intent")
         if page_tool["keyword"].lower() not in intent["seoTitle"].lower():
             # One historically broad research query is deliberately NOT used
@@ -238,7 +238,7 @@ pages_headers=(dist/"_headers").read_text(encoding="utf8")
 if "\n/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n" not in "\n"+pages_headers:
     errors.append("Preview must send X-Robots-Tag noindex on all static assets")
 
-for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/length-entry.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
+for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/length-entry.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","logo-mark.svg","logo-lockup.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
 # All 31 separately hydrated calculator configs must exactly match the
 # source registry. A stale or partial config could silently change quantities.
