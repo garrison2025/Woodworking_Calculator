@@ -2435,17 +2435,27 @@ if(slug){
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
-  restoreValues();
-  let imported=null;
-  try{imported=loadSharedMeasurements();}catch{
-    // Fail closed: a broken/edited link cannot leave the form partly restored.
-    imported="rejected";
-  }
-  render();
-  if(imported===true)
-    status.textContent="Shared measurements loaded and recalculated. Verify actual material dimensions independently.";
-  else if(imported==="rejected")
-    status.textContent="Invalid or incomplete measurement link ignored; default inputs restored.";
+  const applySharedMeasurements=()=>{
+    restoreValues();
+    let imported=null;
+    try{imported=loadSharedMeasurements();}catch{
+      // A malformed or edited fragment never partially overwrites the form.
+      imported="rejected";
+    }
+    schedulePage=0;zoom=1;render();
+    if(imported===true&&latest)
+      status.textContent="Shared measurements loaded and recalculated. Verify actual material dimensions independently.";
+    else if(imported===true)
+      status.textContent="Shared inputs could not be rendered. Review the calculation error before use.";
+    else if(imported==="rejected")
+      status.textContent="Invalid or incomplete measurement link ignored; default inputs restored.";
+  };
+  applySharedMeasurements();
+  // Navigation to the same page with a different fragment is a same-document
+  // navigation. It does not rerun the module, so restore explicitly here too.
+  window.addEventListener("hashchange",()=>{
+    if(window.location.hash.startsWith("#measure="))applySharedMeasurements();
+  });
   try{const recent=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");localStorage.setItem("woodwork-recent",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,6)))}catch{}
 }
 
