@@ -8,7 +8,7 @@
 | 门槛 | 状态 | 证据/实际边界 |
 |---|---|---|
 | V3 26 个计划 P0/P1 工具 | PASS（自动化） | `src/tools.json`；`tests/calculators.test.mjs` 每工具 8 类共享断言 + 各项独立算法测试；`tests/e2e/sitewide-contract.spec.mjs` 31 页逐页核查 in/mm 结果、SVG、CSV；[基线主分支 CI #705](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42329946906) |
-| 原 5 个 P2 | IMPLEMENTED / NOT APPROVED FOR INDEX | 在源码中标记为 P1，实际功能进入预览；需要正式发布前分别审核搜索意图和技术限制，不得因“已写代码”自动认定发布批准 |
+| 原 5 个 P2 | IMPLEMENTED / SEO GATED | 在源码中标记为 P1，实际功能进入预览；即使未来 `RELEASE_APPROVED=1`，也必须另行设置 `RELEASE_V3_P2_APPROVED=1` 才能纳入 sitemap、生成 canonical、标记 index；此开关不是专业施工审批 |
 | 31 个默认黄金值及无效输入 | PASS（自动化） | 每工具至少 8 类独立共享 Node 验证：黄金值、有限几何/清单、决定性、原参数不变、5 单位等价、负数、NaN/∞/超大值、无效零值；另有专项边界/比例/报价/图纸测试 |
 | 31 页屏幕结果、SVG、CSV | PASS（自动化默认场景） | `tests/e2e/sitewide-contract.spec.mjs` 遍历 31 个 URL；英寸/毫米结果核算、SVG 图元核验、下载 CSV 每行及表头与计算模型一致。并不等于检查了每个可能输入 |
 | 42 HTML 静态页、6 分类、152 研究关键词 | PASS（静态工程） | `tests/validate_static.py`、`src/tool-intents.json`；152 是上传 Semrush 前 400 行样本筛出的 KD≤29 研究词，不是预测新站排名或真实流量 |
@@ -78,6 +78,7 @@
 ## 本轮缺陷处置与验收口径
 
 - **缺陷 A（键盘/阅读顺序不一致）：** 原 HTML DOM 为“输入 → 图纸 → 结果”，但 ≤1220px 视觉格为“输入 → 结果 → 图纸”。本轮同步 DOM 实际顺序，并在宽屏恢复“输入 → 图纸 → 结果”，保留原有计算模型及所有按钮事件。
+- **缺陷 C（原 V3 P2 被提前索引风险）：** 五个原 P2 已转为可用 P1，但之前只要正式域名启用索引，它们就会自动进入 sitemap。新增独立的 `RELEASE_V3_P2_APPROVED` 发布门槛；CI 使用离线示例域名同时验证 26 页默认开放与显式批准后 31 页开放。任何预览环境仍然一律 noindex。
 - **缺陷 B（构建不确定性）：** 方案第 20 节明确要求锁文件；此前无 `package-lock.json`，CI 每次无锁 `npm install`。本轮固定间接依赖及完整 SHA-512 校验值，由 `npm ci` 强制校验。
 - **结论与状态更新：** 只有 PR-head 与合并 main 的整套 GitHub Actions CI **均通过**才将这两项视为 PASS；若失败，必须修复并重测。**不存在“自动化全部通过 = 工程现场已经验收”的等号。**
 
