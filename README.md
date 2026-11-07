@@ -6,6 +6,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — WoodLayout identity and logo
+
+- Replaced the provisional WG letter block with a purpose-drawn **vector measurement/carpenter-square mark** and a real **WoodLayout** responsive wordmark. One `src/logo-mark.svg` is the single source for both `/logo-mark.svg` in navigation and `/favicon.svg` in browser tabs; `src/logo-lockup.svg` is an optional standalone horizontal brand asset.
+- The 42 static pages, site metadata, footer, registry label and About wording all use WoodLayout. Branded visuals and favicon are protected by XML/static, responsive Playwright, and live Cloudflare source-parity checks.
+- `woodlayout.com` is **only a candidate, not a purchased or bound domain**. Branding the preview does NOT enable indexing or modify the release gate. Future custom-domain naming remains dependent on a domain purchase and explicit production-launch approval.
+
 ## 2026-11-07 — All 31 calculators approved for future custom-domain SEO release
 
 - Owner approved opening the **five original V3 P2 tools** for Google indexing in the **future authorized custom-domain release**. The historical `RELEASE_V3_P2_APPROVED` flag is obsolete: all **31 calculators + 6 categories + home + 4 legal/about pages = 42 canonical/sitemap URLs** in a real approved production build. [Approval and scoped keyword intents](research/V3-P2-SEO-APPROVAL-20261107.md).
