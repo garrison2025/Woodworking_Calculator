@@ -121,6 +121,22 @@ for p in pages:
         errors.append(f"{u}: unexpected JavaScript entry point {live_scripts}")
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
+        # Every calculator route has one real, accessible in-page workbench
+        # navigator. No extra SEO route, form clone, or measured numeric value
+        # in the static HTML (the local engine supplies the live result).
+        if body.count('aria-label="Jump between calculator sections"')!=1:
+            errors.append(f"{u}: missing single accessible workbench navigator")
+        for anchor in ("workbench-input","workbench-results","workbench-drawing"):
+            if body.count(f'id="{anchor}"')!=1:
+                errors.append(f"{u}: missing/duplicate workbench anchor {anchor}")
+            if body.count(f'href="#{anchor}"')<1:
+                errors.append(f"{u}: workbench anchor not navigable {anchor}")
+        if body.count('id="dock-primary-label"')!=1 or body.count('id="dock-primary-value"')!=1:
+            errors.append(f"{u}: missing/duplicate live result summary")
+        if 'id="workbench-input" tabindex="-1"' not in body:
+            errors.append(f"{u}: workflow target must not insert an extra Tab stop")
+
+    if page_tool:
         for marker in ('id="share-measurements"', 'id="download-measurements-json"',
                        'id="load-measurements-json"', 'id="load-measurements-json" type="file" accept=".json,application/json"'):
             if body.count(marker)!=1:
