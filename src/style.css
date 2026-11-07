@@ -124,7 +124,12 @@ input:focus-visible,select:focus-visible{outline:3px solid #955b23;outline-offse
 .field small{display:block;color:#89968b;font-size:10px;margin-top:4px}
 .field [aria-invalid="true"]{border-color:var(--danger);background:#fff8f6;box-shadow:0 0 0 2px rgba(168,58,51,.10)}
 .field [aria-invalid="true"]:focus{border-color:var(--danger);box-shadow:0 0 0 3px rgba(168,58,51,.16)}
-.pane-actions{padding:2px 19px 14px}.pane-actions button{width:100%}.pane-actions #share-measurements{margin-top:8px}
+.pane-actions{padding:2px 19px 14px}.pane-actions button{width:100%}
+.pane-actions #share-measurements,.pane-actions #download-measurements-json{margin-top:8px}
+.measurement-import-label{display:block;font-size:11px;font-weight:750;color:var(--ink);margin:13px 0 6px;line-height:1.5}
+#load-measurements-json{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-size:11px;line-height:1.4;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)}
+#load-measurements-json::file-selector-button{border:1px solid var(--line);border-radius:6px;background:#edf3ed;color:var(--green);font:700 11px system-ui;cursor:pointer;padding:7px;margin-right:9px}
+#load-measurements-json:focus-visible{outline:3px solid #955b23;outline-offset:2px}
 .sidebar-note{margin:0 19px 20px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;line-height:1.65}
 .sidebar-note span{color:var(--green);font-weight:800;margin-right:4px}
 .drawing-pane{min-height:500px}
