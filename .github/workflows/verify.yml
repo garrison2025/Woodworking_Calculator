@@ -26,7 +26,7 @@ jobs:
       - name: Build the preview with no index
         run: python3 build.py
       - name: Validate browser module and test syntax
-        run: node --check src/app.mjs && node --check src/measurement-links.mjs && node --check tests/e2e/measurement-links.spec.mjs && node --check tests/e2e/homepage-release.spec.mjs && node --check tests/e2e/critical-cut-resolution.spec.mjs && node --check tests/e2e/cut-visual-contract.spec.mjs && node --check tests/e2e/specialty-precision.spec.mjs && node --check src/calcs.mjs && node --check src/cut-list.mjs && node --check playwright.config.mjs && node --check tests/e2e/workspaces.spec.mjs && node --check tests/e2e/cross-browser.spec.mjs && node --check tests/cut-list.test.mjs && node --check tests/worked-cases.test.mjs && node --check tests/e2e/worked-cases.spec.mjs
+        run: node --check src/app.mjs && node --check src/home.mjs && node --check src/measurement-links.mjs && node --check tests/e2e/runtime-payload.spec.mjs && node --check tests/e2e/measurement-links.spec.mjs && node --check tests/e2e/homepage-release.spec.mjs && node --check tests/e2e/critical-cut-resolution.spec.mjs && node --check tests/e2e/cut-visual-contract.spec.mjs && node --check tests/e2e/specialty-precision.spec.mjs && node --check src/calcs.mjs && node --check src/cut-list.mjs && node --check playwright.config.mjs && node --check tests/e2e/workspaces.spec.mjs && node --check tests/e2e/cross-browser.spec.mjs && node --check tests/cut-list.test.mjs && node --check tests/worked-cases.test.mjs && node --check tests/e2e/worked-cases.spec.mjs
       - name: Run geometry checks
         run: node --test tests/*.test.mjs
       - name: Validate prerendered routes and noindex policy
