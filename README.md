@@ -4,16 +4,23 @@
 
 A free browser-only woodworking workspace with **31 active geometry calculators (9 P0 + 22 P1), six populated categories and zero held P2**. Includes proportional SVG drawings, fractional inch display, five length units (in/ft/mm/cm/m), local-only tool search and recent-history controls, typed CSV exports and browser Print / Save as PDF. Geometry references are not certified structural designs or saw-cut instructions.
 
-> **Release status (2026-11-07): engineering beta, not a production launch.** [PR #13 verification](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) passed **556 Node, 193 Chromium and 18 Firefox/Linux WebKit tests**, plus 42 static pages and A4/Letter PDF checks before merge as `cafccc2`. PR #14's stricter cut-coordinate guards require a separate passing CI run. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
+> **Release status (2026-11-07): engineering beta, not a production launch.** Following merged PRs #13–17, the latest verified main regression is [CI #42319538076](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42319538076) on commit `15137a3`, including numerical tests, Chromium, Firefox/Linux WebKit, and PDF/release checks. This is a software check, not physical material verification. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
 
-## 2026-11-07 — Optional measurement share links (proposed PR)
+## 2026-11-07 — Lean browser runtime and tool-specific configuration (proposed PR)
+
+- **Homepage:** `/assets/home.mjs` handles keyword filtering and the recent-tools controls using prerendered directory anchors. It does not import calculator geometry, request `tools.json`, or send browser history to a server.
+- **Tool pages:** Each of the 31 routes hydrates from `/assets/tool-config/<slug>.json`. Exact generated-vs-source registry parity is checked statically; a missing/incorrect JSON rejects initialization. The full registry remains published for backwards compatibility but is no longer fetched for normal calculations.
+- **Category, legal, and 404 pages:** purely prerendered HTML and CSS, with no unused calculator module.
+- Added real-browser network contracts that ensure only the matching config loads, plus unchanged calculation/CSV/SVG, print/PDF, noindex and optional share-link regressions. This is a payload optimization; no real-world loading-time improvement is claimed until externally measured. **This proposed PR requires its own passing CI before merge.**
+
+## 2026-11-07 — Optional measurement share links (PR #17 merged)
 
 - Every calculator offers **Copy measurement link** when current inputs are valid. The link embeds a versioned, complete set of numeric inputs, unit, fraction precision, and the optional currency label as a URL **fragment** (after `#`), not as a request query string.
 - Opening the link validates field identity, duplicates, finite numeric values, unit/precision/currency whitelist and the calculator geometry **before** restoring any input. Malformed, partial or tampered fragments restore only defaults and show a rejection message. **Reset dimensions** removes the fragment so refreshing does not reapply the previous measurements.
 - Links are never silently copied, stored or submitted. URL fragments are not transmitted in the HTTP request to Cloudflare, but **anyone you explicitly share the link with can see the numbers**; the link contains no field inspection, review declarations, purchase authorizations, or source-document contents. Sharing a numeric model does not certify a real-world cut.
-- The new codec has Node negative/round-trip tests and browser tests for numeric/unit/currency restoration, reset and malformed-link rejection. **Until this PR's GitHub Actions succeeds, do not mark these checks PASS.**
+- The new codec has Node negative/round-trip tests and browser tests for numeric/unit/currency restoration, reset and malformed-link rejection. Passed [PR #17 and merged-main CI](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42319538076).
 
-## 2026-11-07 — Spiral, gambrel and tapered stave precision (new PR)
+## 2026-11-07 — Spiral, gambrel and tapered stave precision (PR #16 merged)
 
 - Spiral stair: report **curved annular sector area** separately from the **smaller four-straight-chord polygon area drawn/exported**; never treat these as interchangeable material quantities. Reject unmeasurable riser/inner-chord coordinate rows.
 - Symmetric gambrel: reject positive but rounded-away lower/upper runs, rises or exported segment endpoints before preparing a cut schedule.
@@ -25,12 +32,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 - For **kerf bending**, physical slot SVG rectangles now use the same quantized left/right coordinates and cut depth as CSV; exported overlapping or out-of-bounds slots are rejected.
 - **Crown molding** drawings expose numerical miter/bevel angle checks and clearly separate illustrative left/right plan signs from unsafe saw-setting prescriptions. Use an actual scrap test pair.
 - **Stair stringer** drawing has a verifiable coordinate transform; new browser regression checks every modeled riser/tread vertex against metric CSV dimensions, without implying full-size saw or bearing approval.
-- Cross-surface evidence and unresolved physical risks: [cut drawing / schedule contract](research/CUT-VISUAL-SCHEDULE-CONTRACT-20261107.md). These new changes remain subject to PR #15's own CI, not previous baseline successes.
+- Cross-surface evidence and unresolved physical risks: [cut drawing / schedule contract](research/CUT-VISUAL-SCHEDULE-CONTRACT-20261107.md). PR #15 was merged after dedicated CI; physical approval is still outstanding.
 
 ## 2026-11-07 — Current UX and release readiness
 
 - Homepage tool and category counts are derived from src/tools.json, with a local task/category search field and an explicit Clear history control for recently visited tools.
-- Static verification and browser checks cover the catalog, 390px layout, search behavior, localStorage clearing, existing geometry and print/PDF workflows. PR #13 passed [CI #42310268231](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) and merged. PR #14 addresses cut-coordinate resolution and must pass its own regression gate; the historical figures below describe older 26/28-tool snapshots.
+- Static verification and browser checks cover the catalog, 390px layout, search behavior, localStorage clearing, existing geometry and print/PDF workflows. PR #13 passed [CI #42310268231](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) and merged. PR #14 cut-coordinate resolution checks have passed and merged; the historical figures below describe older 26/28-tool snapshots.
 - See [Release Readiness Gates](research/RELEASE-READINESS-GATES-20261107.md). Real printer-scale measurement, actual workpieces, hardware Safari, NVDA/VoiceOver, GSC and a real launch domain remain outstanding.
 
 ## 2026-11-06 — Expanded functional scope and field review

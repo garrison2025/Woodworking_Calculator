@@ -7,9 +7,12 @@ import {makeFramingReviewVersion,validateFramingReviewVersion,
   proposeFramingMeasurementRestore} from "./framing-review-versions.mjs";
 const slug=document.body.dataset.tool;
 if(slug){
-  const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
-  const tool=manifest.tools.find(t=>t.slug===slug&&t.priority!=="P2");
-  if(!tool)throw Error("Unavailable calculator.");
+  const tool=await fetch("/assets/tool-config/"+encodeURIComponent(slug)+".json").then(r=>{
+    if(!r.ok)throw Error("Missing calculator configuration.");
+    return r.json();
+  });
+  if(!tool||tool.slug!==slug||!["P0","P1"].includes(tool.priority))
+    throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),share=document.querySelector("#share-measurements"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
   let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
@@ -2459,49 +2462,3 @@ if(slug){
   try{const recent=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");localStorage.setItem("woodwork-recent",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,6)))}catch{}
 }
 
-/* Homepage history is browser-only and optional; no tracking endpoint exists. */
-if(!slug){
-  const panel=document.querySelector("#recent-tools"),links=document.querySelector("#recent-links"),clear=document.querySelector("#clear-recent-tools");
-  if(panel&&links){
-    try{
-      const saved=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");
-      const manifest=await fetch("/assets/tools.json").then(r=>r.json());
-      const available=manifest.tools.filter(t=>t.priority!=="P2");
-      for(const item of saved.slice(0,6)){
-        const found=available.find(t=>t.slug===item);
-        if(!found)continue;
-        const a=document.createElement("a");
-        a.href="/"+found.slug+"/";
-        a.textContent=found.title+" ↗";
-        links.appendChild(a);
-      }
-      if(links.children.length)panel.hidden=false;
-      clear?.addEventListener("click",()=>{
-        try{localStorage.removeItem("woodwork-recent")}catch{/* Storage may be disabled. */}
-        links.replaceChildren();
-        panel.hidden=true;
-      });
-    }catch{/* Recent tool history is optional. */}
-  }
-  // Filters prerendered links, never fetches a remote search index or changes the URL.
-  const search=document.querySelector("#tool-search");
-  const directory=document.querySelector("#tool-directory");
-  const searchStatus=document.querySelector("#tool-search-status");
-  if(search&&directory&&searchStatus){
-    const entries=[...directory.querySelectorAll("a")];
-    const filterTools=()=>{
-      const query=search.value.trim().toLocaleLowerCase("en");
-      let visible=0;
-      for(const item of entries){
-        const matched=!query||item.textContent.toLocaleLowerCase("en").includes(query);
-        item.hidden=!matched;
-        if(matched)visible++;
-      }
-      searchStatus.textContent=visible===0?"No matching calculator. Try another task.":
-        `Showing ${visible} of ${entries.length} tools`;
-    };
-    search.addEventListener("input",filterTools);
-    search.addEventListener("search",filterTools);
-    filterTools();
-  }
-}

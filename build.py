@@ -78,6 +78,9 @@ def page(title, description, body, path="/", type_="website"):
     nav = '<a class="brand" href="/" aria-label="Workshop Geometry Tools home"><span class="brand-icon">W<span>G</span></span><span>WORKSHOP <b>GEOMETRY</b><small>MEASURE. LAYOUT. BUILD.</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
+    script = ('<script type="module" src="/assets/home.mjs"></script>' if path == "/"
+              else '<script type="module" src="/assets/app.mjs"></script>' if type_ == "tool"
+              else "")
     footer = ('<footer class="footer"><div class="footer-inner"><p><strong>Workshop Geometry Tools</strong> · Draft useful measurements, not engineering approvals.</p>'
               '<nav aria-label="Legal"><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>'
               '<small>All diagrams are illustrative unless separately verified for full-size printing. No login, paid API or cloud data storage.</small></div></footer>')
@@ -88,8 +91,7 @@ def page(title, description, body, path="/", type_="website"):
             f'<meta property="og:type" content="website"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
             f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav><a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
-            f'<main id="main">{body}</main>{footer}'
-            f'<script type="module" src="/assets/app.mjs"></script></body></html>')
+            f'<main id="main">{body}</main>{footer}{script}</body></html>')
 
 def write(url, content):
     target = DEST / url.strip("/") / "index.html" if url != "/" else DEST / "index.html"
@@ -538,9 +540,17 @@ def build():
     DEST.mkdir()
     assets=DEST/"assets";assets.mkdir()
     shutil.copyfile(ROOT/"src"/"tools.json",assets/"tools.json")
+    # Tool pages hydrate from their own exact registry entry, rather than
+    # transferring 31 tools (and every formula/example) for one calculation.
+    config_dir = assets/"tool-config"
+    config_dir.mkdir()
+    for t in TOOLS:
+        (config_dir/(t["slug"]+".json")).write_text(
+            json.dumps(t,ensure_ascii=False,separators=(",",":")),encoding="utf-8")
     # Preset inputs are embedded in rendered HTML; no extra browser fetch is
     # necessary and all worked cases can be examined without JavaScript.
     shutil.copyfile(ROOT/"src"/"app.mjs",assets/"app.mjs")
+    shutil.copyfile(ROOT/"src"/"home.mjs",assets/"home.mjs")
     shutil.copyfile(ROOT/"src"/"measurement-links.mjs",assets/"measurement-links.mjs")
     shutil.copyfile(ROOT/"src"/"calcs.mjs",assets/"calcs.mjs")
     shutil.copyfile(ROOT/"src"/"cut-list.mjs",assets/"cut-list.mjs")
