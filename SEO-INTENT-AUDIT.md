@@ -2,6 +2,8 @@
 
 > **Evidence grades:** Uploaded Semrush snapshot from 2026-11-04 for estimated demand only; current GitHub manifest/build rules for implementation; CI/browser and public-preview evidence must be recorded separately. Keyword Volume, KD, CPC and competitor visits are historical third-party estimates, **not current Google rankings, actual traffic, conversion or earnings**. The preview URL remains noindex until domain purchase and explicit launch approval.
 
+**Scope update (2026-11-07):** For the complete all-31-tools primary intent matrix and a decision on every one of the 22 historical cautions, with source Volume/KD/CPC and bounded public result spot-checks, see [Final Keyword Intent Audit](research/KEYWORD-INTENT-FINAL-AUDIT-20261107.md) and its [machine-checked review decisions](research/keyword-intent-closure-20261107.json). Older dated portions below are preserved as history; use the final report for current 31/22 counts. This is not a verified current US SERP or successful indexation report.
+
 ## Verified scope and release boundaries
 
 - **31 functional P0/P1 calculator routes** (9 P0 + 22 P1), six populated navigation categories; each has distinct, executable HTML form, geometry result, SVG and spreadsheet/print workflow, with Node golden examples and browser QA. This is software-only validation, not certified field measurements.

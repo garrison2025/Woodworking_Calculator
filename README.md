@@ -6,6 +6,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — 31-tool / 152-keyword final intent closure
+
+- [Final 31-page / 22 flagged-query SEO intent audit](research/KEYWORD-INTENT-FINAL-AUDIT-20261107.md) compares all 31 implemented task inputs, titles, historical US Volume/KD/CPC from the original 152-row Semrush export, and explicitly triages the 22 suspect historical keyword assignments. **21 specific task scopes, nine broad qualifiers and one ambiguous original primary** are recorded; these engineering classifications are not claims of measured current US SERP ranking.
+- The 22 caution cases resolve to **one existing correct destination, two still needing US SERP validation, 12 unimplemented separately gated concepts, three guide/tutorial intents, and four terms excluded as direct SEO targets**. Historical CSV/152 research rows remain untouched; 21 disputed terms are not pushed into live page synonyms.
+- Add machine-readable [intent decisions](research/keyword-intent-closure-20261107.json) and a CI parity test to prevent unsupported SEO copy/URL rewrites. No new tool routes, keyword pages, backlinks, indexing or physical safety claims were introduced in this review.
+
 ## 2026-11-07 — Exact inch fractions and marked feet-and-inch input
 
 - Length input fields accept normal decimals in every unit and, **only while units are inches**, proper power-of-two fractions up to 1/64: `5 1/2`, `5-1/2`, `3/4`, `-1/4`. With the follow-up enhancement, inch mode also accepts explicit marked feet and inches such as `8' 3 1/2"` (99.5 in), `8' 3"` (99 in), and `8'` (96 in). Inch parts must be 0 to under 12, never signed independently; unmarked mixed units and invalid fractions are rejected explicitly rather than guessed.

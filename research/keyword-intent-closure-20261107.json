@@ -1,0 +1,391 @@
+{
+  "auditDate": "2026-11-07",
+  "basis": "Original user-supplied 2026-11-04 Semrush 400-row export -> preserved 152 KD<=29 terms; current main src/tools.json and src/tool-intents.json; limited live web result spot-check of selected ambiguous queries. This is NOT an exhaustive US-geolocated SERP study or measurement of current traffic.",
+  "intentPolicy": "Only implemented user tasks may be claimed on tool pages. This document is evidence triage, not approval to create pages or change canonical/index policy.",
+  "primary": [
+    {
+      "slug": "stud-calculator",
+      "keyword": "stud calculator",
+      "class": "qualified-broad",
+      "scope": "Broad 'stud calculator' also serves straight-wall stud counting; this route solves a sloping gable/rake wall only. The existing wall-stud-calculator is a different task.",
+      "notFor": "A straight wall stud count or framing structural approval."
+    },
+    {
+      "slug": "framing-calculator",
+      "keyword": "framing calculator",
+      "class": "qualified-broad",
+      "scope": "Broad 'framing calculator' may include other types of framing; this route calculates straight wall framing with door/window openings, not structural sizing or picture framing.",
+      "notFor": "An engineering-approved header span, bearing design, or permit drawing."
+    },
+    {
+      "slug": "deck-board-calculator",
+      "keyword": "deck board calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate parallel deck board rows, gaps, and the final rip width.",
+      "notFor": "A full deck frame, joist span, post or footing design."
+    },
+    {
+      "slug": "baluster-spacing-calculator",
+      "keyword": "baluster spacing calculator",
+      "class": "task-specific-match",
+      "scope": "Distribute balusters with explicit clear gaps and center positions.",
+      "notFor": "Proof of local railing, child-safety, or structural-code compliance."
+    },
+    {
+      "slug": "rafter-calculator",
+      "keyword": "rafter calculator",
+      "class": "qualified-broad",
+      "scope": "Broad 'rafter calculator' may mean spacing, count or sizing; this route solves common rafter line and birdsmouth geometry, not approved spacing or design.",
+      "notFor": "A hip-rafter cut, engineered span, load rating, or approved roof assembly."
+    },
+    {
+      "slug": "crown-molding-calculator",
+      "keyword": "crown molding calculator",
+      "class": "task-specific-match",
+      "scope": "Find compound miter and bevel reference angles for crown molding.",
+      "notFor": "Proof of saw orientation, material spring angle, or a verified test cut."
+    },
+    {
+      "slug": "soffit-calculator",
+      "keyword": "soffit calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate an eave-section soffit drop with the defined thickness offsets.",
+      "notFor": "Structural design for rafter tails, fascia fastening or roof ventilation."
+    },
+    {
+      "slug": "kerf-bending-calculator",
+      "keyword": "kerf calculator",
+      "class": "qualified-broad",
+      "scope": "Generic 'kerf calculator' may mean material kerf allowance; this page is specifically for kerf-bending slot geometry.",
+      "notFor": "A guaranteed bend radius, material strength or safe blade path."
+    },
+    {
+      "slug": "wainscoting-calculator",
+      "keyword": "wainscoting calculator",
+      "class": "task-specific-match",
+      "scope": "Divide a wall into repeatable wainscoting panel bays and margins.",
+      "notFor": "Wall framing, molding compound cuts, or an installed structural design."
+    },
+    {
+      "slug": "stair-calculator",
+      "keyword": "stair treads calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate level-finished straight stairs with optional measured deck tread coverage and limited available-flight-run checks.",
+      "notFor": "Stringer bearing strength, spiral stairs or building-code approval."
+    },
+    {
+      "slug": "rise-run-calculator",
+      "keyword": "rise and run",
+      "class": "task-specific-match",
+      "scope": "Convert rise, run and slope angle for a straight reference line.",
+      "notFor": "Full roof cuts, stair step counts, or structural clearance checks."
+    },
+    {
+      "slug": "deck-material-calculator",
+      "keyword": "deck estimator",
+      "class": "qualified-broad",
+      "scope": "Generic 'deck estimator' may mean deck cost, joist spans, footings or complete framing; this tool calculates measured decking takeoff and limited joist reference quantities only.",
+      "notFor": "Engineered joist-span capacity, footings, approved beams or fasteners."
+    },
+    {
+      "slug": "segmented-bowl-calculator",
+      "keyword": "segmented bowl calculator",
+      "class": "task-specific-match",
+      "scope": "Compute segmented bowl ring geometry and reference segment cutting angles.",
+      "notFor": "Wood species machinability, glue-joint strength or lathe safety."
+    },
+    {
+      "slug": "roof-pitch-calculator",
+      "keyword": "pitch calculator",
+      "class": "qualified-broad",
+      "scope": "Generic 'pitch calculator' has non-roof interpretations; this tool is exclusively roof slope, degrees, rise/run and grade.",
+      "notFor": "Rafter birds-mouth geometry, hip-roof panel cuts or structural approval."
+    },
+    {
+      "slug": "equal-spacing-calculator",
+      "keyword": "equal spacing calculator",
+      "class": "task-specific-match",
+      "scope": "Place precise measured part centers, or solve the number of parts from maximum face clearance or desired center-to-center spacing.",
+      "notFor": "Thickness-aware shelf clearances, railing code or drilling hardware limits."
+    },
+    {
+      "slug": "hip-rafter-calculator",
+      "keyword": "hip rafter calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate hip-rafter diagonal run and pitched line reference geometry.",
+      "notFor": "A complete hip roof sheathing layout, birdsmouth, or engineered timber."
+    },
+    {
+      "slug": "hip-roof-calculator",
+      "keyword": "hip roof calculator",
+      "class": "qualified-broad",
+      "scope": "Broad 'hip roof calculator' may imply structural framing or all material costs; this page calculates modeled surface/sheathing polygon geometry only.",
+      "notFor": "A complete structural hip roof truss or verified on-site saw program."
+    },
+    {
+      "slug": "wall-stud-calculator",
+      "keyword": "wall stud calculator",
+      "class": "task-specific-match",
+      "scope": "Count and position studs in a straight, level wall reference.",
+      "notFor": "Door and window King/Jack framing or sloped rake-wall stud lengths."
+    },
+    {
+      "slug": "shelf-spacing-calculator",
+      "keyword": "shelf spacing calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate shelf clearances and optional pin-hole coordinate references.",
+      "notFor": "Hardware load capacity, shelf sag limits or a 1:1 drill jig."
+    },
+    {
+      "slug": "gable-roof-calculator",
+      "keyword": "gable roof calculator",
+      "class": "task-specific-match",
+      "scope": "Estimate a symmetric gable roof's slope lengths and surface area.",
+      "notFor": "Hip or valley roof cuts, sheathing nesting, or a structural roof design."
+    },
+    {
+      "slug": "square-layout-calculator",
+      "keyword": "foundation square calculator",
+      "class": "task-specific-match",
+      "scope": "Compare diagonals when setting out a rectangle or foundation footprint.",
+      "notFor": "Structural footing design, concrete volume or a survey-grade report."
+    },
+    {
+      "slug": "diagonal-brace-calculator",
+      "keyword": "cross brace angle calculator",
+      "class": "task-specific-match",
+      "scope": "Compute reference diagonal length and angle between two measured legs.",
+      "notFor": "Engineered diagonal bracing resistance or an approved load path."
+    },
+    {
+      "slug": "hole-spacing-calculator",
+      "keyword": "hole spacing calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate repeated hole centers and edge offsets for a drilling line.",
+      "notFor": "A calibrated drill jig, fastener edge-distance code or shelf loading."
+    },
+    {
+      "slug": "stair-stringer-calculator",
+      "keyword": "stair stringer calculator",
+      "class": "task-specific-match",
+      "scope": "Compute nominal straight stringer notches and modeled side-profile stations.",
+      "notFor": "Approved bearing cuts, structural stringer capacity or spiral stairs."
+    },
+    {
+      "slug": "roof-sheathing-calculator",
+      "keyword": "roof sheathing calculator",
+      "class": "task-specific-match",
+      "scope": "Estimate roof panel pieces and optional sheet-stock bounding-box reuse.",
+      "notFor": "Hip valley panel cuts outside the entered geometry or an approved roof nailing schedule."
+    },
+    {
+      "slug": "fence-post-calculator",
+      "keyword": "fence post calculator",
+      "class": "task-specific-match",
+      "scope": "Count fence posts and calculate their center locations along a run.",
+      "notFor": "Fence picket layout, post embedment or wind-load structural design."
+    },
+    {
+      "slug": "spiral-staircase-calculator",
+      "keyword": "spiral staircase calculator",
+      "class": "qualified-broad",
+      "scope": "Broad spiral staircase intent may require code, headroom, central-column and engineered stringer design; this is a single-turn measured wedge/reference model only.",
+      "notFor": "Stair headroom or guardrail approval, multi-turn stair design, code compliance, structural bearing, pole selection or finished shop cuts."
+    },
+    {
+      "slug": "gambrel-roof-calculator",
+      "keyword": "gambrel roof calculator",
+      "class": "task-specific-match",
+      "scope": "Calculate symmetric two-pitch gambrel section geometry, knuckle stations, ridge height and surface areas of four roof segments.",
+      "notFor": "Structural gambrel truss loads or joints, timber span design, bearing cuts, sheet nesting or roofing code certification."
+    },
+    {
+      "slug": "lumber-price-calculator",
+      "keyword": "price per thousand calculator",
+      "class": "research-query-ambiguous",
+      "scope": "Historical 'price per thousand calculator' lacks a lumber/MBF qualifier and may refer to generic per-1000 unit prices. The live page correctly only covers BF/MBF lumber quotes; do not claim the broad query is served. Verify a lumber-qualified target term separately.",
+      "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order."
+    },
+    {
+      "slug": "fence-picket-calculator",
+      "keyword": "picket spacing calculator",
+      "class": "task-specific-match",
+      "scope": "Lay out measured fence picket face edges and equal clear gaps, then optionally calculate a separate stepped top-cut height for each straight board.",
+      "notFor": "A structural fence span, curved cutting template, post embedment, safe pool barrier openings or approved wind-loading design."
+    },
+    {
+      "slug": "stave-calculator",
+      "keyword": "stave calculator",
+      "class": "qualified-broad",
+      "scope": "Broad 'stave calculator' may include drums, cooperage and curved barrels; this page handles straight trapezoid faces in a tapered polygon-frustum barrel reference only.",
+      "notFor": "A barrel bulge, guaranteed inner capacity, proven table-saw compound bevel or certified coopering and hardwood stock purchasing."
+    }
+  ],
+  "flagged": [
+    {
+      "keyword": "wall framing calculator with windows and doors",
+      "originalRoute": "/wall-stud-calculator/",
+      "decision": "existing-tool-reassignment",
+      "candidateRoute": "/framing-calculator/",
+      "reason": "Already supported: measured openings and King/Jack/header/sill on the framing calculator. Never claim it on the plain wall-stud route."
+    },
+    {
+      "keyword": "wall framing calculator",
+      "originalRoute": "/wall-stud-calculator/",
+      "decision": "needs-intent-verification",
+      "candidateRoute": "/framing-calculator/",
+      "reason": "Broad term; stronger candidate is opening-capable framing page, but verify present US SERP before claiming the unqualified phrase."
+    },
+    {
+      "keyword": "deck joist span calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Structural span depends on span tables, size, grade/species, loading, wet-service and code edition. Not safely supplied by material takeoff; independent standards and qualified review required before considering any tool.",
+      "sampledPublicResults": [
+        "https://deckpro.studio/tools/joist-span-calculator",
+        "https://hardhatcalc.com/calculators/structural/deck-joist-span-calculator"
+      ]
+    },
+    {
+      "keyword": "hip roof framing plan",
+      "originalRoute": "/hip-rafter-calculator/",
+      "decision": "guide-intent-not-calculator",
+      "reason": "Search seeks complete framing plan, unlike this roof-line geometry; a documented field guide would need professional scope review, not a hidden keyword insertion."
+    },
+    {
+      "keyword": "hip roof volume calculator",
+      "originalRoute": "/hip-rafter-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "User wants enclosed 3D volume; hip rafter reference-line geometry does not calculate that volume. Low evidence priority; verify SERP and inputs before a feature."
+    },
+    {
+      "keyword": "hip to gable calculator",
+      "originalRoute": "/gable-roof-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Hip-to-gable conversion is a different roof conversion geometry/design task, not the gable surface-area tool; do not claim it."
+    },
+    {
+      "keyword": "shelf bracket spacing calculator",
+      "originalRoute": "/shelf-spacing-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Load-bearing bracket spacing/shelf sag requires material/stiffness/load and fixings; shelf-clearance and pin positions cannot substitute."
+    },
+    {
+      "keyword": "coopering calculator",
+      "originalRoute": "/segmented-bowl-calculator/",
+      "decision": "needs-intent-verification",
+      "candidateRoute": "/stave-calculator/",
+      "reason": "Polygon-frustum stave calculations offer a nearby, narrower use case; real coopering often includes curved barrels/compound angles. Do not present as a synonym until SERP and feature match are checked.",
+      "sampledPublicResults": [
+        "https://apps.apple.com/ly/app/coopering-calculator/id6759157985"
+      ]
+    },
+    {
+      "keyword": "how to bend a plywood",
+      "originalRoute": "/kerf-bending-calculator/",
+      "decision": "guide-intent-not-calculator",
+      "reason": "This is a practical tutorial and material-safety question, not a specific kerf geometry calculation; keep out of calculator metadata without researched editorial guidance."
+    },
+    {
+      "keyword": "staircase spindle spacing calculator",
+      "originalRoute": "/baluster-spacing-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Sloping stair rail needs incline/vertical projection and rail conventions; the level-opening baluster tool cannot safely claim that output.",
+      "sampledPublicResults": [
+        "https://www.tkstairs.com/information-help/assembly-fitting-information/spindle-spacing"
+      ]
+    },
+    {
+      "keyword": "rafter spacing calculator",
+      "originalRoute": "/rafter-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Rafter count/on-centre layout is different from rafter cut geometry; user-verified maximum spacing could support a distinct nonstructural layout mode, not code spacing recommendation.",
+      "sampledPublicResults": [
+        "https://craftquantities.com/calculators/materials-quantities/pergola-rafter-spacing-calculator/"
+      ]
+    },
+    {
+      "keyword": "deck post spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Post/footing support layout requires beam/joist spans and loads. Current estimator's joist reference centers do not calculate bearing post positions."
+    },
+    {
+      "keyword": "hip roof construction",
+      "originalRoute": "/hip-rafter-calculator/",
+      "decision": "guide-intent-not-calculator",
+      "reason": "Construction guide and structural framing scope; line geometry is not a roof construction instruction manual."
+    },
+    {
+      "keyword": "pointing calculator",
+      "originalRoute": "/equal-spacing-calculator/",
+      "decision": "exclude-as-target-keyword",
+      "reason": "Web spot-check returned masonry mortar/repointing calculators, not woodworking equal-spacing. Remove from target claims; preserve only historical CSV.",
+      "sampledPublicResults": [
+        "https://www.lime-mortars.co.uk/lime-mortar/calculators/pointing-calculator?product=MRN-003-012"
+      ]
+    },
+    {
+      "keyword": "calculator center",
+      "originalRoute": "/equal-spacing-calculator/",
+      "decision": "exclude-as-target-keyword",
+      "reason": "Generic calculator-service/navigation phrase; no evidence of wood-part center positions. Exclude."
+    },
+    {
+      "keyword": "center calculator",
+      "originalRoute": "/equal-spacing-calculator/",
+      "decision": "exclude-as-target-keyword",
+      "reason": "Generic ambiguous phrase; no evidence of timber center-spacing search intent. Exclude."
+    },
+    {
+      "keyword": "deck framing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Full deck frame involves structural beams, ledgers, supports and code. Current material takeoff is not a framing/footing design."
+    },
+    {
+      "keyword": "decking joist spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Promising nonstructural layout concept using a separately verified allowed OC input; current estimator merely accepts joist spacing and does not solve recommended spacing/count from constraints.",
+      "sampledPublicResults": [
+        "https://areaofirregularshapescalc.com/deck-joist-spacing-calculator/"
+      ]
+    },
+    {
+      "keyword": "deck joist spacing calculator",
+      "originalRoute": "/deck-material-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Same verified-max-OC layout gap as decking joist spacing; do not promise structural spacing standards. Consider one combined tool only after SERP validation.",
+      "sampledPublicResults": [
+        "https://theplanotter.com/decks/deck-joist-spacing-calculator/"
+      ]
+    },
+    {
+      "keyword": "gambrel roof truss calculator",
+      "originalRoute": "/gambrel-roof-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Two-pitch roof outline does not design truss chords, bearing, gussets, connectors and loads; a structural truss claim requires external design authority.",
+      "sampledPublicResults": [
+        "https://rooftrusscalculator.net/gambrel-roof-truss-calculator/",
+        "https://design.medeek.com/resources/resources.html"
+      ]
+    },
+    {
+      "keyword": "gambrel truss calculator",
+      "originalRoute": "/gambrel-roof-calculator/",
+      "decision": "standalone-feature-gated",
+      "reason": "Same structural truss gap as the gambrel roof truss term, not an SEO synonym for simple profile geometry."
+    },
+    {
+      "keyword": "price per thousand calculator",
+      "originalRoute": "/lumber-price-calculator/",
+      "decision": "exclude-as-target-keyword",
+      "reason": "Generic per-thousand pricing may mean unit counts or lumber MBF. The live tool covers BF/MBF only; preserve the historical competitor association but do not target the unqualified phrase without current US-intent evidence.",
+      "sampledPublicResults": [
+        "https://pricecalculator.org/per/price-per-thousand-calculator.html",
+        "https://molecalculator.com/Lumber-Cost-Per-Thousand-Calculator.php"
+      ]
+    }
+  ]
+}
