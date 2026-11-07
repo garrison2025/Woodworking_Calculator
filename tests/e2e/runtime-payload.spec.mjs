@@ -18,7 +18,8 @@ test("homepage renders tool search and recent history without downloading calcul
   await page.getByLabel("Find a calculator").fill("");
   await expect(page.locator("#tool-directory a:visible")).toHaveCount(31);
   await page.goto("/roof-pitch-calculator/");
-  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+  await page.waitForFunction(()=>localStorage.getItem("woodwork-recent")?.includes("roof-pitch-calculator"));
   await page.goto("/");
   await expect(page.locator("#recent-links a")).toHaveCount(1);
   await expect(page.locator("#recent-links a")).toHaveText(["Roof Pitch in Degrees & Percent ↗"]);
