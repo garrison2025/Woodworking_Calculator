@@ -29,13 +29,13 @@
 ~~~powershell
 git clone https://github.com/garrison2025/Woodworking_Calculator.git
 cd Woodworking_Calculator
-python scripts/verify_live_launch.py --base https://woodworking-calculator.pages.dev --mode preview --report preview-audit.json
+python scripts/verify_live_launch.py --base https://woodworking-calculator.pages.dev --mode preview --verify-source-parity --report preview-audit.json
 ~~~
 
 只有真正买了域名并按以上步骤完成 Pages 域名、生产索引和 Bulk Redirect 配置，才运行**正式域名检查**（将占位符替换为真正购买的地址）：
 
 ~~~powershell
-python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --report production-audit.json
+python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --verify-source-parity --report production-audit.json
 ~~~
 
 如原 V3 五个 P2 均单独得到批准且正式构建开启 `RELEASE_V3_P2_APPROVED=1`，才加上 `--approve-v3-p2`。默认必须不带。脚本会检查：
@@ -45,6 +45,8 @@ python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode p
 - **31 个独立配置 JSON**的 URL 与 slug、JS/CSS/favicons 等资源是否能正常 GET；
 - **预览环境**禁止抓取、sitemap 必须 404；**正式环境** sitemap URL 集合与获准索引页完全一致；
 - **不存在路径**实际 HTTP 404；**生产旧 pages.dev 别名**主页与一个工具路径必须真实返回指向自有域名对应路径的 301/308。
+
+附加的 `--verify-source-parity` 会用**当前合并后的 GitHub 主分支源码**核验线上 31 个表单字段、31 份完整 JSON 配置和 11 个关键 JS/CSS/注册表资源。如果 Cloudflare 仍部署旧版本，即使每个 URL 都返回 200，也会 FAIL。主分支 GitHub Actions 新增独立 `deployed-preview` 作业，`verify` 全套通过后再重试真实 Pages 状态，并上传 `cloudflare-live-preview-audit` JSON；该报告与离线 CI 是不同证据，不能混称。
 
 退出码 **0 = PASS，1 = FAIL**；`--report` 保存 JSON 证据。报告明确标明 `physical_measurement=NOT RUN`、`device_screen_reader_test=NOT RUN` 与 `gsc_indexing=NOT RUN`，不代表真实 GSC 索引或工程安全已经验证。
 
