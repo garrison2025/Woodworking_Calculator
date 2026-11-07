@@ -599,9 +599,12 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .result-stack{padding:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
  .metric{min-width:0;padding:10px 8px}
  .metric strong{font-size:clamp(13px,4.3vw,17px)}
- .drawing-pane .pane-head{padding:12px}
- .zoom-controls{gap:1px;flex-shrink:0}
- .zoom-controls button{min-width:27px;height:30px}
+ .drawing-pane .pane-head{padding:12px;flex-wrap:wrap;row-gap:8px}
+ .zoom-controls{gap:3px;flex-shrink:0}
+ .zoom-controls button{min-width:44px;min-height:44px;height:44px;font-size:16px}
+ .zoom-controls button:nth-child(2){min-width:52px;font-size:12px}
+ #load-measurements-json{font-size:16px;min-height:52px;line-height:1.4}
+ #load-measurements-json::file-selector-button{min-height:44px;font-size:14px;padding:8px 10px}
  .diagram-tools{padding:12px;flex-wrap:wrap}
  .diagram-tools .btn{min-width:0;white-space:normal;padding:8px 9px;flex:1 1 110px}
  .drawing-caption{padding:8px 12px;flex-wrap:wrap}
