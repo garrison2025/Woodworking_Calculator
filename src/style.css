@@ -1197,6 +1197,9 @@ tbody tr:nth-child(2n){background:#fafbf8}
     background:linear-gradient(115deg,#e8f3e9,#f7faf5);
     transition:background .2s,border-color .2s}
   .dock-summary:hover,.dock-summary:focus-visible{background:#def0e2;border-color:#95bb9f}
+  .dock-summary.is-invalid{background:#fff3e9;border-color:#dfc7ac}
+  .dock-summary.is-invalid .dock-summary-value{color:#82532a}
+  .dock-summary.is-invalid .dock-summary-label{color:#78604d}
   .dock-summary-label{font-size:10px;font-weight:750;line-height:1.24;
     color:#55715e;flex:1 1 128px;min-width:0;overflow-wrap:anywhere}
   .dock-summary-value{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;
