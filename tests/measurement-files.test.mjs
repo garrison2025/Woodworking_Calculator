@@ -1,5 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {buildMeasurementFile,parseMeasurementFile} from "../src/measurement-files.mjs";
 
 const slug="deck-board-calculator";
@@ -63,4 +64,25 @@ test("save rejects malformed decimal input and nonstandard calculator identity",
   assert.throws(()=>make({slug:"../framing-calculator"}),/identity/);
   assert.throws(()=>make({fields:[{...fields[0],value:"1e1000"},...fields.slice(1)]}),/measurement/);
   assert.throws(()=>make({fields:[...fields,{key:"gap",value:"5"}]}),/keys/);
+});
+
+test("all 31 calculator default field sets survive the exact local backup codec",()=>{
+  const registry=JSON.parse(readFileSync(new URL("../src/tools.json",import.meta.url),"utf8"));
+  const active=registry.tools.filter(t=>t.priority!=="P2");
+  assert.equal(active.length,31);
+  for(const tool of active){
+    const hasPrice=["framing-calculator","deck-material-calculator","lumber-price-calculator"].includes(tool.slug);
+    const currency=hasPrice?"USD":null;
+    const source=tool.inputs.map(f=>({key:f.key,value:String(f.value)}));
+    const content=buildMeasurementFile({
+      slug:tool.slug,unit:"in",fraction:"16",currency,fields:source
+    });
+    const restored=parseMeasurementFile(content,{
+      slug:tool.slug,fields:tool.inputs,allowedCurrencies:hasPrice?["USD","CAD"]:[]
+    });
+    assert.deepEqual(restored.inputs,Object.fromEntries(source.map(f=>[f.key,f.value])),tool.slug);
+    assert.equal(restored.unit,"in",tool.slug);
+    assert.equal(restored.currency,currency,tool.slug);
+    assert.ok(content.length<=12000,tool.slug);
+  }
 });
