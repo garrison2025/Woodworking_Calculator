@@ -367,7 +367,24 @@ def tool_page(t):
         '<p class="caution">The drawing previews at most SIX stock sheets; the numeric CSV lists ALL stock placements and cutting vertices. Not a 1:1 saw template or structural roofing plan. Split-line kerf does not include every angled polygon-perimeter cut.</p>'
         '</section>'
     ) if t["slug"] in ("hip-roof-calculator","roof-sheathing-calculator") else ""
-    body+=(f'<section class="workspace wrap" data-workspace><div class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
+    # The responsive navigation links to real pane anchors, not to duplicate
+    # calculators or generated SEO routes. The compact layout already presents
+    # measurements, then results, then the detailed drawing.
+    body+=(
+        '<nav class="workbench-dock wrap" aria-label="Jump between calculator sections">'
+        '<span class="dock-kicker">WORKBENCH</span>'
+        '<div class="dock-links">'
+        '<a href="#workbench-input">Measurements</a>'
+        '<a href="#workbench-results">Results</a>'
+        '<a href="#workbench-drawing">Drawing</a>'
+        '</div>'
+        '<a class="dock-summary" href="#workbench-results">'
+        '<span class="dock-summary-label" id="dock-primary-label">Live calculation</span>'
+        '<strong class="dock-summary-value" id="dock-primary-value">Preparing…</strong>'
+        '<span class="dock-summary-arrow" aria-hidden="true">↗</span>'
+        '</a></nav>'
+    )
+    body+=(f'<section class="workspace wrap" data-workspace><div id="workbench-input" tabindex="-1" class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
            '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
            '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
@@ -379,7 +396,7 @@ def tool_page(t):
            '<label class="measurement-import-label" for="load-measurements-json">Restore a local measurements JSON file</label>'
            '<input id="load-measurements-json" type="file" accept=".json,application/json" aria-label="Restore saved measurements from local JSON file"></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally. Sharing and local JSON backups are optional. Both preserve numeric inputs, units and quote currency, but NOT material inspections or purchasing approvals. Local files are read only in your browser.</p></div>'
-           '<div class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
+           '<div id="workbench-drawing" tabindex="-1" class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
            '<div class="zoom-controls" role="group" aria-label="Diagram zoom controls"><button type="button" id="zoom-out" aria-label="Zoom out" aria-controls="dimension-svg">−</button><button type="button" id="zoom-reset" aria-label="Reset diagram zoom to 100%" aria-controls="dimension-svg">100%</button><button type="button" id="zoom-in" aria-label="Zoom in" aria-controls="dimension-svg">+</button></div></div>'
            '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
            '<div class="drawing-caption"><span><i></i> SCALED SCHEMATIC</span><span>NOT A VERIFIED 1:1 TEMPLATE</span></div>'
@@ -392,7 +409,7 @@ def tool_page(t):
            '<div class="calibration-measure"><strong>1 in reference</strong><div class="calibration-bar calibration-1in" role="img" aria-label="Reference bar nominally one inch wide when printed at actual size"></div><small>Accept only 0.995 to 1.005 in measured on paper (±0.5%).</small></div>'
            '<p class="calibration-warning">If either ruler is outside tolerance, reject the printed sheet and correct printer settings. Passing these checks does NOT turn the resized SVG diagram into a full-size cutting pattern. Calculated dimensions do not certify structural capacity, code compliance, material quality or safe cutting techniques.</p>'
            '</section></div>'
-           '<aside class="pane result-pane"><div class="pane-head"><div><span class="pane-index">03 / RESULTS</span><h2>Your takeoff</h2></div><span class="live-indicator">LIVE</span></div>'
+           '<aside id="workbench-results" tabindex="-1" class="pane result-pane"><div class="pane-head"><div><span class="pane-index">03 / RESULTS</span><h2>Your takeoff</h2></div><span class="live-indicator">LIVE</span></div>'
            '<p id="calc-error" class="error-banner" role="alert" hidden></p><div id="result-cards" class="result-stack" aria-live="off">'
            '<p class="empty-result">Enter measurements to see calculated dimensions.</p></div>'
            '<div class="export-stack"><button type="button" id="copy-result" class="btn primary">Copy results <span>↗</span></button>'
