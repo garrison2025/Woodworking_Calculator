@@ -74,7 +74,12 @@ ELIGIBLE_CATEGORY_PATHS = {
 }
 SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
 APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
-INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED
+# Cloudflare injects CF_PAGES=1 and CF_PAGES_BRANCH. Only the main branch
+# may become indexable: production env vars mistakenly copied to Preview must
+# NEVER turn a PR/feature deployment into a canonical/sitemap release.
+# Offline local release simulations still work without CF_PAGES=1.
+IS_PAGES_PREVIEW = os.environ.get("CF_PAGES") == "1" and os.environ.get("CF_PAGES_BRANCH") != "main"
+INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED and not IS_PAGES_PREVIEW
 esc = lambda s: html.escape(str(s), quote=True)
 
 def href(path):
