@@ -31,6 +31,8 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Validate prerendered routes and noindex policy
         run: python3 tests/validate_static.py
+      - name: Test deployment acceptance script without touching the public site
+        run: python3 -m unittest discover -s tests -p "test_live_launch_audit.py" -v
       - name: Install browser test dependency
         run: npm ci --no-audit --no-fund
       - name: Install headless Chromium
