@@ -9,8 +9,17 @@
 - **功能软件建设**：31/31 个计算器路由已实现，其中 V3 原计划 9 P0 + 17 P1 + 5 个后续实现的原始 P2。31 个功能都有独立工具页，六个分类、主页、四个政策说明页共 42 个静态 HTML；现有 main 自动化验收 [CI #719](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42339894355) 通过。实物试切、物理打印及人工专业审核仍是 NOT RUN。
 - **关键词研究映射**：152/152 条原始去重研究词、美国搜索量与 KD/CPC 估计值已保存，`target_route` 均指向真实存在的 31 个工具 URL；其中 **75 条历史 CPC > 0**、KD 最大值为 29。152 条历史 Volume 单纯相加为 **108,930 次/月**，由于重复查询意图和平台估算，**不能视为独立搜索人群、新站访问或广告收入**。
 - **31 个主搜索词的功能核对**：21 个与当前页面任务口径相符；9 个有更广泛解释，页面应继续使用限定用途的 `title/H1/Not covered`；1 个（`price per thousand calculator`）有泛化歧义，应暂缓把无修饰词当作精确匹配目标。以上为 **工程语义审核，不是逐词 SERP 验证**。
-- **22 条具体意图偏差**：1 条已纠正到真正支持的现有工具、2 条需要继续核查搜索意图、10 条需独立功能/专业约束、2 条已有可选的几何排布模式但未验证宽泛 SERP、3 条是教程/指南意图、4 条不得作为本站直接 SEO 目标。22 条原始记录的历史搜索量相加 **7,420 次/月**，仍不代表可实际获得流量。这些疑点中 **21 条未被批准成为现有页面的关键词同义词**。
+- **22 条具体意图偏差**：1 条已纠正到真正支持的现有工具、2 条经公开结果抽查确认仅支持现有工具的部分用途（宽泛 SEO 意图仍需验证）、10 条需独立功能/专业约束、2 条已有可选的几何排布模式但未验证宽泛 SERP、3 条是教程/指南意图、4 条不得作为本站直接 SEO 目标。22 条原始记录的历史搜索量相加 **7,420 次/月**，仍不代表可实际获得流量。这些疑点中 **21 条未被批准成为现有页面的关键词同义词**。
 - **不改变发布门槛**：正式域名尚未购买，`pages.dev` 预览全部 `noindex`。未来即使有正式域名，原 V3 的 5 个 P2 计算器及只包含原 P2 的 Materials 分类必须单独审批才可索引。默认正式发布模拟只索引 36 个 URL，原 P2 审批后可增至 42 个；当前不执行上述发布。
+
+### 2026-11-07 公开搜索结果补充：此前最后两个待分类词的处置已经明确
+
+| 查询 | 可核对的公开样本 | 当前结论 |
+|---|---|---|
+| `wall framing calculator` | [WallFramingCalculator](https://www.wallframingcalculator.com/)、[AnyBuild](https://anybuild.co/calculators/framing)、[Harth](https://harth.build/free-tools/wall-framing-stud-calculator/)、[PlanDIYBuild](https://plandiybuild.com/calculators/wall-framing) | **现有 `/framing-calculator/` 只承接墙体布局与门窗构件用量子任务**。本项目未提供结构许可、受力和当地规范核准。原错误的 Wall Stud 归属仍不生效 |
+| `coopering calculator` | [Countfolk](https://countfolk.com/coopered-stave-taper-angle-calculator/)、[nrtechstudio](https://nrtechstudio.com/tools/tapered-stave-calculator/) | **现有 `/stave-calculator/` 仅有直线梯形桶板子任务**；曲形桶身、实际制桶工艺和其他复合角度功能缺失，不把宽泛 `coopering calculator` 当作等价目标词 |
+
+**证据边界**：以上是 2026-11-07 可公开检索的实际竞品页面与功能内容样本，未进行 Google 美国指定位置 Top10/20 的批量抓取，也没有新的 Semrush Volume/KD/CPC 或 GSC 数据。这两个词的**产品处理决策已完成**，但正式 SEO 关键词认可仍须基于目标市场 SERP 和真实展示结果。不能把“已分类”写成“已占领搜索意图”。22 个记录中，1 个正确重分配、2 个有限现有功能、2 个限定等距中心布局、10 个需独立安全/功能审查、3 个更合适指南、4 个不直接投放；原始 152 行数据不变。
 
 ## 二、31 个现有工具：原始主搜索词逐页核对
 
@@ -59,13 +68,13 @@
 | 原始研究关键词 | 美国月量 / KD / CPC($) | 处理类别 | 处理意见与真实能力差距 |
 |---|---|---|---|
 | `wall framing calculator with windows and doors` | 90 / 0 / 3.11 | 已纠正至现有工具 | Already supported: measured openings and King/Jack/header/sill on the framing calculator. Never claim it on the plain wall-stud route.；可能归属 `/framing-calculator/`（仍需遵守裁决状态） |
-| `wall framing calculator` | 390 / 14 / 1.96 | 待进一步核实 SERP | Broad term; stronger candidate is opening-capable framing page, but verify present US SERP before claiming the unqualified phrase.；可能归属 `/framing-calculator/`（仍需遵守裁决状态） |
+| `wall framing calculator` | 390 / 14 / 1.96 | 现有 Framing 页限定任务相符 | 公开同类结果涵盖墙体立柱、门窗洞口与材料清单，已有 `/framing-calculator/` 支持相应几何与材料计算；不是承重梁设计、规范认证或有地理定位的美国 Google Top10 意图证明。 |
 | `deck joist span calculator` | 720 / 16 / 1.83 | 需独立功能及安全审查 | Structural span depends on span tables, size, grade/species, loading, wet-service and code edition. Not safely supplied by material takeoff; independent standards and quali |
 | `hip roof framing plan` | 90 / 16 / 0.00 | 教程/指南意图，现站不承接 | Search seeks complete framing plan, unlike this roof-line geometry; a documented field guide would need professional scope review, not a hidden keyword insertion. |
 | `hip roof volume calculator` | 90 / 2 / 0.00 | 需独立功能及安全审查 | User wants enclosed 3D volume; hip rafter reference-line geometry does not calculate that volume. Low evidence priority; verify SERP and inputs before a feature. |
 | `hip to gable calculator` | 140 / 6 / 0.00 | 需独立功能及安全审查 | Hip-to-gable conversion is a different roof conversion geometry/design task, not the gable surface-area tool; do not claim it. |
 | `shelf bracket spacing calculator` | 90 / 0 / 0.00 | 需独立功能及安全审查 | Load-bearing bracket spacing/shelf sag requires material/stiffness/load and fixings; shelf-clearance and pin positions cannot substitute. |
-| `coopering calculator` | 50 / 8 / 0.00 | 待进一步核实 SERP | Polygon-frustum stave calculations offer a nearby, narrower use case; real coopering often includes curved barrels/compound angles. Do not present as a synonym until SERP a；可能归属 `/stave-calculator/`（仍需遵守裁决状态） |
+| `coopering calculator` | 50 / 8 / 0.00 | 仅部分直线桶板几何相符 | 公共同类结果涉及桶板锥度、复合斜切与曲面木桶；`/stave-calculator/` 仅计算直线正多边形台体桶板的梯形面尺寸，不能将“完整制桶计算”作为页面同义词。 |
 | `how to bend a plywood` | 260 / 25 / 0.00 | 教程/指南意图，现站不承接 | This is a practical tutorial and material-safety question, not a specific kerf geometry calculation; keep out of calculator metadata without researched editorial guidance. |
 | `staircase spindle spacing calculator` | 110 / 14 / 0.00 | 需独立功能及安全审查 | Sloping stair rail needs incline/vertical projection and rail conventions; the level-opening baluster tool cannot safely claim that output. |
 | `rafter spacing calculator` | 260 / 14 / 0.00 | 需独立功能及安全审查 | Rafter count/on-centre layout is different from rafter cut geometry; user-verified maximum spacing could support a distinct nonstructural layout mode, not code spacing reco |
