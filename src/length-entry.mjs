@@ -4,9 +4,9 @@
 // suggesting that arbitrary ratios are conventional fractional-inch marks.
 const DECIMAL=/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i;
 const INCH_FRACTION=/^([+-]?)(?:(\d+)(?:\s+|-))?(\d+)\/(\d+)$/;
-// A tape-mark entry such as 8\' 3 1/2" is accepted only in inch mode.
+// A tape-mark entry such as 8 feet 3 1/2 inches is accepted only in inch mode.
 // Require explicit foot and inch marks so an unmarked 8 3/4 is not guessed.
-const FEET_INCHES=/^([+-]?)(\d+)\'(?:\s*(.+)")?$/;
+const FEET_INCHES=/^([+-]?)(\d+)'(?:\s*(.+)")?$/;
 const MAX_ENTRY_LENGTH=64;
 const MAX_FRACTION_WHOLE=1e9;
 
@@ -24,7 +24,7 @@ export function parseEditableLength(raw,unit){
     if(!Number.isSafeInteger(wholeFeet)||wholeFeet>MAX_FRACTION_WHOLE)return null;
     const inchPart=feetEntry[3];
     // A second unit mark, signed inch part or >=12 inches is ambiguous.
-    if(inchPart!==undefined&&/['"]/.test(inchPart))return null;
+    if(inchPart!==undefined&&(/['"]/.test(inchPart)||/^[+-]/.test(inchPart.trim())))return null;
     const inches=inchPart===undefined?0:parseEditableLength(inchPart,"in");
     if(inches===null||inches<0||inches>=12)return null;
     const total=wholeFeet*12+inches;
@@ -48,6 +48,6 @@ export function parseEditableLength(raw,unit){
 
 export function canonicalLengthText(raw,unit){
   const parsed=parseEditableLength(raw,unit);
-  if(parsed===null)throw Error("Enter a decimal length or, in inches, 5 1/2 or quoted feet/inches such as 8\' 3 1/2".");
+  if(parsed===null)throw Error("Enter a decimal length or, in inches, a fraction (5 1/2) or a feet-and-inches entry.");
   return String(parsed);
 }
