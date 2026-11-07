@@ -16,9 +16,9 @@ closure=json.loads((root/"research"/"keyword-intent-closure-20261107.json").read
 primary=closure["primary"]
 reviewed=closure["flagged"]
 routes={"/"+x["slug"]+"/" for x in tools}
-approved={"task-specific-match","qualified-broad","research-query-mismatch"}
+approved={"task-specific-match","qualified-broad","research-query-ambiguous"}
 decisions={"existing-tool-reassignment","needs-intent-verification","standalone-feature-gated",
-           "guide-intent-not-calculator","exclude-off-topic"}
+           "guide-intent-not-calculator","exclude-as-target-keyword"}
 assert len(tools)==31 and len(intents)==31 and len(research)==152 and len(cautions)==22
 assert len(primary)==31 and len({x["slug"] for x in primary})==31
 assert {x["slug"] for x in primary}==set(intents)
@@ -56,12 +56,12 @@ for x in reviewed:
         assert "candidateRoute" not in x, "An excluded or unbuilt feature cannot silently acquire an approved route"
 assert sum(x["class"]=="task-specific-match" for x in primary)==21
 assert sum(x["class"]=="qualified-broad" for x in primary)==9
-assert [x["slug"] for x in primary if x["class"]=="research-query-mismatch"]==["lumber-price-calculator"]
+assert [x["slug"] for x in primary if x["class"]=="research-query-ambiguous"]==["lumber-price-calculator"]
 expected={"existing-tool-reassignment":1,"needs-intent-verification":2,
           "standalone-feature-gated":12,"guide-intent-not-calculator":3,
-          "exclude-off-topic":4}
+          "exclude-as-target-keyword":4}
 assert {k:sum(x["decision"]==k for x in reviewed) for k in decisions}==expected
 assert sum(int(x["monthly_volume_us"]) for x in research)==108930
-print("PASS: exactly 31 current calculator task-intent verdicts (21 scoped matches, 9 broad qualifiers, 1 mismatched primary),")
+print("PASS: exactly 31 current calculator task-intent verdicts (21 scoped matches, 9 broad qualifiers, 1 ambiguous primary),")
 print("      22 traced historical query cautions (1 reassigned, 2 verify, 12 gated feature, 3 guides, 4 excluded),")
 print("      152 immutable researched KD<=29 keywords and 31 generated routes; NO page/index expansion authorized.")
