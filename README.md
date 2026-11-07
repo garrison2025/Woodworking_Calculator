@@ -6,6 +6,12 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — Owner decision: online-only software acceptance
+
+- **Acceptance scope amended by the user**: no owner-operated printer/ruler measurement, timber trial cuts, or real iOS/Android/assistive-technology session is required to close software QA. See the dated [online-only software acceptance record](research/ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md). All three remain **NOT RUN / OUT OF SCOPE**, not independently verified or certified.
+- [Latest complete main CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839) passed on commit `61a367c`, including Chromium/Firefox/Linux WebKit, numeric/PDF regression, preview/production SEO gates, and **live Cloudflare 42-page/73-source-parity checks (PASS, 0 failures, 0 indexable preview routes)**. This is the remote software acceptance evidence; it is not a physical or screen-reader device audit.
+- The product remains a **geometry/layout/material estimation reference** with proportional diagrams, NOT a certified 1:1 cutting template or structural/building-code approval. No custom domain has been purchased; public search indexing, GSC and the original five V3 P2 SEO approvals remain off.
+
 ## 2026-11-07 — Evidence-complete prelaunch handoff without fictitious physical approval
 
 - [Unfinished-items evidence and manual handoff](research/PRELAUNCH-REMAINING-GATES-20261107.md) now explicitly separates what can be passed in code from physically unavailable measurements, device screen-reader operation, actual domain ownership, GSC and original V3 P2 release approval. The site is a PREVIEW, not an authorized indexed release.
