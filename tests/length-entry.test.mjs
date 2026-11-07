@@ -32,7 +32,7 @@ test("fractions are rejected outside inch mode and cannot be mistaken for decima
 test("fraction parsing rejects unsafe cut instructions and ambiguous notation",()=>{
   for(const raw of [
     "1/0","1/1","1/3","1/128","65/64","3/2","0/2",
-    "5 2/2","5 3/4 in","5' 1/2\"","5/2/3","5--1/2",
+    "5 2/2","5 3/4 in","5' 1/2","5/2/3","5--1/2",
     "5 - 1/2","5.1 1/2","5 1/-2","1 /2","1/ 2",
     "Infinity","NaN","0x10","12abc","1e500",
     "", " ".repeat(100),"1000000001 1/2",
