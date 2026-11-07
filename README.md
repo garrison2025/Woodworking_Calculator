@@ -242,13 +242,15 @@ The new standard-library script checks all 42 deployed pages, canonical/robots/J
 Safe to run on the current preview (Windows PowerShell or any Python 3 system):
 
 ~~~powershell
-python scripts/verify_live_launch.py --base https://woodworking-calculator.pages.dev --mode preview --report preview-audit.json
+python scripts/verify_live_launch.py --base https://woodworking-calculator.pages.dev --mode preview --verify-source-parity --report preview-audit.json
 ~~~
+
+`--verify-source-parity` adds a **deployed-version proof**: each of 31 live HTML forms must expose the current tool input fields, all 31 live tool-config JSON objects must match the checked-out source exactly, and 11 copied assets (including the calculation engine, interactive app code, styles and tool registry) must be identical. This catches stale Cloudflare deployments even when HTTP 200 and config `slug` look correct. Run from the **current merged main checkout**, not a feature branch. The separate `deployed-preview` GitHub Actions job runs this after each successful main-branch CI, with bounded deployment-propagation retries and a downloadable JSON audit. This does NOT prove user-device interactions or Cloudflare dashboard deployment SHA independently.
 
 Only **after** attaching a purchased domain, completing manual review, explicitly approving search indexing and creating the Cloudflare Bulk Redirect:
 
 ~~~powershell
-python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --report production-audit.json
+python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --verify-source-parity --report production-audit.json
 ~~~
 
 Use `--approve-v3-p2` only when the original five V3 P2 tools were independently approved and the deployed build actually uses `RELEASE_V3_P2_APPROVED=1`. Exit code **0 = PASS**, **1 = FAIL**; a live production audit will fail unless the old `pages.dev` host redirects path-for-path with HTTP 301 or 308. The script is HTTP/static evidence, **not** a real-device, physical-print or construction acceptance.
