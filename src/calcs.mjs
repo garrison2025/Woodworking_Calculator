@@ -2703,10 +2703,14 @@ export function compute(slug,a){
     const roofWidth=a.width+2*a.eaveOverhang,
       roofLength=a.length+2*a.endOverhang;
     const half=roofWidth/2,upperRun=half-a.lowerRun;
-    need(upperRun>=1e-7,
-      "Lower slope leaves no measurable upper horizontal run to the ridge.");
+    need(a.lowerRun>=1e-7&&upperRun>=1e-7,
+      "Gambrel lower or upper horizontal run is below cut-coordinate resolution.");
     const rise1=a.lowerRun*a.lowerPitch/12,
       rise2=upperRun*a.upperPitch/12,ridgeRise=rise1+rise2;
+    // Positive, but rounded-away roof rises would create apparently flat
+    // exported cut stations despite nonzero user-entered pitches.
+    need(rise1>=1e-7&&rise2>=1e-7,
+      "Gambrel segment rise is below cut-coordinate resolution; use a measurable run and pitch.");
     const lowerSlope=Math.hypot(a.lowerRun,rise1),
       upperSlope=Math.hypot(upperRun,rise2);
     const lowerArea=2*lowerSlope*roofLength/144,
@@ -2714,6 +2718,8 @@ export function compute(slug,a){
     const points=[{x:0,y:0},{x:a.lowerRun,y:rise1},
       {x:half,y:ridgeRise},
       {x:roofWidth-a.lowerRun,y:rise1},{x:roofWidth,y:0}];
+    need(points.every((p,i)=>i===0||q(p.x)>q(points[i-1].x)),
+      "Gambrel segment endpoints collapse at cut-coordinate resolution.");
     rows=[
       {item:"Left lower slope",part:"lower",start:points[0],end:points[1],pitch:a.lowerPitch},
       {item:"Left upper slope",part:"upper",start:points[1],end:points[2],pitch:a.upperPitch},
@@ -2813,7 +2819,13 @@ export function compute(slug,a){
       outerChord=2*R*Math.sin(theta/2),innerChord=2*r*Math.sin(theta/2),
       walkChord=2*rw*Math.sin(theta/2),
       areaFt2=(R*R-r*r)*theta/2/144,
+      // The screen PLAN polygon has straight inner/outer CHORDS.
+      // Its area is smaller than the curved annular sector area above.
+      chordAreaFt2=(R*R-r*r)*Math.sin(theta)/2/144,
       sign=a.direction===0?1:-1;
+    need(h>=1e-7&&Math.min(innerChord,outerChord-innerChord,
+      walkArc,walkChord)>=1e-7,
+      "Spiral riser height or wedge geometry is below cut-coordinate resolution.");
     const vertex=(radius,degrees)=>{
       const t=rad(degrees);
       return [q(R+radius*Math.cos(t)),q(R+radius*Math.sin(t))];
@@ -2826,11 +2838,16 @@ export function compute(slug,a){
         walklineArcLength:q(walkArc),walklineChord:q(walkChord),
         riserHeight:q(h),treadTopElevation:q((i+1)*h),
         treadAnnularAreaFt2:areaFt2,
+        treadChordPolygonAreaFt2:chordAreaFt2,
         planVertices:[vertex(r,start),vertex(R,start),vertex(R,end),vertex(r,end)]};
     });
-    need(rows.every(row=>row.outerChord>row.innerChord&&
-       row.planVertices.every(p=>p.every(Number.isFinite))),
-      "Spiral wedge plan collapses at drawing precision.");
+    need(rows.every(row=>row.riserHeight>=1e-7&&row.outerChord>row.innerChord&&
+      row.planVertices.every((p,i,poly)=>{
+        const next=poly[(i+1)%poly.length];
+        return p.every(Number.isFinite)&&Math.hypot(
+          next[0]-p[0],next[1]-p[1])>=1e-7;
+      })&&row.treadChordPolygonAreaFt2>0),
+      "Spiral wedge plan collapses at cut-coordinate resolution.");
     return result([
       M("Uniform riser height",h),
       M("Risers including the upper finished floor",a.risers,"N"),
@@ -2845,12 +2862,15 @@ export function compute(slug,a){
       M("Outer-edge straight chord per tread",outerChord),
       M("Inner-edge straight chord per tread",innerChord),
       M("Annular sector area per tread",areaFt2,"FT2"),
+      M("Straight-chord polygon area per tread",chordAreaFt2,"FT2"),
+      M("Curved-sector minus chord-polygon area",areaFt2-chordAreaFt2,"FT2"),
       M("Highest physical tread elevation",h*count),
       M("Upper finished floor elevation",a.totalRise)
     ],[],a.outerDiameter,rows,"spiral-plan",{
       spiralPlan:{outerDiameter:a.outerDiameter,poleDiameter:a.poleDiameter,
         walkRadius:rw,walkInset:a.walkInset,outerRadius:R,innerRadius:r,
-        riserHeight:h,treadAngle:delta,rows}
+        riserHeight:h,treadAngle:delta,
+        sectorAreaFt2:areaFt2,chordPolygonAreaFt2:chordAreaFt2,rows}
     });
   }
   // Faceted frustum: corner-edge length and perpendicular face-center
