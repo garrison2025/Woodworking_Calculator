@@ -1,6 +1,7 @@
 # Woodworking Calculator — V3 交付冻结与最终验收矩阵（2026-11-07）
 
 > **结论：软件开发基本完成，正式发布尚未批准。** 本文件把“代码与自动化通过”和“现实木工施工可用/真实打印/域名发布”严格分离。不应继续添加无关功能，也不能把后者未执行的事项伪装成通过。
+> **2026-11-07 最新验收范围：** 用户已确认只采用[线上软件验收](research/ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)，无需用户亲自打印、试切木料或使用真机验证。最新 [主分支 CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839) 的自动化与 Cloudflare 实站源码一致性检查已通过。实体和真机状态仍是 **NOT RUN · 软件验收范围外**，不阻断几何参考工具的软件结案；但不能作为 1:1 打印、结构施工安全或真机辅助技术认证。正式域名与 SEO 发布仍 **NOT RUN**，原 V3 P2 未获索引批准。
 > **来源优先级：** 用户上传的《Woodworking Calculator 完整开发方案 V3》是产品基线；当前仓库源码和可重放测试作为实现证据。V3 规定 9 P0 + 17 P1 交付，5 P2 后备；仓库后来实现了全部 31 个，并将原 5 个 P2 提升为 P1。这是**实现范围扩大**，不等于这 5 项已获得正式搜索索引/专业施工批准。
 
 ## 一次性交付门槛与证据
@@ -16,7 +17,7 @@
 | 屏幕阅读/Tab 与视觉布局顺序 | FIX IN THIS PR — VERIFY CI | `src/app.mjs` 根据 1220px 断点同步真实 DOM 阅读顺序，`tests/e2e/final-acceptance.spec.mjs` 覆盖 320–1440px、Tab 和调整视口后焦点恢复 |
 | 依赖可复现构建 | FIX IN THIS PR — VERIFY CI | 新增 `package-lock.json`（npm 官方 1.56.1 发布 tarball integrity）并改 `npm install` 为 `npm ci`；须在 Actions 干净运行器验证 |
 | 上线索引、域名、GSC、广告收益 | NOT RUN / BLOCKED | 无自有正式域名；Cloudflare Pages 预览必须继续 `noindex,nofollow,noarchive`，`robots.txt Disallow: /`。正式 canonical/sitemap/index 切换、GSC、AdSense 仅正式发布阶段执行 |
-| 实体尺寸/纸张/安全 | NOT RUN | `FIELD-ACCEPTANCE-CHECKLIST.md` 未填实际测量；必须现场测 100mm/1in 校准条、关键切口/承载面及试切；没有第三方建筑规范/材料许可承诺 |
+| 实体尺寸/纸张/安全 | NOT RUN · OUT OF SOFTWARE QA SCOPE | `FIELD-ACCEPTANCE-CHECKLIST.md` 保留为空白自愿实测模板；用户已豁免其作为纯参考网站的软件发布阻断项，仍不可声称 1:1 或结构安全认证 |
 
 ## 31 项逐一验收（V3 计划范围 vs 当前实现）
 
