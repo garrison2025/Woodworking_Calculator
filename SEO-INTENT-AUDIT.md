@@ -4,6 +4,8 @@
 
 **Scope update (2026-11-07):** For the complete all-31-tools primary intent matrix and a decision on every one of the 22 historical cautions, with source Volume/KD/CPC and bounded public result spot-checks, see [Final Keyword Intent Audit](research/KEYWORD-INTENT-FINAL-AUDIT-20261107.md) and its [machine-checked review decisions](research/keyword-intent-closure-20261107.json). Older dated portions below are preserved as history; use the final report for current 31/22 counts. This is not a verified current US SERP or successful indexation report.
 
+**2026-11-07 later scoped update:** `/deck-material-calculator/` has gained an opt-in geometrical **equalize from separately verified maximum joist OC** mode. It changes the actual joist centers, supported board seams and exported CSV, with the prior fixed-OC behavior kept as the default. `decking joist spacing calculator` and `deck joist spacing calculator` remain caution records until independently checked for broad US SERP intent, because this module does NOT recommend allowable structural spacing. Updated 22-term decisions appear in [the review JSON](research/keyword-intent-closure-20261107.json). No extra URLs or change to the preview noindex gate.
+
 ## Verified scope and release boundaries
 
 - **31 functional P0/P1 calculator routes** (9 P0 + 22 P1), six populated navigation categories; each has distinct, executable HTML form, geometry result, SVG and spreadsheet/print workflow, with Node golden examples and browser QA. This is software-only validation, not certified field measurements.
