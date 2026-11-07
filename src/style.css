@@ -996,7 +996,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .nav-cta{background:#edf3ee;transition:background .22s,border-color .22s,transform .22s}
   .nav-cta:hover{background:#e1ede3;border-color:#97b69e;transform:translateY(-1px)}
   .hero{position:relative;isolation:isolate;gap:clamp(24px,4vw,68px)}
-  .hero::before{content:"";position:absolute;inset:3% -5% 8%;z-index:-1;pointer-events:none;
+  .hero::before{content:"";position:absolute;inset:3% 0 8%;z-index:-1;pointer-events:none;
     background:radial-gradient(ellipse 40% 46% at 85% 36%,rgba(203,221,203,.3),transparent 82%),
       radial-gradient(ellipse 32% 46% at 15% 74%,rgba(213,187,146,.14),transparent 80%)}
   .hero-copy h1{letter-spacing:-.055em;line-height:1.08;font-weight:760;text-wrap:balance}
@@ -1099,7 +1099,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
     background-size:26px 26px}
   .drawing-caption{background:#f9fbf8}
   .zoom-controls{background:#e5eee6;gap:4px}
-  .zoom-controls button{min-width:30px;height:30px;transition:background .18s,color .18s}
+  .zoom-controls button{transition:background .18s,color .18s}
   .zoom-controls button:hover,.zoom-controls button:focus-visible{background:white;color:#1f5e46}
   .diagram-tools{background:#fffefa}
   .result-pane .pane-head{background:#f1f7f1}
@@ -1158,7 +1158,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .pane{border-radius:14px}
   .tool-search-field{flex-basis:100%}
   .tool-search-row{gap:8px}
-  .drawing-caption{font-size:9px}
+  .drawing-caption{font-size:10px}
 }
 @media screen and (max-width:380px){
   .tool-card{padding:13px}
