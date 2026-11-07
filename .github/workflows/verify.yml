@@ -34,7 +34,13 @@ jobs:
       - name: Install browser test dependency
         run: npm install --no-audit --no-fund
       - name: Install headless Chromium
-        run: npx playwright install --with-deps chromium --only-shell
+        # ubuntu-latest already ships common Chromium runtime libraries.
+        # Avoid an unnecessary apt-get update in this step; on some runner
+        # images it can stall before the actual browser test starts.
+        timeout-minutes: 5
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '30000'
+        run: npx playwright install chromium --only-shell
       - name: Test real Chromium calculations, exports and responsive layouts
         run: npx playwright test --project=chromium
       - name: Audit actual 540-row and specialist A4/Letter PDF content
