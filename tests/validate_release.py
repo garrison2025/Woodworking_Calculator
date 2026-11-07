@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline release-mode SEO/GEO contract test. NEVER deploys example domain."""
 import html.parser
+import os
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -11,6 +12,12 @@ base="https://woodworking.example"
 manifest=json.loads((root/"src"/"tools.json").read_text(encoding="utf8"))
 published=[x for x in manifest["tools"] if x["priority"] in ("P0","P1")]
 hold=[x for x in manifest["tools"] if x["priority"]=="P2"]
+# V3 original five P2 tools were implemented later, but their SEO release
+# requires explicit approval in addition to RELEASE_APPROVED.
+v3_p2={"spiral-staircase-calculator","gambrel-roof-calculator",
+       "lumber-price-calculator","fence-picket-calculator","stave-calculator"}
+assert len(v3_p2)==5 and v3_p2<={x["slug"] for x in published}
+allow_p2=os.environ.get("RELEASE_V3_P2_APPROVED")=="1"
 intents={x["slug"]:x for x in json.loads(
     (root/"src"/"tool-intents.json").read_text(encoding="utf8"))["tools"]}
 errors=[]
@@ -49,23 +56,28 @@ class PageHead(html.parser.HTMLParser):
 
 pages=list(dist.rglob("index.html"))
 expected_urls={"/","/about/","/contact/","/privacy/","/terms/"}
-expected_urls.update("/"+t["slug"]+"/" for t in published)
+expected_urls.update("/"+t["slug"]+"/" for t in published
+                     if t["slug"] not in v3_p2 or allow_p2)
 expected_urls.update("/"+data[1]+"/" for key,data in manifest["categories"].items()
                      if any(t["category"]==key for t in published))
 assert len(published)==31 and len(hold)==0
+all_preview_routes=expected_urls|{"/"+t["slug"]+"/" for t in published}
 actual_urls=set()
 for p in pages:
     path="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
     actual_urls.add(path)
     c=PageHead()
     c.feed(p.read_text(encoding="utf8"))
-    if c.meta.get("robots")!="index,follow":
-        errors.append(path+": release page missing explicit index,follow")
+    eligible=path in expected_urls
+    expected_robots="index,follow" if eligible else "noindex,nofollow,noarchive"
+    if c.meta.get("robots")!=expected_robots:
+        errors.append(path+": expected robots "+expected_robots)
     if c.h1!=1:errors.append(path+": expected one H1")
     can=[x.get("href") for x in c.links if x.get("rel")=="canonical"]
-    if can!=[base+path]:errors.append(path+": canonical URL mismatch")
-    if len(c.schema)!=1:errors.append(path+": missing unique structured data")
-    else:
+    if can!=([base+path] if eligible else []):errors.append(path+": canonical URL mismatch")
+    if len(c.schema)!=(1 if eligible else 0):
+        errors.append(path+": unexpected structured data count")
+    elif eligible:
         j=c.schema[0]
         tool=next((t for t in published if t["slug"]==path.strip("/")),None)
         target="WebApplication" if tool else "WebSite"
@@ -86,9 +98,9 @@ for p in pages:
         errors.append(path+": missing social title")
     if "pages.dev" in p.read_text(encoding="utf8"):
         errors.append(path+": preview host leaked into release HTML")
-if actual_urls!=expected_urls:
-    errors.append("Published path set mismatch: extra="+repr(sorted(actual_urls-expected_urls))+
-                  " missing="+repr(sorted(expected_urls-actual_urls)))
+if actual_urls!=all_preview_routes:
+    errors.append("Published path set mismatch: extra="+repr(sorted(actual_urls-all_preview_routes))+
+                  " missing="+repr(sorted(all_preview_routes-actual_urls)))
 for held in hold:
     if (dist/held["slug"]).exists():errors.append("P2 published without review: "+held["slug"])
 site=dist/"sitemap.xml"
@@ -108,5 +120,6 @@ if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
 print("PASS: release dry-run contains",len(expected_urls),
-      "unique canonical/schema/sitemap routes, all 31 P0/P1 tools, no P2 held, valid index gate")
+      "unique canonical/schema/sitemap routes; original V3 P2 SEO approved:",allow_p2,
+       "; all 31 calculators remain usable, only eligible pages indexable")
 print("NOTE: https://woodworking.example is a reserved offline test domain, not a purchased or deployed domain.")
