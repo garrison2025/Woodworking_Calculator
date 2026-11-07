@@ -2,12 +2,14 @@
 
 > **本文件是一次冻结范围的关键词/功能真实性审查，不是网站已获得 Google 收录、流量、排名或全部 152 个关键词都能排名的声明。** 范围以 2026-11-04 用户 Semrush Blocklayer 前 400 条数据筛出的 152 条 KD≤29 词、当前 `src/tools.json` 及 `src/tool-intents.json` 为准。外部公开搜索结果只对少量歧义词进行定性抽查，**不是地理定位美国的逐词 SERP Top10/20 实测**。
 
+**2026-11-07 补充（后续实施）：** 已在原 `/deck-material-calculator/` 追加“用户提供最大 OC 的均匀中心线排布”可选模式。该模式复用同一工具页、图纸、CSV 和计量表，不新增 URL；之前 12 条独立功能候选中，2 条 Joist Spacing 现在属于**限定几何能力已有、仍不认领结构规范/宽泛搜索意图**。CI 需以该功能分支及合并主分支的实际结果为准。
+
 ## 一、结论与数据边界
 
 - **功能软件建设**：31/31 个计算器路由已实现，其中 V3 原计划 9 P0 + 17 P1 + 5 个后续实现的原始 P2。31 个功能都有独立工具页，六个分类、主页、四个政策说明页共 42 个静态 HTML；现有 main 自动化验收 [CI #719](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42339894355) 通过。实物试切、物理打印及人工专业审核仍是 NOT RUN。
 - **关键词研究映射**：152/152 条原始去重研究词、美国搜索量与 KD/CPC 估计值已保存，`target_route` 均指向真实存在的 31 个工具 URL；其中 **75 条历史 CPC > 0**、KD 最大值为 29。152 条历史 Volume 单纯相加为 **108,930 次/月**，由于重复查询意图和平台估算，**不能视为独立搜索人群、新站访问或广告收入**。
 - **31 个主搜索词的功能核对**：21 个与当前页面任务口径相符；9 个有更广泛解释，页面应继续使用限定用途的 `title/H1/Not covered`；1 个（`price per thousand calculator`）有泛化歧义，应暂缓把无修饰词当作精确匹配目标。以上为 **工程语义审核，不是逐词 SERP 验证**。
-- **22 条具体意图偏差**：1 条已纠正到真正支持的现有工具、2 条需要继续核查搜索意图、12 条需独立功能/专业约束、3 条是教程/指南意图、4 条不得作为本站直接 SEO 目标。22 条原始记录的历史搜索量相加 **7,420 次/月**，仍不代表可实际获得流量。这些疑点中 **21 条未被批准成为现有页面的关键词同义词**。
+- **22 条具体意图偏差**：1 条已纠正到真正支持的现有工具、2 条需要继续核查搜索意图、10 条需独立功能/专业约束、2 条已有可选的几何排布模式但未验证宽泛 SERP、3 条是教程/指南意图、4 条不得作为本站直接 SEO 目标。22 条原始记录的历史搜索量相加 **7,420 次/月**，仍不代表可实际获得流量。这些疑点中 **21 条未被批准成为现有页面的关键词同义词**。
 - **不改变发布门槛**：正式域名尚未购买，`pages.dev` 预览全部 `noindex`。未来即使有正式域名，原 V3 的 5 个 P2 计算器及只包含原 P2 的 Materials 分类必须单独审批才可索引。默认正式发布模拟只索引 36 个 URL，原 P2 审批后可增至 42 个；当前不执行上述发布。
 
 ## 二、31 个现有工具：原始主搜索词逐页核对
@@ -73,15 +75,15 @@
 | `calculator center` | 110 / 14 / 0.00 | 不作为本项目目标词 | Generic calculator-service/navigation phrase; no evidence of wood-part center positions. Exclude. |
 | `center calculator` | 110 / 6 / 0.00 | 不作为本项目目标词 | Generic ambiguous phrase; no evidence of timber center-spacing search intent. Exclude. |
 | `deck framing calculator` | 210 / 15 / 1.42 | 需独立功能及安全审查 | Full deck frame involves structural beams, ledgers, supports and code. Current material takeoff is not a framing/footing design. |
-| `decking joist spacing calculator` | 720 / 12 / 1.57 | 需独立功能及安全审查 | Promising nonstructural layout concept using a separately verified allowed OC input; current estimator merely accepts joist spacing and does not solve recommended spacing/c |
-| `deck joist spacing calculator` | 210 / 9 / 1.83 | 需独立功能及安全审查 | Same verified-max-OC layout gap as decking joist spacing; do not promise structural spacing standards. Consider one combined tool only after SERP validation. |
+| `decking joist spacing calculator` | 720 / 12 / 1.57 | 现有页面已支持限定几何模式 | 现有 Deck Material Estimator 可按用户独立核准的最大 OC 做等分中心线、数量和 CSV；不推荐结构合规间距、跨度或材料等级，宽泛 SERP 待核实。 |
+| `deck joist spacing calculator` | 210 / 9 / 1.83 | 现有页面已支持限定几何模式 | 使用同一个可选等距中心线模式，而非建立第二个重复页面；必须输入独立验证的最大 OC，不能当结构承载或规范建议。 |
 | `gambrel roof truss calculator` | 320 / 3 / 2.53 | 需独立功能及安全审查 | Two-pitch roof outline does not design truss chords, bearing, gussets, connectors and loads; a structural truss claim requires external design authority. |
 | `gambrel truss calculator` | 260 / 9 / 2.49 | 需独立功能及安全审查 | Same structural truss gap as the gambrel roof truss term, not an SEO synonym for simple profile geometry. |
 | `price per thousand calculator` | 110 / 9 / 0.00 | 不作为本项目目标词 | Generic per-thousand pricing may mean unit counts or lumber MBF. The live tool covers BF/MBF only; preserve the historical competitor association but do not target the unqu |
 
 ### 值得继续研究但不应立即开发的三类机会
 
-1. **非结构性的龙骨等距排布**：`decking joist spacing calculator`（历史 720/月、KD12、CPC $1.57）与 `deck joist spacing calculator`（210/月、KD9、$1.83）是相近但可能重叠的搜索意图。竞品示例允许用户提供**已独立确认的最大 OC 间距**，仅输出等距中心线与数量，不推荐规范允许跨度；这是可考虑的低成本几何工具方向，但在当前计划中属于 **需验证且未批准开发**。不要把两词 Volume 相加当独立需求。
+1. **非结构性的龙骨等距排布**：`decking joist spacing calculator`（历史 720/月、KD12、CPC $1.57）与 `deck joist spacing calculator`（210/月、KD9、$1.83）是相近但可能重叠的搜索意图。竞品示例允许用户提供**已独立确认的最大 OC 间距**，仅输出等距中心线与数量，不推荐规范允许跨度；这一限定的纯几何功能已加入现有 Deck Material Estimator 的**可选等分模式**，默认仍保留原固定 OC；但尚不意味着宽泛关键词获得 SEO 同义词批准，实际 US SERP 仍待进一步核实。不要把两词 Volume 相加当独立需求。
 2. **承重设计相关词应谨慎**：`deck joist span calculator`（720/月、KD16、$1.83）、`deck post spacing calculator`（590/月、KD8、$1.09）、`gambrel roof truss calculator`（320/月、KD3、$2.53）等涉及构件承载与当地适用规范。现有材料用量和屋顶轮廓算法不等于经过工程认证的结构尺寸；在没有具体标准版本、材料等级、设计荷载与审查前**不立项**。
 3. **删去不相关流量诱惑**：`pointing calculator`（1,900/月、KD15、$2.91）经公开搜索样本检视主要指砌体勾缝的砂浆用量，**不是木件等距定位**。同理 `calculator center`、`center calculator` 没有足够的木工意图证据，不应塞进 Equal Spacing 页面。
 
