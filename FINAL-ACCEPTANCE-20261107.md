@@ -1,0 +1,90 @@
+# Woodworking Calculator — V3 交付冻结与最终验收矩阵（2026-11-07）
+
+> **结论：软件开发基本完成，正式发布尚未批准。** 本文件把“代码与自动化通过”和“现实木工施工可用/真实打印/域名发布”严格分离。不应继续添加无关功能，也不能把后者未执行的事项伪装成通过。
+> **来源优先级：** 用户上传的《Woodworking Calculator 完整开发方案 V3》是产品基线；当前仓库源码和可重放测试作为实现证据。V3 规定 9 P0 + 17 P1 交付，5 P2 后备；仓库后来实现了全部 31 个，并将原 5 个 P2 提升为 P1。这是**实现范围扩大**，不等于这 5 项已获得正式搜索索引/专业施工批准。
+
+## 一次性交付门槛与证据
+
+| 门槛 | 状态 | 证据/实际边界 |
+|---|---|---|
+| V3 26 个计划 P0/P1 工具 | PASS（自动化） | `src/tools.json`；`tests/calculators.test.mjs` 每工具 8 类共享断言 + 各项独立算法测试；`tests/e2e/sitewide-contract.spec.mjs` 31 页逐页核查 in/mm 结果、SVG、CSV；[基线主分支 CI #705](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42329946906) |
+| 原 5 个 P2 | IMPLEMENTED / NOT APPROVED FOR INDEX | 在源码中标记为 P1，实际功能进入预览；需要正式发布前分别审核搜索意图和技术限制，不得因“已写代码”自动认定发布批准 |
+| 31 个默认黄金值及无效输入 | PASS（自动化） | 每工具至少 8 类独立共享 Node 验证：黄金值、有限几何/清单、决定性、原参数不变、5 单位等价、负数、NaN/∞/超大值、无效零值；另有专项边界/比例/报价/图纸测试 |
+| 31 页屏幕结果、SVG、CSV | PASS（自动化默认场景） | `tests/e2e/sitewide-contract.spec.mjs` 遍历 31 个 URL；英寸/毫米结果核算、SVG 图元核验、下载 CSV 每行及表头与计算模型一致。并不等于检查了每个可能输入 |
+| 42 HTML 静态页、6 分类、152 研究关键词 | PASS（静态工程） | `tests/validate_static.py`、`src/tool-intents.json`；152 是上传 Semrush 前 400 行样本筛出的 KD≤29 研究词，不是预测新站排名或真实流量 |
+| 多断点响应与打印 A4/Letter | PASS（自动化） | Playwright 320/360/390/768/1024/1440 部分路由，特殊打印长表 PDF 自动审核；真实打印机与 Safari iOS **NOT RUN** |
+| 屏幕阅读/Tab 与视觉布局顺序 | FIX IN THIS PR — VERIFY CI | `src/app.mjs` 根据 1220px 断点同步真实 DOM 阅读顺序，`tests/e2e/final-acceptance.spec.mjs` 覆盖 320–1440px、Tab 和调整视口后焦点恢复 |
+| 依赖可复现构建 | FIX IN THIS PR — VERIFY CI | 新增 `package-lock.json`（npm 官方 1.56.1 发布 tarball integrity）并改 `npm install` 为 `npm ci`；须在 Actions 干净运行器验证 |
+| 上线索引、域名、GSC、广告收益 | NOT RUN / BLOCKED | 无自有正式域名；Cloudflare Pages 预览必须继续 `noindex,nofollow,noarchive`，`robots.txt Disallow: /`。正式 canonical/sitemap/index 切换、GSC、AdSense 仅正式发布阶段执行 |
+| 实体尺寸/纸张/安全 | NOT RUN | `FIELD-ACCEPTANCE-CHECKLIST.md` 未填实际测量；必须现场测 100mm/1in 校准条、关键切口/承载面及试切；没有第三方建筑规范/材料许可承诺 |
+
+## 31 项逐一验收（V3 计划范围 vs 当前实现）
+
+表中“PASS”只指基线主分支 #705 指定自动化场景，不是“所有现实木工情况经过专业审核”。纯数字换算的物理审核标 N/A；实体类须按风险实际验收。
+
+### P0（9 个）
+
+| URL | 软件计算与浏览器核验 | 真实物理/专业复核 | 正式发布 |
+|---|---|---|---|
+| `/stud-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/framing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/deck-board-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/baluster-spacing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/rafter-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/crown-molding-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/soffit-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/kerf-bending-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/wainscoting-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+
+### V3 计划 P1（17 个）
+
+| URL | 软件计算与浏览器核验 | 真实物理/专业复核 | 正式发布 |
+|---|---|---|---|
+| `/stair-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/rise-run-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | N/A（纯换算或报价；报价来源仍须用户确认） | BLOCKED（预览站 noindex） |
+| `/deck-material-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/segmented-bowl-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/roof-pitch-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | N/A（纯换算或报价；报价来源仍须用户确认） | BLOCKED（预览站 noindex） |
+| `/equal-spacing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/hip-rafter-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/hip-roof-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/wall-stud-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/shelf-spacing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/gable-roof-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/square-layout-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/diagonal-brace-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/hole-spacing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/stair-stringer-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/roof-sheathing-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+| `/fence-post-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex） |
+
+### V3 原 P2（5 个，后来在仓库提升到 P1）
+
+| URL | 软件计算与浏览器核验 | 真实物理/专业复核 | 正式发布 |
+|---|---|---|---|
+| `/spiral-staircase-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
+| `/gambrel-roof-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
+| `/lumber-price-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | N/A（纯换算或报价；报价来源仍须用户确认） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
+| `/fence-picket-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
+| `/stave-calculator/` | PASS（既有 CI #705：默认黄金值、异常/单位、屏幕/SVG/CSV） | NOT RUN（实体尺寸、材料/试切） | BLOCKED（预览站 noindex；原 V3 P2 待专门批准） |
+
+## 发布前唯一保留的外部动作
+
+1. **专业/实体抽查（NOT RUN）：** 由有设备和木料的人执行 `FIELD-ACCEPTANCE-CHECKLIST.md`。先覆盖 P0 九项中的典型尺寸与首尾边界、椽木鸟嘴/角线正负方向、墙体洞口、露台末排裁宽；再覆盖高复杂度楼梯、屋顶、钻孔、分段木碗和原 P2 的加工条件。若出现失败，提供工具 URL、输入、CSV 行和实际测量记录，再修复。
+2. **真实浏览器与手机验收（NOT RUN）：** Windows Chrome、实际 iOS Safari、TalkBack/VoiceOver 或 NVDA 以及实际打印机验收。GitHub Linux WebKit/Firefox smoke 不能替代真实 Apple/Android 设备和辅助技术。
+3. **正式发布（BLOCKED，由域名决定）：** 先确定自有域名和审查结果，才启用生产 canonical/sitemap/index；之后配置 GSC、验证 200/404/robots/结构化数据和实际抓取。未取得搜索表现前，不宣布 SEO 收录或变现完成。
+4. **不再追加功能：** 新想法记录到单独 backlog。只修复可复现的 P0/P1 公式、SVG/CSV 不一致、表单与触屏阻断、正式发布门禁缺陷。
+
+## 本轮缺陷处置与验收口径
+
+- **缺陷 A（键盘/阅读顺序不一致）：** 原 HTML DOM 为“输入 → 图纸 → 结果”，但 ≤1220px 视觉格为“输入 → 结果 → 图纸”。本轮同步 DOM 实际顺序，并在宽屏恢复“输入 → 图纸 → 结果”，保留原有计算模型及所有按钮事件。
+- **缺陷 B（构建不确定性）：** 方案第 20 节明确要求锁文件；此前无 `package-lock.json`，CI 每次无锁 `npm install`。本轮固定间接依赖及完整 SHA-512 校验值，由 `npm ci` 强制校验。
+- **结论与状态更新：** 只有 PR-head 与合并 main 的整套 GitHub Actions CI **均通过**才将这两项视为 PASS；若失败，必须修复并重测。**不存在“自动化全部通过 = 工程现场已经验收”的等号。**
+
+## 判定规则
+
+- **PASS:** 有明确可追溯的已执行测试；只覆盖所列范围。
+- **FAIL:** 已执行且失败，需修复再验收。
+- **NOT RUN:** 没有实际执行记录，绝不冒称 PASS。
+- **N/A:** 不适用于该类任务。
+- **BLOCKED:** 有已知前置条件（正式域名、人工试切等），不能提前推生产。
