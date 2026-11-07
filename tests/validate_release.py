@@ -121,6 +121,31 @@ if "Allow: /" not in robots or "Sitemap: "+base+"/sitemap.xml" not in robots:
     errors.append("Release robots.txt does not permit sitemap crawling")
 if "Disallow: /" in robots:
     errors.append("Release robots.txt still blocks indexing")
+# A custom 404 response is NEVER a canonical landing page, even when all
+# allowed production routes are indexable.
+notfound=(dist/"404.html").read_text(encoding="utf8")
+notfound_head=PageHead();notfound_head.feed(notfound)
+if notfound_head.meta.get("robots")!="noindex,nofollow,noarchive":
+    errors.append("Production 404.html must remain noindex")
+if any(x.get("rel")=="canonical" for x in notfound_head.links):
+    errors.append("Production 404.html must not publish canonical")
+if notfound_head.schema:
+    errors.append("Production 404.html must not contain JSON-LD")
+headers=(dist/"_headers").read_text(encoding="utf8")
+nonindex="  X-Robots-Tag: noindex, nofollow, noarchive\n"
+for pattern in ("https://woodworking-calculator.pages.dev/*",
+                "https://:version.woodworking-calculator.pages.dev/*"):
+    if pattern+"\n"+nonindex not in headers:
+        errors.append("Production Pages alias is missing host-scoped noindex: "+pattern)
+if "\n/*\n"+nonindex in "\n"+headers:
+    errors.append("Production must not globally noindex the approved custom domain")
+for slug in sorted(v3_p2):
+    rule="/"+slug+"/\n"+nonindex
+    if (rule in headers)!= (not allow_p2):
+        errors.append("Original V3 P2 HTTP noindex not gated: "+slug)
+if ("\n/materials/\n"+nonindex in headers)!=(not allow_p2):
+    errors.append("Materials category HTTP noindex not gated")
+
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)

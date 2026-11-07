@@ -87,7 +87,7 @@ def href(path):
 
 def page(title, description, body, path="/", type_="website"):
     desc = description[:180]
-    eligible = INDEXABLE and (
+    eligible = INDEXABLE and path != "/404/" and (
         (type_ != "tool" or path.strip("/") not in V3_P2_ORIGIN or P2_RELEASE_APPROVED)
         and (path not in CATEGORY_PATHS or path in ELIGIBLE_CATEGORY_PATHS))
     canon = SITE_URL + path if eligible else None
@@ -608,7 +608,29 @@ def build():
     for path,(title,paragraphs) in pages.items():write(path,info_page(title,paragraphs,path))
     (DEST/"favicon.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#1e6454"/><path d="M14 21l10 39h9l7-25 7 25h9l10-39H55l-4 20-6-20H35l-6 20-4-20z" fill="#f8f7f4"/></svg>')
     (DEST/"404.html").write_text(page("Page not found","This tool URL is not available.","<section class='wrap legal-page'><h1>That tool isn't here.</h1><p>Try the complete calculator directory.</p><a class='btn primary' href='/#tools'>Find a tool ↗</a></section>","/404/"))
-    (DEST/"_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n")
+    # Cloudflare Pages static response headers. 404.html must never be a
+    # canonical search result; the page() gate above separately keeps its
+    # HTML robots meta noindex in every mode.
+    headers = ("/*\n  X-Content-Type-Options: nosniff\n"
+               "  Referrer-Policy: strict-origin-when-cross-origin\n"
+               "  X-Frame-Options: DENY\n"
+               "  Permissions-Policy: camera=(), microphone=(), geolocation=()\n")
+    nonindex = "  X-Robots-Tag: noindex, nofollow, noarchive\n"
+    if not INDEXABLE:
+        # Both default Pages and custom-domain previews must remain noindex,
+        # including non-HTML resources without a robots meta tag.
+        headers += "\n/*\n" + nonindex
+    else:
+        # Production assets may still be reachable on the Pages origin before
+        # the owner activates the host-level 301 redirect. Fail closed for
+        # Pages aliases WITHOUT suppressing approved custom-domain URLs.
+        headers += "\nhttps://woodworking-calculator.pages.dev/*\n" + nonindex
+        headers += "\nhttps://:version.woodworking-calculator.pages.dev/*\n" + nonindex
+        if not P2_RELEASE_APPROVED:
+            for slug in sorted(V3_P2_ORIGIN):
+                headers += f"\n/{slug}/\n" + nonindex
+            headers += "\n/materials/\n" + nonindex
+    (DEST/"_headers").write_text(headers, encoding="utf-8")
     if INDEXABLE:
         urls=["/"]+[f"/{t['slug']}/" for t in TOOLS
                     if t["slug"] not in V3_P2_ORIGIN or P2_RELEASE_APPROVED]+["/"+slug+"/" for _,(_,slug) in CATS.items() if "/"+slug+"/" in ELIGIBLE_CATEGORY_PATHS]+list(pages)
