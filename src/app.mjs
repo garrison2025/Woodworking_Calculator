@@ -928,6 +928,8 @@ if(slug){
         const points=row.planVertices.map(v=>(cx+(v[0]-R)*scale)+","+
           (cy+(v[1]-R)*scale)).join(" ");
         content+='<polygon class="spiral-tread-face" data-index="'+(i+1)+
+          '" data-sector-area-ft2="'+row.treadAnnularAreaFt2+
+          '" data-chord-area-ft2="'+row.treadChordPolygonAreaFt2+
           '" data-start-angle="'+row.startAngleDeg+
           '" data-end-angle="'+row.endAngleDeg+
           '" data-elevation-in="'+row.treadTopElevation+
@@ -943,6 +945,7 @@ if(slug){
         '" r="'+(r*scale)+'" fill="#667d70" stroke="#2c4b3d" stroke-width="1.5"/>';
       content+=svgText(76,50,"SPIRAL TOP VIEW · POLAR XY CHORD REFERENCE","dim-label");
       content+=svgText(76,71,"ONE TURN ONLY · NOT CODE / STRUCTURAL APPROVAL","tick-label");
+      content+=svgText(76,91,"DRAWN STRAIGHT CHORDS ≠ CURVED SECTOR AREA","tick-label");
       content+=svgText(75,315,d.rows.length+" PHYSICAL TREADS · "+
         trim(d.treadAngle,3)+"° EACH · POLE "+fmt(d.poleDiameter),"dim-label");
       content+=svgText(600,335,"WALK RADIUS "+fmt(d.walkRadius),"tick-label");
@@ -952,7 +955,9 @@ if(slug){
         maxWidth=Math.max(d.topChord,d.bottomChord),left=cx-maxWidth*scale/2;
       const points=d.vertices.map(v=>(left+v[0]*scale)+","+
         (top+v[1]*scale)).join(" ");
-      content+='<polygon class="stave-face" data-top-chord-in="'+d.topChord+
+      content+='<polygon class="stave-face" data-plan-scale="'+scale+
+        '" data-origin-x="'+left+'" data-origin-y="'+top+
+        '" data-top-chord-in="'+d.topChord+
         '" data-bottom-chord-in="'+d.bottomChord+
         '" data-face-length-in="'+d.faceLength+
         '" data-edge-length-in="'+d.edgeLength+

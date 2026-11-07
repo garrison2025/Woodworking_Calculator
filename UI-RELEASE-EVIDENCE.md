@@ -1,9 +1,14 @@
 # UI release evidence — historical evidence and current scope
-## Current UX check — 2026-11-07, PR #13 verified
+## Current UX check — 2026-11-07, PR #13 and #15 verified
 
 - Current manifest contains 31 active tools and six populated categories, and the homepage was corrected to derive both counts and drawing label from this manifest.
 - Added browser-local task search of existing prerendered links, Clear history for local recent-tool storage, and new Chromium/static regression checks including 390px. The new catalog search, history reset and mobile viewport checks passed [PR #13 CI #42310268231](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) before merge. Physical devices, Safari and screen-reader acceptance are still NOT RUN.
 - Previous [Actions #670](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42205140952) passed core automated tests; actual Android/iOS touch, macOS Safari, NVDA/VoiceOver, aesthetic review, real printer calibration and field cutting have not been completed by this change.
+
+## Additional precision evidence
+
+- [PR #15 CI #42314475052](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42314475052) passed the real-browser kerf-slot SVG↔CSV boundaries, crown magnitudes, and stringer coordinates; it is not a hands-on saw certification.
+- PR #16 now adds explicit curved-vs-straight spiral polygon areas, rejects sub-resolution gambrel roof segments, and checks stave SVG corners against metric CSV. These changes require fresh PR CI before any PASS declaration.
 
 ## Verified
 - Practical three-panel desktop calculator: measurement controls, original geometry SVG, live numeric takeoff; mobile order: input → results → diagram → schedule and method.

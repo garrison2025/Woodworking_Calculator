@@ -2493,9 +2493,9 @@
           ]
         }
       ],
-      "formula": "Physical wedge treads = entered risers − 1; the final rise reaches the top landing. Uniform rise = finished floor rise ÷ risers. Angular sector per physical tread = total rotation ÷ number of physical treads. Inner/outer radii are HALF the entered diameters; walk line radius = column outer radius + entered offset. Per tread: walk-line ARC going = walk radius × angular sector in radians; straight chord = 2×walk radius×sin(angular sector/2). The CSV gives four measured straight-chord plan coordinates per wedge and its top elevation.",
+      "formula": "Physical wedge treads = entered risers − 1; the final rise reaches the top landing. Uniform rise = finished floor rise ÷ risers. Angular sector per physical tread = total rotation ÷ number of physical treads. Inner/outer radii are HALF the entered diameters; walk line radius = column outer radius + entered offset. Per tread: walk-line ARC going = walk radius × angular sector in radians; straight chord = 2×walk radius×sin(angular sector/2). The CSV gives four measured straight-chord plan coordinates per wedge and its top elevation. Curved-sector face area = (outer radius²−inner radius²)×sector radians/2, whereas the four straight-chord vertices drawn in the top view have smaller polygon area = (outer radius²−inner radius²)×sin(sector radians)/2. Both distinct areas are shown; neither is a verified fabrication bill of materials.",
       "example": "108 in floor-to-floor rise, 72 in stair outer diameter, 4 in column, 15 risers over one 360° turn, and a walk line 12 in from column outside face: 14 physical wedge treads, 7.2 in per riser, 25.7142857° sector, 14 in walk radius, and 2π≈6.283185 in walk-line arc per tread.",
-      "limit": "Geometric single-turn/partial-turn 60–360° plan ONLY, NOT a construction permit, compliant tread going, landing clearance, safe headroom, handrail, column sizing, structural bearing, welds, bracket capacity, cut-ready template or multi-turn stair plan. The top floor is the final riser, NOT another physical wedge. Straight plan-vertex polygons approximate the annular sector boundary; curved nosing fabrication and safety need separate verified templates and a qualified designer.",
+      "limit": "Geometric single-turn/partial-turn 60–360° plan ONLY, NOT a construction permit, compliant tread going, landing clearance, safe headroom, handrail, column sizing, structural bearing, welds, bracket capacity, cut-ready template or multi-turn stair plan. The top floor is the final riser, NOT another physical wedge. Straight plan-vertex polygons approximate the annular sector boundary; curved nosing fabrication and safety need separate verified templates and a qualified designer. A four-vertex straight-chord polygon does NOT enclose the entire curved annular sector; separate area metrics prevent treating the larger sector as the flat four-corner cutting face. All nonzero tread elevations and relevant wedge edges must be representable in the exported cut-coordinate grid.",
       "guidance": [
         {
           "heading": "The upper floor replaces the final physical tread",
@@ -2512,6 +2512,10 @@
         {
           "heading": "Headroom and the real landing are outside this model",
           "text": "Only one partial or full rotation (60° to 360°) is supported. Stair headroom requires the actual opening, landing elevation and overlapping members. Local rules and structural details must be independently checked by a qualified professional before building."
+        },
+        {
+          "heading": "Compare curved annular sector area with the actual four-corner polygon",
+          "text": "The mathematical curved annular sector covers more area than the straight-chord polygon shown on the screen and exported as four XY vertices. Both per-tread areas are reported separately. The smaller value is the straight-sided polygon footprint, not a verified wood blank size, curved tread template or material purchase allowance."
         }
       ]
     },
@@ -2577,7 +2581,7 @@
       ],
       "formula": "Roof half-span H=(building width+2×eave overhang)/2. Lower horizontal run R1 is entered, upper horizontal run R2=H−R1. Lower rise=R1×lower pitch/12; upper rise=R2×upper pitch/12; ridge elevation=sum of rises. Each true slope is hypot(horizontal run,rise). Total surface area=2×(lower slope length+upper slope length)×(building length+2×end overhang)/144 ft².",
       "example": "For 240 in building width, 12 in eaves, 60 in eave-to-break run, 12:12 lower and 4:12 upper pitch, half-roof run is 132 in and upper run is 72 in. Break elevation is 60 in and roof ridge is 84 in above the eave datum. For 360 in building length and 12 in end overhangs, each slope pair extends 384 in.",
-      "limit": "Symmetric two-pitch gambrel roof geometry only; no dormers, valleys, sheet cut nesting, wind/snow loads, material span, structural truss design, actual saw joints, bearing notches or building code certification. The drawn section is a proportional schematic, never a full-size cutting template.",
+      "limit": "Symmetric two-pitch gambrel roof geometry only; no dormers, valleys, sheet cut nesting, wind/snow loads, material span, structural truss design, actual saw joints, bearing notches or building code certification. The drawn section is a proportional schematic, never a full-size cutting template. Sub-resolution positive horizontal runs or segment rises are rejected instead of exporting rounded-away slope sections.",
       "guidance": [
         {
           "heading": "Locate break point horizontally, not along the slope",
@@ -2594,6 +2598,10 @@
         {
           "heading": "Not a gambrel truss calculator",
           "text": "No structural loads, member sizing, fasteners, support, structural timber strengths or stamped drawings are provided. The historical gambrel truss search terms are excluded as unsupported scope. Obtain qualified design review before construction."
+        },
+        {
+          "heading": "Do not mistake rounded-away slopes for flat panels",
+          "text": "Each of the four cut-coordinate slope segments must have a measurable positive horizontal run and rise. Very small nonzero pitch/run combinations that round to zero at export precision are flagged as invalid; review the roof dimensions rather than cutting from a zero-looking schedule."
         }
       ]
     },

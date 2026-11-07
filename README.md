@@ -6,6 +6,13 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): engineering beta, not a production launch.** [PR #13 verification](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) passed **556 Node, 193 Chromium and 18 Firefox/Linux WebKit tests**, plus 42 static pages and A4/Letter PDF checks before merge as `cafccc2`. PR #14's stricter cut-coordinate guards require a separate passing CI run. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — Spiral, gambrel and tapered stave precision (new PR)
+
+- Spiral stair: report **curved annular sector area** separately from the **smaller four-straight-chord polygon area drawn/exported**; never treat these as interchangeable material quantities. Reject unmeasurable riser/inner-chord coordinate rows.
+- Symmetric gambrel: reject positive but rounded-away lower/upper runs, rises or exported segment endpoints before preparing a cut schedule.
+- Tapered stave: record actual diagram-to-local-coordinate transform and verify all 4 polygon corners against metric CSV, including reversed tapers.
+- Regression: independent geometry tests plus real Chromium SVG↔CSV/invalid-state checks, in addition to unchanged sitewide/print/release gates. See [specialty precision review](research/SPECIALTY-GEOMETRY-PRECISION-20261107.md). This remains a browser-math release gate, not physical material, truss or staircase approval.
+
 ## 2026-11-07 — Cut diagram and exported schedule consistency (PR #15)
 
 - For **kerf bending**, physical slot SVG rectangles now use the same quantized left/right coordinates and cut depth as CSV; exported overlapping or out-of-bounds slots are rejected.
