@@ -4,9 +4,9 @@
   "tools": [
     {
       "slug": "stud-calculator",
-      "seoTitle": "Gable Stud Calculator for Rake Walls",
-      "useFor": "Calculate the individual lengths and stations of studs under a sloped top plate.",
-      "notFor": "A straight wall stud count or framing structural approval.",
+      "seoTitle": "Rake Wall Stud Calculator for Single-Slope Walls",
+      "useFor": "Calculate individual stud lengths and stations under a top plate with one continuous slope.",
+      "notFor": "A full two-sided gable in one calculation, a straight wall stud count, or framing structural approval.",
       "next": [
         {
           "slug": "wall-stud-calculator",
@@ -565,7 +565,7 @@
     {
       "slug": "lumber-price-calculator",
       "seoTitle": "Lumber Price Calculator for Board Foot and MBF Quotes",
-      "useFor": "Estimate lumber volume and an explicitly quoted price per board foot or per thousand board feet from supplier-specified dimensions.",
+      "useFor": "Calculate lumber volume from entered dimensions. Add an optional price per board foot or per thousand board feet for a supplier quote estimate.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order.",
       "next": [
         {

@@ -51,3 +51,16 @@ test("lumber quote BF and MBF prices, currency, actual sizes, SVG, CSV and mobil
  await expect(page.locator("#calc-error")).toBeHidden();
  expect(await value(page,"Total quoted price")).toBeCloseTo(261.36,2);
 });
+
+test("blank or zero supplier rate leaves quantity and downloads available",async({page})=>{
+ await page.goto("/lumber-price-calculator/");
+ for(const rate of ["","0"]){
+  await page.locator("#f-boardFootRate").fill(rate);
+  expect(await value(page,"Board feet per piece")).toBe(4);
+  await expect(page.locator("#result-cards").getByText("Total quoted price")).toHaveCount(0);
+  await expect(page.locator("#result-cards").getByRole("note")).toContainText("positive supplier rate");
+  await expect(page.locator("#download-csv")).toBeEnabled();
+ }
+ await page.locator("#f-priceBasis").selectOption("1");
+ expect(await value(page,"Total quoted price")).toBeCloseTo(261.36,2);
+});

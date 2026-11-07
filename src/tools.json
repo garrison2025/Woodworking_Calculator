@@ -29,13 +29,13 @@
   "tools": [
     {
       "slug": "stud-calculator",
-      "title": "Gable & Rake Wall Stud Calculator",
+      "title": "Rake Wall Stud Calculator",
       "category": "framing",
       "priority": "P0",
       "keyword": "stud calculator",
       "volume": 3600,
       "kd": 1,
-      "desc": "Calculate sloped gable and rake wall stud centerline cuts, face-edge lengths and total plate deductions with a coordinate schedule.",
+      "desc": "Calculate centerline and face-edge stud cuts for a wall with one continuous slope, with plate deductions and a coordinate schedule.",
       "inputs": [
         {
           "key": "length",
@@ -89,7 +89,7 @@
         },
         {
           "heading": "Choose the right wall calculator",
-          "text": "This page describes a single sloped-top reference. Use Wall Stud Count & Layout for a uniform-height wall, or Wall Framing with Doors & Windows when actual rough openings, kings, jacks or cripple pieces must appear in the takeoff. Check each reference against the built wall before cutting."
+          "text": "This page models one continuous slope. A two-sided gable requires separate slope measurements and an independent check of the shared ridge stud. Use Wall Stud Count & Layout for a uniform-height wall, or Wall Framing with Doors & Windows when actual rough openings, kings, jacks or cripple pieces must appear in the takeoff. Check each reference against the built wall before cutting."
         }
       ]
     },
@@ -2638,7 +2638,7 @@
       "volume": 110,
       "kd": 9,
       "status": "BETA_NO_INDEX",
-      "desc": "Measure board-foot volume and estimate whole-piece lumber purchases with explicit per-BF or per-1,000-BF pricing and separate tax.",
+      "desc": "Calculate board feet and whole-piece lumber quantities. Add an optional per-BF or per-1,000-BF supplier rate for pricing and tax.",
       "inputs": [
         {
           "key": "dimensionBasis",
@@ -2707,6 +2707,7 @@
           "label": "Entered price per board foot",
           "kind": "C",
           "value": 5.5,
+          "emptyValue": 0,
           "showWhen": "priceBasis:0"
         },
         {
@@ -2714,6 +2715,7 @@
           "label": "Entered price per 1,000 board feet",
           "kind": "C",
           "value": 5500,
+          "emptyValue": 0,
           "showWhen": "priceBasis:1"
         },
         {

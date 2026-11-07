@@ -2790,16 +2790,16 @@ export function compute(slug,a){
   case "lumber-price-calculator":{
     positive("thickness","width","length");
     whole("quantity",1,5000);whole("dimensionBasis",0,1);whole("priceBasis",0,1);
-    nonnegative("waste","tax","boardFootRate","thousandBoardFootRate");
+    nonnegative("waste","tax");
     need(a.waste<=100&&a.tax<=100,"Waste and tax must be between 0 and 100 percent.");
     const rawBf=a.thickness*a.width*a.length/144;
     need(Number.isFinite(rawBf)&&rawBf>=1e-7&&rawBf<=1e9,
       "Board-foot volume exceeds the supported pricing range.");
     const purchased=ceilStable(a.quantity*(1+a.waste/100));
     need(purchased<=10000,"Purchased board count exceeds the supported limit.");
-    const costPerBf=a.priceBasis===0?a.boardFootRate:a.thousandBoardFootRate/1000;
-    need(costPerBf>0&&Number.isFinite(costPerBf)&&costPerBf<=1e6,
-      "Enter a positive finite quotation rate for the selected board-foot basis.");
+    const costPerBf=a.priceBasis===0?(a.boardFootRate??0):(a.thousandBoardFootRate??0)/1000;
+    need(costPerBf>=0&&costPerBf<=1e6,"The selected quotation rate is outside the supported range.");
+    const hasQuote=costPerBf>0;
     const orderBf=rawBf*purchased,baseBf=rawBf*a.quantity,
       subtotal=orderBf*costPerBf,taxValue=subtotal*a.tax/100,total=subtotal+taxValue;
     need([baseBf,orderBf,subtotal,taxValue,total].every(Number.isFinite)&&total<=1e12,
@@ -2808,22 +2808,25 @@ export function compute(slug,a){
       dimensionBasis:a.dimensionBasis===0?"Entered nominal":"Entered actual measured",
       thickness:q(a.thickness),width:q(a.width),length:q(a.length),
       boardFeetPerPiece:rawBf,orderedBoardFeet:orderBf,
-      pricePerBoardFoot:costPerBf,subtotal,taxAmount:taxValue,totalCost:total};
+      pricePerBoardFoot:hasQuote?costPerBf:null,subtotal:hasQuote?subtotal:null,
+      taxAmount:hasQuote?taxValue:null,totalCost:hasQuote?total:null};
     return result([
       M("Board feet per piece",rawBf,"BF"),
       M("Entered piece count",a.quantity,"N"),
       M("Whole purchased pieces including reserve",purchased,"N"),
       M("Board feet before reserve",baseBf,"BF"),
       M("Purchased board feet",orderBf,"BF"),
-      M("Effective price per board foot",costPerBf,"C"),
-      M("Subtotal before tax",subtotal,"C"),
-      M("Tax amount",taxValue,"C"),
-      M("Total quoted price",total,"C")
+      ...(hasQuote?[
+        M("Effective price per board foot",costPerBf,"C"),
+        M("Subtotal before tax",subtotal,"C"),
+        M("Tax amount",taxValue,"C"),
+        M("Total quoted price",total,"C")
+      ]:[])
     ],[P(0,"Measured start"),P(a.length,"Measured end")],a.length,[row],
       "lumber-board",{lumberBoard:{length:a.length,width:a.width,
         thickness:a.thickness,dimensionBasis:a.dimensionBasis,
         purchased,boardFeetPerPiece:rawBf,purchasedBoardFeet:orderBf,
-        pricePerBoardFoot:costPerBf,totalCost:total}});
+        pricePerBoardFoot:row.pricePerBoardFoot,totalCost:row.totalCost}});
   }
 
   // Only one partial/full turn. The top finished floor accounts for the

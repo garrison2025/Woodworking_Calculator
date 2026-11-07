@@ -7,8 +7,8 @@
       "slug": "stud-calculator",
       "keyword": "stud calculator",
       "class": "qualified-broad",
-      "scope": "Broad 'stud calculator' also serves straight-wall stud counting; this route solves a sloping gable/rake wall only. The existing wall-stud-calculator is a different task.",
-      "notFor": "A straight wall stud count or framing structural approval."
+      "scope": "Broad 'stud calculator' also serves straight-wall stud counting; this route models only a single-slope rake wall. The existing wall-stud-calculator is a different task.",
+      "notFor": "A full two-sided gable in one calculation, a straight wall stud count, or framing structural approval."
     },
     {
       "slug": "framing-calculator",
@@ -203,7 +203,7 @@
       "slug": "lumber-price-calculator",
       "keyword": "price per thousand calculator",
       "class": "research-query-ambiguous",
-      "scope": "Historical 'price per thousand calculator' lacks a lumber/MBF qualifier and may refer to generic per-1000 unit prices. The live page correctly only covers BF/MBF lumber quotes; do not claim the broad query is served. Verify a lumber-qualified target term separately.",
+      "scope": "Historical 'price per thousand calculator' lacks a lumber/MBF qualifier and may refer to generic per-1000 unit prices. The live page covers board-foot volume and optional BF/MBF lumber quotes; do not claim the broad query is served. Verify a lumber-qualified target term separately.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order."
     },
     {

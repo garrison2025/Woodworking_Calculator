@@ -111,3 +111,30 @@ test("importing a local file removes a stale shared URL fragment",async({page,co
   await page.reload();
   await expect(page.locator("#unit-select")).toHaveValue("in");
 });
+
+test("a blank inactive roof input does not block calculation, JSON or sharing",async({page,context})=>{
+  await context.grantPermissions(["clipboard-read","clipboard-write"]);
+  await page.goto("/roof-pitch-calculator/");
+  const mode=page.locator("#f-roofMode");
+  const angle=page.locator("#f-angle");
+  const pitch=page.locator("#f-pitch");
+  await mode.selectOption("1");
+  await angle.fill("");
+  await expect(page.locator("#calc-error")).toBeVisible();
+  await mode.selectOption("0");
+  await expect(angle).toBeHidden();
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await pitch.fill("8");
+  const content=await downloadJson(page);
+  await page.locator("#share-measurements").click();
+  await expect(page.locator("#action-status")).toContainText("Measurement link copied");
+  const link=await page.evaluate(()=>navigator.clipboard.readText());
+  await pitch.fill("6");
+  await uploadJson(page,content);
+  await expect(page.locator("#action-status")).toContainText("Local measurements restored");
+  await expect(pitch).toHaveValue("8");
+  await page.goto("/roof-pitch-calculator/");
+  await page.goto(link);
+  await expect(pitch).toHaveValue("8");
+  await expect(page.locator("#calc-error")).toBeHidden();
+});

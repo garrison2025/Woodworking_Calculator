@@ -131,6 +131,15 @@ def categories_nav():
 def hero_graphic():
     return f'''<div class="hero-graphic" aria-hidden="true"><svg viewBox="0 0 590 350"><defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#d0d8d0" stroke-width=".7"/></pattern></defs><rect x="0" y="0" width="590" height="350" fill="url(#p)"/><g transform="translate(75 48)"><path d="M35 228L395 228 395 38Z" fill="#e5eee6" stroke="#1e6454" stroke-width="3"/><path d="M35 228V70L395 38" fill="none" stroke="#b48456" stroke-dasharray="9 6" stroke-width="2"/><path d="M35 228L395 38" stroke="#1e6454" stroke-width="5"/><g stroke="#bd8d54" stroke-width="4"><path d="M85 228V202M145 228V170M205 228V139M265 228V107M325 228V75"/></g><path d="M35 245V262M395 245V262M35 256H395" stroke="#64736c" stroke-width="1.5"/><path d="M25 228L35 228 35 218" fill="none" stroke="#64736c" stroke-width="1.5"/><g fill="#34554b" font-family="monospace" font-size="14"><text x="185" y="280">12′-0″  /  144 IN</text><text x="400" y="38">6:12</text><text x="46" y="58">R A K E  W A L L</text></g></g></svg><div class="graphic-caption"><span class="graphic-dot"></span> LIVE GEOMETRY WORKSPACE <span>DRAWING 01 / {len(TOOLS)}</span></div></div>'''
 
+def directory_link(t):
+    route = '/' + t['slug'] + '/'
+    primary = [] if (route, t['keyword'].lower()) in CAUTIONED_TERMS else [t['keyword']]
+    reviewed = [word for word, target in SUPPORTED_REASSIGNMENTS.items() if target == route]
+    category = CATS[t['category']][0]
+    terms = '|'.join([t['title'], category, *primary, *reviewed])
+    return (f'<a href="{esc(route)}" data-search-terms="{esc(terms)}">'
+            f'<span>{esc(t["title"])}</span><small>{esc(category)}</small><b>↗</b></a>')
+
 def home():
     featured = sorted(TOOLS, key=lambda t:(t["priority"] != "P0", -t["volume"]))[:6]
     category_count = len({tool["category"] for tool in TOOLS})
@@ -148,7 +157,7 @@ def home():
              '<div class="section-heading compact"><h3>Start with a common task</h3><span>FEATURED TOOLS</span></div><div class="tool-grid">'+''.join(tool_card(t) for t in featured)+'</div>'
              f'<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>{len(TOOLS)} TOOL WORKSPACES</span></div>'
              f'<div class="tool-search-panel"><label for="tool-search">Find a calculator</label><div class="tool-search-row"><input id="tool-search" type="search" autocomplete="off" aria-controls="tool-directory" placeholder="Search {len(TOOLS)} tools by task or category"><output id="tool-search-status" for="tool-search" role="status" aria-live="polite">Showing {len(TOOLS)} tools</output></div></div>'
-             '<div class="directory-list" id="tool-directory">'+''.join(f'<a href="/{esc(t["slug"])}/"><span>{esc(t["title"])}</span><small>{esc(CATS[t["category"]][0])}</small><b>↗</b></a>' for t in TOOLS)+'</div>'
+             '<div class="directory-list" id="tool-directory">'+''.join(directory_link(t) for t in TOOLS)+'</div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
@@ -175,7 +184,7 @@ def tool_page(t):
             'The historical broad research query is NOT a general '
             'price-per-thousand-items feature and is deliberately not '
             'marketed as a matching search synonym. '
-            'Enter the dimensions and supplier rate for actual lumber only.')
+            'Enter actual lumber dimensions for board feet; add a supplier rate only if you need a cost estimate.')
     reviewed = [word for word,route in SUPPORTED_REASSIGNMENTS.items()
                 if route == '/' + t['slug'] + '/']
     if reviewed:
@@ -202,7 +211,8 @@ def tool_page(t):
             note = "Use selected units. In inches: 5.5, 5 1/2, 3/4, or feet-and-inches written as 8' 3 1/2\". Other units: decimals only."
         else:
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
-            note = "Enter a number using the described measurement"
+            note = ("Optional. Leave blank or enter 0 to calculate board feet without a quote."
+                    if "emptyValue" in f else "Enter a number using the described measurement")
         condition = f' data-show-when="{esc(f["showWhen"])}"' if f.get("showWhen") else ""
         return f'<div class="field"{condition}><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
     scenarios=CASES_BY_SLUG.get(t["slug"], [])

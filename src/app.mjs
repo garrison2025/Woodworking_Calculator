@@ -1,7 +1,7 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {createMeasurementFragment,parseMeasurementFragment} from "./measurement-links.mjs";
 import {buildMeasurementFile,parseMeasurementFile} from "./measurement-files.mjs";
-import {parseEditableLength,canonicalLengthText} from "./length-entry.mjs";
+import {parseEditableLength} from "./length-entry.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
 import {makeFramingReviewVersion,validateFramingReviewVersion,
@@ -163,16 +163,30 @@ if(slug){
   const trim=(n,d=3)=>Number(n.toFixed(d)).toLocaleString("en-US",{maximumFractionDigits:d});
   const esc=s=>String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
   const frac=x=>unit==="in"?inchFraction(x,Number(fraction.value)||16):"";
+  const formValue=key=>form.elements.namedItem(key)?.value??"";
+  const isActiveField=(field,readValue=formValue)=>{
+    if(!field.showWhen)return true;
+    const [key,requiredValue]=field.showWhen.split(":");
+    return String(readValue(key))===requiredValue;
+  };
+  const readInput=(field,raw)=>{
+    if(raw.trim()==="")return field.emptyValue??null;
+    return field.kind==="L"?parseEditableLength(raw,unit):Number(raw);
+  };
   const values=()=>{
     const a={};
     for(const f of tool.inputs){
-      const el=form.elements.namedItem(f.key);
-      if(!el||el.value.trim()===""){
+      if(!isActiveField(f)){
+        a[f.key]=f.value;
+        continue;
+      }
+      const raw=formValue(f.key);
+      if(raw.trim()===""&&f.emptyValue===undefined){
         const issue=new Error(f.label+" is required.");
         issue.fieldKey=f.key;
         throw issue;
       }
-      const v=f.kind==="L"?parseEditableLength(el.value,unit):Number(el.value);
+      const v=readInput(f,raw);
       if(v===null||!Number.isFinite(v)){
         const issue=new Error(f.label+(f.kind==="L"&&unit==="in"?
           " must be a decimal, an inch fraction (5 1/2), or quoted feet and inches.":
@@ -2070,10 +2084,9 @@ if(slug){
     if(deckFastenerExport)deckFastenerExport.disabled=!latest?.deckFastenerRows?.length;
   };
   const refreshConditionalFields=()=>{
-    for(const wrapper of form.querySelectorAll("[data-show-when]")){
-      const [key,requiredValue]=wrapper.dataset.showWhen.split(":");
-      const parent=form.elements.namedItem(key);
-      wrapper.hidden=!parent||String(parent.value)!==requiredValue;
+    for(const field of tool.inputs){
+      if(!field.showWhen)continue;
+      form.elements.namedItem(field.key).closest("[data-show-when]").hidden=!isActiveField(field);
     }
   };
   // The visible percentage and accessible reset name describe the actual
@@ -2101,6 +2114,9 @@ if(slug){
       latest=data.data;error.hidden=true;
       renderPrintInputSnapshot();
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
+      if(latest.lumberBoard?.pricePerBoardFoot===null){
+        out.insertAdjacentHTML("beforeend",'<p role="note">Enter a positive supplier rate to show the quoted cost.</p>');
+      }
       if(latest.deckBoardStock?.requiresJointPlan){
         out.insertAdjacentHTML("beforeend",
           '<p class="deck-joint-warning" role="note"><strong>Unverified butt joints.</strong> '
@@ -2218,6 +2234,10 @@ if(slug){
     // All-or-nothing: prove the numeric geometry BEFORE modifying form state.
     const candidate={};
     for(const field of tool.inputs){
+      if(!isActiveField(field,key=>snapshot.inputs[key])){
+        candidate[field.key]=field.value;
+        continue;
+      }
       const raw=Number(snapshot.inputs[field.key]);
       candidate[field.key]=field.kind==="L"?
         convertToInches(raw,snapshot.unit):raw;
@@ -2249,12 +2269,19 @@ if(slug){
   // The link and JSON codecs intentionally accept numeric strings only.
   // Convert a typed US fraction to its exact decimal-inch equivalent before
   // serializing, so every restored calculation has the same physical length.
-  const currentMeasurementFields=()=>tool.inputs.map(f=>({
-    key:f.key,
-    value:f.kind==="L"?
-      canonicalLengthText(form.elements.namedItem(f.key).value,unit):
-      form.elements.namedItem(f.key).value
-  }));
+  const currentMeasurementFields=()=>tool.inputs.map(field=>{
+    const raw=formValue(field.key);
+    const value=readInput(field,raw);
+    if(Number.isFinite(value)){
+      return {key:field.key,value:field.kind==="L"||!raw.trim()?String(value):raw.trim()};
+    }
+    if(isActiveField(field))throw Error("Invalid measurement: "+field.label);
+    // The v1 codecs require every key. Keep valid inactive edits and use
+    // a numeric default only when an inactive field has no usable entry.
+    const fallback=field.kind==="L"?
+      convertEditableLength(field.value,"in",unit):field.value;
+    return {key:field.key,value:String(fallback)};
+  });
   measurementSave?.addEventListener("click",()=>{
     if(!latest)return;
     try{

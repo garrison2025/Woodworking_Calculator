@@ -67,7 +67,6 @@ test("invalid counts, rates, dimensions, tax and totals fail explicitly",()=>{
   {thickness:0},{width:0},{length:0},{quantity:0},{quantity:1.5},
   {quantity:5001},{waste:-1},{waste:101},{tax:-1},{tax:101},
   {priceBasis:3},{dimensionBasis:2},{boardFootRate:-1},
-  {priceBasis:0,boardFootRate:0},{priceBasis:1,thousandBoardFootRate:0},
   {priceBasis:1,thousandBoardFootRate:-5},{length:1e-9},{width:1e-9},
   {thickness:1e8,width:1e8},{boardFootRate:1e8}
  ]){
@@ -84,5 +83,16 @@ test("lumber volume and purchase cost hold across in/mm/ft/cm/m round trips",()=
   const other=compute("lumber-price-calculator",moved);
   near(metric(other,"Purchased board feet"),metric(r,"Purchased board feet"),1e-8);
   near(metric(other,"Total quoted price"),metric(r,"Total quoted price"),1e-6);
+ }
+});
+
+test("unquoted orders report board feet and leave CSV price cells empty",()=>{
+ for(const input of [{...b,boardFootRate:0},{...b,priceBasis:1,thousandBoardFootRate:0}]){
+  const result=compute("lumber-price-calculator",input);
+  near(metric(result,"Board feet per piece"),4);
+  near(metric(result,"Purchased board feet"),44);
+  assert.equal(result.metrics.some(m=>m.kind==="C"),false);
+  assert.equal(result.rows[0].totalCost,null);
+  assert.match(buildScheduleCsv(result.rows,"in").split("\r\n")[1],/,"44","","","",""$/);
  }
 });
