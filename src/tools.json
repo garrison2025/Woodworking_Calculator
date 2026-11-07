@@ -1082,7 +1082,7 @@
       "keyword": "deck estimator",
       "volume": 3600,
       "kd": 15,
-      "desc": "Deck material estimate, modeled butt ends and fastener contacts with optional equalized joist-center layout using an independently verified MAX OC; no structural spacing recommendations.",
+      "desc": "Estimate decking boards, butt joints and fasteners with optional equalized joist centers from a separately verified maximum OC. No structural spacing advice.",
       "inputs": [
         {
           "key": "width",
