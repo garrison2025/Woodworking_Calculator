@@ -122,8 +122,26 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Install macOS-hosted WebKit
         run: npx playwright install webkit
-      - name: Test actual macOS WebKit calculation and accessibility layouts
-        run: npx playwright test tests/e2e/cross-browser.spec.mjs tests/e2e/mobile-accessibility.spec.mjs --project=webkit
+      - name: Preflight local preview before macOS WebKit tests
+        run: |
+          set -eu
+          python3 -m http.server 8787 --bind 127.0.0.1 --directory dist > macos-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ok=0
+          for i in $(seq 1 25); do
+            if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:8787/ -o /dev/null; then
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ok" -ne 1 ]; then
+            cat macos-http.log
+            echo 'FAIL: local Python static preview did not respond on macOS runner'
+            exit 1
+          fi
+          WOODWORK_REUSE_SERVER=1 npx playwright test tests/e2e/cross-browser.spec.mjs tests/e2e/mobile-accessibility.spec.mjs --project=webkit
       - name: Preserve macOS browser failure screenshots
         if: failure()
         uses: actions/upload-artifact@v4
