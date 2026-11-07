@@ -4,7 +4,7 @@
 
 A free browser-only woodworking workspace with **31 active geometry calculators (9 P0 + 22 P1), six populated categories and zero held P2**. Includes proportional SVG drawings, fractional inch display, five length units (in/ft/mm/cm/m), local-only tool search and recent-history controls, typed CSV exports and browser Print / Save as PDF. Geometry references are not certified structural designs or saw-cut instructions.
 
-> **Release status (2026-11-07): engineering beta, not a production launch.** Following merged PRs #13–19, the latest verified main regression is [CI #42323962749](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42323962749) on commit `4552466`, including numerical tests, Chromium, Firefox/Linux WebKit, and PDF/release checks. This is a software check, not physical material verification. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
+> **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
 ## 2026-11-07 — Exact inch fractions and marked feet-and-inch input
 
@@ -190,13 +190,13 @@ cd Woodworking_Calculator
 python build.py
 node --test tests/*.test.mjs
 python tests/validate_static.py
-npm install --no-audit --no-fund
+npm ci --no-audit --no-fund
 npx playwright install chromium
 npx playwright test
 python -m http.server 8787 --directory dist
 ```
 
-Open `http://localhost:8787`. The Playwright suite starts its own local test server and includes 26-route smoke, clipboard/export, breakpoints and UI screenshots.
+Open `http://localhost:8787`. The Playwright suite starts its own local test server and includes all 31 calculator routes, clipboard/export, breakpoints and UI screenshots.
 
 ## Deploy to Cloudflare Pages (preview, free plan)
 
@@ -221,12 +221,35 @@ RELEASE_APPROVED=1
 
 `SITE_URL` must be a real owned HTTPS custom domain, **not** a Pages preview URL. Production then generates absolute canonical URLs, sitemap.xml and an allow-crawl robots.txt. The Pages-provided hostname may still serve identical static bytes, so separately validate your hostname/redirect and canonical policy before submitting the site to GSC. There is no mythical fully automatic “verified launch” switch.
 
+Cloudflare injects `CF_PAGES=1` and `CF_PAGES_BRANCH`. As a fail-closed guard, non-`main` Pages builds now stay **noindex** even if someone accidentally copies production `SITE_URL` and `RELEASE_APPROVED=1` into a preview environment. This does **not** distinguish the production `woodworking-calculator.pages.dev` alias from the same deployment on your custom domain: set up a **301 Bulk Redirect** for that hostname after domain attachment and verify it independently. The original V3 P2 tools and Materials-only category remain excluded until separate `RELEASE_V3_P2_APPROVED=1` approval.
+
+### Read-only live launch audit
+
+The new standard-library script checks all 42 deployed pages, canonical/robots/JSON-LD and 31 calculator configs, critical JS/CSS assets, sitemap, 404 response and old-host redirects. It does not deploy, index, submit to Google or verify physical work.
+
+Safe to run on the current preview (Windows PowerShell or any Python 3 system):
+
+~~~powershell
+python scripts/verify_live_launch.py --base https://woodworking-calculator.pages.dev --mode preview --report preview-audit.json
+~~~
+
+Only **after** attaching a purchased domain, completing manual review, explicitly approving search indexing and creating the Cloudflare Bulk Redirect:
+
+~~~powershell
+python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --report production-audit.json
+~~~
+
+Use `--approve-v3-p2` only when the original five V3 P2 tools were independently approved and the deployed build actually uses `RELEASE_V3_P2_APPROVED=1`. Exit code **0 = PASS**, **1 = FAIL**; a live production audit will fail unless the old `pages.dev` host redirects path-for-path with HTTP 301 or 308. The script is HTTP/static evidence, **not** a real-device, physical-print or construction acceptance.
+
+Cloudflare official references: [Custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/), [Build environment variables](https://developers.cloudflare.com/pages/configuration/build-configuration/), [Redirect pages.dev to custom domain](https://developers.cloudflare.com/pages/how-to/redirect-to-custom-domain/). See [domain launch handoff](research/DOMAIN-LAUNCH-HANDOFF-20261107.md) for all manual and software gates.
+
+
 ## Project structure
 
 ```text
 build.py                         Static HTML/SEO generator
 src/tools.json                   One intent/route registry, defaults, formula descriptions
-src/calcs.mjs                    26 browser-only calculation functions
+src/calcs.mjs                    31 browser-only calculation modes (shared pure-function engine)
 src/app.mjs                      Inputs, SVG drawing, export and print interactions
 src/style.css                    Responsive design and printable stylesheet
 research/WOODWORKING_BUILD_SPEC_V3_20261104.md
