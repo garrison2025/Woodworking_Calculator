@@ -12,8 +12,15 @@
     {
       "keyword": "wall framing calculator",
       "originalRoute": "/wall-stud-calculator/",
-      "reason": "Ambiguous framing query; do not claim the plain stud counter covers opening-member takeoff.",
-      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+      "reason": "Publicly accessible pages for the exact phrase predominantly show one-wall stud/plate estimates with door and window openings. The existing Framing Calculator does support user-entered opening stations, king/jack/header/sill member geometry and stock takeoff; the Wall Stud Counter does not. This is a qualified existing route, NOT structural header sizing, code-certified wall plans, or a verified USA-geolocated Top-10 SERP match.",
+      "status": "public-search-sampled-qualified-existing-scope-no-broad-seo-claim",
+      "supportedRoute": "/framing-calculator/",
+      "publicSamples": [
+        "https://www.wallframingcalculator.com/",
+        "https://anybuild.co/calculators/framing",
+        "https://plandiybuild.com/calculators/wall-framing",
+        "https://harth.build/free-tools/wall-framing-stud-calculator/"
+      ]
     },
     {
       "keyword": "deck joist span calculator",
@@ -48,8 +55,13 @@
     {
       "keyword": "coopering calculator",
       "originalRoute": "/segmented-bowl-calculator/",
-      "reason": "Segmented bowl ring angles are not stave/barrel coopering geometry.",
-      "status": "not-to-claim-in-copy-without-separate-intent-validation"
+      "reason": "Independent coopering/coopered-stave calculators show top and bottom diameters, staves, height, taper/bevel and sometimes thickness, stock fit and curved barrels. The existing Stave Calculator handles only a straight-sided polygon frustum's trapezoid face geometry. It is related to a NARROW subtask, NOT a complete cooperage/barrel-volume/curved-stave solution. Do not market the broad phrase as an equivalent keyword. These public examples are not a verified geographically located US SERP.",
+      "status": "public-search-sampled-qualified-existing-scope-no-broad-seo-claim",
+      "supportedRoute": "/stave-calculator/",
+      "publicSamples": [
+        "https://countfolk.com/coopered-stave-taper-angle-calculator/",
+        "https://nrtechstudio.com/tools/tapered-stave-calculator/"
+      ]
     },
     {
       "keyword": "how to bend a plywood",
