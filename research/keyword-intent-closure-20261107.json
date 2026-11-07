@@ -1,7 +1,7 @@
 {
-  "auditDate": "2026-11-07",
+  "auditDate": "2026-11-07 (updated after opt-in deck joist equalized mode)",
   "basis": "Original user-supplied 2026-11-04 Semrush 400-row export -> preserved 152 KD<=29 terms; current main src/tools.json and src/tool-intents.json; limited live web result spot-check of selected ambiguous queries. This is NOT an exhaustive US-geolocated SERP study or measurement of current traffic.",
-  "intentPolicy": "Only implemented user tasks may be claimed on tool pages. This document is evidence triage, not approval to create pages or change canonical/index policy.",
+  "intentPolicy": "Only implemented user tasks may be claimed on tool pages. This document is evidence triage, not approval to create pages or change canonical/index policy. Optional geometrical modes must distinguish user-supplied independently verified maximum OC from structural code recommendations.",
   "primary": [
     {
       "slug": "stud-calculator",
@@ -85,7 +85,7 @@
       "keyword": "deck estimator",
       "class": "qualified-broad",
       "scope": "Generic 'deck estimator' may mean deck cost, joist spans, footings or complete framing; this tool calculates measured decking takeoff and limited joist reference quantities only.",
-      "notFor": "Engineered joist-span capacity, footings, approved beams or fasteners."
+      "notFor": "Selecting structurally permitted joist spacing or span, engineer-approved post/footing/beam loads, deck certification or prescribed fastener attachment."
     },
     {
       "slug": "segmented-bowl-calculator",
@@ -346,8 +346,8 @@
     {
       "keyword": "decking joist spacing calculator",
       "originalRoute": "/deck-material-calculator/",
-      "decision": "standalone-feature-gated",
-      "reason": "Promising nonstructural layout concept using a separately verified allowed OC input; current estimator merely accepts joist spacing and does not solve recommended spacing/count from constraints.",
+      "decision": "qualified-existing-layout-only",
+      "reason": "Optional equalized mode now calculates joist center counts and uniformly spaced centers from user-measured FIRST-to-LAST joist CENTER run and independently verified MAX OC. This is a real nonstructural geometry result on the existing Deck Material Estimator, not selection of allowable structural spacing, load, span or code compliance. Keep historical broad keyword out of marketing synonyms until a separate present-day US SERP intent check.",
       "sampledPublicResults": [
         "https://areaofirregularshapescalc.com/deck-joist-spacing-calculator/"
       ]
@@ -355,8 +355,8 @@
     {
       "keyword": "deck joist spacing calculator",
       "originalRoute": "/deck-material-calculator/",
-      "decision": "standalone-feature-gated",
-      "reason": "Same verified-max-OC layout gap as decking joist spacing; do not promise structural spacing standards. Consider one combined tool only after SERP validation.",
+      "decision": "qualified-existing-layout-only",
+      "reason": "Optional equalized mode now calculates joist center counts and uniformly spaced centers from user-measured FIRST-to-LAST joist CENTER run and independently verified MAX OC. This is a real nonstructural geometry result on the existing Deck Material Estimator, not selection of allowable structural spacing, load, span or code compliance. Keep historical broad keyword out of marketing synonyms until a separate present-day US SERP intent check.",
       "sampledPublicResults": [
         "https://theplanotter.com/decks/deck-joist-spacing-calculator/"
       ]
