@@ -2,20 +2,22 @@
 
 **当前客观状态：只完成软件/自动化验收和 Cloudflare Pages 预览部署，没有购买自有域名，没有开启搜索引擎收录。** 请勿把本文当作已执行的上线操作记录。当前 31 个工具、42 个页面、5 个原始 V3 P2 的独立索引门禁及最近一次成功的主分支 CI [#717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) 见 [最终验收记录](../FINAL-ACCEPTANCE-20261107.md)。
 
+> **2026-11-07 业主范围变更：** 已选择[仅线上软件验收](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)，不再要求业主本人完成打印尺测、木料试切或 iOS/Android 真机测试。这三类项目仍为 **NOT RUN**，但不再是本参考工具站的**软件发布阻断项**；不可据此声称实体精度/施工安全认证。最新主分支线上核验是 [CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839)，完整通过；**域名购买与正式索引仍然未执行**。
+
 ## 不能混为一谈的三个状态
 
 | 项目 | 状态 | 说明 |
 |---|---|---|
 | 软件开发与自动化验收 | PASS（限 CI 覆盖） | 31 工具/42 静态页面、浏览器/PDF/两种索引配置已有独立 CI 证据 |
-| 实体木工、打印和硬件设备 | NOT RUN | 请使用 [现场验收记录](../FIELD-ACCEPTANCE-CHECKLIST.md)；材料、结构、承载/法规审核不属于软件认证 |
+| 实体木工、打印和硬件设备 | NOT RUN · 已豁免软件验收阻断 | [现场验收记录](../FIELD-ACCEPTANCE-CHECKLIST.md) 仅供自愿实地检查；材料、结构、承载/法规审核不属于软件认证 |
 | 自有域名、真实 GSC、索引与广告 | NOT RUN | 目前只有 `https://woodworking-calculator.pages.dev/`，所有预览页 `noindex,nofollow,noarchive`；无搜索流量/广告收益证据 |
 
 ## 上线先决条件（人工操作，脚本不能代替）
 
-1. **批准真实施工/打印的专业使用边界**：确认哪些工具只作为纯几何参考；至少实测一次 A4 和 Letter 两种纸张下校准条、首尾表格完整性并记录设备与实际读数。P0/P1 的真实项目切口、材料尺寸、当地规范和安全须人工独立核对；不要从 CI 通过推导出结构安全。
+1. **确认线上软件用途与验收证据**：依据[线上软件验收记录](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)与成功的主分支 CI、Cloudflare 源码一致性审计，作为几何计算/材料估算参考工具的网站软件发布条件。**不强制业主执行实体 A4/Letter 尺测、木料试切或真机人工验收**；这些保留 NOT RUN，不构成 1:1 模板、施工安全或法规符合性认证。
 2. **购买自有 HTTPS 域名**：Cloudflare Dashboard → Workers & Pages → 项目 `woodworking-calculator` → **Custom domains → Set up a domain**。如果买根域名（如 `example.com`），按 Cloudflare 的官方流程把它添加为 Cloudflare zone 并配置域名服务器；自定义子域名遵循官方 DNS/CNAME 流程。域名未买就不要填写假 `SITE_URL`。
 3. **先绑定域名，暂不开放索引**：保持 `RELEASE_APPROVED` 缺失或为 `0`，确定自有域名实际返回预览版 `noindex`。在 Cloudflare Pages 的 **Production** 环境单独填写 `SITE_URL=https://真实域名`；Preview 环境不要设置 `RELEASE_APPROVED=1`。源码还会在 `CF_PAGES=1` 且 `CF_PAGES_BRANCH!=main` 时强制关闭索引，防止误拷贝生产环境变量。
-4. **正式选择要索引的范围**：用户确认人工验收及域名后，Production 环境设置 `RELEASE_APPROVED=1`。默认**不设置** `RELEASE_V3_P2_APPROVED`（或设 `0`）：只索引 26 个原 V3 P0/P1 工具、5 个有批准子工具的分类、主页、4 个政策页，共 **36 个 canonical/sitemap URL**。原 V3 五个 P2 虽有可使用的预览功能，但不随之自动索引；仅当单独审批且设置 `RELEASE_V3_P2_APPROVED=1` 时才索引 42 个 URL（含 Materials）。
+4. **正式选择要索引的范围**：用户确认自有域名、明确授权正式发布，且软件 CI/实站检查通过后，Production 环境设置 `RELEASE_APPROVED=1`。默认**不设置** `RELEASE_V3_P2_APPROVED`（或设 `0`）：只索引 26 个原 V3 P0/P1 工具、5 个有批准子工具的分类、主页、4 个政策页，共 **36 个 canonical/sitemap URL**。原 V3 五个 P2 虽有可使用的预览功能，但不随之自动索引；仅当单独审批且设置 `RELEASE_V3_P2_APPROVED=1` 时才索引 42 个 URL（含 Materials）。
 5. **处理生产 Pages 别名**：Cloudflare 说明，当自有域名绑定后，`woodworking-calculator.pages.dev` 仍可能提供和自有域名相同的产物。用 Cloudflare **Bulk Redirects** 将这个旧域名以 **301** 永久重定向到 `https://真实域名`，设置 *Subpath matching*、*Preserve path suffix*、*Preserve query string*。如同时使用 `www`，按选择的首选主域设置相应重定向。不要假设只有 canonical 就完成去重。
 6. **重新部署 production main**：确认实际 Git SHA 与成功的 Cloudflare 部署日志；如 CI 红灯，不批准搜索索引。`CF_PAGES_BRANCH` 必须是 `main` 才会有可索引产物，其他 Pages 分支始终 fail closed。
 7. **运行下面的只读 HTTP 审核并保存 JSON 记录**。全部 PASS 后才去 Google Search Console 添加/验证域名资产并提交真实 `sitemap.xml`，随后按上线后第 2、4、8 周检查 GSC 收录、展现、点击和查询，不虚构流量或收益。
