@@ -232,9 +232,15 @@
     {
       "keyword": "wall framing calculator",
       "originalRoute": "/wall-stud-calculator/",
-      "decision": "needs-intent-verification",
+      "decision": "qualified-existing-scope",
       "candidateRoute": "/framing-calculator/",
-      "reason": "Broad term; stronger candidate is opening-capable framing page, but verify present US SERP before claiming the unqualified phrase."
+      "reason": "Publicly accessible pages for the exact phrase predominantly show one-wall stud/plate estimates with door and window openings. The existing Framing Calculator does support user-entered opening stations, king/jack/header/sill member geometry and stock takeoff; the Wall Stud Counter does not. This is a qualified existing route, NOT structural header sizing, code-certified wall plans, or a verified USA-geolocated Top-10 SERP match.",
+      "sampledPublicResults": [
+        "https://www.wallframingcalculator.com/",
+        "https://anybuild.co/calculators/framing",
+        "https://plandiybuild.com/calculators/wall-framing",
+        "https://harth.build/free-tools/wall-framing-stud-calculator/"
+      ]
     },
     {
       "keyword": "deck joist span calculator",
@@ -273,11 +279,12 @@
     {
       "keyword": "coopering calculator",
       "originalRoute": "/segmented-bowl-calculator/",
-      "decision": "needs-intent-verification",
+      "decision": "qualified-existing-scope",
       "candidateRoute": "/stave-calculator/",
-      "reason": "Polygon-frustum stave calculations offer a nearby, narrower use case; real coopering often includes curved barrels/compound angles. Do not present as a synonym until SERP and feature match are checked.",
+      "reason": "Independent coopering/coopered-stave calculators show top and bottom diameters, staves, height, taper/bevel and sometimes thickness, stock fit and curved barrels. The existing Stave Calculator handles only a straight-sided polygon frustum's trapezoid face geometry. It is related to a NARROW subtask, NOT a complete cooperage/barrel-volume/curved-stave solution. Do not market the broad phrase as an equivalent keyword. These public examples are not a verified geographically located US SERP.",
       "sampledPublicResults": [
-        "https://apps.apple.com/ly/app/coopering-calculator/id6759157985"
+        "https://countfolk.com/coopered-stave-taper-angle-calculator/",
+        "https://nrtechstudio.com/tools/tapered-stave-calculator/"
       ]
     },
     {
@@ -387,5 +394,6 @@
         "https://molecalculator.com/Lumber-Cost-Per-Thousand-Calculator.php"
       ]
     }
-  ]
+  ],
+  "publicSpotCheck": "2026-11-07: exact public web search/result examples for the two previously unresolved broad intents, not a reproducible US-geolocated Google Top10/20 scrape; US results, KD and CPC remeasurement remain outside this evidence."
 }
