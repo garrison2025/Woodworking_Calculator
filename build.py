@@ -178,9 +178,16 @@ def tool_page(t):
             opts = ''.join(f'<option value="{esc(o["value"])}"{" selected" if o["value"] == f["value"] else ""}>{esc(o["label"])}</option>' for o in f["options"])
             control = f'<select id="{field_id}" name="{esc(f["key"])}" aria-describedby="field-note-{esc(f["key"])}">{opts}</select>'
             note = 'Select the intended reference or layout option'
+        elif f["kind"] == "L":
+            # Native number inputs reject the fractional-inch notation used
+            # on rulers and shop drawings (5 1/2, 5-1/2, 3/4).
+            # A strict parser converts accepted entries to decimal inches
+            # before all calculations, exports and measurement sharing.
+            control = f'<input id="{field_id}" name="{esc(f["key"])}" type="text" inputmode="text" maxlength="64" autocomplete="off" spellcheck="false" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
+            note = "Use selected units. In inches: 5.5, 5 1/2, 5-1/2, or 3/4. Other units: decimals only."
         else:
             control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
-            note = "Length: enter the unit selected above" if f["kind"] == "L" else "Enter a number using the described measurement"
+            note = "Enter a number using the described measurement"
         condition = f' data-show-when="{esc(f["showWhen"])}"' if f.get("showWhen") else ""
         return f'<div class="field"{condition}><label for="{field_id}">{label}</label>{control}<small id="field-note-{esc(f["key"])}">{esc(note)}</small></div>'
     scenarios=CASES_BY_SLUG.get(t["slug"], [])
@@ -555,6 +562,7 @@ def build():
     shutil.copyfile(ROOT/"src"/"app.mjs",assets/"app.mjs")
     shutil.copyfile(ROOT/"src"/"home.mjs",assets/"home.mjs")
     shutil.copyfile(ROOT/"src"/"measurement-links.mjs",assets/"measurement-links.mjs")
+    shutil.copyfile(ROOT/"src"/"length-entry.mjs",assets/"length-entry.mjs")
     shutil.copyfile(ROOT/"src"/"measurement-files.mjs",assets/"measurement-files.mjs")
     shutil.copyfile(ROOT/"src"/"calcs.mjs",assets/"calcs.mjs")
     shutil.copyfile(ROOT/"src"/"cut-list.mjs",assets/"cut-list.mjs")

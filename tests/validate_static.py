@@ -50,7 +50,7 @@ class Checker(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()
         self.title=False;self.title_text="";self.h1=0;self.robots=[];self.links=[];self.descriptions=[];self.canon=[];self.forms=0
-        self.input_ids=[];self.label_targets=set();self.field_note_ids=set()
+        self.input_ids=[];self.input_types={};self.label_targets=set();self.field_note_ids=set()
         self.context_targets=[]
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
@@ -59,6 +59,7 @@ class Checker(html.parser.HTMLParser):
         if tag=="form":self.forms+=1
         if tag in ("input","select") and a.get("id","").startswith("f-"):
             self.input_ids.append(a["id"])
+            self.input_types[a["id"]]=tag if tag=="select" else a.get("type","text")
         if tag=="label" and a.get("for"):
             self.label_targets.add(a["for"])
         if a.get("id","").startswith("field-note-"):
@@ -190,6 +191,14 @@ for p in pages:
             errors.append(f"{u}: duplicated calculator field IDs")
         if set(c.input_ids)!=expected:
             errors.append(f"{u}: generated input fields differ from manifest")
+        for source_field in page_tool["inputs"]:
+            field_id="f-"+source_field["key"]
+            expected_type=("select" if source_field.get("options") else
+                           "text" if source_field["kind"]=="L" else "number")
+            if c.input_types.get(field_id)!=expected_type:
+                errors.append(f"{u}: {field_id} expected {expected_type} input, got {c.input_types.get(field_id)}")
+            if expected_type=="text" and "5 1/2" not in body:
+                errors.append(f"{u}: fractional-inch input lacks accessible examples")
         for field_id in expected:
             if field_id not in c.label_targets:
                 errors.append(f"{u}: input lacks a matching visible label: {field_id}")
@@ -217,7 +226,7 @@ for t in hold:
     if (dist/t["slug"]).exists():errors.append(f"P2 unexpectedly published: {t['slug']}")
 if (dist/"sitemap.xml").exists():errors.append("Preview must not expose an XML sitemap")
 if "Disallow: /" not in (dist/"robots.txt").read_text():errors.append("Preview robots.txt must disallow crawling")
-for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
+for asset in ("assets/app.mjs","assets/home.mjs","assets/measurement-links.mjs","assets/measurement-files.mjs","assets/length-entry.mjs","assets/calcs.mjs","assets/cut-list.mjs","assets/framing-stations.mjs","assets/framing-review-versions.mjs","assets/tools.json","assets/style.css","favicon.svg","404.html","_headers"):
     if not (dist/asset).is_file():errors.append("Missing asset: "+asset)
 # All 31 separately hydrated calculator configs must exactly match the
 # source registry. A stale or partial config could silently change quantities.

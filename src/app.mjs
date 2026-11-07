@@ -1,6 +1,7 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
 import {createMeasurementFragment,parseMeasurementFragment} from "./measurement-links.mjs";
 import {buildMeasurementFile,parseMeasurementFile} from "./measurement-files.mjs";
+import {parseEditableLength,canonicalLengthText} from "./length-entry.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
 import {makeFramingReviewVersion,validateFramingReviewVersion,
@@ -152,9 +153,11 @@ if(slug){
         issue.fieldKey=f.key;
         throw issue;
       }
-      const v=Number(el.value);
-      if(!Number.isFinite(v)){
-        const issue=new Error(f.label+" must be a valid number.");
+      const v=f.kind==="L"?parseEditableLength(el.value,unit):Number(el.value);
+      if(v===null||!Number.isFinite(v)){
+        const issue=new Error(f.label+(f.kind==="L"&&unit==="in"?
+          " must be a decimal or a fractional-inch measurement (e.g. 5 1/2).":
+          " must be a valid number."));
         issue.fieldKey=f.key;
         throw issue;
       }
@@ -2168,8 +2171,8 @@ if(slug){
       // Never turn an intentionally blank or invalid field into a false zero
       // when the user switches between inches and metric units.
       if(!el||el.value.trim()==="")continue;
-      const v=Number(el.value);
-      if(Number.isFinite(v))el.value=convertEditableLength(v,before,after);
+      const v=parseEditableLength(el.value,before);
+      if(v!==null)el.value=convertEditableLength(v,before,after);
     }
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
@@ -2214,8 +2217,14 @@ if(slug){
     applyValidatedMeasurementSnapshot(snapshot);
     return true;
   };
+  // The link and JSON codecs intentionally accept numeric strings only.
+  // Convert a typed US fraction to its exact decimal-inch equivalent before
+  // serializing, so every restored calculation has the same physical length.
   const currentMeasurementFields=()=>tool.inputs.map(f=>({
-    key:f.key,value:form.elements.namedItem(f.key).value
+    key:f.key,
+    value:f.kind==="L"?
+      canonicalLengthText(form.elements.namedItem(f.key).value,unit):
+      form.elements.namedItem(f.key).value
   }));
   measurementSave?.addEventListener("click",()=>{
     if(!latest)return;
