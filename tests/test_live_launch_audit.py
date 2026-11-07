@@ -17,9 +17,9 @@ DOMAIN = "https://custom-woodwork.com"
 PAGES = "https://woodworking-calculator.pages.dev"
 
 
-def fake_site(mode, p2=False, broken=None, source_sync=False):
+def fake_site(mode, broken=None, source_sync=False):
     broken = broken or set()
-    eligible = launch.expected_index_routes(p2) if mode == "production" else set()
+    eligible = launch.expected_index_routes() if mode == "production" else set()
 
     def get(url):
         u = urlsplit(url)
@@ -70,8 +70,8 @@ def fake_site(mode, p2=False, broken=None, source_sync=False):
         if path not in launch.ALL_PAGES:
             return 404, "", {}
         indexed = path in eligible
-        if path == "/materials/" and "material_index" in broken:
-            indexed = True
+        if path == "/materials/" and "material_noindex" in broken:
+            indexed = False
         if path == "/framing/" and "missing_h1" in broken:
             h1 = ""
         else:
@@ -106,10 +106,12 @@ def fake_site(mode, p2=False, broken=None, source_sync=False):
 class LiveAuditTests(unittest.TestCase):
     def test_scope_and_launchable_routes(self):
         self.assertEqual(len(launch.ALL_PAGES), 42)
-        self.assertEqual(len(launch.expected_index_routes(False)), 36)
-        self.assertEqual(len(launch.expected_index_routes(True)), 42)
-        self.assertNotIn("/materials/", launch.expected_index_routes(False))
-        self.assertIn("/materials/", launch.expected_index_routes(True))
+        self.assertEqual(len(launch.expected_index_routes()), 42)
+        self.assertIn("/materials/", launch.expected_index_routes())
+        for slug in ("spiral-staircase-calculator", "gambrel-roof-calculator",
+                     "lumber-price-calculator", "fence-picket-calculator",
+                     "stave-calculator"):
+            self.assertIn("/" + slug + "/", launch.expected_index_routes())
 
     def test_preview_is_not_indexable_and_never_has_sitemap(self):
         result = launch.audit(PAGES, "preview", get=fake_site("preview"))
@@ -129,21 +131,15 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("404 body" in x for x in result["failures"]))
 
-    def test_production_keeps_p2_and_materials_noindex_until_approval(self):
+    def test_production_indexes_all_42_including_former_p2_and_materials(self):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
                               get=fake_site("production"))
         self.assertEqual(result["status"], "PASS", result["failures"])
-        self.assertEqual(result["indexable_routes_expected"], 36)
-
-    def test_all_routes_after_explicit_original_p2_approval(self):
-        result = launch.audit(DOMAIN, "production", allow_p2=True,
-                              pages_origin=PAGES, get=fake_site("production", True))
-        self.assertEqual(result["status"], "PASS", result["failures"])
         self.assertEqual(result["indexable_routes_expected"], 42)
 
-    def test_unapproved_materials_category_fails(self):
+    def test_obsolete_materials_noindex_is_rejected(self):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
-                              get=fake_site("production", broken={"material_index"}))
+                              get=fake_site("production", broken={"material_noindex"}))
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/materials/" in x for x in result["failures"]))
 
