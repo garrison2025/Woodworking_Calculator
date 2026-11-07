@@ -49,6 +49,7 @@ class Head(html.parser.HTMLParser):
         self.in_json = False
         self.json_text = ""
         self.calculator_forms = 0
+        self.tool_field_ids = []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -62,6 +63,8 @@ class Head(html.parser.HTMLParser):
             self.canonical.append(a.get("href", ""))
         if tag == "form" and a.get("id") == "calculator-form":
             self.calculator_forms += 1
+        if tag in ("input", "select") and a.get("id", "").startswith("f-"):
+            self.tool_field_ids.append(a["id"])
         if tag == "script" and a.get("type") == "application/ld+json":
             self.in_json = True
             self.json_text = ""
@@ -131,7 +134,7 @@ def validate_base(url: str, mode: str):
 
 
 def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None = None,
-          get=http_get):
+          get=http_get, verify_source_parity: bool = False):
     """Return a machine-readable result. An injected get() supports offline tests."""
     origin = validate_base(base, mode)
     if mode not in ("preview", "production"):
@@ -146,6 +149,8 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
                "base": origin, "mode": mode, "original_v3_p2_approved": allow_p2,
                "checks": 0, "failures": [],
                "http_pages_checked": 0,
+               "verify_source_parity": verify_source_parity,
+               "source_parity_checks": 0,
                "physical_measurement": "NOT RUN",
                "device_screen_reader_test": "NOT RUN",
                "gsc_indexing": "NOT RUN"}
@@ -195,6 +200,13 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
                   path + ": JSON-LD type does not match page")
         if path in TOOL_PATHS:
             check(p.calculator_forms == 1, path + ": missing or duplicate live calculator form")
+            if verify_source_parity:
+                tool = next(t for t in TOOLS if path == "/" + t["slug"] + "/")
+                expected_fields = {"f-" + f["key"] for f in tool["inputs"]}
+                results["source_parity_checks"] += 1
+                check(len(p.tool_field_ids) == len(expected_fields) and
+                      set(p.tool_field_ids) == expected_fields,
+                      path + ": deployed form fields differ from the current source manifest")
     for asset in ("favicon.svg", "assets/app.mjs", "assets/calcs.mjs",
                   "assets/style.css"):
         status, _, _ = request("/" + asset)
@@ -207,8 +219,46 @@ def audit(base: str, mode: str, allow_p2: bool = False, pages_origin: str | None
             try:
                 config = json.loads(body)
                 check(config.get("slug") == t["slug"], path + ": wrong runtime tool config")
+                if verify_source_parity:
+                    results["source_parity_checks"] += 1
+                    check(config == t, path + ": deployed config differs from current source (possible stale deployment)")
             except (ValueError, AttributeError):
                 check(False, path + ": invalid runtime tool config JSON")
+    if verify_source_parity:
+        # Generated tool configs and markup may drift independently of the
+        # JavaScript engine. A correct slug or HTTP 200 alone cannot prove the
+        # current GitHub main commit is the one Cloudflare actually serves.
+        # Build.py copies these files byte-for-byte, so text equality is a
+        # meaningful, repeatable deployment parity check.
+        source_assets = {
+            "assets/tools.json": "tools.json",
+            "assets/app.mjs": "app.mjs",
+            "assets/home.mjs": "home.mjs",
+            "assets/calcs.mjs": "calcs.mjs",
+            "assets/cut-list.mjs": "cut-list.mjs",
+            "assets/length-entry.mjs": "length-entry.mjs",
+            "assets/measurement-files.mjs": "measurement-files.mjs",
+            "assets/measurement-links.mjs": "measurement-links.mjs",
+            "assets/framing-stations.mjs": "framing-stations.mjs",
+            "assets/framing-review-versions.mjs": "framing-review-versions.mjs",
+            "assets/style.css": "style.css",
+        }
+        for asset, source in source_assets.items():
+            status, actual, _ = request("/" + asset)
+            results["source_parity_checks"] += 1
+            check(status == 200, "/" + asset + ": missing asset for source parity")
+            if status != 200:
+                continue
+            expected = (ROOT / "src" / source).read_text(encoding="utf-8")
+            if source.endswith(".json"):
+                try:
+                    matches = json.loads(actual) == json.loads(expected)
+                except ValueError:
+                    matches = False
+            else:
+                matches = actual == expected
+            check(matches, "/" + asset +
+                  ": deployed content differs from source (possible stale deployment)")
     status, body, _ = request("/robots.txt")
     check(status == 200, "Missing robots.txt")
     if mode == "preview":
@@ -253,9 +303,12 @@ def main(argv=None):
     parser.add_argument("--pages-origin",
                         help="Required for production: https://woodworking-calculator.pages.dev")
     parser.add_argument("--report", help="Write JSON verification evidence to this file")
+    parser.add_argument("--verify-source-parity", action="store_true",
+                        help="Compare deployed 31 form-field sets, 31 tool configs and 11 source assets with current checked-out source; run after deployment")
     args = parser.parse_args(argv)
     try:
-        result = audit(args.base, args.mode, args.approve_v3_p2, args.pages_origin)
+        result = audit(args.base, args.mode, args.approve_v3_p2, args.pages_origin,
+                       verify_source_parity=args.verify_source_parity)
     except ValueError as error:
         parser.error(str(error))
     print(json.dumps(result, ensure_ascii=False, indent=2))
