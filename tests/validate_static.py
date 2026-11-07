@@ -127,7 +127,7 @@ for p in pages:
                 errors.append(f"{u}: missing or duplicate local input-backup control {marker}")
     if page_tool:
         intent=intents[page_tool["slug"]]
-        if c.title_text != intent["seoTitle"]+" | Workshop Geometry Tools":
+        if c.title_text != intent["seoTitle"]+" | WoodLayout":
             errors.append(f"{u}: SEO title does not match task-specific approved intent")
         if page_tool["keyword"].lower() not in intent["seoTitle"].lower():
             # One historically broad research query is deliberately NOT used
