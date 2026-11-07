@@ -17,7 +17,7 @@ DOMAIN = "https://custom-woodwork.com"
 PAGES = "https://woodworking-calculator.pages.dev"
 
 
-def fake_site(mode, p2=False, broken=None):
+def fake_site(mode, p2=False, broken=None, source_sync=False):
     broken = broken or set()
     eligible = launch.expected_index_routes(p2) if mode == "production" else set()
 
@@ -48,8 +48,20 @@ def fake_site(mode, p2=False, broken=None):
                 return 404, "", {}
             if "missing_config" in broken and slug == "stud-calculator":
                 return 404, "", {}
+            if source_sync:
+                tool = next(t for t in launch.TOOLS if t["slug"] == slug)
+                if "stale_deck_config" in broken and slug == "deck-material-calculator":
+                    tool = {**tool, "desc": "Outdated version with same slug"}
+                return 200, json.dumps(tool), {}
             return 200, json.dumps({"slug": slug}), {}
         if path.startswith("/assets/") or path == "/favicon.svg":
+            if source_sync and path.startswith("/assets/"):
+                name = path[len("/assets/"):]
+                asset = launch.ROOT / "src" / name
+                if asset.is_file():
+                    if "stale_calcs" in broken and name == "calcs.mjs":
+                        return 200, "stale calculator engine", {}
+                    return 200, asset.read_text(encoding="utf-8"), {}
             return 200, "asset", {}
         if path not in launch.ALL_PAGES:
             return 404, "", {}
@@ -68,6 +80,13 @@ def fake_site(mode, p2=False, broken=None):
         }) + "</script>" if indexed else "")
         robot = "index,follow" if indexed else "noindex,nofollow,noarchive"
         form = '<form id="calculator-form"></form>' if path in launch.TOOL_PATHS else ""
+        if source_sync and path in launch.TOOL_PATHS:
+            tool = next(t for t in launch.TOOLS if path == "/" + t["slug"] + "/")
+            fields = [x["key"] for x in tool["inputs"]]
+            if "stale_deck_form" in broken and path == "/deck-material-calculator/":
+                fields.remove("joistLayoutMode")
+            form = '<form id="calculator-form">' + "".join(
+                '<input id="f-' + key + '">' for key in fields) + "</form>"
         doc = ('<!doctype html><html><head><title>Page: ' + path +
                '</title><meta name="description" content="Useful geometry calculator">'
                '<meta name="robots" content="' + robot + '">' + canonical + schema +
@@ -125,6 +144,37 @@ class LiveAuditTests(unittest.TestCase):
                               get=fake_site("preview", broken={"missing_h1"}))
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/framing/" in x for x in result["failures"]))
+
+    def test_full_live_source_parity_passes_when_remote_matches_checked_out_commit(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True))
+        self.assertEqual(result["status"], "PASS", result["failures"])
+        self.assertEqual(result["source_parity_checks"], 73)
+        self.assertEqual(result["http_pages_checked"], 42)
+
+    def test_deployed_deck_config_mismatch_detected_even_when_slug_is_correct(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True,
+                                            broken={"stale_deck_config"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("deck-material-calculator.json" in x and
+                            "differs" in x for x in result["failures"]))
+
+    def test_deployed_form_missing_latest_mode_is_not_falsely_accepted(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True,
+                                            broken={"stale_deck_form"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("/deck-material-calculator/" in x and
+                            "form fields" in x for x in result["failures"]))
+
+    def test_deployed_calculator_engine_mismatch_detected(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True,
+                                            broken={"stale_calcs"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("/assets/calcs.mjs" in x and
+                            "differs" in x for x in result["failures"]))
 
     def test_fake_or_preview_hosts_cannot_be_production(self):
         for origin in (PAGES, "https://woodworking.example",
