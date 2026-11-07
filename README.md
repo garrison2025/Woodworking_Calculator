@@ -6,6 +6,13 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): engineering beta, not a production launch.** [PR #13 verification](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42310268231) passed **556 Node, 193 Chromium and 18 Firefox/Linux WebKit tests**, plus 42 static pages and A4/Letter PDF checks before merge as `cafccc2`. PR #14's stricter cut-coordinate guards require a separate passing CI run. Real timber trials, macOS Safari/screen readers, physical printer rulers and professional approvals remain unverified. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-07 — Optional measurement share links (proposed PR)
+
+- Every calculator offers **Copy measurement link** when current inputs are valid. The link embeds a versioned, complete set of numeric inputs, unit, fraction precision, and the optional currency label as a URL **fragment** (after `#`), not as a request query string.
+- Opening the link validates field identity, duplicates, finite numeric values, unit/precision/currency whitelist and the calculator geometry **before** restoring any input. Malformed, partial or tampered fragments restore only defaults and show a rejection message. **Reset dimensions** removes the fragment so refreshing does not reapply the previous measurements.
+- Links are never silently copied, stored or submitted. URL fragments are not transmitted in the HTTP request to Cloudflare, but **anyone you explicitly share the link with can see the numbers**; the link contains no field inspection, review declarations, purchase authorizations, or source-document contents. Sharing a numeric model does not certify a real-world cut.
+- The new codec has Node negative/round-trip tests and browser tests for numeric/unit/currency restoration, reset and malformed-link rejection. **Until this PR's GitHub Actions succeeds, do not mark these checks PASS.**
+
 ## 2026-11-07 — Spiral, gambrel and tapered stave precision (new PR)
 
 - Spiral stair: report **curved annular sector area** separately from the **smaller four-straight-chord polygon area drawn/exported**; never treat these as interchangeable material quantities. Reject unmeasurable riser/inner-chord coordinate rows.
