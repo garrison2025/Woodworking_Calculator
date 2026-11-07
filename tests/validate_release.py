@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Offline release-mode SEO/GEO contract test. NEVER deploys example domain."""
 import html.parser
-import os
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -12,12 +11,8 @@ base="https://woodworking.example"
 manifest=json.loads((root/"src"/"tools.json").read_text(encoding="utf8"))
 published=[x for x in manifest["tools"] if x["priority"] in ("P0","P1")]
 hold=[x for x in manifest["tools"] if x["priority"]=="P2"]
-# V3 original five P2 tools were implemented later, but their SEO release
-# requires explicit approval in addition to RELEASE_APPROVED.
-v3_p2={"spiral-staircase-calculator","gambrel-roof-calculator",
-       "lumber-price-calculator","fence-picket-calculator","stave-calculator"}
-assert len(v3_p2)==5 and v3_p2<={x["slug"] for x in published}
-allow_p2=os.environ.get("RELEASE_V3_P2_APPROVED")=="1"
+# All 31 completed tools are eligible in one owner-authorized custom-domain
+# SEO release. Historical V3 P2 planning priority has no separate index gate.
 intents={x["slug"]:x for x in json.loads(
     (root/"src"/"tool-intents.json").read_text(encoding="utf8"))["tools"]}
 errors=[]
@@ -56,17 +51,14 @@ class PageHead(html.parser.HTMLParser):
 
 pages=list(dist.rglob("index.html"))
 expected_urls={"/","/about/","/contact/","/privacy/","/terms/"}
-expected_urls.update("/"+t["slug"]+"/" for t in published
-                     if t["slug"] not in v3_p2 or allow_p2)
+expected_urls.update("/"+t["slug"]+"/" for t in published)
 category_urls={"/"+data[1]+"/" for key,data in manifest["categories"].items()
                if any(t["category"]==key for t in published)}
-release_categories={"/"+data[1]+"/" for key,data in manifest["categories"].items()
-                    if any(t["category"]==key and (t["slug"] not in v3_p2 or allow_p2)
-                           for t in published)}
-expected_urls.update(release_categories)
-assert ("/materials/" in release_categories)==allow_p2, "Materials must stay noindex until lumber P2 approval"
+expected_urls.update(category_urls)
+assert "/materials/" in category_urls, "Materials category must be released with Lumber Price"
 assert len(published)==31 and len(hold)==0
-all_preview_routes=expected_urls|category_urls|{"/"+t["slug"]+"/" for t in published}
+assert len(expected_urls)==42, "Production sitemap must index exactly all 42 approved routes"
+all_preview_routes=expected_urls
 actual_urls=set()
 for p in pages:
     path="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
@@ -139,17 +131,15 @@ for pattern in ("https://woodworking-calculator.pages.dev/*",
         errors.append("Production Pages alias is missing host-scoped noindex: "+pattern)
 if "\n/*\n"+nonindex in "\n"+headers:
     errors.append("Production must not globally noindex the approved custom domain")
-for slug in sorted(v3_p2):
-    rule="/"+slug+"/\n"+nonindex
-    if (rule in headers)!= (not allow_p2):
-        errors.append("Original V3 P2 HTTP noindex not gated: "+slug)
-if ("\n/materials/\n"+nonindex in headers)!=(not allow_p2):
-    errors.append("Materials category HTTP noindex not gated")
+# Owner has approved the five originally P2 tools. An extra HTTP noindex on
+# any route would silently suppress its approved canonical/sitemap listing.
+for path in sorted(expected_urls):
+    if "\n"+path+"\n"+nonindex in headers:
+        errors.append("Approved URL has obsolete path-scoped HTTP noindex: "+path)
 
 if errors:
     for e in errors:print("FAIL:",e)
     raise SystemExit(1)
 print("PASS: release dry-run contains",len(expected_urls),
-      "unique canonical/schema/sitemap routes; original V3 P2 SEO approved:",allow_p2,
-       "; all 31 calculators remain usable, only eligible pages indexable")
+      "unique canonical/schema/sitemap routes including all 31 calculators and Materials")
 print("NOTE: https://woodworking.example is a reserved offline test domain, not a purchased or deployed domain.")

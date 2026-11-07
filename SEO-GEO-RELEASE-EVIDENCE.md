@@ -1,4 +1,6 @@
 # SEO / GEO release evidence — historical evidence and current scope
+
+> **最新 2026-11-07 SEO 发布范围批准：** 全部 **31 个工具（含原 V3 五个 P2）+ 6 个分类 + 首页 + 4 个说明页** 均获未来自有域名正式索引范围授权，生产为 **42 URL**，不再有单独 P2 门禁；当前 Cloudflare Pages 仍为 noindex 预览。见[正式批准记录](research/V3-P2-SEO-APPROVAL-20261107.md)。以下旧版 26 工具/36 页的数字均属历史快照。
 ## Latest owner-approved online-only software QA scope — 2026-11-07
 
 The owner has waived hands-on printer-ruler, timber trial and real iOS/Android/screen-reader verification **as release gates for this geometry reference website**, not as evidence that any of them passed. See [online-only software acceptance](research/ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md). The later [main CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839) passed 31-tool regression, cross-engine browser/PDF tests and the 42-page, 73-source Cloudflare preview parity audit with **0 indexable preview URLs**. Physical 1:1 and structural-code claims remain unsupported. Formal domain, Google indexing, actual US SERP and original V3 P2 SEO approval are still unperformed.

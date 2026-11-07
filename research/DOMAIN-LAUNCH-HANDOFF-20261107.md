@@ -2,6 +2,8 @@
 
 **当前客观状态：只完成软件/自动化验收和 Cloudflare Pages 预览部署，没有购买自有域名，没有开启搜索引擎收录。** 请勿把本文当作已执行的上线操作记录。当前 31 个工具、42 个页面、5 个原始 V3 P2 的独立索引门禁及最近一次成功的主分支 CI [#717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) 见 [最终验收记录](../FINAL-ACCEPTANCE-20261107.md)。
 
+> **2026-11-07 SEO 范围变更（覆盖下文旧版 36/42 条双模式描述）：** 用户已批准原 V3 全部五个 P2 工具及 Materials 分类参与**未来正式自有域名**的搜索收录，`RELEASE_V3_P2_APPROVED` 已废弃；现在真实域名上线发布默认包含 **42/42 URL**。见[用户批准记录](V3-P2-SEO-APPROVAL-20261107.md)。当前 `pages.dev` 预览保持 `noindex`，域名未购买，正式上线授权仍未执行。
+
 > **2026-11-07 业主范围变更：** 已选择[仅线上软件验收](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)，不再要求业主本人完成打印尺测、木料试切或 iOS/Android 真机测试。这三类项目仍为 **NOT RUN**，但不再是本参考工具站的**软件发布阻断项**；不可据此声称实体精度/施工安全认证。最新主分支线上核验是 [CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839)，完整通过；**域名购买与正式索引仍然未执行**。
 
 ## 不能混为一谈的三个状态
@@ -17,7 +19,7 @@
 1. **确认线上软件用途与验收证据**：依据[线上软件验收记录](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)与成功的主分支 CI、Cloudflare 源码一致性审计，作为几何计算/材料估算参考工具的网站软件发布条件。**不强制业主执行实体 A4/Letter 尺测、木料试切或真机人工验收**；这些保留 NOT RUN，不构成 1:1 模板、施工安全或法规符合性认证。
 2. **购买自有 HTTPS 域名**：Cloudflare Dashboard → Workers & Pages → 项目 `woodworking-calculator` → **Custom domains → Set up a domain**。如果买根域名（如 `example.com`），按 Cloudflare 的官方流程把它添加为 Cloudflare zone 并配置域名服务器；自定义子域名遵循官方 DNS/CNAME 流程。域名未买就不要填写假 `SITE_URL`。
 3. **先绑定域名，暂不开放索引**：保持 `RELEASE_APPROVED` 缺失或为 `0`，确定自有域名实际返回预览版 `noindex`。在 Cloudflare Pages 的 **Production** 环境单独填写 `SITE_URL=https://真实域名`；Preview 环境不要设置 `RELEASE_APPROVED=1`。源码还会在 `CF_PAGES=1` 且 `CF_PAGES_BRANCH!=main` 时强制关闭索引，防止误拷贝生产环境变量。
-4. **正式选择要索引的范围**：用户确认自有域名、明确授权正式发布，且软件 CI/实站检查通过后，Production 环境设置 `RELEASE_APPROVED=1`。默认**不设置** `RELEASE_V3_P2_APPROVED`（或设 `0`）：只索引 26 个原 V3 P0/P1 工具、5 个有批准子工具的分类、主页、4 个政策页，共 **36 个 canonical/sitemap URL**。原 V3 五个 P2 虽有可使用的预览功能，但不随之自动索引；仅当单独审批且设置 `RELEASE_V3_P2_APPROVED=1` 时才索引 42 个 URL（含 Materials）。
+4. **正式 SEO 发布范围已确定为 42 个 URL**：用户已明确批准全部五个原 V3 P2 工具，额外 `RELEASE_V3_P2_APPROVED` 开关已移除。未来仅在用户购买并接入自有域名、明确授权正式发布、软件 CI/实站检查通过后，在 Production 环境填写 `SITE_URL=https://真实域名` 和 `RELEASE_APPROVED=1`，一次性索引 **31 个工具 + 6 个分类（含 Materials）+ 首页 + 4 个政策页 = 42 个 canonical/sitemap URL**。目前不要设置正式发布开关。
 5. **处理生产 Pages 别名**：Cloudflare 说明，当自有域名绑定后，`woodworking-calculator.pages.dev` 仍可能提供和自有域名相同的产物。用 Cloudflare **Bulk Redirects** 将这个旧域名以 **301** 永久重定向到 `https://真实域名`，设置 *Subpath matching*、*Preserve path suffix*、*Preserve query string*。如同时使用 `www`，按选择的首选主域设置相应重定向。不要假设只有 canonical 就完成去重。
 6. **重新部署 production main**：确认实际 Git SHA 与成功的 Cloudflare 部署日志；如 CI 红灯，不批准搜索索引。`CF_PAGES_BRANCH` 必须是 `main` 才会有可索引产物，其他 Pages 分支始终 fail closed。
 7. **运行下面的只读 HTTP 审核并保存 JSON 记录**。全部 PASS 后才去 Google Search Console 添加/验证域名资产并提交真实 `sitemap.xml`，随后按上线后第 2、4、8 周检查 GSC 收录、展现、点击和查询，不虚构流量或收益。
@@ -40,10 +42,10 @@ python scripts/verify_live_launch.py --base https://woodworking-calculator.pages
 python scripts/verify_live_launch.py --base https://YOUR-OWN-DOMAIN.com --mode production --pages-origin https://woodworking-calculator.pages.dev --verify-source-parity --report production-audit.json
 ~~~
 
-如原 V3 五个 P2 均单独得到批准且正式构建开启 `RELEASE_V3_P2_APPROVED=1`，才加上 `--approve-v3-p2`。默认必须不带。脚本会检查：
+原 V3 五个 P2 已获批准，**不再使用** `--approve-v3-p2` 参数；未来正式域名审核默认检查 42 个 URL。脚本会检查：
 
 - **所有 42 个实际页面**是否 HTTP 200、有唯一 H1、标题和 description；31 个工具都有表单；
-- **索引条件**：未批准的原 P2 和只含 P2 的 Materials 分类必须 noindex、无 canonical/JSON-LD、不在生产 sitemap；已批准的 URL 则必须有绝对 canonical、匹配 URL 与类型的 JSON-LD；
+- **索引条件**：当前预览全部 noindex；未来正式自有域名上线时 42 个已批准 URL 均须有绝对 canonical、匹配 URL 与类型的 JSON-LD，并出现在生产 sitemap；
 - **31 个独立配置 JSON**的 URL 与 slug、JS/CSS/favicons 等资源是否能正常 GET；
 - **预览环境**禁止抓取、sitemap 必须 404；**正式环境** sitemap URL 集合与获准索引页完全一致；
 - **不存在路径**实际 HTTP 404；**生产旧 pages.dev 别名**主页与一个工具路径必须真实返回指向自有域名对应路径的 301/308。

@@ -1,5 +1,7 @@
 # Woodworking Calculator — Release Readiness Gate (2026-11-07)
 
+> **同日追加审批，优先级高于下方历史文字：** 五个原 V3 P2 工具已获站长批准随全站进入未来 HTTPS 自有域名的 SEO 生产范围，`RELEASE_V3_P2_APPROVED` 已废弃。正式发布目标 **42 个 URL**，不再等待 P2 单独审批；正式域名/主发布门禁仍未执行。详见[批准记录](V3-P2-SEO-APPROVAL-20261107.md)。
+
 Current implementation: **31 geometry calculators** (9 P0 + 22 P1), **six populated categories**, **zero unimplemented P2**, and 152 historical KD<=29 Semrush research entries. These counts come from src/tools.json. **Current software acceptance: 2026-11-07 main CI #717 PASS, merged SHA `95e8b81`; 42 publicly fetched preview HTML pages PASS, no real domain.** All original five P2 intents require independent release approval; the Materials category stays noindex until Lumber Price is approved. This document describes verifications still needed, not proof of real-world field acceptance. [Executable launch handoff](DOMAIN-LAUNCH-HANDOFF-20261107.md).
 
 **Superseding owner scope decision (2026-11-07):** [Online-only software acceptance](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md) replaces human physical/real-device work as a **website software** release gate. Latest successful complete [main CI #42354449839](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42354449839) includes real Cloudflare HTTP/source parity. Items below labelled HUMAN/PHYSICAL/MANUAL NOT RUN remain historically accurate but are **optional/out-of-scope for software release**; they must not be reinterpreted as PASS or construction approval. Custom domain and explicit SEO release authorization remain required.
