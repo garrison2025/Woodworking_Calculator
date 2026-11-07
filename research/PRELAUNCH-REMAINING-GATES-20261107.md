@@ -1,5 +1,7 @@
 # Woodworking Calculator｜预上线未完成事项的执行交接（2026-11-07）
 
+> **2026-11-07 最新 SEO 批准：** 原 V3 五个 P2 工具和 Materials 分类已获用户授权纳入**未来正式自有域名**索引范围，默认 42 个 URL；旧 `RELEASE_V3_P2_APPROVED` 开关废弃。见[批准记录](V3-P2-SEO-APPROVAL-20261107.md)。无域名时保持全部预览页 noindex，正式收录仍未执行。
+
 > **2026-11-07 最新范围决定：** 用户选择线上软件验收，实体打印、木料试切和真实移动设备/辅助技术人工验收 **不再要求用户执行，也不再阻断网站软件结案**。这些项目仍为 **NOT RUN · OUT OF SCOPE**，不是 PASS；该豁免不能被描述成真实 1:1 切割模板或结构安全认证。详见 [线上软件验收记录](ONLINE-ONLY-SOFTWARE-ACCEPTANCE-20261107.md)。正式域名、索引及原 V3 P2 批准没有变化。
 
 > **此表不是全量上线放行声明。** 31 个工具/42 个页面的软件回归可自动完成；实物木工、实体打印和设备辅助技术验收必须由实际操作者独立完成。正式域名尚未购买，不能伪造 Cloudflare DNS、GSC 收录或 P2 审批。
@@ -21,7 +23,7 @@
 | OOS | iOS Safari、Android Chrome、VoiceOver/TalkBack/NVDA | **真实设备与辅助技术**检查所有重要交互：独立朗读标签/报错、横向表格、键盘顺序、打印/导出、是否需要拖动等；记录机型与系统版本、录屏/截图 | **NOT RUN：自动化仿真不能代替** | 真机用户/测试人员 |
 | P1 | GSC 实际收录、展示、查询与点击 | 正式索引开放后 GSC 验证财产权；提交 sitemap；等实际 Google 抓取结果及查询数据，记录日期 | **BLOCKED：预览 noindex，尚未上线** | 已持有域名并登录 GSC 的用户 |
 | P1 | 最新美国 SERP 和 KD/Volume/CPC | 对每条来源词用可复核的美国指定地区 SERP 搜索结果和当期 Semrush/Ahrefs 原始导出核对工具意图、数据日期、前 10/20 名；不能用 web 公共样本当作全量验证 | **仍未完成 152 条 US GEO SERP 和最新付费指标**；来源历史值保留、全部打状态 | 可访问目标地区 SERP 与商业数据平台的人 |
-| P2 | 原 V3 五个 P2 的正式 SEO 收录 | 用户确认风险和编辑范围后，单独明确批准 `RELEASE_V3_P2_APPROVED=1`；先完成域名、内容、真实测试，再核对索引列表（目前默认生产模拟只开放 36，含 P2 时模拟为 42） | **功能 IMPLEMENTED；SEO APPROVAL NOT GRANTED** | 站长/专业审核人 |
+| P2 | 原 V3 五个 P2 的正式 SEO 收录 | 已由用户明确批准随全部 31 个工具在未来自有域名正式发布时进入 sitemap/canonical；原独立 P2 开关废弃，软件测试通过 | **SEO SCOPE APPROVED；CUSTOM DOMAIN INDEX LAUNCH NOT RUN** | 不需要另行人工 P2 审批 |
 
 ### 两类工作不可混同
 
