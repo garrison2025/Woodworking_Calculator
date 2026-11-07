@@ -1,4 +1,5 @@
 import {safeCompute,convertToInches,convertFromInches,convertEditableLength,inchFraction} from "./calcs.mjs";
+import {createMeasurementFragment,parseMeasurementFragment} from "./measurement-links.mjs";
 import {buildScheduleCsv,buildMetricsCsv,scheduleColumns} from "./cut-list.mjs";
 import {makeFramingStationLedger,auditMeasuredFramingFits,assessFramingPurchaseReview} from "./framing-stations.mjs";
 import {makeFramingReviewVersion,validateFramingReviewVersion,
@@ -9,7 +10,7 @@ if(slug){
   const manifest=await fetch("/assets/tools.json").then(r=>{if(!r.ok)throw Error("Missing tool registry");return r.json()});
   const tool=manifest.tools.find(t=>t.slug===slug&&t.priority!=="P2");
   if(!tool)throw Error("Unavailable calculator.");
-  const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
+  const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),share=document.querySelector("#share-measurements"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
   let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
   const schedulePager=document.querySelector("#schedule-pager");
@@ -2030,7 +2031,7 @@ if(slug){
   // keyboard and screen-reader users must see that stale results are disabled.
   const syncResultActions=()=>{
     const enabled=!!latest;
-    for(const button of [copy,csv,svg,print])if(button)button.disabled=!enabled;
+    for(const button of [copy,csv,svg,print,share])if(button)button.disabled=!enabled;
     if(stockExport)stockExport.disabled=!latest?.stockCuts?.length;
     if(stockAuditExport)stockAuditExport.disabled=!latest?.stockAudit?.enabled||!latest?.stockAudit?.rows?.length;
     if(stockReuseExport)stockReuseExport.disabled=!latest?.stockReusePlan?.enabled||
@@ -2172,7 +2173,53 @@ if(slug){
   form.addEventListener("input",()=>{schedulePage=0;render();});
   fraction.addEventListener("change",render);
   currency?.addEventListener("change",render);
-  reset.addEventListener("click",()=>{restoreValues();zoom=1;schedulePage=0;render();});
+  // Measurement links intentionally use fragments. HTTP requests and hosting
+  // access logs do not receive the measurements; no review/approval flags are
+  // serialized. A complete numeric snapshot must pass the calculator model
+  // before any field is changed.
+  const availableCurrencies=currency?[...currency.options].map(o=>o.value):[];
+  const loadSharedMeasurements=()=>{
+    const snapshot=parseMeasurementFragment(window.location.hash,tool.inputs,availableCurrencies);
+    if(!snapshot)return false;
+    const candidate={};
+    for(const field of tool.inputs){
+      const raw=Number(snapshot.inputs[field.key]);
+      candidate[field.key]=field.kind==="L"?
+        convertToInches(raw,snapshot.unit):raw;
+    }
+    const proof=safeCompute(slug,candidate);
+    if(!proof.ok)throw Error("Shared inputs cannot be calculated: "+proof.error);
+    unit=snapshot.unit;units.value=unit;
+    fraction.value=snapshot.fraction;
+    if(currency)currency.value=snapshot.currency;
+    for(const field of tool.inputs)
+      form.elements.namedItem(field.key).value=snapshot.inputs[field.key];
+    document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);
+    return true;
+  };
+  share?.addEventListener("click",async()=>{
+    if(!latest)return;
+    try{
+      const fields=tool.inputs.map(f=>({
+        key:f.key,value:form.elements.namedItem(f.key).value
+      }));
+      const fragment=createMeasurementFragment({
+        unit,fraction:fraction.value,currency:currency?currencyCode():null,fields
+      });
+      // The fragment is opt-in and does not change browser history or submit
+      // entered values to the site. Never include self-declared approval data.
+      const link=window.location.origin+window.location.pathname+fragment;
+      await navigator.clipboard.writeText(link);
+      status.textContent="Measurement link copied. It includes your numeric inputs, not site inspections, purchase approvals or other review records.";
+    }catch(e){
+      status.textContent="Could not copy the measurement link: "+e.message;
+    }
+  });
+  reset.addEventListener("click",()=>{
+    if(window.location.hash.startsWith("#measure="))
+      window.history.replaceState(null,"",window.location.pathname+window.location.search);
+    restoreValues();zoom=1;schedulePage=0;render();
+  });
   diagram.addEventListener("transitionend",event=>{
     // Width animates for 180ms; one rAF after click is too early to reliably
     // remove the keyboard tab stop when a drawing zooms back down to 100%.
@@ -2388,7 +2435,17 @@ if(slug){
   });
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
-  restoreValues();render();
+  restoreValues();
+  let imported=null;
+  try{imported=loadSharedMeasurements();}catch{
+    // Fail closed: a broken/edited link cannot leave the form partly restored.
+    imported="rejected";
+  }
+  render();
+  if(imported===true)
+    status.textContent="Shared measurements loaded and recalculated. Verify actual material dimensions independently.";
+  else if(imported==="rejected")
+    status.textContent="Invalid or incomplete measurement link ignored; default inputs restored.";
   try{const recent=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");localStorage.setItem("woodwork-recent",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,6)))}catch{}
 }
 
