@@ -216,6 +216,16 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                 check(len(p.tool_field_ids) == len(expected_fields) and
                       set(p.tool_field_ids) == expected_fields,
                       path + ": deployed form fields differ from the current source manifest")
+                # HTML and engine assets can deploy independently. Confirm the
+                # entire 31-route in-page workbench navigation is present too.
+                results["source_parity_checks"] += 1
+                check('aria-label="Jump between calculator sections"' in body and
+                      all(('id="' + key + '"') in body for key in (
+                          "workbench-input", "workbench-results", "workbench-drawing",
+                          "dock-primary-label", "dock-primary-value")) and
+                      all(('href="#' + key + '"') in body for key in (
+                          "workbench-input", "workbench-results", "workbench-drawing")),
+                      path + ": deployed workbench navigator/summary differs from the current source")
     for asset in ("favicon.svg", "logo-mark.svg", "logo-lockup.svg",
                   "assets/app.mjs", "assets/calcs.mjs", "assets/style.css"):
         status, _, _ = request("/" + asset)

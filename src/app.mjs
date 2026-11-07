@@ -16,6 +16,36 @@ if(slug){
   if(!tool||tool.slug!==slug||!["P0","P1"].includes(tool.priority))
     throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),share=document.querySelector("#share-measurements"),measurementSave=document.querySelector("#download-measurements-json"),measurementImport=document.querySelector("#load-measurements-json"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
+  // Real anchor navigation, not simulated tabs or duplicated calculator state.
+  // Share links with #measure= continue to work independently of these anchors.
+  const dockLabel=document.querySelector("#dock-primary-label");
+  const dockValue=document.querySelector("#dock-primary-value");
+  const dockSummary=document.querySelector(".dock-summary");
+  const dockLinks=[...document.querySelectorAll(".dock-links a")];
+  const syncDockLocation=()=>{
+    const current=window.location.hash;
+    for(const link of dockLinks){
+      if(link.getAttribute("href")===current)link.setAttribute("aria-current","location");
+      else link.removeAttribute("aria-current");
+    }
+  };
+  syncDockLocation();
+  window.addEventListener("hashchange",syncDockLocation);
+  const updateDockSummary=(label,value,invalid=false)=>{
+    if(!dockLabel||!dockValue||!dockSummary)return;
+    dockLabel.textContent=label;
+    const changed=dockValue.textContent!==value;
+    dockValue.textContent=value;
+    dockValue.title=value;
+    dockSummary.classList.toggle("is-invalid",invalid);
+    // A short color shift on a newly calculated value, NOT numeric count-up.
+    // The visible and copied values always equal the calculation output.
+    if(changed&&!invalid&&typeof dockValue.animate==="function"&&
+       !window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      dockValue.animate([{color:"#2e8f60"},{color:"#1d553f"}],
+        {duration:260,easing:"ease-out"});
+    }
+  };
   // Keep the DOM, Tab sequence and screen-reader reading order consistent with
   // the actual responsive grid. Wide screens read input -> diagram -> results;
   // compact/two-column screens read input -> results -> diagram. Grid-area CSS
@@ -2133,6 +2163,7 @@ if(slug){
       diagram.innerHTML=drawing(latest);applyDiagramZoom();
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
+      updateDockSummary(latest.metrics[0].label,fmt(latest.metrics[0].value,latest.metrics[0].kind));
       syncResultActions();
       requestAnimationFrame(syncKeyboardScrollRegions);
     }catch(e){
@@ -2157,6 +2188,7 @@ if(slug){
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       renderSpecialtyPrintTables();
       status.textContent="Calculation requires correction; see the error message.";
+      updateDockSummary("Review measurements","—",true);
       syncResultActions();
       requestAnimationFrame(syncKeyboardScrollRegions);
     }

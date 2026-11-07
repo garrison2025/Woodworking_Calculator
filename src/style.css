@@ -1165,3 +1165,92 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .tool-priority{font-size:8.5px}
   .tool-search-row output{padding:6px 9px}
 }
+
+
+/* 2026-11-08 · Practical workbench navigation and live summary.
+   This belongs to the 31 actual calculator pages only, with no extra
+   network request, duplicate search page, 1:1 template promise or library. */
+@media screen{
+  .workbench-dock{
+    position:sticky;top:86px;z-index:16;display:flex;align-items:center;gap:13px;
+    max-width:1460px;margin:0 auto 18px;padding-top:9px;padding-bottom:9px;
+    min-height:65px;background:rgba(253,253,249,.975);
+    border-top:1px solid #dce6dd;border-bottom:1px solid #cfded2;
+    box-shadow:0 9px 22px rgba(28,61,40,.055);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+  }
+  .dock-kicker{font:750 10px ui-monospace,SFMono-Regular,Consolas,monospace;
+    letter-spacing:.11em;color:#547564;white-space:nowrap}
+  .dock-links{display:flex;align-items:stretch;gap:5px;flex:1 1 auto;min-width:0;
+    overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}
+  .dock-links a{min-height:44px;flex:0 0 auto;display:inline-flex;align-items:center;
+    padding:9px clamp(9px,1.3vw,15px);font-size:12px;font-weight:750;line-height:1.35;
+    color:#4b6555;border:1px solid transparent;border-radius:10px;
+    transition:color .18s,background .18s,border-color .18s,transform .18s}
+  .dock-links a:hover,.dock-links a:focus-visible{background:#edf4ec;color:#205842;
+    border-color:#ccdfce}
+  .dock-links a[aria-current="location"]{background:#e6f2e8;color:#205842;
+    border-color:#abcdb3;box-shadow:inset 0 -2px #3f8660}
+  .dock-summary{display:flex;align-items:center;gap:8px;flex:0 1 340px;
+    min-width:150px;max-width:340px;min-height:44px;
+    padding:7px 11px;border:1px solid #c7ddce;border-radius:10px;
+    background:linear-gradient(115deg,#e8f3e9,#f7faf5);
+    transition:background .2s,border-color .2s}
+  .dock-summary:hover,.dock-summary:focus-visible{background:#def0e2;border-color:#95bb9f}
+  .dock-summary.is-invalid{background:#fff3e9;border-color:#dfc7ac}
+  .dock-summary.is-invalid .dock-summary-value{color:#82532a}
+  .dock-summary.is-invalid .dock-summary-label{color:#78604d}
+  .dock-summary-label{font-size:10px;font-weight:750;line-height:1.24;
+    color:#55715e;flex:1 1 128px;min-width:0;overflow-wrap:anywhere}
+  .dock-summary-value{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;
+    letter-spacing:-.025em;color:#1d553f;min-width:0;max-width:170px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dock-summary-arrow{color:#397556;font-size:15px;flex:0 0 auto}
+  .workbench-dock~.workspace [id^="workbench-"]{
+    scroll-margin-top:176px
+  }
+  #workbench-input:target,#workbench-results:target,#workbench-drawing:target{
+    border-color:#8bb59a;box-shadow:0 0 0 3px rgba(56,129,81,.12),
+      0 10px 28px rgba(31,81,49,.075)
+  }
+  #workbench-input:focus,#workbench-results:focus,#workbench-drawing:focus{
+    outline:3px solid #955b23;outline-offset:2px
+  }
+}
+@media screen and (max-width:1220px){
+  .dock-kicker{display:none}
+  .workbench-dock{gap:7px}
+  .dock-summary{flex-basis:245px;max-width:245px}
+}
+@media screen and (max-width:870px){
+  .workbench-dock{top:71px;gap:8px;padding-top:8px;padding-bottom:8px}
+  .dock-summary{max-width:210px;flex-basis:210px}
+  .dock-links a{padding:7px 10px}
+}
+@media screen and (max-width:680px){
+  .workbench-dock{display:grid;grid-template-columns:minmax(0,1fr);
+    row-gap:5px;padding-top:6px;padding-bottom:6px;
+    background:#fbfcf8;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .dock-links{width:100%;justify-content:space-between}
+  .dock-links a{font-size:12px;min-height:44px;flex:1 0 auto;
+    justify-content:center;padding:7px 9px}
+  .dock-summary{max-width:none;width:100%;min-height:31px;
+    padding:3px 10px;border-radius:7px;gap:9px}
+  .dock-summary-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dock-summary-value{font-size:12px;max-width:min(50vw,190px)}
+  .workbench-dock~.workspace [id^="workbench-"]{scroll-margin-top:184px}
+}
+@media screen and (max-width:360px){
+  .dock-links a{font-size:11px;padding:6px}
+  .dock-summary-value{max-width:125px}
+}
+@media screen and (prefers-reduced-motion:no-preference){
+  @keyframes workbench-dock-arrive{
+    from{opacity:.7;transform:translateY(-6px)}
+    to{opacity:1;transform:none}
+  }
+  .workbench-dock{animation:workbench-dock-arrive .4s ease-out both}
+}
+@media print{
+  .workbench-dock{display:none!important}
+}
