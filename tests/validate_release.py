@@ -58,10 +58,15 @@ pages=list(dist.rglob("index.html"))
 expected_urls={"/","/about/","/contact/","/privacy/","/terms/"}
 expected_urls.update("/"+t["slug"]+"/" for t in published
                      if t["slug"] not in v3_p2 or allow_p2)
-expected_urls.update("/"+data[1]+"/" for key,data in manifest["categories"].items()
-                     if any(t["category"]==key for t in published))
+category_urls={"/"+data[1]+"/" for key,data in manifest["categories"].items()
+               if any(t["category"]==key for t in published)}
+release_categories={"/"+data[1]+"/" for key,data in manifest["categories"].items()
+                    if any(t["category"]==key and (t["slug"] not in v3_p2 or allow_p2)
+                           for t in published)}
+expected_urls.update(release_categories)
+assert ("/materials/" in release_categories)==allow_p2, "Materials must stay noindex until lumber P2 approval"
 assert len(published)==31 and len(hold)==0
-all_preview_routes=expected_urls|{"/"+t["slug"]+"/" for t in published}
+all_preview_routes=expected_urls|category_urls|{"/"+t["slug"]+"/" for t in published}
 actual_urls=set()
 for p in pages:
     path="/" if p.parent==dist else "/"+p.parent.relative_to(dist).as_posix()+"/"
