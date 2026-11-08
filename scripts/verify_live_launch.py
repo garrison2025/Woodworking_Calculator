@@ -338,11 +338,12 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                       "Sitemap must contain exactly the approved indexable canonical URLs")
             except ET.ParseError:
                 check(False, "Invalid sitemap XML")
-        for path in ("/", "/stud-calculator/"):
-            status, _, headers = request(path, pages_origin)
-            location = headers.get("location", "")
-            check(status in (301, 308) and location == origin + path,
-                  "pages.dev" + path + ": expected exact permanent redirect to custom domain")
+        www_origin = origin.replace("https://", "https://www.", 1)
+        for alias in (pages_origin, www_origin):
+            for path in ("/", "/stud-calculator/", "/stud-calculator/?audit=path%20and%20query"):
+                status, _, headers = request(path, alias)
+                check(status in (301, 308) and headers.get("location") == origin + path,
+                      alias + path + ": expected permanent redirect preserving path and query")
     status, body, _ = request("/nonexistent-woodworking-release-audit-404/")
     check(status == 404, "Unknown URL must return HTTP 404")
     if status == 404:

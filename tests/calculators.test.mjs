@@ -2569,3 +2569,17 @@ test("sub-resolution physical kerf and butt-end gaps are rejected instead of exp
   assert.equal(tinyButt.ok,false);
   assert.match(tinyButt.error,/coordinate resolution/i);
 });
+
+test("wall stud layout reports an extended last bay after end overlap",()=>{
+  const wall={length:161,spacing:16,studWidth:1.5,height:96,plates:4.5};
+  const extended=compute("wall-stud-calculator",wall);
+  assert.equal(extended.metrics.find(m=>m.label==="Final bay size").value,17);
+  assert.equal(extended.finalBayExceedsNominal,true);
+  assert.equal(compute("wall-stud-calculator",{...wall,length:160}).finalBayExceedsNominal,false);
+});
+
+test("rise/run rejects an unrepresentable horizontal run",()=>{
+  assert.throws(()=>compute("rise-run-calculator",{run:1e-309,rise:36}),/run must be at least/);
+  assert.throws(()=>compute("rise-run-calculator",{run:1e-309,rise:0}),/run must be at least/);
+  assert.equal(compute("rise-run-calculator",{run:72,rise:36}).metrics.find(m=>m.label==="Grade").value,50);
+});

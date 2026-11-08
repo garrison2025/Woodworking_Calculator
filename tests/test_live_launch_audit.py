@@ -24,10 +24,13 @@ def fake_site(mode, broken=None, source_sync=False):
     def get(url):
         u = urlsplit(url)
         path = u.path
-        if u.hostname == "woodworking-calculator.pages.dev" and mode == "production":
-            if "alias" in broken:
+        if mode == "production" and u.hostname in ("woodworking-calculator.pages.dev", "www.woodlayout.com"):
+            if "alias" in broken and u.hostname.endswith(".pages.dev"):
                 return 200, "Old public HTML", {}
-            return 301, "", {"location": DOMAIN + path}
+            query = "?" + u.query if u.query else ""
+            if "www_query" in broken and u.hostname.startswith("www."):
+                query = ""
+            return 301, "", {"location": DOMAIN + path + query}
         if path.startswith("/nonexistent-woodworking-release-audit"):
             robots = ("index,follow" if "indexed_404" in broken
                       else "noindex,nofollow,noarchive")
@@ -192,6 +195,12 @@ class LiveAuditTests(unittest.TestCase):
                               get=fake_site("production", broken={"material_noindex"}))
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/materials/" in x for x in result["failures"]))
+
+    def test_www_redirect_preserves_query(self):
+        result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
+                              get=fake_site("production", broken={"www_query"}))
+        self.assertEqual(len(result["failures"]), 1)
+        self.assertIn("https://www.woodlayout.com/stud-calculator/?audit=", result["failures"][0])
 
     def test_pages_dev_must_redirect_after_custom_domain_launch(self):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
