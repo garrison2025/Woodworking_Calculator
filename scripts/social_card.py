@@ -123,11 +123,11 @@ def generate(path: str | Path) -> None:
     label(77,550,"31 FREE TOOLS / WOODLAYOUT.COM",3,1)
     label(715,121,"GEOMETRY WORKBENCH",3,5)
     label(830,534,"REFERENCE DRAWING",3,5)
-    raw = b"".join(b"\\x00" + pixels[y*WIDTH:(y+1)*WIDTH] for y in range(HEIGHT))
+    raw = b"".join(b"\x00" + pixels[y*WIDTH:(y+1)*WIDTH] for y in range(HEIGHT))
     def chunk(kind, data):
         return struct.pack(">I",len(data))+kind+data+struct.pack(">I",zlib.crc32(kind+data)&0xffffffff)
     palette = bytes(channel for rgb in COLORS for channel in rgb)
-    png = (b"\\x89PNG\\r\\n\\x1a\\n" + chunk(b"IHDR",struct.pack(">IIBBBBB",WIDTH,HEIGHT,8,3,0,0,0))
+    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR",struct.pack(">IIBBBBB",WIDTH,HEIGHT,8,3,0,0,0))
            + chunk(b"PLTE",palette) + chunk(b"IDAT",zlib.compress(raw,9)) + chunk(b"IEND",b""))
     Path(path).write_bytes(png)
 
