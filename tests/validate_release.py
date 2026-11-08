@@ -2,12 +2,13 @@
 """Offline release-mode SEO/GEO contract test. NEVER deploys example domain."""
 import html.parser
 import json
+import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 root=Path(__file__).resolve().parents[1]
 dist=root/"dist"
-base="https://woodworking.example"
+base=os.environ.get("EXPECTED_RELEASE_ORIGIN", "https://woodworking.example")
 manifest=json.loads((root/"src"/"tools.json").read_text(encoding="utf8"))
 published=[x for x in manifest["tools"] if x["priority"] in ("P0","P1")]
 hold=[x for x in manifest["tools"] if x["priority"]=="P2"]
@@ -142,4 +143,4 @@ if errors:
     raise SystemExit(1)
 print("PASS: release dry-run contains",len(expected_urls),
       "unique canonical/schema/sitemap routes including all 31 calculators and Materials")
-print("NOTE: https://woodworking.example is a reserved offline test domain, not a purchased or deployed domain.")
+print("NOTE: Static release validation does not prove public domain response, HTTPS, or Google indexing.")

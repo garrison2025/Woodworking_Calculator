@@ -5,20 +5,15 @@
 - **用户提供**：正式域名 `woodlayout.com` 已购买，已绑定到 `cloudflare.com`；正式联系邮箱为 `contact@woodlayout.com`。
 - **代码已准备**：31 个工具、6 个分类、42 个独立页面；静态网页、导出、V5 UI、SEO 生产门禁，以及联系邮箱与邮件隐私披露。
 - **尚无独立线上证据**：域名解析成功、Cloudflare Pages 项目 **Custom Domains = Active**、HTTPS 证书、邮件收发、带正确 Canonical 的 42 个上线页面、正式 sitemap、旧域名跳转、Search Console 收录。仅将域名添加到 Cloudflare DNS zone 并不能证明这些项目已完成。
-- **生产索引策略**：保留双重许可开关。只有 **Cloudflare Pages 生产分支 main**、合法 HTTPS `SITE_URL`、显式 `RELEASE_APPROVED=1` 三者同时具备，才会在新构建中输出 `index,follow`、Canonical、结构化数据、正式 robots 与 sitemap。预览分支继续 noindex；不自动提交 GSC。
+- **2026-11-08 最新索引授权**：用户已明确要求直接通过代码解除 `noindex`。现在仅在 **Cloudflare Pages 生产分支 main** 自动使用 `https://woodlayout.com` 并生成 `index,follow`、Canonical、结构化数据、正式 robots 与 42 URL sitemap；**无需手动设置 `SITE_URL` 或 `RELEASE_APPROVED`**（生产 main 会覆盖这两个旧配置值）。PR/预览分支继续 noindex；旧 pages.dev 主机保留 host-scoped HTTP noindex。不会自动完成 Cloudflare 账户级 301 重定向、GSC 提交或搜索收录。
 - **风险边界**：网站仍是几何尺寸/排布参考工具，不代表结构强度、法规认证、实体 1:1 打印或实物试切已通过。用户此前豁免了这些项目作为软件上线门槛，但不得写成已实测。
 
 ## Cloudflare 控制台必须完成的步骤
 
 1. 进入 Cloudflare → **Workers & Pages → woodworking-calculator → Custom domains**，核实 `woodlayout.com` 的状态是否 **Active**。如果没有出现域名，点击 **Set up a domain** 添加 `woodlayout.com`。仅在 Cloudflare 注册/托管该 zone 与 DNS 记录，不等于绑定到了 Pages 项目。
 2. 在该 Pages 项目 **Settings → Builds & deployments** 核对生产分支 `main`、构建命令 `python3 build.py`、输出目录 `dist`，确认最新 GitHub 提交有对应成功的 Pages 构建记录。
-3. 在 **Settings → Environment variables** 的 **Production** 范围配置：
-   ```text
-   SITE_URL=https://woodlayout.com
-   RELEASE_APPROVED=1
-   ```
-   第二项是**正式开放索引的明确动作**。必须在域名、HTTPS 和网址跳转都准备好后设置；不要提前放入 Preview 环境。Cloudflare 会提供 `CF_PAGES=1` 与 `CF_PAGES_BRANCH`。
-4. 在完成上一步后执行一次新的 Production 部署，使 Python 构建系统读到新变量；仅修改变量而不重新构建，旧静态 HTML 不会变。生产主域名首页需要返回 200，且页面里的 `meta robots` 为 `index,follow`，Canonical 指向 `https://woodlayout.com/`。
+3. **无需在 Settings → Environment variables 中手动填写索引配置。** 用户已经授权写入建站代码；Cloudflare Pages 默认注入的 `CF_PAGES=1` 和 `CF_PAGES_BRANCH=main` 将在本项目源码中自动生成 `woodlayout.com` 的 indexable 构建。已有的 `SITE_URL`、`RELEASE_APPROVED` 即使是旧值，也不会覆盖生产 main 的这次授权；非 main 的 Preview 仍然禁止索引。
+4. 合并并部署本次修改到生产分支后，核查 Pages 构建成功。生产主域名首页需要返回 200，且 HTML 的 `meta robots` 为 `index,follow`，Canonical 指向 `https://woodlayout.com/`。
 5. 通过 **Bulk Redirects** 将 `https://woodworking-calculator.pages.dev/*` **301** 至 `https://woodlayout.com/*`；启用 preserve path suffix、preserve query string 和 subpath matching，不能将所有工具的深层链接扔回首页。设置并核验 `www.woodlayout.com` → `https://woodlayout.com` 的永久跳转，保留路径与查询字符串；不要让两个主机都返回可索引 200。
 6. 核实邮箱 **实际接收和发送邮件**：`contact@woodlayout.com` 的 MX、SPF、DKIM、DMARC 与邮件服务商配置与网站的 Cloudflare Pages 绑定是两个独立问题。Cloudflare DNS / Email Routing 可以辅助转发，但 DNS 绑定不证明收发可用。本站使用 `mailto:`，没有后端表单，不会在网站上接收邮件数据。
 
