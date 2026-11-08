@@ -66,6 +66,11 @@ test("complex framing shows a task index and keeps full advanced proof printable
 test("numbered deck board geometry and schedule rows highlight the exact same part",async({page})=>{
   await page.goto("/deck-board-calculator/");
   await expect(page.locator("#dimension-svg svg[data-model-shape='boards']")).toBeVisible();
+  const keyboardStart=page.locator("#diagram-start-row");
+  await expect(keyboardStart).toBeVisible();
+  await keyboardStart.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#diagram-selection")).toContainText("Row 1 / ");
   const row=page.locator('#cut-table tbody tr[data-geometry-row="2"]');
   await expect(row).toHaveCount(1);
   await row.click();
