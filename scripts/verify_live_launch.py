@@ -226,6 +226,10 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                       all(('href="#' + key + '"') in body for key in (
                           "workbench-input", "workbench-results", "workbench-drawing")),
                       path + ": deployed workbench navigator/summary differs from the current source")
+                results["source_parity_checks"] += 1
+                check('id="undo-reset" type="button" hidden' in body and
+                      'id="review-invalid" type="button" aria-describedby="calc-error" hidden' in body,
+                      path + ": deployed input-recovery controls differ from the current source")
     for asset in ("favicon.svg", "logo-mark.svg", "logo-lockup.svg",
                   "assets/app.mjs", "assets/calcs.mjs", "assets/style.css"):
         status, _, _ = request("/" + asset)
