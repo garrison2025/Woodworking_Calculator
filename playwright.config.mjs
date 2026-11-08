@@ -13,7 +13,11 @@ export default defineConfig({
     screenshot: "only-on-failure"
   },
   projects: [
-    {name:"chromium",use:{...devices["Desktop Chrome"]}},
+    // Keep the 540-cut, five-group PDF stress fixture out of the parallel
+    // Chromium suite. Its large print DOM can starve unrelated UI assertions
+    // on shared GitHub runners; run it alone in the single-worker project.
+    {name:"chromium",testIgnore:"**/long-print-pdf.spec.mjs",use:{...devices["Desktop Chrome"]}},
+    {name:"chromium-long-print",testMatch:"**/long-print-pdf.spec.mjs",workers:1,use:{...devices["Desktop Chrome"]}},
     {name:"firefox",use:{...devices["Desktop Firefox"]}},
     {name:"webkit",use:{...devices["Desktop Safari"]}}
   ],

@@ -53,6 +53,8 @@ jobs:
         run: npx playwright install chromium --only-shell
       - name: Test real Chromium calculations, exports and responsive layouts
         run: npx playwright test --project=chromium
+      - name: Test the 540-cut printable worksheet in an isolated Chromium worker
+        run: npx playwright test --project=chromium-long-print
       - name: Audit actual 540-row and specialist A4/Letter PDF content
         run: |
           python3 -m pip install --quiet --disable-pip-version-check pypdf==5.9.0
