@@ -1380,3 +1380,16 @@ tbody tr:nth-child(2n){background:#fafbf8}
   #cut-table tbody tr.is-selected-geometry{background:transparent!important;box-shadow:none!important}
   #dimension-svg svg .is-selected-geometry{filter:none!important}
 }
+
+/* V4 finishing rules: readable field controls and a self-contained inspector. */
+.diagram-linked-help{margin:0 15px 10px;font-size:12px;line-height:1.5;color:#496852}
+.diagram-inspector button{min-height:44px;border:1px solid #c8dcca;white-space:normal}
+.diagram-inspector button:disabled{opacity:.45;cursor:not-allowed}
+.diagram-inspector button:hover:not(:disabled){background:#d5ebda;color:#1b5039}
+@media screen and (max-width:680px){
+  #calculator-form input,#calculator-form select{font-size:16px}
+  .diagram-linked-help{font-size:12px}
+  .diagram-inspector{align-items:stretch;padding:10px;gap:6px}
+  .diagram-inspector strong{flex-basis:100%;font-size:12px}
+  .diagram-inspector button{flex:1 1 85px;font-size:12px;margin-left:0}
+}
