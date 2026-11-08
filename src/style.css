@@ -1393,3 +1393,20 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .diagram-inspector strong{flex-basis:100%;font-size:12px}
   .diagram-inspector button{flex:1 1 85px;font-size:12px;margin-left:0}
 }
+
+
+/* Prevent the brand + dropdown combination from widening 320px viewports.
+   Header must fit the viewport instead of masking overflow with clipping. */
+@media screen and (max-width:680px){
+  .topbar-inner{gap:9px;padding-left:12px;padding-right:12px;min-width:0}
+  .brand{min-width:0;flex:0 1 auto;gap:8px}
+  .brand-wordmark{min-width:0}
+  .mobile-site-menu{flex:0 0 auto;margin-left:auto}
+  .mobile-site-menu>summary{padding:8px 11px}
+}
+@media screen and (max-width:420px){
+  .brand small{display:none}
+  .brand-icon{flex-basis:36px;width:36px;height:36px}
+  .brand-wordmark strong{font-size:18px}
+  .mobile-site-menu>summary{font-size:12px}
+}
