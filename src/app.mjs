@@ -532,7 +532,9 @@ async function initializeCalculator(){
           content+='<rect class="wall-cut-stud" data-position="'+r.position+'" data-cut-length="'+r.cutLength+'" x="'+rawX(r.faceLeft)+'" y="'+yHeight(r.cutLength)+'" width="'+(rawX(r.faceRight)-rawX(r.faceLeft))+'" height="'+(base-yHeight(r.cutLength))+'" fill="#426b5b"><title>'+esc(r.item+" · center "+fmt(r.position)+" · cut "+fmt(r.cutLength)+" · gross "+fmt(r.grossHeight))+'</title></rect>';
         }
         content+=svgText(left,64,"NET STUD CUT "+fmt(rows[0].cutLength)+" · "+rows.length+" STUD CENTERS","dim-label");
-        content+=svgText(left,323,"DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
+        content+=svgText(left,323,data.wallStudLayoutMode===1?
+          "EQUALIZED MAX OC · END POSITIONS ARE CENTERS · NOT A PANEL MODULE":
+          "DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
       }else if(data.shape==="holes"){
         // One physical X/Y scale for the entire flat board FACE, including
         // every circular hole. No minimum visual radius: it would fabricate
@@ -2358,7 +2360,10 @@ async function initializeCalculator(){
         out.insertAdjacentHTML("beforeend",'<p role="note">Enter a positive supplier rate to show the quoted cost.</p>');
       }
       if(latest.finalBayExceedsNominal){
-        out.insertAdjacentHTML("beforeend",'<p class="error-banner" role="note"><strong>Final bay exceeds nominal spacing.</strong> The overlapping near-end stud was omitted. If your spacing is a maximum, revise the layout before using this schedule.</p>');
+        out.insertAdjacentHTML("beforeend",'<p class="error-banner" role="note"><strong>Final bay exceeds nominal spacing.</strong> The overlapping near-end stud was omitted. Switch to Maximum OC if this is a hard spacing limit; verify sheathing module and structural requirements separately.</p>');
+      }
+      if(latest.wallStudLayoutMode===1){
+        out.insertAdjacentHTML("beforeend",'<p role="note"><strong>Equalized maximum-OC layout.</strong> All bays meet the entered center-spacing limit and end studs are retained, but this re-spaces the full grid. Verify sheet-edge backing, fastening and structural requirements independently.</p>');
       }
       if(latest.deckBoardStock?.requiresJointPlan){
         out.insertAdjacentHTML("beforeend",
@@ -2554,6 +2559,14 @@ async function initializeCalculator(){
   // serialized. A complete numeric snapshot must pass the calculator model
   // before any field is changed.
   const availableCurrencies=currency?[...currency.options].map(o=>o.value):[];
+  // Only the Wall Stud tool gained one optional mode after launch. Restore
+  // its exact former five-field snapshots as Nominal OC, never relax validation
+  // for other calculators or permit arbitrary missing, extra or duplicate keys.
+  const legacyWallStudFields=slug==="wall-stud-calculator"?
+    tool.inputs.filter(field=>field.key!=="spacingMode"):null;
+  const withLegacyWallStudMode=snapshot=>({
+    ...snapshot,inputs:{...snapshot.inputs,spacingMode:"0"}
+  });
   const applyValidatedMeasurementSnapshot=snapshot=>{
     // All-or-nothing: prove the numeric geometry BEFORE modifying form state.
     const candidate={};
@@ -2586,7 +2599,15 @@ async function initializeCalculator(){
     document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);
   };
   const loadSharedMeasurements=()=>{
-    const snapshot=parseMeasurementFragment(window.location.hash,tool.inputs,availableCurrencies);
+    let snapshot;
+    try{
+      snapshot=parseMeasurementFragment(window.location.hash,tool.inputs,availableCurrencies);
+    }catch(error){
+      if(!legacyWallStudFields)throw error;
+      const old=parseMeasurementFragment(
+        window.location.hash,legacyWallStudFields,availableCurrencies);
+      snapshot=old?withLegacyWallStudMode(old):null;
+    }
     if(!snapshot)return false;
     applyValidatedMeasurementSnapshot(snapshot);
     return true;
@@ -2628,9 +2649,18 @@ async function initializeCalculator(){
     try{
       if(selected.size>16384)throw Error("File exceeds the 16 KB measurement limit.");
       const content=await selected.text();
-      const snapshot=parseMeasurementFile(content,{
-        slug,fields:tool.inputs,allowedCurrencies:availableCurrencies
-      });
+      let snapshot;
+      try{
+        snapshot=parseMeasurementFile(content,{
+          slug,fields:tool.inputs,allowedCurrencies:availableCurrencies
+        });
+      }catch(error){
+        if(!legacyWallStudFields)throw error;
+        const old=parseMeasurementFile(content,{
+          slug,fields:legacyWallStudFields,allowedCurrencies:availableCurrencies
+        });
+        snapshot=withLegacyWallStudMode(old);
+      }
       applyValidatedMeasurementSnapshot(snapshot);
       // A previously opened share fragment must not silently restore its old
       // inputs when the user refreshes after importing another local file.
@@ -2710,7 +2740,12 @@ async function initializeCalculator(){
     if(!latest)return;
     const text=latest.rows.length?
       buildScheduleCsv(latest.rows,unit,
-        tool.limit+(slug==="lumber-price-calculator"?
+        tool.limit+(slug==="wall-stud-calculator"?
+          " Selected stud layout: "+(latest.wallStudLayoutMode===1?
+            "equalized maximum OC":"nominal OC grid")+
+          "; entered OC (in): "+values().spacing+
+          "; actual maximum OC (in): "+latest.actualMaximumOC+".":"")+
+        (slug==="lumber-price-calculator"?
           " Entered price currency: "+currencyCode()+". No FX conversion.":"")):
       buildMetricsCsv(latest.metrics,unit,tool.limit,currencyCode());
     save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");

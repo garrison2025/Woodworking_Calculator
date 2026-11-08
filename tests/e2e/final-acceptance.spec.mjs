@@ -96,3 +96,36 @@ test("rise/run disables exports when the entered run is too small",async({page})
   await expect(page.locator("#calc-error")).toBeHidden();
   await expect(page.locator("#download-csv")).toBeEnabled();
 });
+
+
+test("maximum OC mode keeps the wall drawing and downloaded cut schedule aligned",async({page})=>{
+  await page.goto("/wall-stud-calculator/");
+  await expect(page.locator("#calculator-startup")).toBeHidden();
+  await page.locator("#f-length").fill("161");
+  await page.locator("#f-spacingMode").selectOption("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.getByText("Equalized maximum-OC layout.",{exact:true})).toBeVisible();
+  const shapes=page.locator("#dimension-svg .wall-cut-stud");
+  await expect(shapes).toHaveCount(12);
+  const stationPositions=await shapes.evaluateAll(nodes=>
+    nodes.map(el=>Number(el.getAttribute("data-position"))));
+  expect(stationPositions[0]).toBe(0);
+  expect(stationPositions.at(-1)).toBe(161);
+  for(let i=1;i<stationPositions.length;i++){
+    expect(stationPositions[i]-stationPositions[i-1]).toBeLessThanOrEqual(16+1e-8);
+  }
+  await expect(page.locator("#cut-table tbody tr")).toHaveCount(12);
+  await expect(page.locator('#print-input-table tr[data-print-field="spacingMode"] td'))
+    .toContainText("Maximum OC");
+  const downloadEvent=page.waitForEvent("download");
+  await page.locator("#download-csv").click();
+  const downloaded=await downloadEvent;
+  const fs=await import("node:fs/promises");
+  const csv=await fs.readFile(await downloaded.path(),"utf8");
+  expect(csv).toContain("equalized maximum OC");
+  expect(csv).toContain('"Stud 12"');
+  expect(csv).toContain('"161"');
+  await page.locator("#f-spacingMode").selectOption("0");
+  await expect(page.getByText("Final bay exceeds nominal spacing.",{exact:true})).toBeVisible();
+  await expect(shapes).toHaveCount(11);
+});
