@@ -76,11 +76,18 @@ jobs:
           # MUST produce noindex and no sitemap or canonical.
           CF_PAGES=1 CF_PAGES_BRANCH=feature/preview SITE_URL=https://woodworking.example RELEASE_APPROVED=1 python3 build.py
           python3 tests/validate_static.py
-          # The same explicit release gate on the real main branch is valid.
-          CF_PAGES=1 CF_PAGES_BRANCH=main SITE_URL=https://woodworking.example RELEASE_APPROVED=1 python3 build.py
-          python3 tests/validate_release.py
-          # Pages host can never be treated as an owned custom domain.
-          CF_PAGES=1 CF_PAGES_BRANCH=main SITE_URL=https://woodworking-calculator.pages.dev RELEASE_APPROVED=1 python3 build.py
+          # Source-controlled Pages main is now the owner-approved real
+          # woodlayout.com production build even if old Cloudflare env vars
+          # attempt to supply a Pages origin or hold RELEASE_APPROVED=0.
+          CF_PAGES=1 CF_PAGES_BRANCH=main SITE_URL=https://woodworking-calculator.pages.dev RELEASE_APPROVED=0 python3 build.py
+          EXPECTED_RELEASE_ORIGIN=https://woodlayout.com python3 tests/validate_release.py
+          # Main without manually configured production env vars must also
+          # produce the complete 42-URL canonical/sitemap release.
+          CF_PAGES=1 CF_PAGES_BRANCH=main python3 build.py
+          EXPECTED_RELEASE_ORIGIN=https://woodlayout.com python3 tests/validate_release.py
+          # Preview PR deployments must remain noindex even with conflicting
+          # environment settings inherited from the Pages project.
+          CF_PAGES=1 CF_PAGES_BRANCH=feature/another SITE_URL=https://woodlayout.com RELEASE_APPROVED=1 python3 build.py
           python3 tests/validate_static.py
       - name: Upload desktop and mobile design snapshots
         if: success()
@@ -111,10 +118,10 @@ jobs:
 
 
 
-  deployed-preview:
-    # The already-merged main commit is the only source of truth for a live
-    # deployment. A PR's unmerged HTML/JS intentionally MUST NOT be compared
-    # against production Pages, so this job never runs on pull_request.
+  deployed-production:
+    # On main, the Pages deployment now has custom-domain canonical URLs.
+    # Assert production-domain HTTP, sitemap, redirect and source parity,
+    # instead of incorrectly expecting the Pages alias to remain preview HTML.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verify
     runs-on: ubuntu-latest
@@ -125,35 +132,37 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Confirm real Pages preview serves current main source
+      - name: Confirm canonical woodlayout.com is live and matches current main
         run: |
           python3 - <<'PY'
           import subprocess, sys, time
           args = [
               sys.executable, "scripts/verify_live_launch.py",
-              "--base", "https://woodworking-calculator.pages.dev",
-              "--mode", "preview", "--verify-source-parity",
-              "--report", "live-preview-audit.json",
+              "--base", "https://woodlayout.com",
+              "--mode", "production",
+              "--pages-origin", "https://woodworking-calculator.pages.dev",
+              "--verify-source-parity",
+              "--report", "live-production-audit.json",
           ]
           # Cloudflare Pages builds may finish after GitHub CI. Retry the
           # actual source-parity check; do not treat a stale deploy as success.
           for attempt in range(1, 7):
-              print(f"Live deployment acceptance attempt {attempt}/6", flush=True)
+              print(f"Live woodlayout.com acceptance attempt {attempt}/6", flush=True)
               result = subprocess.run(args, check=False)
               if result.returncode == 0:
                   print("Verified: 42 live pages + 31 current config objects + 31 live forms + 11 current source assets.", flush=True)
                   raise SystemExit(0)
               if attempt < 6:
-                  print("Deployment not yet identical or audit failed; retry in 20 s.", flush=True)
+                  print("Custom-domain deployment, old-host redirect or source parity is not yet ready; retry in 20 s.", flush=True)
                   time.sleep(20)
-          print("FAIL: Live Pages still does not match this main commit or cannot be reached.", file=sys.stderr)
+          print("FAIL: woodlayout.com release acceptance is not yet complete. Check the generated report.", file=sys.stderr)
           raise SystemExit(1)
           PY
-      - name: Preserve independent real-Pages HTTP and source-parity evidence
+      - name: Preserve independent production-domain HTTP and source-parity evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cloudflare-live-preview-audit
-          path: live-preview-audit.json
+          name: woodlayout-production-audit
+          path: live-production-audit.json
           if-no-files-found: warn
           retention-days: 7
