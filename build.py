@@ -93,6 +93,12 @@ def page(title, description, body, path="/", type_="website"):
     nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
+    mobile_categories = ''.join(
+        f'<a href="/{esc(slug)}/">{esc(name)}</a>'
+        for name,slug in CATS.values())
+    mobile_menu = ('<details class="mobile-site-menu"><summary>Browse tools</summary>'
+                   '<nav aria-label="Mobile tool categories"><a href="/#tools">All calculators</a>'
+                   + mobile_categories + '</nav></details>')
     script = ('<script type="module" src="/assets/home.mjs"></script>' if path == "/"
               else '<script type="module" src="/assets/app.mjs"></script>' if type_ == "tool"
               else "")
@@ -105,7 +111,7 @@ def page(title, description, body, path="/", type_="website"):
             f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
             f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
-            f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav><a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
+            f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav>{mobile_menu}<a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
 
 def write(url, content):
@@ -373,7 +379,8 @@ def tool_page(t):
     body+=(
         '<nav class="workbench-dock wrap" aria-label="Jump between calculator sections">'
         '<span class="dock-kicker">WORKBENCH</span>'
-        '<div class="dock-links">'
+        '<button id="dock-toggle" class="dock-toggle" type="button" aria-controls="workbench-shortcuts" aria-expanded="true" hidden>Sections <span aria-hidden="true">⌄</span></button>'
+        '<div class="dock-links" id="workbench-shortcuts">'
         '<a href="#workbench-input">Measurements</a>'
         '<a href="#workbench-results">Results</a>'
         '<a href="#workbench-drawing">Drawing</a>'
@@ -401,6 +408,14 @@ def tool_page(t):
            '<div class="zoom-controls" role="group" aria-label="Diagram zoom controls"><button type="button" id="zoom-out" aria-label="Zoom out" aria-controls="dimension-svg">−</button><button type="button" id="zoom-reset" aria-label="Reset diagram zoom to 100%" aria-controls="dimension-svg">100%</button><button type="button" id="zoom-in" aria-label="Zoom in" aria-controls="dimension-svg">+</button></div></div>'
            '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
            '<div class="drawing-caption"><span><i></i> SCALED SCHEMATIC</span><span>NOT A VERIFIED 1:1 TEMPLATE</span></div>'
+           '<p class="diagram-linked-help" id="geometry-link-status">Part selection is available only where a drawing element maps exactly to one numbered schedule row.</p>'
+           '<button id="diagram-start-row" class="btn secondary diagram-start-row" type="button" hidden>Inspect measured parts →</button>'
+           '<div id="diagram-inspector" class="diagram-inspector" aria-live="polite" hidden>'
+           '<strong id="diagram-selection">No measured part selected</strong>'
+           '<button id="diagram-previous-row" type="button">← Previous</button>'
+           '<button id="diagram-next-row" type="button">Next →</button>'
+           '<button id="diagram-find-row" type="button">Show matching schedule row ↗</button>'
+           '</div>'
            '<div class="diagram-tools"><button type="button" class="btn subtle" id="download-svg">↓ Save SVG</button><button type="button" class="btn subtle" id="print-sheet">⎙ Print / PDF</button></div>'
            '<p class="print-advice">Print / PDF includes the complete measurement schedule, including rows on other screen pages, plus two physical calibration rulers. Use 100% / Actual size and check both with a real ruler; the geometry diagram itself is NOT a 1:1 template. Printed schedules may span many sheets.</p>'
            '<section id="print-calibration" class="print-calibration" aria-label="Printed ruler calibration check">'
@@ -443,12 +458,14 @@ def tool_page(t):
         '<thead><tr><th>Profile</th><th>Candidate</th><th>Planned sticks</th><th>Buy</th><th>Estimated purchase</th><th>Unallocated offcut</th><th>Decision</th></tr></thead><tbody></tbody></table></div>'
         '<div class="takeoff-legend">Quoted supplier offers only · Unquoted base length excluded from price comparisons · No offcut carryover between material families</div>'
         '<section id="framing-optimizer-panel" class="framing-optimizer-panel" aria-label="Exact material cost proof">'
-        '<h3>Optimality verification</h3>'
+        '<details class="advanced-results-disclosure" open>'
+        '<summary>Advanced optimality verification <span>Show or hide technical proof</span></summary>'
+        '<div class="advanced-results-body"><h3>Optimality verification</h3>'
         '<p id="framing-optimizer-status" role="status" aria-live="polite">Check prices to see exact and heuristic verification.</p>'
         '<div class="table-scroll framing-table-scroll"><table id="framing-proof-table" aria-label="Optimization proof by material">'
         '<thead><tr><th>Material</th><th>Pieces</th><th>Search status</th><th>Distinct states</th><th>Merged repeats</th><th>Certificate</th></tr></thead><tbody></tbody></table></div>'
         '<p class="optimizer-note">Exact mode memoizes equivalent cutting states and can prove the modeled lowest quote cost for up to 16 pieces per material when all distinct search states fit within a 40,000-state limit. A certificate is issued only when search completes with every required supplier price provided. It is valid only for offered lengths, between-cut kerf, independent material profiles and separately rounded purchase allowances. Other results are heuristic estimates, not proven optima.</p>'
-        '</section>'
+        '</div></details></section>'
 
         '<section class="framing-order-ticket" id="framing-order-ticket" aria-label="Printable purchasing checklist">'
         '<h3>Purchase checklist</h3><p id="framing-ticket-status">Enter supplier quotes.</p>'
@@ -566,7 +583,23 @@ def tool_page(t):
         '<button id="download-deck-fastener-csv" type="button" class="btn secondary">↓ Download fastener rows CSV</button>'
         '</div></section>'
     ) if t["slug"]=="deck-material-calculator" else ""
-    body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block worksheet-schedule"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
+    # Navigation is task-based, not a new SEO route. The full underlying
+    # tables, assumptions and exports remain in the DOM and in print.
+    detail_index = (
+        '<nav class="worksheet-index" aria-label="Worksheet results sections">'
+        '<span class="eyebrow">ON THIS WORKSHEET</span>'
+        '<a href="#workbench-results">Key results</a>'
+        '<a href="#workbench-drawing">Drawing</a>'
+        '<a href="#measurement-schedule">Measurements</a>'
+        + ('<a href="#framing-takeoff">Material plan</a>'
+           '<a href="#framing-optimizer-panel">Advanced verification</a>'
+           '<a href="#framing-order-ticket">Purchase checklist</a>'
+           if t["slug"]=="framing-calculator" else '')
+        + ('<a href="#deck-purchase-plan">Materials & fasteners</a>'
+           if t["slug"]=="deck-material-calculator" else '')
+        + '</nav>'
+    )
+    body+=(f'<section class="wrap detail-layout"><div class="detail-main">{detail_index}<div id="measurement-schedule" class="content-block worksheet-schedule"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
            '<p>Items below are generated from the same numbers used for the drawing. The screen may show only 160 rows per page, but Print / PDF expands the entire schedule before printing and restores your screen page afterwards; CSV always includes all rows. Numeric CSV cells use the selected units in column headers for spreadsheet import. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table" aria-label="Calculated cut and measurement schedule"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
            '<p class="schedule-count" id="schedule-count" aria-live="polite"></p>'
