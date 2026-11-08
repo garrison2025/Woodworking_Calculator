@@ -184,7 +184,7 @@
     },
     {
       "slug": "stair-calculator",
-      "seoTitle": "Stair Tread Calculator for Rise and Run",
+      "seoTitle": "Stair Calculator for Rise and Run",
       "useFor": "Calculate level-finished straight stairs with optional measured deck tread coverage and limited available-flight-run checks.",
       "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
       "next": [
@@ -524,7 +524,7 @@
     },
     {
       "slug": "fence-picket-calculator",
-      "seoTitle": "Fence Picket Spacing & Cut Calculator",
+      "seoTitle": "Fence Picket Spacing Calculator for Cut Heights",
       "useFor": "Lay out measured fence picket face edges and equal clear gaps, then optionally calculate a separate stepped top-cut height for each straight board.",
       "notFor": "A structural fence span, curved cutting template, post embedment, safe pool barrier openings or approved wind-loading design.",
       "next": [
@@ -544,7 +544,7 @@
     },
     {
       "slug": "gambrel-roof-calculator",
-      "seoTitle": "Gambrel Roof Geometry Calculator",
+      "seoTitle": "Gambrel Roof Calculator for Two Pitches",
       "useFor": "Calculate symmetric two-pitch gambrel section geometry, knuckle stations, ridge height and surface areas of four roof segments.",
       "notFor": "Structural gambrel truss loads or joints, timber span design, bearing cuts, sheet nesting or roofing code certification.",
       "next": [
@@ -564,7 +564,7 @@
     },
     {
       "slug": "lumber-price-calculator",
-      "seoTitle": "Lumber Price Calculator for Board Feet & MBF",
+      "seoTitle": "Lumber Price Calculator for BF & MBF",
       "useFor": "Calculate lumber volume from entered dimensions. Add an optional price per board foot or per thousand board feet for a supplier quote estimate.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order.",
       "next": [
@@ -584,7 +584,7 @@
     },
     {
       "slug": "spiral-staircase-calculator",
-      "seoTitle": "Spiral Staircase Tread Layout Calculator",
+      "seoTitle": "Spiral Staircase Calculator for Tread Layout",
       "useFor": "Lay out a single-turn spiral stair's physical wedge sectors, polar plan coordinates, uniform risers and measured walk-line arc going.",
       "notFor": "Stair headroom or guardrail approval, multi-turn stair design, code compliance, structural bearing, pole selection or finished shop cuts.",
       "next": [
