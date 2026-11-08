@@ -240,6 +240,7 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                 check(all(('id="' + element + '"') in body for element in (
                           "dock-toggle", "workbench-shortcuts",
                           "diagram-inspector", "diagram-selection", "diagram-find-row",
+                          "diagram-start-row",
                           "geometry-link-status", "measurement-schedule")) and
                       'aria-label="Worksheet results sections"' in body and
                       (path != "/framing-calculator/" or
