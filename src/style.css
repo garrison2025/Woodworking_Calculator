@@ -687,6 +687,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .print-only-heading{display:none}
 @media print{
  .tool-heading h1{font-size:18pt;line-height:1.18}
+ .tool-heading .tool-formula{display:none!important}
  .worksheet-schedule>p:not(.schedule-count){display:none!important}
  .print-only-heading{display:block;font-size:11pt!important;margin:0 0 4pt;break-after:avoid}
  .proof{border-top:.75pt solid #777;padding:8pt 0 0;margin-top:12pt;break-inside:auto}
