@@ -153,7 +153,21 @@ if(slug){
     const map=geometrySelector();
     return map?diagram.querySelector(map[0]+'[data-'+map[1]+'="'+i+'"]'):null;
   };
+  // Give a long measurement table ONE Tab stop, then let arrow keys move
+  // between the visible schedule rows. Keep native table semantics and
+  // expose only rows whose SVG parts have a verified one-to-one match.
+  const syncGeometryRowTabStops=()=>{
+    const rows=[...cut.querySelectorAll("tbody tr[data-geometry-row]")];
+    if(!geometryIndexEnabled){
+      for(const row of rows)row.removeAttribute("tabindex");
+      return;
+    }
+    const active=rows.find(row=>Number(row.dataset.geometryRow)===geometrySelected)||
+      rows[0];
+    for(const row of rows)row.tabIndex=row===active?0:-1;
+  };
   const highlightGeometry=()=>{
+    syncGeometryRowTabStops();
     const map=geometrySelector();
     diagram.querySelectorAll(".is-selected-geometry").forEach(n=>n.classList.remove("is-selected-geometry"));
     cut.querySelectorAll(".is-selected-geometry").forEach(n=>n.classList.remove("is-selected-geometry"));
@@ -192,7 +206,7 @@ if(slug){
     highlightGeometry();
     const row=cut.querySelector('tbody tr[data-geometry-row="'+geometrySelected+'"]');
     if(!row)return;
-    row.setAttribute("tabindex","-1");
+    row.tabIndex=0;
     row.focus({preventScroll:true});
     row.scrollIntoView({
       block:"center",
@@ -202,6 +216,26 @@ if(slug){
   cut.addEventListener("click",event=>{
     const row=event.target.closest("tr[data-geometry-row]");
     if(row)selectGeometry(Number(row.dataset.geometryRow),{bringDrawing:true});
+  });
+  cut.addEventListener("keydown",event=>{
+    const row=event.target.closest?.("tr[data-geometry-row]");
+    if(!geometryIndexEnabled||!row||!cut.contains(row)||
+       !["ArrowUp","ArrowDown","Home","End","Enter"," "].includes(event.key))return;
+    if(event.key==="Enter"||event.key===" "){
+      event.preventDefault();
+      // Preserve the focused table row instead of scrolling it offscreen.
+      selectGeometry(Number(row.dataset.geometryRow));
+      return;
+    }
+    const rows=[...cut.querySelectorAll("tbody tr[data-geometry-row]")];
+    const index=rows.indexOf(row);
+    if(index<0)return;
+    const next=event.key==="Home"?0:event.key==="End"?rows.length-1:
+      Math.max(0,Math.min(rows.length-1,index+(event.key==="ArrowDown"?1:-1)));
+    if(next===index)return;
+    event.preventDefault();
+    rows.forEach((candidate,i)=>{candidate.tabIndex=i===next?0:-1;});
+    rows[next].focus();
   });
   diagram.addEventListener("click",event=>{
     const map=geometrySelector();
@@ -2339,11 +2373,12 @@ if(slug){
         diagram.querySelectorAll(geometryMap[0]).length===latest.rows.length &&
         Boolean(geometryPart(1)) && Boolean(geometryPart(latest.rows.length)) : false;
       geometryIndexEnabled=Boolean(matches);
+      syncGeometryRowTabStops();
       geometryStart.hidden=!geometryIndexEnabled;
       if(geometryIndexEnabled&&geometrySelected)highlightGeometry();
       if(!geometryIndexEnabled)geometryInspector.hidden=true;
       geometryStatus.textContent=matches && latest.rows.length?
-        "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Arrow buttons inspect adjacent rows.":
+        "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Keyboard: Tab into the schedule, Up/Down to move, Enter to select; arrow buttons inspect adjacent rows.":
         "Schematic reference: not every geometry element corresponds to a numbered schedule row. Inspect the numeric measurements before use.";
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
