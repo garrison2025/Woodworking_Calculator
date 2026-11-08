@@ -121,6 +121,11 @@ def page(title, description, body, path="/", type_="website"):
             item["@id"] = canon + ("#webapplication" if type_ == "tool" else "#webpage")
             item["isPartOf"] = {"@id": SITE_URL + "/#website"}
         item["publisher"] = organization
+        # Credit the actual site publisher instead of inventing a named expert.
+        item["author"] = {"@id": SITE_URL + "#organization"}
+        # Dates track editorial changes only, not automatic build timestamps.
+        if path in ("/", "/about/"):
+            item["dateModified"] = "2026-11-08"
         if type_ == "tool":
             selected = next(t for t in TOOLS if "/" + t["slug"] + "/" == path)
             item["applicationCategory"] = "UtilitiesApplication"
@@ -162,7 +167,7 @@ def page(title, description, body, path="/", type_="website"):
     og_title = {"/about/": "About WoodLayout", "/contact/": "Contact WoodLayout",
                  "/privacy/": "WoodLayout Privacy Policy",
                  "/terms/": "WoodLayout Terms & Safety"}.get(path, title)
-    nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
+    nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="WoodLayout logo" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
     mobile_categories = ''.join(
@@ -179,7 +184,7 @@ def page(title, description, body, path="/", type_="website"):
               '<small>All diagrams are illustrative unless separately verified for full-size printing. No login, paid API or cloud data storage.</small></div></footer>')
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<meta name="color-scheme" content="light"><meta name="robots" content="{robots}">'
-            f'<title>{esc(title)} | WoodLayout</title><meta name="description" content="{esc(desc)}">{canonical}'
+            f'<title>{esc(title)} | WoodLayout</title><meta name="description" content="{esc(desc)}"><meta name="author" content="WoodLayout">{canonical}'
             f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
             f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(og_title)}"><meta property="og:description" content="{esc(desc)}">'
             + (f'<meta property="og:url" content="{esc(canon)}">' if eligible else "")
@@ -315,7 +320,7 @@ def home():
     category_count = len({tool["category"] for tool in TOOLS})
     body = ('<section class="hero wrap"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> PRECISION FOR THE WORKSHOP</span>'
             '<h1>Free woodworking calculators<br><em>for better measurements.</em></h1>'
-            '<p>Woodworking calculators for practical layouts, cut lengths, spacing and material takeoffs. Enter dimensions, inspect an annotated drawing, then export your work.</p>'
+            f'<p>WoodLayout provides {len(TOOLS)} free woodworking calculators for framing, decks, roofing, stairs, shelf layouts, cut lists and lumber estimates. Enter measured dimensions, inspect an annotated diagram and export results locally.</p>'
             f'<div class="hero-actions"><a class="btn primary" href="/#tools">Explore {len(TOOLS)} free tools <span aria-hidden="true">↗</span></a>'
             '<a class="btn subtle" href="/stud-calculator/">Try the stud calculator</a></div>'
             f'<div class="hero-facts"><span><strong>{len(TOOLS)}</strong> working calculator routes</span><span><strong>{category_count}</strong> active categories</span><span><strong>0</strong> accounts required</span></div>'
@@ -338,7 +343,32 @@ def home():
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
             '<div><b>02 / Check</b><p>Visible formulas, explicit assumptions, precise dimensions.</p></div>'
             '<div><b>03 / Export</b><p>Save a locally generated CSV or SVG; print to PDF from your browser.</p></div></section>')
-    return page("Free Woodworking Calculators & Layout Tools",f"{len(TOOLS)} practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
+    # Provide a useful answer, a semantic measurement checklist and a genuine
+    # source for length conversions rather than manufacturing quotes or badges.
+    body += ('<section class="wrap home-method" aria-labelledby="home-method-title">'
+             '<span class="eyebrow">MEASUREMENT BASICS &amp; SOURCES</span>'
+             '<h2 id="home-method-title">How do I choose and check a woodworking calculator?</h2>'
+             '<p>Start with a dimension you can measure, choose the matching task, and verify the result against real stock. Reference faces and clear openings are not interchangeable.</p>'
+             '<div class="home-method-grid"><div>'
+             '<ol class="home-method-steps">'
+             '<li><strong>Choose the datum.</strong> Measure the clear opening, outside face, centerline or actual stock dimension required by the tool.</li>'
+             '<li><strong>Check the geometry.</strong> Read the stated formula and assumptions, then compare the proportional drawing and numeric schedule.</li>'
+             '<li><strong>Verify before cutting.</strong> Check real stock, kerf, allowances, site requirements and printer scale independently.</li>'
+             '</ol></div><div class="home-method-reference">'
+             '<h3>Quick length reference</h3>'
+             '<table><caption>Exact standard length relationships</caption>'
+             '<thead><tr><th scope="col">From</th><th scope="col">Equivalent</th></tr></thead>'
+             '<tbody><tr><th scope="row">1 foot (ft)</th><td>12 inches (in)</td></tr>'
+             '<tr><th scope="row">1 inch (in)</th><td>25.4 millimeters (mm)</td></tr>'
+             '<tr><th scope="row">1 foot (ft)</th><td>0.3048 meters (m)</td></tr></tbody></table>'
+             '<p>Conversion source: <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors" rel="noopener noreferrer">NIST Guide to the SI, Appendix B</a>. '
+             'This confirms standard units, not cutting safety or a certification of individual calculator outputs.</p>'
+             '</div></div>'
+             '<p class="home-method-provenance">Created and maintained by <a href="/about/">WoodLayout</a>. '
+             'Content updated <time datetime="2026-11-08">November 8, 2026</time>. '
+             'Review the <a href="https://github.com/garrison2025/Woodworking_Calculator" rel="noopener noreferrer">source code and automated tests</a>; physical workshop validation remains separate.</p>'
+             '</section>')
+    return page("Free Woodworking Calculators & Layout Tools","Explore 31 free woodworking calculators for studs, decking, rafters, stairs, shelves and lumber layouts. Check measured diagrams; export CSV and PDF.",body)
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]
@@ -838,6 +868,8 @@ def info_page(title, paragraphs, url):
                  '<li>Available length units are inches, feet, millimeters, centimeters and meters. In inch mode, common fractional-inch entries such as 5 1/2 and 3/4 are accepted; other unit modes use decimal entries.</li>'
                  '<li>Fraction display precision can be selected for inch results. CSV exports preserve numeric values and label their units; do not treat rounded display fractions as more precise than the entered measurements.</li>'
                  '<li>Supplier prices are entered by the visitor. WoodLayout does not provide live lumber prices or currency conversion.</li></ul>'
+                 '<p>For inch and foot conversion factors, see the <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors" rel="noopener noreferrer">NIST Guide to the SI, Appendix B</a>. This source defines standard length relationships; it does not independently validate WoodLayout geometry, structural safety or shop cutting methods.</p>'
+                 '<p>Documentation updated <time datetime="2026-11-08">November 8, 2026</time> after an editorial review of unit references and attribution.</p>'
                  '<h2>How to interpret drawings, schedules and estimates</h2>'
                  '<p>SVG diagrams are proportional geometry references, not 1:1 cutting or drilling templates. Print worksheets include physical calibration bars; measure them on paper before relying on printed scale. Material estimates depend on the dimensions, stock lengths, kerf and allowances entered by the visitor. A mathematical fit does not prove a safe saw path, stock quality or installation method.</p>'
                  '<h2>What has and has not been tested</h2>'
