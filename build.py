@@ -584,7 +584,7 @@ def tool_page(t):
            '<button class="btn secondary" id="share-measurements" type="button" disabled>Copy measurement link ↗</button>'
            '<button class="btn secondary" id="download-measurements-json" type="button" disabled>↓ Save measurements JSON</button>'
            '<label class="measurement-import-label" for="load-measurements-json">Restore a local measurements JSON file</label>'
-           '<input id="load-measurements-json" disabled data-calculator-startup-control type="file" accept=".json,application/json" aria-label="Restore saved measurements from local JSON file"></div>'
+           '<input id="load-measurements-json" type="file" accept=".json,application/json" disabled data-calculator-startup-control aria-label="Restore saved measurements from local JSON file"></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally. Sharing and local JSON backups are optional. Both preserve numeric inputs, units and quote currency, but NOT material inspections or purchasing approvals. Local files are read only in your browser.</p></div>'
            '<div id="workbench-drawing" tabindex="-1" class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
            '<div class="zoom-controls" role="group" aria-label="Diagram zoom controls"><button type="button" id="zoom-out" aria-label="Zoom out" aria-controls="dimension-svg">−</button><button type="button" id="zoom-reset" aria-label="Reset diagram zoom to 100%" aria-controls="dimension-svg">100%</button><button type="button" id="zoom-in" aria-label="Zoom in" aria-controls="dimension-svg">+</button></div></div>'
