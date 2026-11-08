@@ -2608,7 +2608,8 @@ test("maximum wall-stud OC equalizes 161-inch run without stud overlap",()=>{
   const defaultR=compute("wall-stud-calculator",{...wall,spacingMode:0});
   assert.equal(value(defaultR,"Final bay size"),17);
   assert.equal(defaultR.finalBayExceedsNominal,true);
-  assert.equal(compute("wall-stud-calculator",{...wall,spacingMode:undefined}).wallStudLayoutMode,0);
+  const {spacingMode,...legacyWall}=wall;
+  assert.equal(compute("wall-stud-calculator",legacyWall).wallStudLayoutMode,0);
 });
 
 test("maximum stud OC mode enforces face clearance, integer mode and boundary geometry",()=>{
