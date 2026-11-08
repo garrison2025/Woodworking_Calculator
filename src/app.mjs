@@ -134,6 +134,7 @@ if(slug){
   const geometryPrevious=document.querySelector("#diagram-previous-row");
   const geometryNext=document.querySelector("#diagram-next-row");
   const geometryFind=document.querySelector("#diagram-find-row");
+  let lastDiagramMarkup=null;
   const geometryShapes={
     "boards":[".deck-board-face","row"],
     "panels":[".wainscot-panel","panel"],
@@ -2282,8 +2283,9 @@ if(slug){
     // Flush a queued event frame when another action calls render directly.
     // This prevents stale geometry after a quick reset/unit change.
     if(inputQueued)inputQueued=false;
-    geometrySelected=0;
-    geometryInspector.hidden=true;
+    // Keep exact part selection when an input changes the quote but leaves
+    // measured geometry identical; clear it if a fresh SVG replaces the
+    // underlying measured drawing.
     refreshConditionalFields();
     reviewField=null;
     reviewInvalid.hidden=true;
@@ -2316,7 +2318,16 @@ if(slug){
       if(printFullSchedule)renderReadablePrintSchedule();
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       if(printFullSchedule)renderSpecialtyPrintTables();
-      diagram.innerHTML=drawing(latest);applyDiagramZoom();
+      const drawn=drawing(latest);
+      if(drawn!==lastDiagramMarkup){
+        diagram.innerHTML=drawn;
+        lastDiagramMarkup=drawn;
+        geometrySelected=0;
+        geometryInspector.hidden=true;
+      }else if(geometrySelected){
+        highlightGeometry();
+      }
+      applyDiagramZoom();
       const geometryMap=geometrySelector();
       const matches=geometryMap && latest.rows.length>0 ?
         diagram.querySelectorAll(geometryMap[0]).length===latest.rows.length &&
@@ -2331,6 +2342,8 @@ if(slug){
       requestAnimationFrame(syncKeyboardScrollRegions);
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
+      geometrySelected=0;geometryInspector.hidden=true;
+      lastDiagramMarkup=null;
       renderPrintInputSnapshot();
       error.textContent=e.message;error.hidden=false;
       // Input parsing supplies its own field key. Most calculator rules use
