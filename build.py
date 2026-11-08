@@ -792,7 +792,8 @@ def build():
     shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"logo-mark.svg")
     shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"favicon.svg")
     shutil.copyfile(ROOT/"src"/"logo-lockup.svg", DEST/"logo-lockup.svg")
-    shutil.copyfile(ROOT/"src"/"social-card.png", DEST/"social-card.png")
+    from scripts.social_card import generate as generate_social_card
+    generate_social_card(DEST/"social-card.png")
     (DEST/"404.html").write_text(page("Page not found","This tool URL is not available.","<section class='wrap legal-page'><h1>That tool isn't here.</h1><p>Try the complete calculator directory.</p><a class='btn primary' href='/#tools'>Find a tool ↗</a></section>","/404/"))
     # Cloudflare Pages static response headers. 404.html must never be a
     # canonical search result; the page() gate above separately keeps its
