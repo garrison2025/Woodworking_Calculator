@@ -149,7 +149,7 @@ def main():
             "Confirm official IP verification and Cloudflare AI Crawler policies separately."
         ),
     }
-    shared_ua = "WoodLayout-GEO-ReadOnly-Audit/1.0 (+https://woodlayout.com/about/)"
+    shared_ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     robots_result = fetch(base + "/robots.txt", shared_ua)
     if robots_result["status"] != 200:
         report["failures"].append("robots.txt HTTP " + str(robots_result["status"]))
