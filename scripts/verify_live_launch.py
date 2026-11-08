@@ -188,6 +188,16 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                   p.title.endswith(" | WoodLayout"),
                   path + ": deployed WoodLayout navigation logo/brand differs from source")
         check(bool(p.meta.get("description", "").strip()), path + ": missing meta description")
+        check(len(p.title.strip()) <= 60,
+              path + ": document title exceeds the 60-character editorial budget")
+        check(len(p.meta.get("description", "").strip()) <= 155,
+              path + ": meta description exceeds the 155-character editorial budget")
+        if approved:
+            check(p.meta.get("twitter:card") == "summary_large_image" and
+                  bool(p.meta.get("twitter:title")) and
+                  p.meta.get("twitter:description") == p.meta.get("description") and
+                  p.meta.get("twitter:image") == origin + "/social-card.png",
+                  path + ": incomplete Twitter card metadata")
         if p.title in seen_titles:
             check(False, path + ": duplicate title with " + seen_titles[p.title])
         else:
