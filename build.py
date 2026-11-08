@@ -845,7 +845,7 @@ def info_page(title, paragraphs, url):
                  '<h2>Public implementation and corrections</h2>'
                  '<p>The <a href="https://github.com/garrison2025/Woodworking_Calculator">public source repository</a> contains the calculation engines and automated regression tests. To report a discrepancy, provide the calculator URL, selected units, exact entered dimensions and expected comparison. Send it to <a href="mailto:contact@woodlayout.com">contact@woodlayout.com</a> or use the public <a href="https://github.com/garrison2025/Woodworking_Calculator/issues">GitHub issue tracker</a> without posting private information.</p>'
                  '<p>This independent tool collection is free to use in a browser; calculations run locally, there is no account requirement, and no live lumber pricing service.</p>'
-                 '<p>For machine-readable navigation, see the optional <a href="/llms.txt">WoodLayout site guide</a>. It summarizes the site and links to the detailed calculator pages; it does not guarantee search ranking, indexing or AI citations.</p></section>')
+                 ('<p>For machine-readable navigation, see the optional <a href="/llms.txt">WoodLayout site guide</a>. It summarizes the site and links to the detailed calculator pages; it does not guarantee search ranking, indexing or AI citations.</p>' if INDEXABLE else '') + '</section>')
     body += '</article>'
     content_type = "about" if url == "/about/" else "info"
     meta_descriptions = {
