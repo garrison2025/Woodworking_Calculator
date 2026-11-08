@@ -135,6 +135,7 @@ for p in pages:
     if page_tool:
         for marker in ('id="dock-toggle"', 'id="workbench-shortcuts"',
                        'id="diagram-inspector"', 'id="diagram-selection"',
+                       'id="diagram-start-row"',
                        'id="diagram-previous-row"', 'id="diagram-next-row"',
                        'id="diagram-find-row"', 'id="geometry-link-status"',
                        'id="measurement-schedule"', 'aria-label="Worksheet results sections"'):
