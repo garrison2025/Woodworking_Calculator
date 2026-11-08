@@ -105,6 +105,9 @@ test("unchanged physical geometry preserves its SVG subtree instead of triggerin
 
 test("twenty rapid input events coalesce into one or two output refreshes and keep exact values",async({page})=>{
   await page.goto("/deck-board-calculator/");
+  // The ES module loads asynchronously. Only measure event batching after
+  // the live engine has attached the form listeners and rendered once.
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
   const count=await page.evaluate(async()=>{
     const field=document.querySelector("#f-width");
     const target=document.querySelector("#dimension-svg");
