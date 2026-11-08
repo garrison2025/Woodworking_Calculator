@@ -154,3 +154,35 @@ test("motion preference disables V4 transitions, preserves labels and keyboard o
   await page.getByRole("button",{name:/Sections/}).click();
   await expect(page.locator("#workbench-shortcuts a")).toHaveCount(3);
 });
+
+
+test("linked cut schedule has one keyboard tab stop and direct row selection",async({page})=>{
+  await page.goto("/deck-board-calculator/");
+  const rows=page.locator("#cut-table tbody tr[data-geometry-row]");
+  await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeGreaterThan(3);
+  await expect(rows.nth(0)).toHaveAttribute("tabindex","0");
+  await expect(rows.nth(1)).toHaveAttribute("tabindex","-1");
+  await rows.nth(0).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(rows.nth(1)).toBeFocused();
+  await expect(rows.nth(0)).toHaveAttribute("tabindex","-1");
+  await expect(rows.nth(1)).toHaveAttribute("tabindex","0");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#diagram-selection")).toContainText("Row 2 / ");
+  await expect(page.locator('#dimension-svg .deck-board-face[data-row="2"]'))
+    .toHaveClass(/is-selected-geometry/);
+  await page.keyboard.press("ArrowDown");
+  await expect(rows.nth(2)).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.locator("#diagram-selection")).toContainText("Row 3 / ");
+  await page.keyboard.press("End");
+  await expect(rows.last()).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(rows.first()).toBeFocused();
+  // Invalid/ambiguous SVG-to-schedule mappings must never create fake
+  // accessible measurement-to-shape links.
+  await page.goto("/framing-calculator/");
+  await expect(page.locator("#result-cards .metric").first()).toBeVisible();
+  await expect(page.locator("#cut-table tr[data-geometry-row]")).toHaveCount(0);
+});
