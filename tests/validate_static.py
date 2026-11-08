@@ -119,6 +119,10 @@ for p in pages:
     live_scripts=re.findall(r'<script type="module" src="([^"]+)"',body)
     if live_scripts!=([expected_script] if expected_script else []):
         errors.append(f"{u}: unexpected JavaScript entry point {live_scripts}")
+    # Native mobile category navigation is available on all 42 pages, including
+    # directory and policy pages that intentionally have no JavaScript.
+    if body.count('class="mobile-site-menu"')!=1 or body.count('aria-label="Mobile tool categories"')!=1:
+        errors.append(f"{u}: missing V4 mobile category navigation")
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
         for control in ('id="undo-reset"', 'id="review-invalid"'):
@@ -128,6 +132,16 @@ for p in pages:
             'id="review-invalid" type="button" aria-describedby="calc-error" hidden' not in body):
             errors.append(f"{u}: input recovery controls must be initially hidden and non-submitting")
 
+    if page_tool:
+        for marker in ('id="dock-toggle"', 'id="workbench-shortcuts"',
+                       'id="diagram-inspector"', 'id="diagram-selection"',
+                       'id="diagram-previous-row"', 'id="diagram-next-row"',
+                       'id="diagram-find-row"', 'id="geometry-link-status"',
+                       'id="measurement-schedule"', 'aria-label="Worksheet results sections"'):
+            if body.count(marker)!=1:
+                errors.append(f"{u}: V4 workbench navigator/diagram index missing or duplicated {marker}")
+        if u=="/framing-calculator/" and body.count('class="advanced-results-disclosure"')!=1:
+            errors.append(f"{u}: framing advanced proof must be user-collapsible")
     if page_tool:
         # Every calculator route has one real, accessible in-page workbench
         # navigator. No extra SEO route, form clone, or measured numeric value
