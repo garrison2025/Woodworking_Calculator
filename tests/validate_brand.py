@@ -25,8 +25,8 @@ class HeadAndBrand(HTMLParser):
                 raise AssertionError("Brand link has wrong home URL or accessible name")
             self.brand_links += 1
         if tag == "img" and a.get("src") == "/logo-mark.svg":
-            if a.get("alt") != "" or a.get("width") != "44" or a.get("height") != "44":
-                raise AssertionError("Brand SVG img must be decorative with stable dimensions")
+            if a.get("alt") != "WoodLayout logo" or a.get("width") != "44" or a.get("height") != "44":
+                raise AssertionError("Brand SVG img must describe the logo and retain stable dimensions")
             self.brand_marks += 1
         if tag == "link" and a.get("rel") == "icon":
             self.icon.append(a.get("href"))
