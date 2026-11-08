@@ -43,6 +43,44 @@ if(slug){
   const dockValue=document.querySelector("#dock-primary-value");
   const dockSummary=document.querySelector(".dock-summary");
   const dockLinks=[...document.querySelectorAll(".dock-links a")];
+  const dock=document.querySelector(".workbench-dock");
+  const dockToggle=document.querySelector("#dock-toggle");
+  const dockMobile=window.matchMedia("(max-width: 680px)");
+  let dockScrolled=false,dockUserExpanded=false,dockScrollFrame=0;
+  const syncCompactDock=()=>{
+    dockScrollFrame=0;
+    if(!dock||!dockToggle)return;
+    const shouldCompact=dockMobile.matches && window.scrollY>310;
+    if(shouldCompact!==dockScrolled) dockUserExpanded=false;
+    dockScrolled=shouldCompact;
+    dock.classList.toggle("is-compact",shouldCompact);
+    dock.classList.toggle("is-expanded",shouldCompact&&dockUserExpanded);
+    dockToggle.hidden=!shouldCompact;
+    dockToggle.setAttribute("aria-expanded",String(!shouldCompact||dockUserExpanded));
+  };
+  dockToggle?.addEventListener("click",()=>{
+    dockUserExpanded=!dockUserExpanded;
+    syncCompactDock();
+    if(dockUserExpanded)dockLinks[0]?.focus({preventScroll:true});
+  });
+  dockLinks.forEach(link=>link.addEventListener("click",()=>{
+    dockUserExpanded=false;
+    syncCompactDock();
+  }));
+  window.addEventListener("scroll",()=>{
+    if(!dockScrollFrame) dockScrollFrame=requestAnimationFrame(syncCompactDock);
+  },{passive:true});
+  dockMobile.addEventListener("change",syncCompactDock);
+  syncCompactDock();
+  const mobileMenu=document.querySelector(".mobile-site-menu");
+  document.addEventListener("click",event=>{
+    if(mobileMenu?.open&&!mobileMenu.contains(event.target))mobileMenu.open=false;
+  });
+  document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&mobileMenu?.open){
+      mobileMenu.open=false;mobileMenu.querySelector("summary")?.focus();
+    }
+  });
   const syncDockLocation=()=>{
     const current=window.location.hash;
     for(const link of dockLinks){
@@ -88,6 +126,83 @@ if(slug){
   compactReadingOrder.addEventListener("change",syncWorkspaceReadingOrder);
   let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
+  const geometryStatus=document.querySelector("#geometry-link-status");
+  const geometryInspector=document.querySelector("#diagram-inspector");
+  const geometryLabel=document.querySelector("#diagram-selection");
+  const geometryPrevious=document.querySelector("#diagram-previous-row");
+  const geometryNext=document.querySelector("#diagram-next-row");
+  const geometryFind=document.querySelector("#diagram-find-row");
+  const geometryShapes={
+    "boards":[".deck-board-face","row"],
+    "panels":[".wainscot-panel","panel"],
+    "spacing-faces":[".equal-part-face","index"],
+    "slope":[".gable-cut-stud","index"],
+    "kerfs":[".kerf-slot","index"],
+    "shelves":[".shelf-face","index"],
+    "posts":[".post-face","index"],
+    "balusters":[".baluster-face","index"]
+  };
+  let geometrySelected=0;
+  const geometrySelector=()=>geometryShapes[latest?.shape]??null;
+  const geometryPart=(i)=>{
+    const map=geometrySelector();
+    return map?diagram.querySelector(map[0]+'[data-'+map[1]+'="'+i+'"]'):null;
+  };
+  const highlightGeometry=()=>{
+    const map=geometrySelector();
+    diagram.querySelectorAll(".is-selected-geometry").forEach(n=>n.classList.remove("is-selected-geometry"));
+    cut.querySelectorAll(".is-selected-geometry").forEach(n=>n.classList.remove("is-selected-geometry"));
+    const element=geometrySelected?geometryPart(geometrySelected):null;
+    if(!element||!map){
+      geometryInspector.hidden=true;
+      return;
+    }
+    element.classList.add("is-selected-geometry");
+    const row=cut.querySelector('tbody tr[data-geometry-row="'+geometrySelected+'"]');
+    row?.classList.add("is-selected-geometry");
+    const source=latest.rows[geometrySelected-1];
+    const name=source?.item??source?.label??("Row "+geometrySelected);
+    geometryLabel.textContent="Row "+geometrySelected+" / "+latest.rows.length+" · "+String(name);
+    geometryPrevious.disabled=geometrySelected<=1;
+    geometryNext.disabled=geometrySelected>=latest.rows.length;
+    geometryInspector.hidden=false;
+  };
+  const selectGeometry=(i,{bringDrawing=false}={})=>{
+    if(!Number.isInteger(i)||i<1||i>latest?.rows?.length||!geometryPart(i))return;
+    geometrySelected=i;
+    highlightGeometry();
+    if(bringDrawing)diagram.scrollIntoView({
+      block:"center",
+      behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"
+    });
+  };
+  geometryPrevious?.addEventListener("click",()=>selectGeometry(geometrySelected-1));
+  geometryNext?.addEventListener("click",()=>selectGeometry(geometrySelected+1));
+  geometryFind?.addEventListener("click",()=>{
+    if(!geometrySelected||!latest)return;
+    const page=Math.floor((geometrySelected-1)/schedulePageSize);
+    if(schedulePage!==page){schedulePage=page;renderSchedule();}
+    highlightGeometry();
+    const row=cut.querySelector('tbody tr[data-geometry-row="'+geometrySelected+'"]');
+    if(!row)return;
+    row.setAttribute("tabindex","-1");
+    row.focus({preventScroll:true});
+    row.scrollIntoView({
+      block:"center",
+      behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"
+    });
+  });
+  cut.addEventListener("click",event=>{
+    const row=event.target.closest("tr[data-geometry-row]");
+    if(row)selectGeometry(Number(row.dataset.geometryRow),{bringDrawing:true});
+  });
+  diagram.addEventListener("click",event=>{
+    const map=geometrySelector();
+    if(!map||!event.target.closest)return;
+    const element=event.target.closest(map[0]);
+    const index=Number(element?.getAttribute("data-"+map[1]));
+    if(index)selectGeometry(index);
+  });
   const schedulePager=document.querySelector("#schedule-pager");
   const schedulePrev=document.querySelector("#schedule-prev");
   const scheduleNext=document.querySelector("#schedule-next");
@@ -1218,7 +1333,7 @@ if(slug){
     // the Print/PDF button cannot silently omit all nonvisible pages.
     const visible=printFullSchedule?latest.rows:latest.rows.slice(start,end);
     cut.innerHTML='<thead><tr>'+scheduleCols.map(col=>'<th scope="col">'+esc(col.label)+'</th>').join("")+'</tr></thead><tbody>'+
-      visible.map(row=>'<tr>'+scheduleCols.map((col,i)=>
+      visible.map((row,i)=>'<tr'+(geometrySelector()?' data-geometry-row="'+(printFullSchedule?i+1:start+i+1)+'"':'')+'>'+scheduleCols.map((col,i)=>
         '<td'+(i===0?' role="rowheader"':'')+'>'+esc(scheduleValue(col.kind,row[col.key],col.key))+'</td>'
       ).join("")+'</tr>').join("")+'</tbody>';
     schedulePager.hidden=printFullSchedule||pages<=1;
@@ -1227,6 +1342,7 @@ if(slug){
     schedulePageInput.max=String(pages);
     schedulePageInput.value=String(schedulePage+1);
     schedulePageStatus.textContent="Page "+(schedulePage+1)+" of "+pages;
+    highlightGeometry();
     scheduleCount.textContent=printFullSchedule?
       "PRINT WORKSHEET — all "+count+" calculated rows included; CSV contains the same "+count+" rows."+bulkAdvice:
       count>schedulePageSize?
@@ -2151,6 +2267,8 @@ if(slug){
     zoomPlus.disabled=percent>=250;
   };
   function render(){
+    geometrySelected=0;
+    geometryInspector.hidden=true;
     refreshConditionalFields();
     reviewField=null;
     reviewInvalid.hidden=true;
@@ -2184,6 +2302,12 @@ if(slug){
       renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       if(printFullSchedule)renderSpecialtyPrintTables();
       diagram.innerHTML=drawing(latest);applyDiagramZoom();
+      const geometryMap=geometrySelector();
+      const matches=geometryMap?
+        Array.from({length:latest.rows.length},(_,i)=>geometryPart(i+1)).every(Boolean):false;
+      geometryStatus.textContent=matches && latest.rows.length?
+        "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Arrow buttons inspect adjacent rows.":
+        "Schematic reference: not every geometry element corresponds to a numbered schedule row. Inspect the numeric measurements before use.";
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
       updateDockSummary(latest.metrics[0].label,fmt(latest.metrics[0].value,latest.metrics[0].kind));
@@ -2211,6 +2335,7 @@ if(slug){
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
       cut.innerHTML="";diagram.innerHTML="";scheduleCount.textContent="";
+      geometryStatus.textContent="Correct the measurement input to restore the diagram.";
       renderReadablePrintSchedule();
       schedulePager.hidden=true;renderFramingTakeoff();renderDeckTakeoff();renderStringerSection();renderRoofReuse();renderShelfPins();
       renderSpecialtyPrintTables();
@@ -2283,7 +2408,22 @@ if(slug){
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
   form.addEventListener("submit",event=>event.preventDefault());
-  form.addEventListener("input",()=>{clearResetUndo();schedulePage=0;render();});
+  let inputFrame=0;
+  const flushInputRender=()=>{
+    if(!inputFrame)return;
+    cancelAnimationFrame(inputFrame);
+    inputFrame=0;
+    render();
+  };
+  form.addEventListener("input",()=>{
+    clearResetUndo();schedulePage=0;
+    // Coalesce multiple events in a paint interval, keeping the exact engine,
+    // SVG and schedule in sync rather than rendering them after every keystroke.
+    if(!inputFrame)inputFrame=requestAnimationFrame(()=>{
+      inputFrame=0;render();
+    });
+  });
+  window.addEventListener("beforeprint",flushInputRender);
   fraction.addEventListener("change",()=>{clearResetUndo();render();});
   currency?.addEventListener("change",()=>{clearResetUndo();render();});
   // Measurement links intentionally use fragments. HTTP requests and hosting
@@ -2643,7 +2783,12 @@ if(slug){
     save(slug+"-"+unit+"-support-surfaces.csv",csv,"text/csv;charset=utf-8");
     status.textContent="Support surface reference CSV saved locally.";
   });
-  svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
+  svg.addEventListener("click",()=>{flushInputRender();if(latest){
+    const clean=diagram.firstElementChild.cloneNode(true);
+    clean.querySelectorAll(".is-selected-geometry").forEach(el=>el.classList.remove("is-selected-geometry"));
+    save(slug+"-"+unit+"-diagram.svg",clean.outerHTML,"image/svg+xml");
+    status.textContent="SVG saved locally.";
+  }});
   print.addEventListener("click",()=>{if(latest)window.print()});
   const applySharedMeasurements=()=>{
     clearResetUndo();
