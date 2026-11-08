@@ -184,7 +184,7 @@
     },
     {
       "slug": "stair-calculator",
-      "seoTitle": "Stair Calculator for Rise and Run",
+      "seoTitle": "Stair Treads Calculator for Rise & Run",
       "useFor": "Calculate level-finished straight stairs with optional measured deck tread coverage and limited available-flight-run checks.",
       "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
       "next": [
@@ -564,7 +564,7 @@
     },
     {
       "slug": "lumber-price-calculator",
-      "seoTitle": "Lumber Price Calculator for BF & MBF",
+      "seoTitle": "Lumber Price Calculator: Board Foot & MBF",
       "useFor": "Calculate lumber volume from entered dimensions. Add an optional price per board foot or per thousand board feet for a supplier quote estimate.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order.",
       "next": [
