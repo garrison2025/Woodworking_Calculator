@@ -137,9 +137,9 @@ def page(title, description, body, path="/", type_="website"):
                            "name": title, "item": canon})
             item["breadcrumb"] = {"@type": "BreadcrumbList", "itemListElement": crumbs}
         schema = '<script type="application/ld+json">' + json.dumps(item, ensure_ascii=False).replace("<","\\u003c") + '</script>'
-    og_title = {"about": "About WoodLayout", "contact": "Contact WoodLayout",
-                 "privacy": "WoodLayout Privacy Policy",
-                 "terms": "WoodLayout Terms & Safety"}.get(type_, title)
+    og_title = {"/about/": "About WoodLayout", "/contact/": "Contact WoodLayout",
+                 "/privacy/": "WoodLayout Privacy Policy",
+                 "/terms/": "WoodLayout Terms & Safety"}.get(path, title)
     nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
