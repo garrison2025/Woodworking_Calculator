@@ -1737,7 +1737,7 @@
         },
         {
           "key": "spacing",
-          "label": "Stud OC interval",
+          "label": "Nominal stud on-center spacing",
           "value": 16,
           "kind": "L"
         },
@@ -1767,7 +1767,7 @@
       "guidance": [
         {
           "heading": "Wall length is measured between end stud centers",
-          "text": "Place the first nominal stud at center zero and the far-end stud at the entered wall length. Intermediate centers follow the chosen on-center interval, with overlapping near-end faces suppressed. Because this is a center-to-center reference, the outside faces of the end studs extend beyond the entered run."
+          "text": "Place the first nominal stud at center zero and the far-end stud at the entered wall length. Intermediate centers follow the nominal on-center interval. Removing an overlapping near-end stud can leave a final bay wider than that interval. If the entered spacing is a maximum, review the warning and revise the layout. Because this is a center-to-center reference, the outside faces of the end studs extend beyond the entered run."
         },
         {
           "heading": "Calculate the common vertical cut height",

@@ -1473,8 +1473,12 @@ export function compute(slug,a){
   }
   case "rise-run-calculator":{
     positive("run");nonnegative("rise");
+    need(a.run>=1e-8,"run must be at least 0.00000001 inches.");
     const angle=deg(Math.atan2(a.rise,a.run)),hyp=Math.hypot(a.rise,a.run);
-    return result([M("Slope length",hyp),M("Slope angle",angle,"A"),M("Pitch / 12",12*a.rise/a.run,"P"),M("Grade",100*a.rise/a.run,"D")],[],a.run,[],"triangle",{rise:a.rise,run:a.run,roofLine:hyp});
+    const pitch=12*a.rise/a.run,grade=100*a.rise/a.run;
+    need(Number.isFinite(pitch)&&Number.isFinite(grade),
+      "run must be large enough to report a finite pitch and grade.");
+    return result([M("Slope length",hyp),M("Slope angle",angle,"A"),M("Pitch / 12",pitch,"P"),M("Grade",grade,"D")],[],a.run,[],"triangle",{rise:a.rise,run:a.run,roofLine:hyp});
   }
   case "deck-material-calculator":{
     positive("width","length","board","joists","stock");nonnegative("gap","waste","boardUnitPrice","fastenerPackPrice",
@@ -2009,12 +2013,14 @@ export function compute(slug,a){
       grossHeight:q(a.height),bottomElevation:0,topElevation:q(a.height-a.plates),
       faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2)
     }));
+    const finalBay=xs.at(-1)-xs.at(-2);
     return result([
       M("Stud count",xs.length,"N"),M("Cut length",a.height-a.plates),
-      M("Plate deduction",a.plates),M("Final bay size",xs.at(-1)-xs.at(-2))
+      M("Plate deduction",a.plates),M("Final bay size",finalBay)
     ],rows.map(r=>({...P(r.position,r.item),topHeight:r.cutLength,cutLength:r.cutLength})),
     a.length,rows,"wall-studs",{
-      studRows:rows,wallHeight:a.height,studWidth:a.studWidth
+      studRows:rows,wallHeight:a.height,studWidth:a.studWidth,
+      finalBayExceedsNominal:finalBay>a.spacing+1e-8
     });
   }
   case "shelf-spacing-calculator":{

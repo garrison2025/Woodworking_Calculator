@@ -8,7 +8,7 @@ import {makeFramingReviewVersion,validateFramingReviewVersion,
   compareFramingReviewVersions,framingReviewVersionNote,
   proposeFramingMeasurementRestore} from "./framing-review-versions.mjs";
 const slug=document.body.dataset.tool;
-if(slug){
+async function initializeCalculator(){
   const tool=await fetch("/assets/tool-config/"+encodeURIComponent(slug)+".json").then(r=>{
     if(!r.ok)throw Error("Missing calculator configuration.");
     return r.json();
@@ -2357,6 +2357,9 @@ if(slug){
       if(latest.lumberBoard?.pricePerBoardFoot===null){
         out.insertAdjacentHTML("beforeend",'<p role="note">Enter a positive supplier rate to show the quoted cost.</p>');
       }
+      if(latest.finalBayExceedsNominal){
+        out.insertAdjacentHTML("beforeend",'<p class="error-banner" role="note"><strong>Final bay exceeds nominal spacing.</strong> The overlapping near-end stud was omitted. If your spacing is a maximum, revise the layout before using this schedule.</p>');
+      }
       if(latest.deckBoardStock?.requiresJointPlan){
         out.insertAdjacentHTML("beforeend",
           '<p class="deck-joint-warning" role="note"><strong>Unverified butt joints.</strong> '
@@ -2927,11 +2930,27 @@ if(slug){
       status.textContent="Invalid or incomplete measurement link ignored; default inputs restored.";
   };
   applySharedMeasurements();
+  for(const control of document.querySelectorAll("[data-calculator-startup-control]")){
+    control.disabled=false;
+  }
+  document.querySelector("#calculator-startup").hidden=true;
   // Navigation to the same page with a different fragment is a same-document
   // navigation. It does not rerun the module, so restore explicitly here too.
   window.addEventListener("hashchange",()=>{
     if(window.location.hash.startsWith("#measure="))applySharedMeasurements();
   });
   try{const recent=JSON.parse(localStorage.getItem("woodwork-recent")||"[]");localStorage.setItem("woodwork-recent",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,6)))}catch{}
+}
+
+if(slug){
+  const retry=document.querySelector("#calculator-retry");
+  retry.addEventListener("click",()=>window.location.reload());
+  initializeCalculator().catch(()=>{
+    document.querySelector("#calculator-startup-message").textContent=
+      "The calculator could not load. Retry to reload its settings.";
+    retry.hidden=false;
+    document.querySelector("#dock-primary-value").textContent="Unavailable";
+    document.querySelector("#action-status").textContent="Calculator unavailable.";
+  });
 }
 

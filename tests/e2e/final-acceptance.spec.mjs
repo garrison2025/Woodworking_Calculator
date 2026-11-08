@@ -57,3 +57,42 @@ test("resizing while result action is focused preserves focus and an intact resu
     .toBe(metric.replace(/\s+/g," ").trim());
   await expect(page.locator("#calc-error")).toBeHidden();
 });
+
+test("slow or failed calculator startup protects edits and offers retry",async({page})=>{
+  let finishConfig;
+  const blockedConfig=new Promise(resolve=>{finishConfig=resolve;});
+  await page.route("**/assets/tool-config/wall-stud-calculator.json",async route=>{
+    await blockedConfig;
+    await route.fulfill({status:503,body:"Temporary failure"});
+  });
+  await page.goto("/wall-stud-calculator/",{waitUntil:"domcontentloaded"});
+  const length=page.locator("#f-length");
+  const startup=page.locator("#calculator-startup");
+  try{
+    await expect(startup).toContainText("Loading calculator settings");
+    await expect(length).toBeDisabled();
+  }finally{
+    finishConfig();
+  }
+  await expect(startup).toContainText("The calculator could not load");
+  await expect(length).toBeDisabled();
+  await page.unroute("**/assets/tool-config/wall-stud-calculator.json");
+  await page.getByRole("button",{name:"Retry loading calculator"}).click();
+  await expect(length).toBeEnabled();
+  await expect(startup).toBeHidden();
+  await length.fill("161");
+  await expect(page.getByText("Final bay exceeds nominal spacing.",{exact:true})).toBeVisible();
+  await length.fill("160");
+  await expect(page.getByText("Final bay exceeds nominal spacing.",{exact:true})).toHaveCount(0);
+});
+
+test("rise/run disables exports when the entered run is too small",async({page})=>{
+  await page.goto("/rise-run-calculator/");
+  const run=page.locator("#f-run");
+  await run.fill("1e-309");
+  await expect(page.locator("#calc-error")).toContainText("run must be at least");
+  await expect(page.locator("#download-csv")).toBeDisabled();
+  await run.fill("72");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#download-csv")).toBeEnabled();
+});

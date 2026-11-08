@@ -405,17 +405,17 @@ def tool_page(t):
         label = esc(f["label"]) + (' <span data-length-unit>in</span>' if f["kind"] == "L" else '')
         if f.get("options"):
             opts = ''.join(f'<option value="{esc(o["value"])}"{" selected" if o["value"] == f["value"] else ""}>{esc(o["label"])}</option>' for o in f["options"])
-            control = f'<select id="{field_id}" name="{esc(f["key"])}" aria-describedby="field-note-{esc(f["key"])}">{opts}</select>'
+            control = f'<select id="{field_id}" disabled data-calculator-startup-control name="{esc(f["key"])}" aria-describedby="field-note-{esc(f["key"])}">{opts}</select>'
             note = 'Select the intended reference or layout option'
         elif f["kind"] == "L":
             # Native number inputs reject the fractional-inch notation used
             # on rulers and shop drawings (5 1/2, 5-1/2, 3/4).
             # A strict parser converts accepted entries to decimal inches
             # before all calculations, exports and measurement sharing.
-            control = f'<input id="{field_id}" name="{esc(f["key"])}" type="text" inputmode="text" maxlength="64" autocomplete="off" spellcheck="false" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
+            control = f'<input id="{field_id}" disabled data-calculator-startup-control name="{esc(f["key"])}" type="text" inputmode="text" maxlength="64" autocomplete="off" spellcheck="false" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = "Use selected units. In inches: 5.5, 5 1/2, 3/4, or feet-and-inches written as 8' 3 1/2\". Other units: decimals only."
         else:
-            control = f'<input id="{field_id}" name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
+            control = f'<input id="{field_id}" disabled data-calculator-startup-control name="{esc(f["key"])}" type="number" inputmode="decimal" step="any" value="{esc(f["value"])}" aria-describedby="field-note-{esc(f["key"])}">'
             note = ("Optional. Leave blank or enter 0 to calculate board feet without a quote."
                     if "emptyValue" in f else "Enter a number using the described measurement")
         condition = f' data-show-when="{esc(f["showWhen"])}"' if f.get("showWhen") else ""
@@ -468,7 +468,7 @@ def tool_page(t):
                        else "deck-currency")
     currency_picker=(
         f'<div class="framing-currency-control"><label for="{quote_currency_id}">Supplier quote currency</label>'
-        f'<select id="{quote_currency_id}" aria-label="Currency for entered stock prices">'
+        f'<select id="{quote_currency_id}" disabled data-calculator-startup-control aria-label="Currency for entered stock prices">'
         '<option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>'
         '<option value="CAD">CAD</option><option value="AUD">AUD</option>'
         '<option value="BRL">BRL</option><option value="MXN">MXN</option>'
@@ -572,16 +572,19 @@ def tool_page(t):
     )
     body+=(f'<section class="workspace wrap" data-workspace><div id="workbench-input" tabindex="-1" class="pane input-pane"><div class="pane-head"><div><span class="pane-index">01 / SETUP</span>'
            '<h2>Measurements</h2></div><span class="pane-state">EDITABLE</span></div>'
-           '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
-           '<label for="fraction-select">Fraction</label><select id="fraction-select" aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
+           '<div class="unit-row"><label for="unit-select">Units</label><select id="unit-select" disabled data-calculator-startup-control aria-label="Measurement units"><option value="in">Inches (in)</option><option value="ft">Feet (ft)</option><option value="mm">Millimeters (mm)</option><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option></select>'
+           '<label for="fraction-select">Fraction</label><select id="fraction-select" disabled data-calculator-startup-control aria-label="Inch fraction precision"><option value="16">1/16</option><option value="32">1/32</option></select></div>'
+           '<div id="calculator-startup" class="error-banner"><p id="calculator-startup-message" role="status">Loading calculator settings…</p>'
+           '<button id="calculator-retry" class="btn secondary" type="button" hidden>Retry loading calculator</button>'
+           '<noscript><p>Enable JavaScript and reload to use the calculator.</p></noscript></div>'
            +currency_picker+
            f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel+
-           '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button>'
+           '<div class="pane-actions"><button class="btn secondary" id="reset-values" disabled data-calculator-startup-control type="button">Reset dimensions ↺</button>'
             '<button class="btn secondary undo-reset" id="undo-reset" type="button" hidden>↶ Undo last reset</button>'
            '<button class="btn secondary" id="share-measurements" type="button" disabled>Copy measurement link ↗</button>'
            '<button class="btn secondary" id="download-measurements-json" type="button" disabled>↓ Save measurements JSON</button>'
            '<label class="measurement-import-label" for="load-measurements-json">Restore a local measurements JSON file</label>'
-           '<input id="load-measurements-json" type="file" accept=".json,application/json" aria-label="Restore saved measurements from local JSON file"></div>'
+           '<input id="load-measurements-json" type="file" accept=".json,application/json" disabled data-calculator-startup-control aria-label="Restore saved measurements from local JSON file"></div>'
            '<p class="sidebar-note"><span>ⓘ</span> Inputs stay in your browser. Units convert automatically; calculations run locally. Sharing and local JSON backups are optional. Both preserve numeric inputs, units and quote currency, but NOT material inspections or purchasing approvals. Local files are read only in your browser.</p></div>'
            '<div id="workbench-drawing" tabindex="-1" class="pane drawing-pane"><div class="pane-head"><div><span class="pane-index">02 / VISUALIZE</span><h2>Dimension drawing</h2></div>'
            '<div class="zoom-controls" role="group" aria-label="Diagram zoom controls"><button type="button" id="zoom-out" aria-label="Zoom out" aria-controls="dimension-svg">−</button><button type="button" id="zoom-reset" aria-label="Reset diagram zoom to 100%" aria-controls="dimension-svg">100%</button><button type="button" id="zoom-in" aria-label="Zoom in" aria-controls="dimension-svg">+</button></div></div>'
