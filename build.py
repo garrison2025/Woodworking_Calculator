@@ -117,11 +117,10 @@ def page(title, description, body, path="/", type_="website"):
         if path == "/":
             item["@id"] = canon + "#website"
             item["alternateName"] = "WoodLayout Woodworking Calculators"
-            item["publisher"] = organization
         else:
             item["@id"] = canon + ("#webapplication" if type_ == "tool" else "#webpage")
             item["isPartOf"] = {"@id": SITE_URL + "/#website"}
-            item["publisher"] = {"@id": SITE_URL + "#organization"}
+        item["publisher"] = organization
         if type_ == "tool":
             selected = next(t for t in TOOLS if "/" + t["slug"] + "/" == path)
             item["applicationCategory"] = "UtilitiesApplication"
