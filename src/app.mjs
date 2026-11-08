@@ -16,6 +16,27 @@ if(slug){
   if(!tool||tool.slug!==slug||!["P0","P1"].includes(tool.priority))
     throw Error("Unavailable calculator.");
   const form=document.querySelector("#calculator-form"),out=document.querySelector("#result-cards"),cut=document.querySelector("#cut-table"),diagram=document.querySelector("#dimension-svg"),error=document.querySelector("#calc-error"),units=document.querySelector("#unit-select"),fraction=document.querySelector("#fraction-select"),copy=document.querySelector("#copy-result"),csv=document.querySelector("#download-csv"),svg=document.querySelector("#download-svg"),print=document.querySelector("#print-sheet"),reset=document.querySelector("#reset-values"),share=document.querySelector("#share-measurements"),measurementSave=document.querySelector("#download-measurements-json"),measurementImport=document.querySelector("#load-measurements-json"),zoomPlus=document.querySelector("#zoom-in"),zoomMinus=document.querySelector("#zoom-out"),zoomReset=document.querySelector("#zoom-reset"),status=document.querySelector("#action-status");
+  // Reset recovery is intentionally in memory only. Neither invalid input
+  // contents nor supplier prices are persisted or transmitted by this UI.
+  const undoReset=document.querySelector("#undo-reset");
+  const reviewInvalid=document.querySelector("#review-invalid");
+  let resetSnapshot=null;
+  let reviewField=null;
+  const clearResetUndo=()=>{
+    resetSnapshot=null;
+    undoReset.hidden=true;
+  };
+  reviewInvalid?.addEventListener("click",()=>{
+    if(!reviewField||!reviewField.isConnected||reviewField.closest("[hidden]"))return;
+    // A targeted validation error may belong to advanced stock options.
+    // Expand its existing disclosure before scrolling/focusing the real input.
+    const details=reviewField.closest("details");
+    if(details)details.open=true;
+    reviewField.focus({preventScroll:true});
+    reviewField.scrollIntoView({
+      block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"
+    });
+  });
   // Real anchor navigation, not simulated tabs or duplicated calculator state.
   // Share links with #measure= continue to work independently of these anchors.
   const dockLabel=document.querySelector("#dock-primary-label");
@@ -2131,6 +2152,8 @@ if(slug){
   };
   function render(){
     refreshConditionalFields();
+    reviewField=null;
+    reviewInvalid.hidden=true;
     // Clear field-specific validation before re-reading the current inputs.
     // Errors caused by cross-field geometry rules remain in the main alert.
     for(const f of tool.inputs){
@@ -2180,6 +2203,10 @@ if(slug){
         if(field){
           field.setAttribute("aria-invalid","true");
           field.setAttribute("aria-describedby","field-note-"+fieldKey+" calc-error");
+          if(!field.closest("[hidden]")){
+            reviewField=field;
+            reviewInvalid.hidden=false;
+          }
         }
       }
       out.innerHTML='<p class="empty-result">Fix an input to view the calculated results.</p>';
@@ -2226,6 +2253,7 @@ if(slug){
       status.textContent="Example is incomplete and was not applied.";
       return;
     }
+    clearResetUndo();
     for(const field of tool.inputs){
       const el=form.elements.namedItem(field.key);
       el.value=field.kind==="L"?
@@ -2251,12 +2279,13 @@ if(slug){
       const v=parseEditableLength(el.value,before);
       if(v!==null)el.value=convertEditableLength(v,before,after);
     }
+    clearResetUndo();
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
   form.addEventListener("submit",event=>event.preventDefault());
-  form.addEventListener("input",()=>{schedulePage=0;render();});
-  fraction.addEventListener("change",render);
-  currency?.addEventListener("change",render);
+  form.addEventListener("input",()=>{clearResetUndo();schedulePage=0;render();});
+  fraction.addEventListener("change",()=>{clearResetUndo();render();});
+  currency?.addEventListener("change",()=>{clearResetUndo();render();});
   // Measurement links intentionally use fragments. HTTP requests and hosting
   // access logs do not receive the measurements; no review/approval flags are
   // serialized. A complete numeric snapshot must pass the calculator model
@@ -2285,6 +2314,7 @@ if(slug){
       clearPurchaseReview(true);
       versionState.current=null;versionState.difference=null;
     }
+    clearResetUndo();
     unit=snapshot.unit;units.value=unit;
     fraction.value=snapshot.fraction;
     if(currency)currency.value=snapshot.currency;
@@ -2367,9 +2397,33 @@ if(slug){
     }
   });
   reset.addEventListener("click",()=>{
+    // Preserve the first pre-reset input state if Reset is tapped twice.
+    // Raw strings (including typed inch fractions) are restored exactly.
+    if(!resetSnapshot)resetSnapshot={
+      values:tool.inputs.map(field=>({
+        key:field.key,value:form.elements.namedItem(field.key).value
+      })),
+      zoom
+    };
     if(window.location.hash.startsWith("#measure="))
       window.history.replaceState(null,"",window.location.pathname+window.location.search);
     restoreValues();zoom=1;schedulePage=0;render();
+    const changed=resetSnapshot.zoom!==zoom||
+      resetSnapshot.values.some(entry=>
+        form.elements.namedItem(entry.key).value!==entry.value);
+    undoReset.hidden=!changed;
+    if(changed)
+      status.textContent="Measurements reset to defaults. Undo last reset is available.";
+    else resetSnapshot=null;
+  });
+  undoReset.addEventListener("click",()=>{
+    if(!resetSnapshot)return;
+    const saved=resetSnapshot;
+    clearResetUndo();
+    for(const entry of saved.values)
+      form.elements.namedItem(entry.key).value=entry.value;
+    zoom=saved.zoom;schedulePage=0;render();
+    status.textContent="Previous measurements restored from this browser session. Verify inputs and calculated results before use.";
   });
   diagram.addEventListener("transitionend",event=>{
     // Width animates for 180ms; one rAF after click is too early to reliably
@@ -2592,6 +2646,7 @@ if(slug){
   svg.addEventListener("click",()=>{if(latest){save(slug+"-"+unit+"-diagram.svg",diagram.firstElementChild.outerHTML,"image/svg+xml");status.textContent="SVG saved locally."}});
   print.addEventListener("click",()=>{if(latest)window.print()});
   const applySharedMeasurements=()=>{
+    clearResetUndo();
     restoreValues();
     let imported=null;
     try{imported=loadSharedMeasurements();}catch{

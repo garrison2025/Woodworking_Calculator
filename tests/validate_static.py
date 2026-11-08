@@ -121,6 +121,14 @@ for p in pages:
         errors.append(f"{u}: unexpected JavaScript entry point {live_scripts}")
     if page_tool and c.forms!=1:errors.append(f"{u}: calculator form absent")
     if page_tool:
+        for control in ('id="undo-reset"', 'id="review-invalid"'):
+            if body.count(control)!=1:
+                errors.append(f"{u}: expected exactly one recoverable-input control {control}")
+        if ('id="undo-reset" type="button" hidden' not in body or
+            'id="review-invalid" type="button" aria-describedby="calc-error" hidden' not in body):
+            errors.append(f"{u}: input recovery controls must be initially hidden and non-submitting")
+
+    if page_tool:
         # Every calculator route has one real, accessible in-page workbench
         # navigator. No extra SEO route, form clone, or measured numeric value
         # in the static HTML (the local engine supplies the live result).

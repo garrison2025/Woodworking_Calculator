@@ -6,6 +6,13 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-08 — Reversible reset and actionable validation
+
+- All 31 calculator pages now provide **Undo last reset** when clicking Reset actually changed any editable field or diagram zoom. Recovery stores exact raw text (including inch fractions) and zoom in a **single in-memory snapshot**; nothing is persisted or transmitted. A second Reset preserves the original snapshot, while new field edits, unit/currency/precision changes, worked examples and imports invalidate it so Undo cannot overwrite newer work.
+- If a parsing or field-specific validation error identifies a real editable input, the existing results error banner gains **Find invalid measurement**, which opens its existing advanced disclosure if needed, focuses the exact field, and brings it into view while respecting reduced motion. Cross-field errors without a reliable input target do not guess or expose a misleading button.
+- Both controls are unobtrusive when unused, keyboard-usable, >=44px tall on mobile, and hidden in print output. No formula, inspection/approval state, material quantity, measurement-file format, SEO route or indexing gate is altered.
+- Playwright tests cover fractional measurement recovery, repeated resets, later-edit protection, field focus, invalid-to-valid recovery, 320/390/768px and reduced-motion behavior. Static validation ensures both controls on all 31 routes; the independent live Cloudflare audit now checks **180** page/asset/config source-parity assertions rather than 149.
+
 ## 2026-11-08 — Responsive calculator workbench navigation
 
 - Each of the **31** calculator pages now has a keyboard-accessible, sticky section navigator with **Measurements / Results / Drawing** shortcuts linked to actual panel anchors. On narrow screens it stays immediately below the existing header while long measurement fields scroll.
