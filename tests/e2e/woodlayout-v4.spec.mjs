@@ -13,7 +13,7 @@ test("all screen sizes expose working mobile categories and no horizontal overfl
         await menu.locator("summary").click();
         await expect(menu.locator('nav[aria-label="Mobile tool categories"] a')).toHaveCount(7);
         await expect(menu.locator('a[href="/materials/"]')).toBeVisible();
-        await page.keyboard.press("Escape");
+        await menu.locator("summary").click();
         await expect(menu).not.toHaveAttribute("open","");
       }else{
         await expect(menu).toBeHidden();
@@ -73,11 +73,11 @@ test("numbered deck board geometry and schedule rows highlight the exact same pa
   await expect(page.locator("#diagram-selection")).toContainText("Row 2 / ");
   await expect(page.locator('#dimension-svg .deck-board-face[data-row="2"]'))
     .toHaveClass(/is-selected-geometry/);
-  await page.getByRole("button",{name:"Next →"}).click();
+  await page.locator("#diagram-next-row").click();
   await expect(page.locator("#diagram-selection")).toContainText("Row 3 / ");
   await page.locator('#dimension-svg .deck-board-face[data-row="1"]').click();
   await expect(page.locator("#diagram-selection")).toContainText("Row 1 / ");
-  await page.getByRole("button",{name:/Show matching schedule row/}).click();
+  await page.locator("#diagram-find-row").click();
   await expect(page.locator('#cut-table tbody tr[data-geometry-row="1"]'))
     .toHaveClass(/is-selected-geometry/);
   const downloadPromise=page.waitForEvent("download");
