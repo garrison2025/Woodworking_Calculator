@@ -176,6 +176,12 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
         check(bool(p.title.strip()), path + ": missing document title")
         if verify_source_parity:
             results["source_parity_checks"] += 1
+            check('class="mobile-site-menu"' in body and
+                  'aria-label="Mobile tool categories"' in body and
+                  'href="/materials/"' in body,
+                  path + ": deployed V4 mobile category navigation differs from source")
+        if verify_source_parity:
+            results["source_parity_checks"] += 1
             check('src="/logo-mark.svg"' in body and
                   'class="brand-wordmark"' in body and
                   'Wood<span>Layout</span>' in body and
@@ -230,6 +236,15 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                 check('id="undo-reset" type="button" hidden' in body and
                       'id="review-invalid" type="button" aria-describedby="calc-error" hidden' in body,
                       path + ": deployed input-recovery controls differ from the current source")
+                results["source_parity_checks"] += 1
+                check(all(('id="' + element + '"') in body for element in (
+                          "dock-toggle", "workbench-shortcuts",
+                          "diagram-inspector", "diagram-selection", "diagram-find-row",
+                          "geometry-link-status", "measurement-schedule")) and
+                      'aria-label="Worksheet results sections"' in body and
+                      (path != "/framing-calculator/" or
+                       'class="advanced-results-disclosure"' in body),
+                      path + ": deployed V4 advanced-workbench UI differs from current source")
     for asset in ("favicon.svg", "logo-mark.svg", "logo-lockup.svg",
                   "assets/app.mjs", "assets/calcs.mjs", "assets/style.css"):
         status, _, _ = request("/" + asset)
