@@ -159,7 +159,7 @@ def page(title, description, body, path="/", type_="website"):
             + (f'<meta property="og:image" content="{esc(SITE_URL)}/social-card.png">'
                '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
                '<meta property="og:image:alt" content="WoodLayout woodworking geometry calculators illustration">'
-               '<meta name="twitter:card" content="summary_large_image">' if eligible else "") + schema
+               '<meta name="twitter:card" content="summary_large_image">' if eligible else "") + schema +
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
             f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav>{mobile_menu}<a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
