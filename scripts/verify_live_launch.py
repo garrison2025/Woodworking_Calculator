@@ -120,6 +120,8 @@ def validate_base(url: str, mode: str):
             u.query or u.fragment or u.path not in ("", "/")):
         raise ValueError("Use an origin-only HTTPS URL, such as https://your-domain.com")
     host = u.hostname.lower()
+    if mode == "production" and host.startswith("www."):
+        raise ValueError("Production canonical origin must be the apex host, not www")
     if mode == "production" and (
         host.endswith(".pages.dev") or host == "pages.dev"
         or host.endswith((".example", ".invalid", ".test", ".localhost"))
@@ -338,11 +340,20 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                       "Sitemap must contain exactly the approved indexable canonical URLs")
             except ET.ParseError:
                 check(False, "Invalid sitemap XML")
-        for path in ("/", "/stud-calculator/"):
-            status, _, headers = request(path, pages_origin)
-            location = headers.get("location", "")
-            check(status in (301, 308) and location == origin + path,
-                  "pages.dev" + path + ": expected exact permanent redirect to custom domain")
+        # The old Pages production alias and the www hostname must both
+        # converge on the apex custom domain while preserving deep paths and
+        # query strings. Do not redirect branch-specific *.pages.dev previews.
+        redirect_paths = ("/?woodlayout_redirect_audit=1",
+                          "/stud-calculator/?woodlayout_redirect_audit=1")
+        apex_host = urlsplit(origin).hostname
+        www_host = "www." + apex_host
+        for redirect_host, label in ((pages_origin, "pages.dev"),
+                                     ("https://" + www_host, www_host)):
+            for path in redirect_paths:
+                status, _, headers = request(path, redirect_host)
+                location = headers.get("location", "")
+                check(status in (301, 308) and location == origin + path,
+                      label + path + ": expected exact permanent redirect to apex with path and query preserved")
     status, body, _ = request("/nonexistent-woodworking-release-audit-404/")
     check(status == 404, "Unknown URL must return HTTP 404")
     if status == 404:

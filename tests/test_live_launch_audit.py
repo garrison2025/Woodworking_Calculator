@@ -24,10 +24,16 @@ def fake_site(mode, broken=None, source_sync=False):
     def get(url):
         u = urlsplit(url)
         path = u.path
-        if u.hostname == "woodworking-calculator.pages.dev" and mode == "production":
-            if "alias" in broken:
+        if mode == "production" and u.hostname in (
+                "woodworking-calculator.pages.dev", "www." + urlsplit(DOMAIN).hostname):
+            if u.hostname == "woodworking-calculator.pages.dev" and "alias" in broken:
                 return 200, "Old public HTML", {}
-            return 301, "", {"location": DOMAIN + path}
+            if u.hostname == "www." + urlsplit(DOMAIN).hostname and "www_alias" in broken:
+                return 200, "WWW host serves duplicate content", {}
+            query = ("?" + u.query) if u.query else ""
+            if "redirect_query_mismatch" in broken and query:
+                query = ""
+            return 301, "", {"location": DOMAIN + path + query}
         if path.startswith("/nonexistent-woodworking-release-audit"):
             robots = ("index,follow" if "indexed_404" in broken
                       else "noindex,nofollow,noarchive")
@@ -199,6 +205,18 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("pages.dev" in x for x in result["failures"]))
 
+    def test_www_hostname_must_redirect_to_canonical_apex(self):
+        result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
+                              get=fake_site("production", broken={"www_alias"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("www.custom-woodwork.com" in x for x in result["failures"]))
+
+    def test_pages_dev_and_www_redirects_must_preserve_query_strings(self):
+        result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
+                              get=fake_site("production", broken={"redirect_query_mismatch"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("path and query preserved" in x for x in result["failures"]))
+
     def test_missing_real_tool_config_blocks_launch(self):
         result = launch.audit(PAGES, "preview",
                               get=fake_site("preview", broken={"missing_config"}))
@@ -278,7 +296,8 @@ class LiveAuditTests(unittest.TestCase):
 
     def test_fake_or_preview_hosts_cannot_be_production(self):
         for origin in (PAGES, "https://woodworking.example",
-                       "http://custom-woodwork.com", "https://custom-woodwork.com/path/"):
+                       "http://custom-woodwork.com", "https://custom-woodwork.com/path/",
+                       "https://www.custom-woodwork.com"):
             with self.subTest(origin=origin):
                 with self.assertRaises(ValueError):
                     launch.validate_base(origin, "production")

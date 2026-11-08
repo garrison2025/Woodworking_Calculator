@@ -14,7 +14,7 @@
 2. 在该 Pages 项目 **Settings → Builds & deployments** 核对生产分支 `main`、构建命令 `python3 build.py`、输出目录 `dist`，确认最新 GitHub 提交有对应成功的 Pages 构建记录。
 3. **无需在 Settings → Environment variables 中手动填写索引配置。** 用户已经授权写入建站代码；Cloudflare Pages 默认注入的 `CF_PAGES=1` 和 `CF_PAGES_BRANCH=main` 将在本项目源码中自动生成 `woodlayout.com` 的 indexable 构建。已有的 `SITE_URL`、`RELEASE_APPROVED` 即使是旧值，也不会覆盖生产 main 的这次授权；非 main 的 Preview 仍然禁止索引。
 4. 合并并部署本次修改到生产分支后，核查 Pages 构建成功。生产主域名首页需要返回 200，且 HTML 的 `meta robots` 为 `index,follow`，Canonical 指向 `https://woodlayout.com/`。
-5. 通过 **Bulk Redirects** 将 `https://woodworking-calculator.pages.dev/*` **301** 至 `https://woodlayout.com/*`；启用 preserve path suffix、preserve query string 和 subpath matching，不能将所有工具的深层链接扔回首页。设置并核验 `www.woodlayout.com` → `https://woodlayout.com` 的永久跳转，保留路径与查询字符串；不要让两个主机都返回可索引 200。
+5. 通过 **Bulk Redirects** 将精确主机 `woodworking-calculator.pages.dev` **301** 至 `https://woodlayout.com`；启用 subpath matching、preserve path suffix 和 preserve query string。**不要启用 Include subdomains**，以免把分支预览主机一并重定向到生产站，预览仍须保持 noindex。另确保 `www.woodlayout.com` 有可到达 Cloudflare 的 DNS 记录，并建立 `www.woodlayout.com/*` → `https://woodlayout.com/$1` 的 **301** 规则，同样保留路径和查询字符串；不要让旧主机或 www 主机返回可索引的重复 200。
 6. 核实邮箱 **实际接收和发送邮件**：`contact@woodlayout.com` 的 MX、SPF、DKIM、DMARC 与邮件服务商配置与网站的 Cloudflare Pages 绑定是两个独立问题。Cloudflare DNS / Email Routing 可以辅助转发，但 DNS 绑定不证明收发可用。本站使用 `mailto:`，没有后端表单，不会在网站上接收邮件数据。
 
 ## 可执行的正式站只读验收
@@ -30,8 +30,9 @@ python scripts/verify_live_launch.py --base https://woodlayout.com --mode produc
 - 42 个 HTML 页可访问，42 个应发布 URL 有 `index,follow` 与 `woodlayout.com` Canonical，31 个工具表单与原始配置一致；
 - `https://woodlayout.com/robots.txt` 允许抓取并指向 `https://woodlayout.com/sitemap.xml`；
 - Sitemap **恰好 42 个**独立 `https://woodlayout.com/...` URL；
-- `pages.dev` 的首页和工具路径返回 301/308 至各自的新域名路径；
-- `https://www.woodlayout.com/stud-calculator/` 也必须永久重定向到无 `www` 的同一路径；
+- `pages.dev` 首页与 `/stud-calculator/` 深层路径均返回 301/308，完整保留路径和查询字符串；
+- `www.woodlayout.com` 首页与 `/stud-calculator/` 深层路径也必须永久重定向到无 `www` 的同一路径，并保留查询字符串；
+- 分支预览主机仍维持 preview noindex，不被上述精确主机规则重定向；
 - 未知 URL 返回实际 404，且不能携带任何错误的 Canonical 或结构化数据。
 
 仓库另设 **手动 GitHub Actions — WoodLayout Production Audit**，在正式部署后可一键执行上面的只读 HTTP 校验并下载 JSON 报告。此工作流不会修改 Cloudflare、设置 DNS 或提交 Google。
