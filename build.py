@@ -646,6 +646,23 @@ def cat_page(key, name, slug):
     return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body,"/"+slug+"/")
 
 def info_page(title, paragraphs, url):
+    if url == "/contact/":
+        # A mailto link is only a user-initiated handoff to the visitor's
+        # email client. The static site has no web form or message storage.
+        body = ('<article class="wrap legal-page"><a href="/">← Back to calculators</a>'
+                '<span class="eyebrow">WOODLAYOUT</span><h1>Contact</h1>'
+                '<p>Questions, corrections, or feedback about a calculator? '
+                'Email <a href="mailto:contact@woodlayout.com">contact@woodlayout.com</a>.</p>'
+                '<p>For reproducible geometry issues, include the calculator name, '
+                'input dimensions, selected units and the result you expected. '
+                'Do not send passwords or sensitive personal information.</p>'
+                '<p>You can also report a technical issue through the '
+                '<a href="https://github.com/garrison2025/Woodworking_Calculator/issues">'
+                'public GitHub issue tracker</a>. Remember that GitHub issues are public.</p>'
+                '<p>This site does not collect or store messages through a web form. '
+                'Sending email uses your email provider and the receiving mailbox provider.</p>'
+                '</article>')
+        return page(title,"Email contact@woodlayout.com for WoodLayout calculator questions, corrections and feedback.",body,url)
     body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WOODLAYOUT</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)+'</article>'
     return page(title,paragraphs[0],body,url)
 
@@ -679,8 +696,8 @@ def build():
         if any(t["category"]==k for t in TOOLS):write("/"+slug+"/",cat_page(k,name,slug))
     pages={
     "/about/":("About",["WoodLayout is an independent collection of browser-based woodworking geometry calculators. It gives DIY builders reproducible measurements, diagrams and local exports.","These tools are educational dimension aids only; they do not provide structural engineering, safe spans, or building-code certification."]),
-    "/contact/":("Contact",["For feedback, corrections or questions, please open an issue in the public GitHub repository: github.com/garrison2025/Woodworking_Calculator.","We do not collect contact messages through this website or maintain a user account system."]),
-    "/privacy/":("Privacy",["This preview does not run analytics, advertising scripts, third-party APIs, or form submissions. Calculator values are processed in your browser; no measurements are uploaded by the site.","The website may store a short list of recently visited tools in your browser localStorage. You can remove that item by clearing site storage. Optional copied measurement links encode numeric inputs in the URL fragment (after #), which is not included in HTTP requests, but anyone you share the link with can see these measurements. Optional local JSON backups are downloaded to and read from your own device with no file upload. The web host can still process standard HTTP requests and access logs. If analytics or ads are added, this policy must be revised before those scripts are enabled."]),
+    "/contact/":("Contact",["For questions and feedback, email contact@woodlayout.com or report a reproducible issue in our public GitHub repository.","We do not operate a contact web form or user account system."]),
+    "/privacy/":("Privacy",["This website does not currently run analytics, advertising scripts, third-party APIs, or web form submissions. Calculator values are processed in your browser; no measurements are uploaded by the site.","The website may store a short list of recently visited tools in your browser localStorage. You can remove that item by clearing site storage. Optional copied measurement links encode numeric inputs in the URL fragment (after #), which is not included in HTTP requests, but anyone you share the link with can see these measurements. Optional local JSON backups are downloaded to and read from your own device with no file upload. The web host can still process standard HTTP requests and access logs. If analytics or ads are added, this policy must be revised before those scripts are enabled.","If you contact contact@woodlayout.com by email, your email provider and the receiving mailbox provider process your message, sender address and any details you choose to include. The website itself does not receive your email message via its static hosting. Do not email passwords or sensitive personal data."]),
     "/terms/":("Terms & Safety",["All tools are supplied as free dimensional reference aids without warranties. Verify actual cuts against a physical sample, chosen stock and applicable local codes.","No computed number constitutes structural certification or a guarantee of workmanship. Avoid using a diagram as a full-size printed cutting template unless its physical scale has been verified."])
     }
     for path,(title,paragraphs) in pages.items():write(path,info_page(title,paragraphs,path))
