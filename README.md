@@ -6,6 +6,19 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-08 — WoodLayout UI / UX V4 integrated release
+
+**Six owner-approved UI initiatives, one code release; no new calculator routes or SEO intent expansion:**
+
+1. **Responsive navigation:** all 42 pages get a native, keyboard-accessible six-category mobile menu. The 31 tool workbenches compact their sticky navigation after scrolling, retaining the primary result and a user-expandable Sections control without hiding measurement controls.
+2. **Complex result structure:** the same 31 tool pages expose a task-oriented worksheet index; framing presents its full technical optimality-proof table in an optional native disclosure. Printing opens the proof before the worksheet snapshot and restores its previous state afterward. Technical explanations, tables and CSV data stay available and were not removed for SEO.
+3. **Frame-batched input:** consecutive `input` events coalesce into at most one full geometry/worksheet rerender per animation frame. Export, share, SVG and print actions synchronously flush pending user input; measurements and print figures must never lag. This is not a claim of benchmarked speed on physical low-end devices.
+4. **Exact drawing ↔ schedule matching:** for shapes whose drawing carries the *same 1-based member index as the generated schedule* (boards, wainscot panels, equal face spacing, rake studs, kerf slots, shelves, posts and balusters), selecting either a diagram member or a cut-list row highlights both. A compact inspector offers adjacent-row keyboard controls and a jump to the matching schedule row. Models with ambiguous multipiece/aggregate mappings do **not** fabricate a link. Exported SVGs omit selection decoration and physical dimensions remain unchanged.
+5. **Typography/motion:** improve phone input legibility (16px), secondary labels, and touch targets (44px minimum); maintain optional reveal and one-shot geometry animations while respecting `prefers-reduced-motion`.
+6. **Acceptance:** expand static tests for all 42 pages, full desktop/mobile Playwright coverage, Chromium input-burst coalescing, Firefox/WebKit cross-engine V4 tests, real A4/Letter PDF checks, and source-parity HTTP audits of the actual Pages deployment.
+
+**Release protection:** `woodworking-calculator.pages.dev` stays `noindex,nofollow,noarchive`. The five original V3 P2 tools retain approval for a **future** owned domain; the 31 calculation engines, historical 152 Semrush research rows, per-tool SEO URLs and all existing CSV/SVG/PDF safety caveats remain unchanged. Manual physical printing and real-shop validation remain outside software acceptance.
+
 ## 2026-11-08 — Reversible reset and actionable validation
 
 - All 31 calculator pages now provide **Undo last reset** when clicking Reset actually changed any editable field or diagram zoom. Recovery stores exact raw text (including inch fractions) and zoom in a **single in-memory snapshot**; nothing is persisted or transmitted. A second Reset preserves the original snapshot, while new field edits, unit/currency/precision changes, worked examples and imports invalidate it so Undo cannot overwrite newer work.
