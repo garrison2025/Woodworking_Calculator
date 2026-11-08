@@ -319,6 +319,16 @@ descriptions=[]
 for p in pages:
     c=Checker();c.feed(p.read_text(encoding="utf8"));descriptions.extend(c.descriptions)
 if len(descriptions)!=len(set(descriptions)):errors.append("Duplicate page descriptions")
+for p in pages:
+    source=p.read_text(encoding="utf8")
+    if '<img src="/logo-mark.svg" alt="WoodLayout logo"' not in source:
+        errors.append(f"{p}: branded logo missing descriptive alternative text")
+home_source=(dist/"index.html").read_text(encoding="utf8")
+for marker in ('id="home-method-title"', '<ol class="home-method-steps">',
+               '<table><caption>Exact standard length relationships</caption>',
+               'https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors'):
+    if marker not in home_source:
+        errors.append("Homepage answer/source structure missing: "+marker)
 print("Preview static checks:",len(pages),"HTML pages;",len(active),"tool pages;",len(hold),"P2 held;",len(research_rows),"keyword rows validated")
 if errors:
     for e in errors:print("FAIL:",e)

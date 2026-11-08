@@ -8,7 +8,7 @@ test("WoodLayout header logo renders and stays within mobile viewports",async({p
       const brand=page.getByRole("link",{name:"WoodLayout home"});
       await expect(brand).toHaveCount(1);
       await expect(brand.locator("img")).toHaveAttribute("src","/logo-mark.svg");
-      await expect(brand.locator("img")).toHaveAttribute("alt","");
+      await expect(brand.locator("img")).toHaveAttribute("alt","WoodLayout logo");
       await expect(brand.locator(".brand-wordmark")).toContainText("WoodLayout");
       const check=await page.evaluate(()=>{
         const link=document.querySelector("a.brand");

@@ -96,6 +96,14 @@ assert publisher.get("@type") == "Organization"
 assert publisher.get("@id") == BASE + "#organization"
 assert publisher.get("name") == "WoodLayout"
 assert publisher.get("email") == "contact@woodlayout.com"
+assert home_schema.get("author", {}).get("@id") == BASE + "#organization"
+assert home_schema.get("dateModified") == "2026-11-08"
+assert '<img src="/logo-mark.svg" alt="WoodLayout logo"' in home_html
+assert '<h2 id="home-method-title">How do I choose and check a woodworking calculator?</h2>' in home_html
+assert '<ol class="home-method-steps">' in home_html
+assert '<table><caption>Exact standard length relationships</caption>' in home_html
+assert "https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors" in home_html
+assert '<time datetime="2026-11-08">' in home_html
 
 for tool in tools:
     path = DIST / tool["slug"] / "index.html"
@@ -105,6 +113,7 @@ for tool in tools:
     assert schema.get("isPartOf", {}).get("@id") == BASE + "/#website", tool["slug"]
     assert schema.get("publisher", {}).get("@id") == BASE + "#organization", tool["slug"]
     assert schema.get("isAccessibleForFree") is True, tool["slug"]
+    assert schema.get("author", {}).get("@id") == BASE + "#organization", tool["slug"]
     assert schema.get("browserRequirements"), tool["slug"]
     assert len(schema.get("featureList", [])) >= 5, tool["slug"]
     assert 'id="geometry-rule"' in source, f"{tool['slug']}: missing answer-first formula"
@@ -114,9 +123,10 @@ for tool in tools:
     assert html.escape(intents[tool["slug"]]["useFor"], quote=True) in source
     assert html.escape(intents[tool["slug"]]["notFor"], quote=True) in source
 
-about = (DIST / "about" / "index.html").read_text(encoding="utf-8")
+about_schema, about = read_schema(DIST / "about" / "index.html")
+assert about_schema.get("dateModified") == "2026-11-08"
 for marker in ("Measurement conventions", "clear opening", "center-to-center",
-               "Public source repository", "llms.txt"):
+               "Public source repository", "llms.txt", "NIST Guide to the SI"):
     assert marker.lower() in about.lower(), f"About page missing GEO trust context: {marker}"
 
 sitemap = ET.parse(DIST / "sitemap.xml")
