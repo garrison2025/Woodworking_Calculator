@@ -1,0 +1,95 @@
+name: WoodLayout Live Lighthouse Lab
+
+# Independent performance evidence. This does NOT prove field CrUX CWV,
+# submit URLs to GSC, alter Cloudflare, or gate the verified calculator code.
+on:
+  push:
+    branches: [main]
+    paths:
+      - build.py
+      - src/**
+      - scripts/social_card.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure latest SEO release is present on canonical domain
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if curl -fsSL --max-time 15 https://woodlayout.com/ | grep -q 'Free woodworking calculators'; then
+              echo "Current WoodLayout SEO release detected on public canonical site."
+              exit 0
+            fi
+            echo "Live deployment not yet updated; recheck $attempt/12"
+            sleep 10
+          done
+          echo "Current SEO release not yet observed; no Lighthouse scores claimed." >&2
+          exit 1
+      - name: Confirm Chrome is available
+        run: |
+          if command -v google-chrome >/dev/null; then
+            echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          elif command -v chromium >/dev/null; then
+            echo "CHROME_PATH=$(command -v chromium)" >> "$GITHUB_ENV"
+          else
+            echo "No Chrome binary found on this runner" >&2
+            exit 1
+          fi
+      - name: Install Lighthouse CLI
+        run: npm install --no-audit --no-fund --global lighthouse@12
+      - name: Collect reproducible mobile/desktop lab reports from the actual site
+        shell: bash
+        run: |
+          mkdir -p lighthouse-evidence
+          for entry in "home-mobile|https://woodlayout.com/|mobile" \
+                       "home-desktop|https://woodlayout.com/|desktop" \
+                       "deck-board-mobile|https://woodlayout.com/deck-board-calculator/|mobile" \
+                       "stair-stringer-mobile|https://woodlayout.com/stair-stringer-calculator/|mobile" \
+                       "materials-mobile|https://woodlayout.com/materials/|mobile"; do
+            IFS='|' read -r name url mode <<< "$entry"
+            preset=()
+            if [ "$mode" = "desktop" ]; then preset=(--preset=desktop); fi
+            lighthouse "$url" --quiet --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              "${preset[@]}" --output=json --output-path="lighthouse-evidence/$name.json"
+          done
+      - name: Extract date-stamped lab metrics (not field CWV)
+        run: |
+          python3 - <<'PY'
+          import glob,json,pathlib
+          out=[]
+          for p in glob.glob("lighthouse-evidence/*.json"):
+              report=json.loads(pathlib.Path(p).read_text())
+              audits=report.get("audits",{})
+              row={"report":pathlib.Path(p).name,"url":report.get("finalDisplayedUrl"),
+                   "fetchTime":report.get("fetchTime"),"lighthouseVersion":report.get("lighthouseVersion"),
+                   "scores":{key:round(val["score"]*100) if val.get("score") is not None else None
+                             for key,val in report.get("categories",{}).items()},
+                   "lab":{key:audits.get(key,{}).get("numericValue")
+                          for key in ("first-contentful-paint","largest-contentful-paint",
+                                      "total-blocking-time","cumulative-layout-shift",
+                                      "speed-index")}}
+              out.append(row)
+              print(json.dumps(row,ensure_ascii=False))
+          pathlib.Path("lighthouse-evidence/summary.json").write_text(json.dumps(out,indent=2),encoding="utf8")
+          PY
+      - name: Preserve public site Lighthouse evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: woodlayout-lighthouse-lab
+          path: lighthouse-evidence/
+          if-no-files-found: warn
+          retention-days: 14
