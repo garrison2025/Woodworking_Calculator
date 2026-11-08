@@ -129,6 +129,8 @@ if(slug){
   let unit="in",latest=null,zoom=1,schedulePage=0,scheduleCols=[],printFullSchedule=false;
   const schedulePageSize=160;
   const geometryStatus=document.querySelector("#geometry-link-status");
+  const geometryStart=document.querySelector("#diagram-start-row");
+  let geometryIndexEnabled=false;
   const geometryInspector=document.querySelector("#diagram-inspector");
   const geometryLabel=document.querySelector("#diagram-selection");
   const geometryPrevious=document.querySelector("#diagram-previous-row");
@@ -171,7 +173,8 @@ if(slug){
     geometryInspector.hidden=false;
   };
   const selectGeometry=(i,{bringDrawing=false}={})=>{
-    if(!Number.isInteger(i)||i<1||i>latest?.rows?.length||!geometryPart(i))return;
+    if(!geometryIndexEnabled||!Number.isInteger(i)||i<1||
+       i>latest?.rows?.length||!geometryPart(i))return;
     geometrySelected=i;
     highlightGeometry();
     if(bringDrawing)diagram.scrollIntoView({
@@ -179,6 +182,7 @@ if(slug){
       behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"
     });
   };
+  geometryStart?.addEventListener("click",()=>selectGeometry(1));
   geometryPrevious?.addEventListener("click",()=>selectGeometry(geometrySelected-1));
   geometryNext?.addEventListener("click",()=>selectGeometry(geometrySelected+1));
   geometryFind?.addEventListener("click",()=>{
@@ -2280,6 +2284,8 @@ if(slug){
     zoomPlus.disabled=percent>=250;
   };
   function render(){
+    geometryIndexEnabled=false;
+    geometryStart.hidden=true;
     // Flush a queued event frame when another action calls render directly.
     // This prevents stale geometry after a quick reset/unit change.
     if(inputQueued)inputQueued=false;
@@ -2332,6 +2338,10 @@ if(slug){
       const matches=geometryMap && latest.rows.length>0 ?
         diagram.querySelectorAll(geometryMap[0]).length===latest.rows.length &&
         Boolean(geometryPart(1)) && Boolean(geometryPart(latest.rows.length)) : false;
+      geometryIndexEnabled=Boolean(matches);
+      geometryStart.hidden=!geometryIndexEnabled;
+      if(geometryIndexEnabled&&geometrySelected)highlightGeometry();
+      if(!geometryIndexEnabled)geometryInspector.hidden=true;
       geometryStatus.textContent=matches && latest.rows.length?
         "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Arrow buttons inspect adjacent rows.":
         "Schematic reference: not every geometry element corresponds to a numbered schedule row. Inspect the numeric measurements before use.";
@@ -2343,6 +2353,7 @@ if(slug){
     }catch(e){
       latest=null;scheduleCols=[];schedulePage=0;
       geometrySelected=0;geometryInspector.hidden=true;
+      geometryStart.hidden=true;geometryIndexEnabled=false;
       lastDiagramMarkup=null;
       renderPrintInputSnapshot();
       error.textContent=e.message;error.hidden=false;
