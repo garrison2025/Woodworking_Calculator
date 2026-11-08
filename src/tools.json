@@ -1727,7 +1727,7 @@
       "keyword": "wall stud calculator",
       "volume": 2400,
       "kd": 11,
-      "desc": "Estimate regular wall stud centers, face positions and nominal stud cut length from spacing, wall height and plate thickness.",
+      "desc": "Calculate wall stud count, end-center positions and cut lengths with a nominal on-center grid or a guaranteed maximum-OC equalized layout.",
       "inputs": [
         {
           "key": "length",
@@ -1737,9 +1737,25 @@
         },
         {
           "key": "spacing",
-          "label": "Nominal stud on-center spacing",
+          "label": "Stud on-center spacing (nominal or maximum)",
           "value": 16,
           "kind": "L"
+        },
+        {
+          "key": "spacingMode",
+          "label": "Stud spacing layout",
+          "value": 0,
+          "kind": "E",
+          "options": [
+            {
+              "value": 0,
+              "label": "Nominal OC grid — preserve standard reference stations"
+            },
+            {
+              "value": 1,
+              "label": "Maximum OC — equalize all bays within limit"
+            }
+          ]
         },
         {
           "key": "studWidth",
@@ -1760,14 +1776,18 @@
           "kind": "L"
         }
       ],
-      "formula": "Nominal centers = 0, OC multiples below L, and far-end center L. Remove a nominal center if its face overlaps the mandatory end stud. Cut = gross wall height − total plate deduction.",
+      "formula": "Nominal mode: centers at regular OC multiples with a mandatory far-end center; overlapping near-end face is omitted. Maximum mode: equalize ceil(wall length ÷ maximum OC) bays, retaining both end centers; reject face overlaps. Cut = gross height − combined plate deduction.",
       "example": "120 in between end stud centers at 16 in OC gives 9 centers; 96 in gross height minus 4.5 in plates gives 91.5 in cut length.",
-      "limit": "Centerline geometry only. End stud faces extend outside the entered center-to-center run; openings require Framing. Total plate deduction is applied once; verify physical field dimensions.",
+      "limit": "Centers are between the two end reference centers (faces extend beyond). Equalized maximum OC is geometry only, not a code or panel-seam/fastening approval. Check sheathing module, local building rules, openings and measured physical dimensions separately.",
       "status": "BETA_NO_INDEX",
       "guidance": [
         {
           "heading": "Wall length is measured between end stud centers",
-          "text": "Place the first nominal stud at center zero and the far-end stud at the entered wall length. Intermediate centers follow the nominal on-center interval. Removing an overlapping near-end stud can leave a final bay wider than that interval. If the entered spacing is a maximum, review the warning and revise the layout. Because this is a center-to-center reference, the outside faces of the end studs extend beyond the entered run."
+          "text": "Measure between the first and last stud centers, not outside framing faces. Nominal mode preserves the entered standard center grid; it removes a near-end stud if the end faces overlap, which may increase the final bay beyond the nominal OC. Maximum OC mode retains both end centers and redistributes every bay evenly so no measured center spacing exceeds the entered maximum; if that would overlap stud faces, the app blocks the layout. An equalized grid may NOT align with 16/24-inch sheathing seams, backing or fastening schedules. End faces extend outside the reference run."
+        },
+        {
+          "heading": "Nominal spacing versus a verified maximum",
+          "text": "Use Nominal OC when preserving module layout is important, and inspect the final bay before using any schedule. Use Maximum OC to request an upper spacing bound: for a 161 in center-to-center run with max 16 in OC and 1.5 in faces, 11 equal bays give 12 studs at about 14.636 in OC. This is not a structural design, inspection, or verification of panel support."
         },
         {
           "heading": "Calculate the common vertical cut height",
