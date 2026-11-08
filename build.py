@@ -391,6 +391,7 @@ def tool_page(t):
            +currency_picker+
            f'<form id="calculator-form" novalidate>{fields}{advanced_options}</form>'+scenario_panel+
            '<div class="pane-actions"><button class="btn secondary" id="reset-values" type="button">Reset dimensions ↺</button>'
+            '<button class="btn secondary undo-reset" id="undo-reset" type="button" hidden>↶ Undo last reset</button>'
            '<button class="btn secondary" id="share-measurements" type="button" disabled>Copy measurement link ↗</button>'
            '<button class="btn secondary" id="download-measurements-json" type="button" disabled>↓ Save measurements JSON</button>'
            '<label class="measurement-import-label" for="load-measurements-json">Restore a local measurements JSON file</label>'
@@ -410,7 +411,9 @@ def tool_page(t):
            '<p class="calibration-warning">If either ruler is outside tolerance, reject the printed sheet and correct printer settings. Passing these checks does NOT turn the resized SVG diagram into a full-size cutting pattern. Calculated dimensions do not certify structural capacity, code compliance, material quality or safe cutting techniques.</p>'
            '</section></div>'
            '<aside id="workbench-results" tabindex="-1" class="pane result-pane"><div class="pane-head"><div><span class="pane-index">03 / RESULTS</span><h2>Your takeoff</h2></div><span class="live-indicator">LIVE</span></div>'
-           '<p id="calc-error" class="error-banner" role="alert" hidden></p><div id="result-cards" class="result-stack" aria-live="off">'
+           '<p id="calc-error" class="error-banner" role="alert" hidden></p>'
+            '<button class="btn secondary error-review" id="review-invalid" type="button" aria-describedby="calc-error" hidden>Find invalid measurement ↗</button>'
+            '<div id="result-cards" class="result-stack" aria-live="off">'
            '<p class="empty-result">Enter measurements to see calculated dimensions.</p></div>'
            '<div class="export-stack"><button type="button" id="copy-result" class="btn primary">Copy results <span>↗</span></button>'
            '<button type="button" id="download-csv" class="btn secondary">↓ Download CSV cut list</button></div>'
