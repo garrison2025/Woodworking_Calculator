@@ -409,6 +409,7 @@ def tool_page(t):
            '<div class="drawing-grid" id="dimension-svg"><div class="loading-graphic">Drawing will update from your measurements.</div></div>'
            '<div class="drawing-caption"><span><i></i> SCALED SCHEMATIC</span><span>NOT A VERIFIED 1:1 TEMPLATE</span></div>'
            '<p class="diagram-linked-help" id="geometry-link-status">Part selection is available only where a drawing element maps exactly to one numbered schedule row.</p>'
+           '<button id="diagram-start-row" class="btn secondary diagram-start-row" type="button" hidden>Inspect measured parts →</button>'
            '<div id="diagram-inspector" class="diagram-inspector" aria-live="polite" hidden>'
            '<strong id="diagram-selection">No measured part selected</strong>'
            '<button id="diagram-previous-row" type="button">← Previous</button>'
