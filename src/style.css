@@ -1416,3 +1416,16 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .diagram-start-row{margin:0 15px 12px;min-height:44px;
   color:#235a42;background:#eaf4ea;border:1px solid #a8cbb0}
 .diagram-start-row:hover,.diagram-start-row:focus-visible{background:#deefdf;border-color:#75ad84}
+
+
+/* Print/PDF must retain original worksheet pagination. V4 interactive
+   navigation and help are screen-only; expanded proof tables remain printable
+   with no disclosure chrome or extra padding affecting A4/Letter layout. */
+@media print{
+  .diagram-linked-help,.diagram-start-row{display:none!important}
+  .advanced-results-disclosure{display:block!important;margin:0!important;
+    padding:0!important;border:0!important;break-inside:auto!important;
+    page-break-inside:auto!important}
+  .advanced-results-body{padding:0!important;margin:0!important;
+    break-inside:auto!important;page-break-inside:auto!important}
+}
