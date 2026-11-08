@@ -135,6 +135,10 @@ def fake_site(mode, broken=None, source_sync=False):
         doc = ('<!doctype html><html><head><title>Page: ' + path +
                (' | WoodLayout' if source_sync else '') +
                '</title><meta name="description" content="Useful geometry calculator">'
+               '<meta name="twitter:card" content="summary_large_image">'
+               '<meta name="twitter:title" content="Page: ' + path + ' | WoodLayout">'
+               '<meta name="twitter:description" content="Useful geometry calculator">'
+               '<meta name="twitter:image" content="' + DOMAIN + '/social-card.png">'
                '<meta name="robots" content="' + robot + '">' + canonical + schema +
                '</head><body>' +
                ('<a class="brand" href="/"><img src="/logo-mark.svg">'
