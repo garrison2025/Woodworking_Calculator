@@ -431,7 +431,7 @@ def tool_page(t):
           f'<p><strong>Typical task</strong> {esc(intent["useFor"])}</p>'
           f'<p><strong>Not covered</strong> {esc(intent["notFor"])}</p>'
           '</div>'
-          f'<p class="formula tool-formula" id="geometry-rule"><strong>Calculation rule</strong> {esc(t["formula"])}</p>'
+          f'<p class="formula tool-formula" id="geometry-rule"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
     quote_currency_id=("framing-currency" if t["slug"]=="framing-calculator"
                        else "lumber-currency" if t["slug"]=="lumber-price-calculator"
