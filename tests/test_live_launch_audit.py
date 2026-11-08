@@ -98,6 +98,10 @@ def fake_site(mode, broken=None, source_sync=False):
                 fields.remove("joistLayoutMode")
             form = '<form id="calculator-form">' + "".join(
                 '<input id="f-' + key + '">' for key in fields) + "</form>"
+        if source_sync and path in launch.TOOL_PATHS and "stale_recovery" not in broken:
+            form += ('<button id="undo-reset" type="button" hidden>Undo last reset</button>'
+                     '<button id="review-invalid" type="button" aria-describedby="calc-error" hidden>'
+                     'Find invalid measurement</button>')
         if source_sync and path in launch.TOOL_PATHS and "stale_workbench" not in broken:
             form = ('<nav aria-label="Jump between calculator sections">'
                     '<a href="#workbench-input">Measurements</a>'
@@ -188,7 +192,7 @@ class LiveAuditTests(unittest.TestCase):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
                               get=fake_site("preview", source_sync=True))
         self.assertEqual(result["status"], "PASS", result["failures"])
-        self.assertEqual(result["source_parity_checks"], 149)
+        self.assertEqual(result["source_parity_checks"], 180)
         self.assertEqual(result["http_pages_checked"], 42)
 
     def test_deployed_deck_config_mismatch_detected_even_when_slug_is_correct(self):
@@ -206,6 +210,14 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/deck-material-calculator/" in x and
                             "form fields" in x for x in result["failures"]))
+
+    def test_deployed_input_recovery_controls_missing_is_not_accepted(self):
+        result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                              get=fake_site("preview", source_sync=True,
+                                            broken={"stale_recovery"}))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertTrue(any("input-recovery controls" in failure
+                            for failure in result["failures"]))
 
     def test_deployed_workbench_navigation_missing_is_not_accepted(self):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
