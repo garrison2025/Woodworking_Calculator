@@ -137,6 +137,13 @@ if(slug){
   const geometryNext=document.querySelector("#diagram-next-row");
   const geometryFind=document.querySelector("#diagram-find-row");
   let lastDiagramMarkup=null;
+  let lastPrimaryDisplay=null;
+  let lastFeedbackMotionAt=-1000;
+  const canAnimateFeedback=()=>document.visibilityState==="visible" &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    !window.matchMedia("print").matches &&
+    typeof Element.prototype.animate==="function" &&
+    performance.now()-lastFeedbackMotionAt>=280;
   const geometryShapes={
     "boards":[".deck-board-face","row"],
     "panels":[".wainscot-panel","panel"],
@@ -2340,6 +2347,11 @@ if(slug){
       const data=safeCompute(slug,values());
       if(!data.ok)throw new Error(data.error);
       latest=data.data;error.hidden=true;
+      const primaryDisplay=latest.metrics.length?
+        latest.metrics[0].label+" · "+fmt(latest.metrics[0].value,latest.metrics[0].kind):"";
+      const animateUpdate=lastPrimaryDisplay!==null &&
+        lastPrimaryDisplay!==primaryDisplay && canAnimateFeedback();
+      lastPrimaryDisplay=primaryDisplay;
       renderPrintInputSnapshot();
       out.innerHTML=latest.metrics.map((m,i)=>'<article class="metric '+(i===0?"main-metric":"")+'"><span>'+esc(m.label)+'</span><strong>'+esc(fmt(m.value,m.kind))+'</strong>'+(m.kind==="L"&&unit==="in"?'<small>≈ '+esc(frac(m.value))+'</small>':"")+'</article>').join("");
       if(latest.lumberBoard?.pricePerBoardFoot===null){
@@ -2360,8 +2372,16 @@ if(slug){
       if(printFullSchedule)renderSpecialtyPrintTables();
       const drawn=drawing(latest);
       if(drawn!==lastDiagramMarkup){
+        const hadPreviousDrawing=lastDiagramMarkup!==null;
         diagram.innerHTML=drawn;
         lastDiagramMarkup=drawn;
+        // Only a new, noninitial calculation gets a short opacity
+        // transition. Never interpolate coordinates or cutting dimensions.
+        if(hadPreviousDrawing&&animateUpdate){
+          diagram.getAnimations().forEach(animation=>animation.cancel());
+          diagram.animate([{opacity:.9},{opacity:1}],
+            {duration:150,easing:"ease-out"});
+        }
         geometrySelected=0;
         geometryInspector.hidden=true;
       }else if(geometrySelected){
@@ -2380,13 +2400,19 @@ if(slug){
       geometryStatus.textContent=matches && latest.rows.length?
         "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Keyboard: Tab into the schedule, Up/Down to move, Enter to select; arrow buttons inspect adjacent rows.":
         "Schematic reference: not every geometry element corresponds to a numbered schedule row. Inspect the numeric measurements before use.";
+      if(animateUpdate){
+        out.querySelector(".main-metric")?.animate(
+          [{opacity:.86,transform:"translateY(2px)"},{opacity:1,transform:"none"}],
+          {duration:170,easing:"ease-out"});
+        lastFeedbackMotionAt=performance.now();
+      }
       document.querySelector("#print-assumptions").textContent=tool.limit;
       status.textContent="Updated: "+latest.metrics[0].label+" — "+fmt(latest.metrics[0].value,latest.metrics[0].kind)+".";
       updateDockSummary(latest.metrics[0].label,fmt(latest.metrics[0].value,latest.metrics[0].kind));
       syncResultActions();
       requestAnimationFrame(syncKeyboardScrollRegions);
     }catch(e){
-      latest=null;scheduleCols=[];schedulePage=0;
+      latest=null;lastPrimaryDisplay=null;scheduleCols=[];schedulePage=0;
       geometrySelected=0;geometryInspector.hidden=true;
       geometryStart.hidden=true;geometryIndexEnabled=false;
       lastDiagramMarkup=null;
@@ -2503,7 +2529,13 @@ if(slug){
       });
     }
   });
-  window.addEventListener("beforeprint",flushInputRender);
+  window.addEventListener("beforeprint",()=>{
+    flushInputRender();
+    // A native print dialog must never capture a frame of a faded drawing.
+    diagram.getAnimations().forEach(animation=>animation.finish());
+    out.querySelectorAll(".main-metric").forEach(metric=>
+      metric.getAnimations().forEach(animation=>animation.finish()));
+  });
   document.addEventListener("click",event=>{
     // A fast click on a download or share control must use the LAST typed
     // dimensions even when the next paint has not occurred yet.

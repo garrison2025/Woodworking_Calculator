@@ -3,6 +3,8 @@
 const directory=document.querySelector("#tool-directory");
 const search=document.querySelector("#tool-search");
 const searchStatus=document.querySelector("#tool-search-status");
+const emptyState=document.querySelector("#tool-search-empty");
+const clearSearch=document.querySelector("#tool-search-clear");
 const panel=document.querySelector("#recent-tools");
 const links=document.querySelector("#recent-links");
 const clear=document.querySelector("#clear-recent-tools");
@@ -50,7 +52,16 @@ if(directory){
       searchStatus.textContent=visible===0?
         "No matching calculator. Try another task.":
         `Showing ${visible} of ${entries.length} tools`;
+      // Keep the existing server-rendered link directory authoritative:
+      // empty-state feedback adds no extra or duplicate SEO routes.
+      if(emptyState)emptyState.hidden=visible!==0;
+      directory.classList.toggle("is-filtering",query.length>0);
     };
+    clearSearch?.addEventListener("click",()=>{
+      search.value="";
+      filterTools();
+      search.focus();
+    });
     search.addEventListener("input",filterTools);
     search.addEventListener("search",filterTools);
     filterTools();

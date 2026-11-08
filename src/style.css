@@ -1440,3 +1440,55 @@ tbody tr:nth-child(2n){background:#fafbf8}
     outline:0;background:transparent;
   }
 }
+
+/* V5 visual and motion polish: source values, labels and geometry never animate numerically.
+   Quiet surfaces and brief, optional state feedback suit a measured workbench. */
+@media screen {
+  .field label{font-size:13px;line-height:1.45}
+  .field small{font-size:12px;line-height:1.55;color:#53665a}
+  #calculator-form input,#calculator-form select{min-height:44px}
+  .metric{min-width:0}
+  .metric.main-metric strong{font-size:clamp(19px,1.8vw,26px);line-height:1.25}
+  .drawing-pane:focus-within{border-color:#9fc4aa;box-shadow:0 10px 32px rgba(27,83,49,.065)}
+  .diagram-inspector{border-color:#bdd7c2;background:#f2f9f2}
+  .search-empty{
+    display:flex;align-items:center;gap:17px;margin-top:12px;
+    padding:19px 21px;border:1px dashed #b7cfbc;background:#f6faf5;
+    border-radius:14px;min-width:0;
+  }
+  .search-empty[hidden]{display:none!important}
+  .search-empty-symbol{
+    width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;
+    border-radius:13px;background:#e6f1e7;color:#2b694b;font-size:28px;
+  }
+  .search-empty>div{flex:1 1 220px;min-width:0}
+  .search-empty strong{display:block;font-size:15px;color:#274d39}
+  .search-empty p{font-size:13px;line-height:1.55;margin-top:2px}
+  .search-empty button{
+    flex:0 0 auto;min-height:44px;padding:9px 15px;border-radius:10px;
+    border:1px solid #9fbcaa;background:#fffefa;color:#235842;font-weight:750;
+  }
+  .search-empty button:hover,.search-empty button:focus-visible{
+    background:#e8f3e8;border-color:#649879;
+  }
+}
+@media screen and (max-width:680px){
+  .search-empty{flex-wrap:wrap;gap:12px;padding:15px}
+  .search-empty-symbol{width:42px;height:42px;flex-basis:42px}
+  .search-empty>div{flex-basis:calc(100% - 60px)}
+  .search-empty button{width:100%}
+  .field label{font-size:12px}
+}
+@media screen and (prefers-reduced-motion:no-preference){
+  @keyframes woodlayout-soft-enter{
+    from{opacity:.88;transform:translate3d(0,4px,0)}
+    to{opacity:1;transform:none}
+  }
+  .search-empty:not([hidden]),.diagram-inspector:not([hidden]){
+    animation:woodlayout-soft-enter .18s ease-out both;
+  }
+  .directory-list.is-filtering a:not([hidden]){animation:none}
+}
+@media print{
+  .search-empty{display:none!important}
+}
