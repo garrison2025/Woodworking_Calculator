@@ -51,7 +51,9 @@ if(slug){
     dockScrollFrame=0;
     if(!dock||!dockToggle)return;
     const shouldCompact=dockMobile.matches && window.scrollY>310;
-    if(shouldCompact!==dockScrolled) dockUserExpanded=false;
+    // Preserve the expanded navigation after an explicit anchor click.
+    // Only reset when the user scrolls back above the compact threshold.
+    if(!shouldCompact&&dockScrolled)dockUserExpanded=false;
     dockScrolled=shouldCompact;
     dock.classList.toggle("is-compact",shouldCompact);
     dock.classList.toggle("is-expanded",shouldCompact&&dockUserExpanded);
@@ -64,7 +66,7 @@ if(slug){
     if(dockUserExpanded)dockLinks[0]?.focus({preventScroll:true});
   });
   dockLinks.forEach(link=>link.addEventListener("click",()=>{
-    dockUserExpanded=false;
+    dockUserExpanded=true;
     syncCompactDock();
   }));
   window.addEventListener("scroll",()=>{
@@ -2279,7 +2281,7 @@ if(slug){
   function render(){
     // Flush a queued event frame when another action calls render directly.
     // This prevents stale geometry after a quick reset/unit change.
-    if(inputFrame){cancelAnimationFrame(inputFrame);inputFrame=0;}
+    if(inputQueued)inputQueued=false;
     geometrySelected=0;
     geometryInspector.hidden=true;
     refreshConditionalFields();
@@ -2422,26 +2424,31 @@ if(slug){
     unit=after;document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);render();
   });
   form.addEventListener("submit",event=>event.preventDefault());
-  let inputFrame=0;
+  let inputQueued=false;
   const flushInputRender=()=>{
-    if(!inputFrame)return;
-    cancelAnimationFrame(inputFrame);
-    inputFrame=0;
+    if(!inputQueued)return;
+    inputQueued=false;
     render();
   };
   form.addEventListener("input",()=>{
     clearResetUndo();schedulePage=0;
-    // Coalesce multiple events in a paint interval, keeping the exact engine,
-    // SVG and schedule in sync rather than rendering them after every keystroke.
-    if(!inputFrame)inputFrame=requestAnimationFrame(()=>{
-      inputFrame=0;render();
-    });
+    // A microtask renders after this input task, before the next browser
+    // interaction can read stale data. Repeated input events in ONE task
+    // coalesce; no animation-frame delay or deferred accuracy contract.
+    if(!inputQueued){
+      inputQueued=true;
+      queueMicrotask(()=>{
+        if(!inputQueued)return;
+        inputQueued=false;
+        render();
+      });
+    }
   });
   window.addEventListener("beforeprint",flushInputRender);
   document.addEventListener("click",event=>{
     // A fast click on a download or share control must use the LAST typed
     // dimensions even when the next paint has not occurred yet.
-    if(inputFrame&&event.target.closest(
+    if(inputQueued&&event.target.closest(
       '#copy-result,#download-csv,#download-svg,#print-sheet,#share-measurements,'+
       '#download-measurements-json,[id^="download-"]'
     ))flushInputRender();
