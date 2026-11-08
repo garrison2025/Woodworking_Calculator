@@ -1410,3 +1410,9 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .brand-wordmark strong{font-size:18px}
   .mobile-site-menu>summary{font-size:12px}
 }
+
+/* Reach the SVG/worksheet inspection controls without using a mouse. */
+.diagram-start-row[hidden]{display:none!important}
+.diagram-start-row{margin:0 15px 12px;min-height:44px;
+  color:#235a42;background:#eaf4ea;border:1px solid #a8cbb0}
+.diagram-start-row:hover,.diagram-start-row:focus-visible{background:#deefdf;border-color:#75ad84}
