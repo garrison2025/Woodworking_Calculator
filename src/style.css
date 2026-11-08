@@ -1429,3 +1429,14 @@ tbody tr:nth-child(2n){background:#fafbf8}
   .advanced-results-body{padding:0!important;margin:0!important;
     break-inside:auto!important;page-break-inside:auto!important}
 }
+
+/* Keyboard-linked schedule row focus uses the existing measured part, not
+   simulated SVG geometry. A single roving Tab stop avoids 160 dead ends. */
+#cut-table tbody tr[data-geometry-row]:focus-visible{
+  outline:3px solid #955b23;outline-offset:-3px;background:#fff2e6;
+}
+@media print{
+  #cut-table tbody tr[data-geometry-row]:focus-visible{
+    outline:0;background:transparent;
+  }
+}
