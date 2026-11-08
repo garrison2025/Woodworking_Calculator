@@ -535,7 +535,7 @@
       "keyword": "baluster spacing calculator",
       "volume": 1000,
       "kd": 16,
-      "desc": "Equal clear baluster gaps and accurate left/right face locations with end-gap and opening-closure verification",
+      "desc": "Calculate equal clear baluster gaps and left/right face positions in a measured opening. Check end gaps and total width; export SVG or CSV.",
       "inputs": [
         {
           "key": "length",
@@ -583,7 +583,7 @@
       "keyword": "rafter calculator",
       "volume": 4400,
       "kd": 7,
-      "desc": "Ridge-adjusted common rafter, eave length and measurable birdsmouth horizontal seat/vertical heel cut endpoints with HAP.",
+      "desc": "Calculate a common rafter's ridge-adjusted length, eave line and birdsmouth seat/heel reference cuts. Export the measured layout as SVG or CSV.",
       "inputs": [
         {
           "key": "run",
@@ -863,7 +863,7 @@
       "keyword": "wainscoting calculator",
       "volume": 1300,
       "kd": 18,
-      "desc": "Equal-width wainscot panel cuts with exact left/right edges, visible gaps, symmetric end margins and dimensional closure",
+      "desc": "Lay out equal wainscot panels with exact face edges, gaps and symmetric end margins. Check total wall-width closure and export the cut schedule.",
       "inputs": [
         {
           "key": "wall",
@@ -1082,7 +1082,7 @@
       "keyword": "deck estimator",
       "volume": 3600,
       "kd": 15,
-      "desc": "Estimate decking boards, butt joints and fasteners with optional equalized joist centers from a separately verified maximum OC. No structural spacing advice.",
+      "desc": "Estimate deck boards, butt joints and fasteners. Model joist centers only from a maximum spacing you have independently verified.",
       "inputs": [
         {
           "key": "width",
@@ -1563,7 +1563,7 @@
       "keyword": "hip rafter calculator",
       "volume": 170,
       "kd": 8,
-      "desc": "Hip-rafter three-dimensional line from actual plan X/Y runs, roof-face pitch, and separate hip-elevation pitch",
+      "desc": "Calculate a hip rafter's 3D line from plan X/Y runs, roof-face pitch and hip-elevation pitch. Export the reference geometry.",
       "inputs": [
         {
           "key": "runX",
@@ -1615,7 +1615,7 @@
       "keyword": "hip roof calculator",
       "volume": 390,
       "kd": 2,
-      "desc": "Four-plane equal-pitch hip-roof sheets with cleaned triangular/trapezoid cuts, exported local and projected vertices, and sheet-by-sheet material conservation",
+      "desc": "Lay out four equal-pitch hip-roof planes with panel cuts, projected vertices and sheet-by-sheet material checks; export the cut layout.",
       "inputs": [
         {
           "key": "width",
@@ -1889,7 +1889,7 @@
       "keyword": "gable roof calculator",
       "volume": 170,
       "kd": 4,
-      "desc": "Estimate two-plane gable roof surface area, pitched half-span rise and sloped length with one uniform eave overhang.",
+      "desc": "Estimate gable roof area, half-span rise and sloped lengths with a uniform eave overhang; export the geometry as SVG or CSV.",
       "inputs": [
         {
           "key": "width",
@@ -1943,7 +1943,7 @@
       "keyword": "foundation square calculator",
       "volume": 590,
       "kd": 17,
-      "desc": "Compare both measured diagonals with the Pythagorean target and each other using your own stated measurement tolerance",
+      "desc": "Compare measured rectangle diagonals with the Pythagorean target and your chosen tolerance. Export a dimensional layout check.",
       "inputs": [
         {
           "key": "width",
@@ -2055,7 +2055,7 @@
       "keyword": "hole spacing calculator",
       "volume": 110,
       "kd": 4,
-      "desc": "Lay out one or multiple aligned drilling rows with measured board length and width, full X/Y center coordinates, true circular hole edges and checked end/side margins.",
+      "desc": "Lay out drilling rows with full X/Y hole centers, circular edges and checked end and side margins. Export coordinates to CSV.",
       "inputs": [
         {
           "key": "length",
@@ -2131,7 +2131,7 @@
       "keyword": "stair stringer calculator",
       "volume": 8100,
       "kd": 20,
-      "desc": "Nominal straight stair cut lines, selected end cuts, measured horizontal support line offsets, true 2D point-contact diagnostics and pitch-aligned stock reference.",
+      "desc": "Review nominal stair-stringer notch lines, end-cut references and support-line intersections. Check the 2D geometry before field verification.",
       "inputs": [
         {
           "key": "rise",
@@ -2756,7 +2756,7 @@
       "volume": 210,
       "kd": 2,
       "status": "BETA_NO_INDEX",
-      "desc": "Calculate measured fence picket faces, equal boundary gaps, center stations and optional stepped top cut heights.",
+      "desc": "Lay out picket faces, equal boundary gaps and center marks, with optional stepped top-cut heights. Export the cut schedule.",
       "inputs": [
         {
           "key": "length",

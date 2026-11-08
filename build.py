@@ -92,7 +92,9 @@ def href(path):
     return "/" + path.strip("/") + ("/" if path and not path.endswith(".") else "")
 
 def page(title, description, body, path="/", type_="website"):
-    desc = description[:180]
+    desc = description.strip()
+    if len(desc) > 155:
+        raise ValueError(f"SEO description exceeds 155-character editorial budget on {path}: {len(desc)}")
     eligible = INDEXABLE and path != "/404/"
     canon = SITE_URL + path if eligible else None
     canonical = f'<link rel="canonical" href="{esc(canon)}">' if canon else ""
@@ -135,6 +137,9 @@ def page(title, description, body, path="/", type_="website"):
                            "name": title, "item": canon})
             item["breadcrumb"] = {"@type": "BreadcrumbList", "itemListElement": crumbs}
         schema = '<script type="application/ld+json">' + json.dumps(item, ensure_ascii=False).replace("<","\\u003c") + '</script>'
+    og_title = {"/about/": "About WoodLayout", "/contact/": "Contact WoodLayout",
+                 "/privacy/": "WoodLayout Privacy Policy",
+                 "/terms/": "WoodLayout Terms & Safety"}.get(path, title)
     nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
@@ -154,12 +159,17 @@ def page(title, description, body, path="/", type_="website"):
             f'<meta name="color-scheme" content="light"><meta name="robots" content="{robots}">'
             f'<title>{esc(title)} | WoodLayout</title><meta name="description" content="{esc(desc)}">{canonical}'
             f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
-            f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">'
+            f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(og_title)}"><meta property="og:description" content="{esc(desc)}">'
             + (f'<meta property="og:url" content="{esc(canon)}">' if eligible else "")
             + (f'<meta property="og:image" content="{esc(SITE_URL)}/social-card.png">'
+               '<meta property="og:image:type" content="image/png">'
                '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
                '<meta property="og:image:alt" content="WoodLayout woodworking geometry calculators illustration">'
-               '<meta name="twitter:card" content="summary_large_image">' if eligible else "") + schema +
+               '<meta name="twitter:card" content="summary_large_image">'
+               f'<meta name="twitter:title" content="{esc(og_title)}">'
+               f'<meta name="twitter:description" content="{esc(desc)}">'
+               f'<meta name="twitter:image" content="{esc(SITE_URL)}/social-card.png">'
+               '<meta name="twitter:image:alt" content="WoodLayout woodworking geometry calculators illustration">' if eligible else "") + schema +
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
             f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav>{mobile_menu}<a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
@@ -245,7 +255,7 @@ def home():
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
             '<div><b>02 / Check</b><p>Visible formulas, explicit assumptions, precise dimensions.</p></div>'
             '<div><b>03 / Export</b><p>Save a locally generated CSV or SVG; print to PDF from your browser.</p></div></section>')
-    return page("Free Woodworking Calculators, Layout & Cutting Geometry",f"{len(TOOLS)} practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
+    return page("Free Woodworking Calculators & Layout Tools",f"{len(TOOLS)} practical woodworking geometry and layout tools: studs, decking, rafters, framing, spacing, shelves and cutting diagrams.",body)
 
 def tool_page(t):
     intent = INTENTS[t["slug"]]
@@ -680,11 +690,7 @@ def tool_page(t):
            '</div></div><aside class="details-side"><nav class="related-box intent-related" aria-label="Next calculator for a different task"><span class="eyebrow">NEXT AT THE WORKBENCH</span><h2>Choose your next calculation</h2>'
            +''.join(f'<a href="/{esc(r["slug"])}/" data-intent-target="{esc(r["slug"])}"><strong>{esc(r["title"])}</strong><small>{esc(why)}</small></a>' for r,why in relevant)
            +'</nav><div class="related-box muted-box"><span class="eyebrow">SITE POLICY</span><h3>Local by default</h3><p>No account, no project upload, no paid API. A small local setting may remember recent tools.</p></div></aside></section>')
-    description=t["desc"].strip().rstrip(".")
-    if len(description)<=120:
-        description+=". Free local calculation with SVG and CSV export."
-    else:
-        description+="."
+    description=t["desc"].strip().rstrip(".") + "."
     return page(intent["seoTitle"],description,body,"/"+t["slug"]+"/","tool")
 
 def cat_page(key, name, slug):
@@ -750,7 +756,12 @@ def info_page(title, paragraphs, url):
                  '<p>This independent tool collection is free to use in a browser; there is no account requirement or live lumber pricing service.</p></section>')
     body += '</article>'
     content_type = "about" if url == "/about/" else "info"
-    return page(title,paragraphs[0],body,url,content_type)
+    meta_descriptions = {
+        "/about/": "About WoodLayout: free browser-based woodworking calculators with measurement guides, diagrams and local CSV/SVG exports.",
+        "/privacy/": "Privacy: calculations run in your browser. Measurements are not uploaded; the site uses no analytics, ads, third-party APIs or web forms.",
+        "/terms/": "Terms and safety: free dimensional reference tools. Verify cuts, stock, printer scale and local building requirements before use."
+    }
+    return page(title,meta_descriptions.get(url,paragraphs[0]),body,url,content_type)
 
 def build():
     if DEST.exists(): shutil.rmtree(DEST)

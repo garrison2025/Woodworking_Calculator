@@ -4,7 +4,7 @@
   "tools": [
     {
       "slug": "stud-calculator",
-      "seoTitle": "Rake Wall Stud Calculator for Single-Slope Walls",
+      "seoTitle": "Rake Wall Stud Calculator for Sloped Walls",
       "useFor": "Calculate individual stud lengths and stations under a top plate with one continuous slope.",
       "notFor": "A full two-sided gable in one calculation, a straight wall stud count, or framing structural approval.",
       "next": [
@@ -184,7 +184,7 @@
     },
     {
       "slug": "stair-calculator",
-      "seoTitle": "Stair Treads Calculator for Straight Stair Rise and Run",
+      "seoTitle": "Stair Treads Calculator for Rise & Run",
       "useFor": "Calculate level-finished straight stairs with optional measured deck tread coverage and limited available-flight-run checks.",
       "notFor": "Stringer bearing strength, spiral stairs or building-code approval.",
       "next": [
@@ -404,7 +404,7 @@
     },
     {
       "slug": "square-layout-calculator",
-      "seoTitle": "Foundation Square Calculator for Layout Diagonals",
+      "seoTitle": "Foundation Square Calculator for Diagonals",
       "useFor": "Compare diagonals when setting out a rectangle or foundation footprint.",
       "notFor": "Structural footing design, concrete volume or a survey-grade report.",
       "next": [
@@ -524,7 +524,7 @@
     },
     {
       "slug": "fence-picket-calculator",
-      "seoTitle": "Fence Picket Spacing Calculator with Cut Heights",
+      "seoTitle": "Fence Picket Spacing Calculator for Cut Heights",
       "useFor": "Lay out measured fence picket face edges and equal clear gaps, then optionally calculate a separate stepped top-cut height for each straight board.",
       "notFor": "A structural fence span, curved cutting template, post embedment, safe pool barrier openings or approved wind-loading design.",
       "next": [
@@ -544,7 +544,7 @@
     },
     {
       "slug": "gambrel-roof-calculator",
-      "seoTitle": "Gambrel Roof Calculator with Upper and Lower Pitch",
+      "seoTitle": "Gambrel Roof Calculator for Two Pitches",
       "useFor": "Calculate symmetric two-pitch gambrel section geometry, knuckle stations, ridge height and surface areas of four roof segments.",
       "notFor": "Structural gambrel truss loads or joints, timber span design, bearing cuts, sheet nesting or roofing code certification.",
       "next": [
@@ -564,7 +564,7 @@
     },
     {
       "slug": "lumber-price-calculator",
-      "seoTitle": "Lumber Price Calculator for Board Foot and MBF Quotes",
+      "seoTitle": "Lumber Price Calculator: Board Foot & MBF",
       "useFor": "Calculate lumber volume from entered dimensions. Add an optional price per board foot or per thousand board feet for a supplier quote estimate.",
       "notFor": "A generic price per 1,000 items, hardwood market price feed, tree/log scaling, actual dressed-size lookup, or a verified cutting/purchase order.",
       "next": [
@@ -584,7 +584,7 @@
     },
     {
       "slug": "spiral-staircase-calculator",
-      "seoTitle": "Spiral Staircase Calculator for Tread Wedge Geometry",
+      "seoTitle": "Spiral Staircase Calculator for Tread Layout",
       "useFor": "Lay out a single-turn spiral stair's physical wedge sectors, polar plan coordinates, uniform risers and measured walk-line arc going.",
       "notFor": "Stair headroom or guardrail approval, multi-turn stair design, code compliance, structural bearing, pole selection or finished shop cuts.",
       "next": [
@@ -604,7 +604,7 @@
     },
     {
       "slug": "stave-calculator",
-      "seoTitle": "Tapered Stave Calculator for Polygon Barrel Trapezoids",
+      "seoTitle": "Tapered Stave Calculator for Polygon Barrels",
       "useFor": "Compute theoretical trapezoid faces, top and bottom chord cuts and separate vertical, face-center and long-edge stave dimensions.",
       "notFor": "A barrel bulge, guaranteed inner capacity, proven table-saw compound bevel or certified coopering and hardwood stock purchasing.",
       "next": [

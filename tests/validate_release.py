@@ -127,8 +127,22 @@ for p in pages:
                 errors.append(path+": application name differs from rendered task title")
     if not c.meta.get("description") or not c.meta.get("og:description"):
         errors.append(path+": missing explanatory description/social text")
+    if len(c.title) > 60:
+        errors.append(path+": document title exceeds the 60-character editorial budget")
+    if len(c.meta.get("description", "")) > 155:
+        errors.append(path+": meta description exceeds the 155-character editorial budget")
+    if c.meta.get("description") != c.meta.get("og:description"):
+        errors.append(path+": Open Graph description differs from search description")
     if not c.meta.get("og:title"):
         errors.append(path+": missing social title")
+    if c.meta.get("twitter:card") != "summary_large_image" or not c.meta.get("twitter:title"):
+        errors.append(path+": missing complete Twitter card metadata")
+    if c.meta.get("twitter:title") != c.meta.get("og:title"):
+        errors.append(path+": Twitter title differs from Open Graph title")
+    if c.meta.get("twitter:description") != c.meta.get("description"):
+        errors.append(path+": Twitter description differs from search description")
+    if c.meta.get("twitter:image") != base + "/social-card.png":
+        errors.append(path+": Twitter image differs from branded social image")
     if c.meta.get("og:url")!=base+path or c.meta.get("og:image")!=base+"/social-card.png":
         errors.append(path+": missing canonical Open Graph URL or PNG image")
     if c.meta.get("og:image:width")!="1200" or c.meta.get("og:image:height")!="630":

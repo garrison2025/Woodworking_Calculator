@@ -1,7 +1,7 @@
 {
   "framing": {
     "title": "Wall Framing & Stud Layout Calculators",
-    "description": "Choose between straight wall studs, sloped rake studs, walls with openings and diagonal layout checks. Free measured framing geometry, not engineered span design.",
+    "description": "Choose wall-stud counts, sloped stud cuts, opening layouts or diagonal checks. Measured geometry only, not structural design.",
     "lead": "Different wall layouts need different measurements. Select a straight stud count for an unbroken wall, a rake-wall cut schedule for a single sloped top, or an openings layout when doors and windows interrupt the wall.",
     "choices": [
       {
@@ -90,7 +90,7 @@
     "limit": "No page here certifies allowable roof span, roof loading, stair headroom, guardrail rules, stair stringer bearing or permit compliance."
   },
   "interior": {
-    "title": "Crown Molding, Wainscoting & Shelf Layout Calculators",
+    "title": "Interior Finish & Layout Calculators",
     "description": "Compare compound crown-molding cut references, equal wainscot panel layouts and shelf/pin positions with clear geometry and local exports.",
     "lead": "Interior finishing requires different reference faces. Crown molding uses corner and spring angles; panel layout works from opening width, face size and gaps; shelf spacing works from measured cabinet interior and actual shelf thickness.",
     "choices": [
@@ -115,7 +115,7 @@
     "limit": "Confirm actual molding orientation, hardware hole locations, shelf deflection and mounting strength; geometry is not a substitute for a test fit."
   },
   "wood": {
-    "title": "Woodworking Cutting, Spacing & Stave Calculators",
+    "title": "Woodworking Cutting & Layout Calculators",
     "description": "Explore segmented bowl rings, controlled kerf-bend reference layouts, equal center spacing, drilling coordinates and tapered polygon stave geometry.",
     "lead": "This group covers specialty layouts where exact station coordinates matter more than a single material-count number. It separates center marks, hole edges, cut lines and face dimensions so that one reference is not mistaken for another.",
     "choices": [
