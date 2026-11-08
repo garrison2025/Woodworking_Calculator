@@ -57,19 +57,27 @@ assert set(SUPPORTED_REASSIGNMENTS.values()) <= {"/" + t["slug"] + "/" for t in 
 # 2026-11-07 owner approval: all 31 completed P0/P1 tools, including the
 # five originally listed as P2 in the V3 plan, share the ONE production gate.
 # Historical planning priority is not a quality or SEO publication veto.
-# Without an owned custom HTTPS domain and RELEASE_APPROVED=1, every page
-# remains noindex. RELEASE_V3_P2_APPROVED is obsolete and intentionally ignored.
+# The owner acquired woodlayout.com, attached it to Cloudflare Pages and
+# explicitly authorized a code-managed search-index release on 2026-11-08.
+# Only the production Pages main branch automatically publishes 42 canonical
+# URLs; all PR/preview branches remain noindex. Do not treat proportional SVG
+# as a physically certified print/cutting template.
+# RELEASE_V3_P2_APPROVED is obsolete and intentionally ignored.
 ACTIVE_CATEGORIES = {
     "/" + slug + "/" for key, (_, slug) in CATS.items()
     if any(t["category"] == key for t in TOOLS)
 }
-SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
-APPROVED = os.environ.get("RELEASE_APPROVED") == "1"
-# Cloudflare injects CF_PAGES=1 and CF_PAGES_BRANCH. Only the main branch
-# may become indexable: production env vars mistakenly copied to Preview must
-# NEVER turn a PR/feature deployment into a canonical/sitemap release.
-# Offline local release simulations still work without CF_PAGES=1.
-IS_PAGES_PREVIEW = os.environ.get("CF_PAGES") == "1" and os.environ.get("CF_PAGES_BRANCH") != "main"
+OWNER_SITE_URL = "https://woodlayout.com"
+IS_PAGES = os.environ.get("CF_PAGES") == "1"
+IS_PAGES_PRODUCTION = IS_PAGES and os.environ.get("CF_PAGES_BRANCH") == "main"
+IS_PAGES_PREVIEW = IS_PAGES and not IS_PAGES_PRODUCTION
+# Site owner approved direct source-controlled production indexing.
+# A stale or conflicting Cloudflare dashboard environment variable must not
+# silently keep the purchased main domain noindexed or advertise Pages URLs.
+# Local/offline release tests retain their explicit env-based simulation.
+SITE_URL = (OWNER_SITE_URL if IS_PAGES_PRODUCTION else
+            os.environ.get("SITE_URL", "").strip().rstrip("/"))
+APPROVED = (IS_PAGES_PRODUCTION or os.environ.get("RELEASE_APPROVED") == "1")
 INDEXABLE = SITE_URL.startswith("https://") and "pages.dev" not in SITE_URL and APPROVED and not IS_PAGES_PREVIEW
 esc = lambda s: html.escape(str(s), quote=True)
 
