@@ -8,6 +8,16 @@ A free browser-only woodworking workspace with **31 active geometry calculators 
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
+## 2026-11-08 — GEO and AI retrieval readiness
+
+- Production `robots.txt` explicitly allows OAI-SearchBot / ChatGPT-User, Claude-SearchBot / Claude-User, PerplexityBot / Perplexity-User, Googlebot and Bingbot. General crawler access remains allowed. Training-specific crawlers are not separately restricted by this file; GPTBot and ClaudeBot inherit the general rule.
+- Every calculator page presents its task-specific geometry rule near the top of the page, while retaining the existing worked example, task boundaries, independent measurement check and safety limits.
+- Production builds generate `/llms.txt` from the existing 31-tool registry, six category guides, formulas and task boundaries. It is a navigation aid for systems that choose to read it, not a Google ranking factor or a guarantee of AI citations. Preview builds do not publish it.
+- JSON-LD now connects the site to a named WoodLayout publisher entity and describes each free WebApplication's actual browser requirements and feature set. No author credentials, engineering certifications, external endorsements or social profiles are invented.
+- The About page now documents measurement datums, unit-entry conventions, local calculation, diagram/print limitations, public source code and correction channels.
+- Offline release tests validate the AI crawler policy, machine-readable guide, all 31 formula summaries, publisher graph and unchanged 42 canonical HTML routes. A separate live audit checks robots, sitemap, llms.txt, all 42 routes and representative AI/search user-agent requests on `woodlayout.com`.
+- **Cloudflare account-side control remains a separate owner check:** AI Crawler and Agent access policies must allow Search and user-requested Agent traffic, and WAF rules must not challenge those verified crawlers. Robots.txt alone cannot override a Cloudflare edge block. Training access is a separate policy choice.
+
 ## 2026-11-08 — WoodLayout UI / UX V4 integrated release
 
 **Six owner-approved UI initiatives, one code release; no new calculator routes or SEO intent expansion:**
