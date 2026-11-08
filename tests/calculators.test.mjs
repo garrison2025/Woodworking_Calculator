@@ -2583,3 +2583,51 @@ test("rise/run rejects an unrepresentable horizontal run",()=>{
   assert.throws(()=>compute("rise-run-calculator",{run:1e-309,rise:0}),/run must be at least/);
   assert.equal(compute("rise-run-calculator",{run:72,rise:36}).metrics.find(m=>m.label==="Grade").value,50);
 });
+
+
+test("maximum wall-stud OC equalizes 161-inch run without stud overlap",()=>{
+  const wall={length:161,spacing:16,spacingMode:1,studWidth:1.5,height:96,plates:4.5};
+  const r=compute("wall-stud-calculator",wall);
+  assert.equal(value(r,"Stud count"),12);
+  assert.equal(r.wallStudLayoutMode,1);
+  assert.equal(r.finalBayExceedsNominal,false);
+  assert.equal(r.rows[0].position,0);
+  assert.equal(r.rows.at(-1).position,161);
+  near(value(r,"Actual maximum OC"),161/11,1e-8);
+  const positions=r.rows.map(row=>row.position);
+  for(let i=1;i<positions.length;i++){
+    const bay=positions[i]-positions[i-1];
+    assert.ok(bay<=16+1e-8,"Maximum OC violated at bay "+i);
+    assert.ok(bay>=1.5-1e-8,"Stud faces overlap at bay "+i);
+    if(i>1)near(bay,positions[1]-positions[0],1e-8);
+  }
+  assert.deepEqual(r.marks.map(mark=>mark.x),positions);
+  const exported=buildScheduleCsv(r.rows,"in","Equalized maximum OC");
+  for(const position of positions)assert.ok(exported.includes('"'+position+'"'));
+  assert.ok(exported.includes('"Stud 12"'));
+  const defaultR=compute("wall-stud-calculator",{...wall,spacingMode:0});
+  assert.equal(value(defaultR,"Final bay size"),17);
+  assert.equal(defaultR.finalBayExceedsNominal,true);
+  assert.equal(compute("wall-stud-calculator",{...wall,spacingMode:undefined}).wallStudLayoutMode,0);
+});
+
+test("maximum stud OC mode enforces face clearance, integer mode and boundary geometry",()=>{
+  const base={length:161,spacing:16,spacingMode:1,studWidth:1.5,height:96,plates:4.5};
+  for(const length of [16,160,160.01,161,192,203.125]){
+    const r=compute("wall-stud-calculator",{...base,length});
+    assert.equal(r.rows[0].position,0);
+    assert.equal(r.rows.at(-1).position,length);
+    assert.ok(r.rows.every((row,i)=>i===0||
+      row.position-r.rows[i-1].position<=base.spacing+1e-8));
+  }
+  const metric=compute("wall-stud-calculator",{
+    ...base,length:convertToInches(4089.4,"mm"),spacing:convertToInches(406.4,"mm"),
+    studWidth:convertToInches(38.1,"mm")});
+  near(value(metric,"Actual maximum OC"),161/11,1e-8);
+  assert.throws(()=>compute("wall-stud-calculator",{
+    ...base,length:17,studWidth:12}),/Cannot meet maximum OC without overlapping stud faces/);
+  assert.throws(()=>compute("wall-stud-calculator",{...base,spacingMode:2}),
+    /spacingMode must be a whole number between 0 and 1/);
+  assert.throws(()=>compute("wall-stud-calculator",{
+    ...base,length:100000,spacing:1}),/Too many layout marks/);
+});
