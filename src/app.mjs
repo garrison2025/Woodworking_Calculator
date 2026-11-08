@@ -2559,6 +2559,14 @@ async function initializeCalculator(){
   // serialized. A complete numeric snapshot must pass the calculator model
   // before any field is changed.
   const availableCurrencies=currency?[...currency.options].map(o=>o.value):[];
+  // Only the Wall Stud tool gained one optional mode after launch. Restore
+  // its exact former five-field snapshots as Nominal OC, never relax validation
+  // for other calculators or permit arbitrary missing, extra or duplicate keys.
+  const legacyWallStudFields=slug==="wall-stud-calculator"?
+    tool.inputs.filter(field=>field.key!=="spacingMode"):null;
+  const withLegacyWallStudMode=snapshot=>({
+    ...snapshot,inputs:{...snapshot.inputs,spacingMode:"0"}
+  });
   const applyValidatedMeasurementSnapshot=snapshot=>{
     // All-or-nothing: prove the numeric geometry BEFORE modifying form state.
     const candidate={};
@@ -2591,7 +2599,15 @@ async function initializeCalculator(){
     document.querySelectorAll("[data-length-unit]").forEach(el=>el.textContent=unit);
   };
   const loadSharedMeasurements=()=>{
-    const snapshot=parseMeasurementFragment(window.location.hash,tool.inputs,availableCurrencies);
+    let snapshot;
+    try{
+      snapshot=parseMeasurementFragment(window.location.hash,tool.inputs,availableCurrencies);
+    }catch(error){
+      if(!legacyWallStudFields)throw error;
+      const old=parseMeasurementFragment(
+        window.location.hash,legacyWallStudFields,availableCurrencies);
+      snapshot=old?withLegacyWallStudMode(old):null;
+    }
     if(!snapshot)return false;
     applyValidatedMeasurementSnapshot(snapshot);
     return true;
@@ -2633,9 +2649,18 @@ async function initializeCalculator(){
     try{
       if(selected.size>16384)throw Error("File exceeds the 16 KB measurement limit.");
       const content=await selected.text();
-      const snapshot=parseMeasurementFile(content,{
-        slug,fields:tool.inputs,allowedCurrencies:availableCurrencies
-      });
+      let snapshot;
+      try{
+        snapshot=parseMeasurementFile(content,{
+          slug,fields:tool.inputs,allowedCurrencies:availableCurrencies
+        });
+      }catch(error){
+        if(!legacyWallStudFields)throw error;
+        const old=parseMeasurementFile(content,{
+          slug,fields:legacyWallStudFields,allowedCurrencies:availableCurrencies
+        });
+        snapshot=withLegacyWallStudMode(old);
+      }
       applyValidatedMeasurementSnapshot(snapshot);
       // A previously opened share fragment must not silently restore its old
       // inputs when the user refreshes after importing another local file.
