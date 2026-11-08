@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline release-mode SEO/GEO contract test. NEVER deploys example domain."""
+import html
 import html.parser
 import json
 import os
@@ -103,7 +104,7 @@ for p in pages:
                 errors.append(path+": category title differs from task guide")
             body=p.read_text(encoding="utf8")
             for text in (guide["lead"],guide["example"],guide["limit"],guide["example_title"]):
-                if text not in body:
+                if html.escape(text, quote=True) not in body:
                     errors.append(path+": unique category content not rendered")
             for choice in guide["choices"]:
                 if 'href="/'+choice["slug"]+'/"' not in body:
