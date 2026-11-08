@@ -76,6 +76,7 @@ class Checker(html.parser.HTMLParser):
         if self.title:self.title_text+=data
 errors=[]
 pages=sorted(dist.rglob("index.html"))
+assert not (dist/"llms.txt").exists(), "Noindex preview builds must not publish the production AI site guide"
 assert len(active)==31 and len(hold)==0,(len(active),len(hold))
 assert len(pages)==1+31+len({t["category"] for t in active})+4,len(pages)
 for p in pages:
