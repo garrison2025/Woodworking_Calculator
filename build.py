@@ -185,6 +185,11 @@ def home():
              f'<div class="section-heading compact" id="all-tools"><h3>Every available calculator</h3><span>{len(TOOLS)} TOOL WORKSPACES</span></div>'
              f'<div class="tool-search-panel"><label for="tool-search">Find a calculator</label><div class="tool-search-row"><div class="tool-search-field"><input id="tool-search" type="search" autocomplete="off" aria-controls="tool-directory" aria-describedby="tool-search-status" placeholder="Search {len(TOOLS)} tools by task or category"><kbd aria-hidden="true">/</kbd></div><output id="tool-search-status" for="tool-search" role="status" aria-live="polite">Showing {len(TOOLS)} tools</output></div></div>'
              '<div class="directory-list" id="tool-directory">'+''.join(directory_link(t) for t in TOOLS)+'</div>'
+             '<div id="tool-search-empty" class="search-empty" role="region" aria-label="No matching calculators" hidden>'
+             '<span class="search-empty-symbol" aria-hidden="true">⌕</span>'
+             '<div><strong>No matching calculator</strong>'
+             '<p>Try a shorter measurement task, or return to the full 31-tool directory.</p></div>'
+             '<button id="tool-search-clear" type="button">Clear search</button></div>'
              '</section>')
     body+= ('<section class="wrap trust-strip"><div><span class="eyebrow">REPRODUCIBLE BY DESIGN</span><h2>Measure, inspect, take it to the bench.</h2></div>'
             '<div><b>01 / Input</b><p>US customary inches and feet, with millimeters, centimeters and meters one click away.</p></div>'
