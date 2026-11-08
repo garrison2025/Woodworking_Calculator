@@ -688,12 +688,37 @@ def tool_page(t):
     return page(intent["seoTitle"],description,body,"/"+t["slug"]+"/","tool")
 
 def cat_page(key, name, slug):
-    subset=[t for t in TOOLS if t["category"]==key]
-    body=(f'<section class="wrap category-header"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">All tools</a><span>/</span>{esc(name)}</nav>'
-          f'<span class="eyebrow">WORKSHOP DIRECTORY / {len(subset):02d} TOOLS</span><h1>{esc(name)}</h1>'
-          '<p>Choose a dedicated measurement tool. Every calculator has explicit inputs, a geometric result, a printable diagram and its own calculation explanation.</p>'
-          '<div class="tool-grid">'+''.join(tool_card(t) for t in subset)+'</div></section>')
-    return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body,"/"+slug+"/")
+    subset = [t for t in TOOLS if t["category"] == key]
+    guide = CATEGORY_GUIDES[key]
+    lookup = {t["slug"]: t for t in subset}
+    choices = ''.join(
+        '<a class="category-choice" href="/' + esc(choice["slug"]) + '/">'
+        '<strong>' + esc(choice["label"]) + '</strong>'
+        '<span>' + esc(choice["why"]) + '</span>'
+        '<small>' + esc(lookup[choice["slug"]]["title"]) + ' ↗</small></a>'
+        for choice in guide["choices"]
+    )
+    body = (
+        f'<section class="wrap category-header"><nav class="breadcrumbs" aria-label="Breadcrumb">'
+        f'<a href="/">All tools</a><span>/</span>{esc(name)}</nav>'
+        f'<span class="eyebrow">WORKSHOP DIRECTORY / {len(subset):02d} TOOLS</span>'
+        f'<h1>{esc(guide["title"])}</h1>'
+        f'<p class="category-lede">{esc(guide["lead"])}</p>'
+        '<div class="tool-grid">' + ''.join(tool_card(t) for t in subset) + '</div>'
+        '<section class="category-guide" aria-label="Choose and check your measurement task">'
+        '<div class="category-guide-heading"><span class="eyebrow">MATCH THE MEASUREMENT</span>'
+        '<h2>Choose the right calculator for the job</h2>'
+        '<p>These tools answer different geometry questions. Start with what you can actually measure.</p></div>'
+        '<div class="category-choice-grid">' + choices + '</div>'
+        '<div class="category-guide-notes">'
+        '<section class="category-example"><span class="eyebrow">CHECK THE MATH</span>'
+        '<h2>' + esc(guide["example_title"]) + '</h2><p>' + esc(guide["example"]) + '</p></section>'
+        '<section class="category-limit"><span class="eyebrow">SCOPE &amp; SAFETY</span>'
+        '<h2>What these tools do not certify</h2><p>' + esc(guide["limit"]) + '</p>'
+        '<p>Calculations are browser-based references. Verify physical measurements and local requirements before working on material.</p>'
+        '</section></div></section></section>'
+    )
+    return page(guide["title"],guide["description"],body,"/"+slug+"/","category")
 
 def info_page(title, paragraphs, url):
     if url == "/contact/":
