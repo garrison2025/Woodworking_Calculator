@@ -1615,7 +1615,7 @@
       "keyword": "hip roof calculator",
       "volume": 390,
       "kd": 2,
-      "desc": "Lay out four equal-pitch hip-roof planes with panel cuts, projected vertices and sheet-by-sheet material checks.",
+      "desc": "Lay out four equal-pitch hip-roof planes with panel cuts, projected vertices and sheet-by-sheet material checks; export the cut layout.",
       "inputs": [
         {
           "key": "width",
@@ -1889,7 +1889,7 @@
       "keyword": "gable roof calculator",
       "volume": 170,
       "kd": 4,
-      "desc": "Estimate gable roof area, half-span rise and sloped lengths with a uniform eave overhang. Export the geometry.",
+      "desc": "Estimate gable roof area, half-span rise and sloped lengths with a uniform eave overhang; export the geometry as SVG or CSV.",
       "inputs": [
         {
           "key": "width",
