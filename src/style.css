@@ -1281,3 +1281,102 @@ tbody tr:nth-child(2n){background:#fafbf8}
 @media print{
   #undo-reset,#review-invalid{display:none!important}
 }
+
+
+/* WoodLayout V4 — functional hierarchy, responsive navigation, and measured
+   interaction rather than decorative continuous movement. */
+.mobile-site-menu{display:none}
+.worksheet-index{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
+  margin-bottom:18px;padding:16px 18px;background:#f5f9f4;border:1px solid #d7e5d8;
+  border-radius:14px}
+.worksheet-index .eyebrow{font-size:10px;letter-spacing:.1em;margin-right:6px}
+.worksheet-index a{min-height:40px;display:inline-flex;align-items:center;
+  padding:9px 13px;color:#295b45;font-size:12px;font-weight:750;background:#fff;
+  border:1px solid #d1dfd2;border-radius:8px}
+.worksheet-index a:hover,.worksheet-index a:focus-visible{border-color:#6ca077;background:#eaf5ec}
+#measurement-schedule,#framing-takeoff,#framing-optimizer-panel,#framing-order-ticket,
+#deck-purchase-plan{scroll-margin-top:188px}
+.advanced-results-disclosure{margin:9px 0}
+.advanced-results-disclosure>summary{cursor:pointer;list-style:none;
+  display:flex;gap:9px;justify-content:space-between;align-items:center;
+  min-height:48px;padding:11px 15px;border-radius:9px;border:1px solid #ccdecf;
+  background:#eef6ee;color:#235a42;font-weight:770}
+.advanced-results-disclosure>summary::-webkit-details-marker{display:none}
+.advanced-results-disclosure>summary::before{content:"▸";font-size:17px;transition:transform .2s;line-height:1}
+.advanced-results-disclosure[open]>summary::before{transform:rotate(90deg)}
+.advanced-results-disclosure>summary>span{color:#5b7463;font-size:11px;font-weight:600}
+.advanced-results-body{padding:15px 4px 4px}
+#cut-table tbody tr[data-geometry-row]{cursor:pointer}
+#cut-table tbody tr[data-geometry-row]:hover{background:#edf5ed}
+#cut-table tbody tr.is-selected-geometry{background:#deefe2;
+  box-shadow:inset 3px 0 #31835b}
+#cut-table tbody tr.is-selected-geometry td{color:#184932}
+#dimension-svg svg [data-row],#dimension-svg svg [data-index],#dimension-svg svg [data-panel]{
+  transition:stroke .16s ease,stroke-width .16s ease,filter .16s ease}
+#dimension-svg svg .is-selected-geometry{
+  stroke:#c36c29!important;stroke-width:3!important;filter:drop-shadow(0 0 2px rgba(173,105,39,.3))}
+.diagram-inspector{display:flex;flex-wrap:wrap;gap:9px;align-items:center;
+  min-height:38px;padding:9px 12px;border:1px solid #d4e2d4;border-radius:10px;
+  margin:0 15px 12px;background:#f5faf4;color:#42614a;font-size:12px;line-height:1.45}
+.diagram-inspector strong{color:#225842}
+.diagram-inspector[hidden]{display:none!important}
+.diagram-inspector button{border:0;border-radius:7px;padding:6px 8px;
+  margin-left:auto;background:#e6efe6;color:#255b42;font-weight:700;cursor:pointer}
+.diagram-inspector button:focus-visible{outline:3px solid #955b23}
+.dock-toggle[hidden]{display:none!important}
+@media screen and (max-width:870px){
+  .mobile-site-menu{display:block;margin-left:auto;position:relative;z-index:45}
+  .mobile-site-menu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;min-height:44px;padding:8px 14px;border-radius:10px;
+    border:1px solid #b9cdbc;color:#255941;background:#ecf4ec;
+    font-size:12px;font-weight:780}
+  .mobile-site-menu>summary::-webkit-details-marker{display:none}
+  .mobile-site-menu>summary::after{content:"⌄";margin-left:9px;font-size:18px;line-height:1}
+  .mobile-site-menu[open]>summary::after{transform:rotate(180deg)}
+  .mobile-site-menu>nav{position:absolute;top:calc(100% + 10px);right:0;
+    width:min(310px,calc(100vw - 25px));max-height:min(65dvh,520px);overflow-y:auto;
+    display:grid;grid-template-columns:1fr;gap:3px;padding:10px;border-radius:13px;
+    background:#fffefa;box-shadow:0 15px 45px rgba(23,52,34,.16);
+    border:1px solid #ceddce}
+  .mobile-site-menu>nav a{display:flex;align-items:center;min-height:44px;
+    padding:10px 12px;border-radius:8px;color:#2a5942;font-size:13px;font-weight:690}
+  .mobile-site-menu>nav a:hover,.mobile-site-menu>nav a:focus-visible{background:#edf5ed}
+  .nav-cta{margin-left:0}
+}
+@media screen and (max-width:680px){
+  .mobile-site-menu{margin-left:auto}
+  .workbench-dock.is-compact{display:grid;grid-template-columns:auto minmax(0,1fr);
+    gap:7px;padding-top:6px;padding-bottom:6px;min-height:58px}
+  .workbench-dock.is-compact .dock-toggle:not([hidden]){display:flex;align-items:center;
+    justify-content:center;min-height:44px;padding:8px 12px;gap:7px;
+    border-radius:9px;border:1px solid #bed6c2;background:#e9f4e9;
+    color:#275943;font-size:12px;font-weight:780}
+  .workbench-dock.is-compact .dock-links{display:none}
+  .workbench-dock.is-compact.is-expanded .dock-links{display:flex;grid-column:1/-1;grid-row:2}
+  .workbench-dock.is-compact .dock-summary{min-height:44px;grid-column:2;grid-row:1}
+  .workbench-dock.is-compact.is-expanded .dock-summary{grid-row:3;grid-column:1/-1}
+  .workbench-dock.is-compact .dock-summary-label{font-size:10px}
+  .workbench-dock.is-compact .dock-summary-value{font-size:12px}
+  .worksheet-index{padding:12px;gap:7px}
+  .worksheet-index .eyebrow{flex-basis:100%}
+  .worksheet-index a{min-height:44px;padding:8px 10px;font-size:12px}
+  .advanced-results-disclosure>summary{flex-wrap:wrap}
+  .advanced-results-disclosure>summary>span{flex-basis:100%;margin-left:24px}
+  .tool-priority{font-size:11px!important}
+  .drawing-caption{font-size:11px}
+  .graphic-caption{font-size:11px}
+  .tool-card>span:nth-child(3){font-size:12px;line-height:1.55}
+  #measurement-schedule,#framing-takeoff,#framing-optimizer-panel,#framing-order-ticket,
+  #deck-purchase-plan{scroll-margin-top:156px}
+}
+@media screen and (prefers-reduced-motion:reduce){
+  #dimension-svg svg .is-selected-geometry{filter:none}
+  .advanced-results-disclosure>summary::before{transition:none}
+}
+@media print{
+  .mobile-site-menu,.worksheet-index,.diagram-inspector{display:none!important}
+  .advanced-results-disclosure>summary{display:none!important}
+  .advanced-results-body{display:block!important}
+  #cut-table tbody tr.is-selected-geometry{background:transparent!important;box-shadow:none!important}
+  #dimension-svg svg .is-selected-geometry{filter:none!important}
+}
