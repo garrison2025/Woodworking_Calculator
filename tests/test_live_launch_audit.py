@@ -113,6 +113,21 @@ def fake_site(mode, broken=None, source_sync=False):
                     '<div id="workbench-input"></div>'
                     '<div id="workbench-results"></div>'
                     '<div id="workbench-drawing"></div>') + form
+        if source_sync and path in launch.TOOL_PATHS and "stale_v4_tool" not in broken:
+            form += ('<button id="dock-toggle"></button>'
+                     '<div id="workbench-shortcuts"></div>'
+                     '<div id="diagram-inspector"></div>'
+                     '<strong id="diagram-selection"></strong>'
+                     '<button id="diagram-find-row"></button>'
+                     '<p id="geometry-link-status"></p>'
+                     '<div id="measurement-schedule"></div>'
+                     '<nav aria-label="Worksheet results sections"></nav>')
+            if path == "/framing-calculator/":
+                form += '<details class="advanced-results-disclosure" open></details>'
+        mobile = ('<details class="mobile-site-menu">'
+                  '<nav aria-label="Mobile tool categories">'
+                  '<a href="/materials/">Materials</a></nav></details>'
+                  if source_sync and "stale_v4_mobile" not in broken else '')
         doc = ('<!doctype html><html><head><title>Page: ' + path +
                (' | WoodLayout' if source_sync else '') +
                '</title><meta name="description" content="Useful geometry calculator">'
@@ -121,7 +136,7 @@ def fake_site(mode, broken=None, source_sync=False):
                ('<a class="brand" href="/"><img src="/logo-mark.svg">'
                 '<span class="brand-wordmark">Wood<span>Layout</span></span></a>'
                 if source_sync and "stale_brand" not in broken else '') +
-               h1 + form + "</body></html>")
+               mobile + h1 + form + "</body></html>")
         response_headers = ({"x-robots-tag": "noindex, nofollow, noarchive"}
                             if mode == "preview" and
                             not ("missing_preview_header" in broken and path == "/")
@@ -192,7 +207,7 @@ class LiveAuditTests(unittest.TestCase):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
                               get=fake_site("preview", source_sync=True))
         self.assertEqual(result["status"], "PASS", result["failures"])
-        self.assertEqual(result["source_parity_checks"], 180)
+        self.assertEqual(result["source_parity_checks"], 253)
         self.assertEqual(result["http_pages_checked"], 42)
 
     def test_deployed_deck_config_mismatch_detected_even_when_slug_is_correct(self):
@@ -210,6 +225,15 @@ class LiveAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("/deck-material-calculator/" in x and
                             "form fields" in x for x in result["failures"]))
+
+    def test_v4_mobile_menu_and_workbench_regression_cannot_pass_live_audit(self):
+        for broken, fragment in [("stale_v4_mobile", "V4 mobile category"),
+                                 ("stale_v4_tool", "V4 advanced-workbench")]:
+            result = launch.audit(PAGES, "preview", verify_source_parity=True,
+                                  get=fake_site("preview", source_sync=True,
+                                                broken={broken}))
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(fragment in msg for msg in result["failures"]))
 
     def test_deployed_input_recovery_controls_missing_is_not_accepted(self):
         result = launch.audit(PAGES, "preview", verify_source_parity=True,
