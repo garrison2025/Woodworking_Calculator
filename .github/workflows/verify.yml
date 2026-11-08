@@ -87,6 +87,7 @@ jobs:
           # produce the complete 42-URL canonical/sitemap release.
           CF_PAGES=1 CF_PAGES_BRANCH=main python3 build.py
           EXPECTED_RELEASE_ORIGIN=https://woodlayout.com python3 tests/validate_release.py
+          EXPECTED_RELEASE_ORIGIN=https://woodlayout.com python3 tests/validate_geo.py
           # Preview PR deployments must remain noindex even with conflicting
           # environment settings inherited from the Pages project.
           CF_PAGES=1 CF_PAGES_BRANCH=feature/another SITE_URL=https://woodlayout.com RELEASE_APPROVED=1 python3 build.py
