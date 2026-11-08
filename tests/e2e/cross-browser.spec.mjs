@@ -156,3 +156,18 @@ test("Firefox and WebKit 390px wide cutting tables give keyboard-accessible colu
   await page.emulateMedia({media:"screen"});
   await expect(toolbar).toBeVisible();
 });
+
+
+test("wall stud maximum OC survives cross-engine layout switching",async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto("/wall-stud-calculator/");
+  await expect(page.locator("#calculator-startup")).toBeHidden();
+  await page.locator("#f-length").fill("161");
+  await page.locator("#f-spacingMode").selectOption("1");
+  await expect(page.locator("#calc-error")).toBeHidden();
+  await expect(page.locator("#dimension-svg .wall-cut-stud")).toHaveCount(12);
+  await expect(page.getByText("Equalized maximum-OC layout.",{exact:true})).toBeVisible();
+  await page.locator("#f-spacingMode").selectOption("0");
+  await expect(page.getByText("Final bay exceeds nominal spacing.",{exact:true})).toBeVisible();
+  await expect(page.locator("#dimension-svg .wall-cut-stud")).toHaveCount(11);
+});
