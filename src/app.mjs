@@ -2438,6 +2438,14 @@ if(slug){
     });
   });
   window.addEventListener("beforeprint",flushInputRender);
+  document.addEventListener("click",event=>{
+    // A fast click on a download or share control must use the LAST typed
+    // dimensions even when the next paint has not occurred yet.
+    if(inputFrame&&event.target.closest(
+      '#copy-result,#download-csv,#download-svg,#print-sheet,#share-measurements,'+
+      '#download-measurements-json,[id^="download-"]'
+    ))flushInputRender();
+  },true);
   fraction.addEventListener("change",()=>{clearResetUndo();render();});
   currency?.addEventListener("change",()=>{clearResetUndo();render();});
   // Measurement links intentionally use fragments. HTTP requests and hosting
