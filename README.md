@@ -4,7 +4,7 @@
 
 A free browser-only woodworking workspace with **31 active geometry calculators (9 P0 + 22 P1), six populated categories and zero held P2**. Includes proportional SVG drawings, fractional inch display, five length units (in/ft/mm/cm/m), local-only tool search and recent-history controls, typed CSV exports and browser Print / Save as PDF. Geometry references are not certified structural designs or saw-cut instructions.
 
-> **2026-11-08 latest owner update — real domain:** `woodlayout.com` has been purchased and connected to Cloudflare **according to the owner**; the designated public contact is `contact@woodlayout.com`. The old domain-unpurchased remarks below are historical snapshots. **Cloudflare zone connection is not proof of Pages Custom Domains = Active, HTTPS, mail reception, or Google indexability.** Production still requires setting `SITE_URL=https://woodlayout.com`, explicit `RELEASE_APPROVED=1` in the Cloudflare Pages production build, verified old-host/www redirects and a passing production live audit. Until those gates are verified, the preview noindex policy remains in force. See [domain launch handoff](WOODLAYOUT-COM-LAUNCH-20261108.md).
+> **2026-11-08 production indexing authorization:** Owner purchased `woodlayout.com`, confirmed the Pages Custom Domains entry is Active and explicitly asked to remove the `noindex` restriction. The Python builder now **automatically generates indexable 42-page production SEO output on Cloudflare Pages `main`**, with `https://woodlayout.com` canonical URLs, JSON-LD, a sitemap and allow-crawl robots.txt, even when old env variables are unset or conflict. **No manual SITE_URL or RELEASE_APPROVED settings are required for the Pages production branch.** Feature/PR preview builds remain `noindex`; Pages hostname is host-scoped `X-Robots-Tag: noindex`. The old Pages host should 301/308 redirect to the owned domain with path/query preserved; that is an account-side Cloudflare Bulk Redirect, not something a static HTML meta tag can enforce. External HTTPS/redirect/indexing evidence must be checked separately; GSC submission and actual Google inclusion are not automatic. Contact: `contact@woodlayout.com`. See [release handoff](WOODLAYOUT-COM-LAUNCH-20261108.md).
 
 > **Release status (2026-11-07): software development and automated V3 acceptance complete; custom-domain launch NOT RUN.** [Main CI #717](https://github.com/garrison2025/Woodworking_Calculator/actions/runs/42337786055) passed on commit `95e8b81`: 31 tools, 42 static pages, real Chromium/Firefox/Linux WebKit regression, PDF content and preview/production SEO gates. See [final 31-route acceptance](FINAL-ACCEPTANCE-20261107.md). A custom domain has not been purchased; no real printer-ruler measurement, timber trial, macOS Safari/assistive-technology signoff, GSC indexing or AdSense earnings are claimed. Preview remains `noindex,nofollow,noarchive`.
 
@@ -284,16 +284,11 @@ Open `http://localhost:8787`. The Playwright suite starts its own local test ser
 
 For most Cloudflare Pages Python build environments Python is already available. If a platform build image does not provide Python, configure its version or a supported build image before deploying. Do not claim deployment succeeded until the Pages build log and preview response are checked.
 
-### Production SEO gate (do not activate prematurely)
+### Production SEO gate — source-controlled for woodlayout.com
 
-After the custom domain is registered, attached to Pages and the actual mobile/geometry/print QA is complete, configure the production build:
+The owner has authorized search indexing on the purchased and Pages-attached `woodlayout.com`. When Cloudflare Pages builds branch `main` with its injected `CF_PAGES=1`, the builder automatically selects `SITE_URL=https://woodlayout.com` and enables indexing of all 42 approved routes. **Do not add manual production environment variables; old conflicting values are deliberately ignored on the production branch.** Preview/PR branches remain `noindex`, and offline builds remain safe unless explicitly simulated for release tests.
 
-```text
-SITE_URL=https://YOUR-REAL-DOMAIN.com
-RELEASE_APPROVED=1
-```
-
-`SITE_URL` must be a real owned HTTPS custom domain, **not** a Pages preview URL. Production then generates absolute canonical URLs, sitemap.xml and an allow-crawl robots.txt. The Pages-provided hostname may still serve identical static bytes, so separately validate your hostname/redirect and canonical policy before submitting the site to GSC. There is no mythical fully automatic “verified launch” switch.
+Production outputs include `index,follow` in the 42 HTML pages, absolute `woodlayout.com` Canonicals, JSON-LD, `robots.txt` permitting crawling and a 42-URL `sitemap.xml`. The Pages-provided hostname can still serve the same HTML; its host-specific `X-Robots-Tag` remains `noindex`, and a separate Cloudflare Bulk Redirect for `woodworking-calculator.pages.dev` to `woodlayout.com` must be enabled and confirmed. This static-source change does not grant access to Cloudflare DNS/redirect settings, Google Search Console, or actual search inclusion.
 
 Cloudflare injects `CF_PAGES=1` and `CF_PAGES_BRANCH`. As a fail-closed guard, non-`main` Pages builds now stay **noindex** even if someone accidentally copies production `SITE_URL` and `RELEASE_APPROVED=1` into a preview environment. This does **not** distinguish the production `woodworking-calculator.pages.dev` alias from the same deployment on your custom domain: set up a **301 Bulk Redirect** for that hostname after domain attachment and verify it independently. The original V3 P2 tools and Materials-only category remain excluded until separate `RELEASE_V3_P2_APPROVED=1` approval.
 
