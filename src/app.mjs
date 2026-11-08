@@ -532,7 +532,9 @@ async function initializeCalculator(){
           content+='<rect class="wall-cut-stud" data-position="'+r.position+'" data-cut-length="'+r.cutLength+'" x="'+rawX(r.faceLeft)+'" y="'+yHeight(r.cutLength)+'" width="'+(rawX(r.faceRight)-rawX(r.faceLeft))+'" height="'+(base-yHeight(r.cutLength))+'" fill="#426b5b"><title>'+esc(r.item+" · center "+fmt(r.position)+" · cut "+fmt(r.cutLength)+" · gross "+fmt(r.grossHeight))+'</title></rect>';
         }
         content+=svgText(left,64,"NET STUD CUT "+fmt(rows[0].cutLength)+" · "+rows.length+" STUD CENTERS","dim-label");
-        content+=svgText(left,323,"DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
+        content+=svgText(left,323,data.wallStudLayoutMode===1?
+          "EQUALIZED MAX OC · END POSITIONS ARE CENTERS · NOT A PANEL MODULE":
+          "DASHED = GROSS WALL HEIGHT · END POSITIONS ARE CENTERS","tick-label");
       }else if(data.shape==="holes"){
         // One physical X/Y scale for the entire flat board FACE, including
         // every circular hole. No minimum visual radius: it would fabricate
@@ -2358,7 +2360,10 @@ async function initializeCalculator(){
         out.insertAdjacentHTML("beforeend",'<p role="note">Enter a positive supplier rate to show the quoted cost.</p>');
       }
       if(latest.finalBayExceedsNominal){
-        out.insertAdjacentHTML("beforeend",'<p class="error-banner" role="note"><strong>Final bay exceeds nominal spacing.</strong> The overlapping near-end stud was omitted. If your spacing is a maximum, revise the layout before using this schedule.</p>');
+        out.insertAdjacentHTML("beforeend",'<p class="error-banner" role="note"><strong>Final bay exceeds nominal spacing.</strong> The overlapping near-end stud was omitted. Switch to Maximum OC if this is a hard spacing limit; verify sheathing module and structural requirements separately.</p>');
+      }
+      if(latest.wallStudLayoutMode===1){
+        out.insertAdjacentHTML("beforeend",'<p role="note"><strong>Equalized maximum-OC layout.</strong> All bays meet the entered center-spacing limit and end studs are retained, but this re-spaces the full grid. Verify sheet-edge backing, fastening and structural requirements independently.</p>');
       }
       if(latest.deckBoardStock?.requiresJointPlan){
         out.insertAdjacentHTML("beforeend",
@@ -2710,7 +2715,12 @@ async function initializeCalculator(){
     if(!latest)return;
     const text=latest.rows.length?
       buildScheduleCsv(latest.rows,unit,
-        tool.limit+(slug==="lumber-price-calculator"?
+        tool.limit+(slug==="wall-stud-calculator"?
+          " Selected stud layout: "+(latest.wallStudLayoutMode===1?
+            "equalized maximum OC":"nominal OC grid")+
+          "; entered OC (in): "+values().spacing+
+          "; actual maximum OC (in): "+latest.actualMaximumOC+".":"")+
+        (slug==="lumber-price-calculator"?
           " Entered price currency: "+currencyCode()+". No FX conversion.":"")):
       buildMetricsCsv(latest.metrics,unit,tool.limit,currencyCode());
     save(slug+"-"+unit+"-cut-list.csv",text,"text/csv;charset=utf-8");
