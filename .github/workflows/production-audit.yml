@@ -1,0 +1,36 @@
+name: WoodLayout Production Audit
+
+# Owner-triggered only. Never publishes, changes DNS or enables indexing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production:
+    name: Audit woodlayout.com canonical SEO and source parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Audit deployed production host (read-only)
+        run: |
+          python3 scripts/verify_live_launch.py \
+            --base https://woodlayout.com \
+            --mode production \
+            --pages-origin https://woodworking-calculator.pages.dev \
+            --verify-source-parity \
+            --report woodlayout-production-audit.json
+      - name: Preserve report even if production is not ready
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: woodlayout-production-audit
+          path: woodlayout-production-audit.json
+          if-no-files-found: warn
+          retention-days: 14
