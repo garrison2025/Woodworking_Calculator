@@ -93,6 +93,12 @@ def page(title, description, body, path="/", type_="website"):
     nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
     navlinks = ''.join(f'<a href="{esc(url)}">{esc(label)}</a>' for label,url in links)
+    mobile_categories = ''.join(
+        f'<a href="/{esc(slug)}/">{esc(name)}</a>'
+        for name,slug in CATS.values())
+    mobile_menu = ('<details class="mobile-site-menu"><summary>Browse tools</summary>'
+                   '<nav aria-label="Mobile tool categories"><a href="/#tools">All calculators</a>'
+                   + mobile_categories + '</nav></details>')
     script = ('<script type="module" src="/assets/home.mjs"></script>' if path == "/"
               else '<script type="module" src="/assets/app.mjs"></script>' if type_ == "tool"
               else "")
@@ -105,7 +111,7 @@ def page(title, description, body, path="/", type_="website"):
             f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
             f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
-            f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav><a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
+            f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav>{mobile_menu}<a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
 
 def write(url, content):
@@ -373,7 +379,8 @@ def tool_page(t):
     body+=(
         '<nav class="workbench-dock wrap" aria-label="Jump between calculator sections">'
         '<span class="dock-kicker">WORKBENCH</span>'
-        '<div class="dock-links">'
+        '<button id="dock-toggle" class="dock-toggle" type="button" aria-controls="workbench-shortcuts" aria-expanded="true" hidden>Sections <span aria-hidden="true">⌄</span></button>'
+        '<div class="dock-links" id="workbench-shortcuts">'
         '<a href="#workbench-input">Measurements</a>'
         '<a href="#workbench-results">Results</a>'
         '<a href="#workbench-drawing">Drawing</a>'
@@ -566,7 +573,23 @@ def tool_page(t):
         '<button id="download-deck-fastener-csv" type="button" class="btn secondary">↓ Download fastener rows CSV</button>'
         '</div></section>'
     ) if t["slug"]=="deck-material-calculator" else ""
-    body+=(f'<section class="wrap detail-layout"><div class="detail-main"><div class="content-block worksheet-schedule"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
+    # Navigation is task-based, not a new SEO route. The full underlying
+    # tables, assumptions and exports remain in the DOM and in print.
+    detail_index = (
+        '<nav class="worksheet-index" aria-label="Worksheet results sections">'
+        '<span class="eyebrow">ON THIS WORKSHEET</span>'
+        '<a href="#workbench-results">Key results</a>'
+        '<a href="#workbench-drawing">Drawing</a>'
+        '<a href="#measurement-schedule">Measurements</a>'
+        + ('<a href="#framing-takeoff">Material plan</a>'
+           '<a href="#framing-optimizer-panel">Advanced verification</a>'
+           '<a href="#framing-order-ticket">Purchase checklist</a>'
+           if t["slug"]=="framing-calculator" else '')
+        + ('<a href="#deck-purchase-plan">Materials & fasteners</a>'
+           if t["slug"]=="deck-material-calculator" else '')
+        + '</nav>'
+    )
+    body+=(f'<section class="wrap detail-layout"><div class="detail-main">{detail_index}<div id="measurement-schedule" class="content-block worksheet-schedule"><span class="eyebrow">CUT & POSITION DATA</span><h2>Measurement schedule</h2>'
            '<p>Items below are generated from the same numbers used for the drawing. The screen may show only 160 rows per page, but Print / PDF expands the entire schedule before printing and restores your screen page afterwards; CSV always includes all rows. Numeric CSV cells use the selected units in column headers for spreadsheet import. Inspect all cuts on site.</p>'
            '<div class="table-scroll"><table id="cut-table" aria-label="Calculated cut and measurement schedule"><tbody><tr><td>Calculated position data appears here.</td></tr></tbody></table></div>'
            '<p class="schedule-count" id="schedule-count" aria-live="polite"></p>'
