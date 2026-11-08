@@ -1534,10 +1534,10 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .home-method-steps strong{color:var(--ink)}
 .home-method-reference{min-width:0;background:#f6f9f5;border:1px solid #d9e5da;border-radius:12px;padding:18px}
 .home-method-reference h3{font-size:16px;margin:0 0 10px}
-.home-method-reference table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;text-align:left}
+.home-method-reference table{width:100%;min-width:0;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;text-align:left}
 .home-method-reference caption{text-align:left;font-size:12px;color:var(--muted);margin-bottom:9px}
 .home-method-reference th,.home-method-reference td{border-bottom:1px solid #d7e0d7;padding:9px 7px;vertical-align:top;overflow-wrap:anywhere}
-.home-method-reference th{font-weight:700}
+.home-method-reference th{font-weight:700;position:static;top:auto;z-index:auto;background:transparent;text-transform:none}
 .home-method-reference p{font-size:12px;line-height:1.65;margin-top:13px}
 .home-method a{color:#255f46;text-decoration:underline;text-underline-offset:2px}
 .home-method-provenance{margin-top:19px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
