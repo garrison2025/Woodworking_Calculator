@@ -88,6 +88,21 @@ test("numbered deck board geometry and schedule rows highlight the exact same pa
   expect(file).not.toContain("is-selected-geometry");
 });
 
+test("unchanged physical geometry preserves its SVG subtree instead of triggering repaint",async({page})=>{
+  await page.goto("/deck-board-calculator/");
+  await expect(page.locator("#dimension-svg svg")).toBeVisible();
+  const retained=await page.evaluate(async()=>{
+    const root=document.querySelector("#dimension-svg");
+    const original=root.firstElementChild;
+    const field=document.querySelector("#f-width");
+    field.dispatchEvent(new Event("input",{bubbles:true}));
+    await new Promise(resolve=>queueMicrotask(resolve));
+    await new Promise(resolve=>queueMicrotask(resolve));
+    return root.firstElementChild===original;
+  });
+  expect(retained).toBe(true);
+});
+
 test("twenty rapid input events coalesce into one or two output refreshes and keep exact values",async({page})=>{
   await page.goto("/deck-board-calculator/");
   const count=await page.evaluate(async()=>{
