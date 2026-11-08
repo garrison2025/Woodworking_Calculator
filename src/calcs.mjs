@@ -36,6 +36,25 @@ const studCenters=(length,spacing,faceWidth)=>{
     centers.splice(-2,1);
   return centers;
 };
+// Equalize the COMPLETE end-to-end run when the entered OC is a hard maximum.
+// The two mandatory end centers are retained; all internal centers are
+// redistributed. Reject layouts whose faces would intersect after rounding,
+// rather than silently exceeding the requested maximum.
+const maxOcStudCenters=(length,maxOC,faceWidth)=>{
+  need(faceWidth>0&&length>=faceWidth&&maxOC>=faceWidth,
+    "Stud face width must fit the wall and cannot exceed maximum OC.");
+  const bays=ceilStable(length/maxOC);
+  need(bays>=1&&bays<=1200,"Too many layout marks; increase maximum OC.");
+  const centers=Array.from({length:bays+1},(_,i)=>i===bays?length:q(i*length/bays));
+  for(let i=1;i<centers.length;i++){
+    const distance=centers[i]-centers[i-1];
+    need(distance>=faceWidth-1e-8,
+      "Cannot meet maximum OC without overlapping stud faces. Adjust wall length, maximum OC or stud width.");
+    need(distance<=maxOC+1e-8,
+      "Rounded stud coordinates exceed maximum OC; change the dimensions.");
+  }
+  return centers;
+};
 // One pitch convention across common rafter, pitched roof and hip rafter:
 // pitch means rise per 12 horizontal (never per 12 along the sloping line).
 const roofRunGeometry=(run,pitch)=>{
@@ -668,7 +687,7 @@ export function inchFraction(value,denominator=16){
   return sign+(whole?whole+" ":"")+(numerator/div)+"/"+(denominator/div)+" in";
 }
 export function compute(slug,a){
-  a={caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,joistLayoutMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,boardEndTrim:0,boardCrosscutKerf:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
+  a={spacingMode:0,caseDepth:12,frontPinInset:1.5,backPinInset:1.5,pinCenterDrop:0.25,pinHoleDiameter:0,boardWidth:40/25.4,rowCount:1,crossSetback:5/25.4,lowerSupportRun:0,upperSupportRun:0,lowerSupportVerticalOffset:0,upperSupportVerticalOffset:0,nosing:0,upperLandingDepth:0,seamMode:0,joistLayoutMode:0,buttEndGap:0,joistFaceWidth:1.5,minEndBearing:0,joistStockLength:0,joistUnitPrice:0,outerStep:0,innerStep:0,ringHeight:.75,ringOversize:0,ringKerf:0,lowerEndCutRun:0,upperEndCutRun:0,measuredBlankLength:0,blankEndAllowance:0,reuseMode:0,roofKerf:0,boardUnitPrice:0,fastenersPerContact:2,fastenerPackSize:100,fastenerPackPrice:0,landing:0,itemWidth:0,wallHeight:96,bottomPlate:1.5,topPlate:3,studWidth:1.5,headerDepth:5.5,sillThickness:1.5,studStockLength:96,headerStockLength:96,sillStockLength:96,stockKerf:0.125,stockWaste:0,boardEndTrim:0,boardCrosscutKerf:0,stockAuditMode:0,stockAuditEndTrim:0,stockAuditSeverKerf:0,stockAuditReuseMin:0,studUnitPrice:0,headerUnitPrice:0,sillUnitPrice:0,studAltStockLength:120,studAltUnitPrice:0,studAlt2StockLength:144,studAlt2UnitPrice:0,headerAltStockLength:120,headerAltUnitPrice:0,headerAlt2StockLength:144,headerAlt2UnitPrice:0,sillAltStockLength:120,sillAltUnitPrice:0,sillAlt2StockLength:144,sillAlt2UnitPrice:0,openingSill:0,opening2Start:0,opening2Width:0,opening2Height:40,opening2Sill:36,opening3Start:0,opening3Width:0,opening3Height:40,opening3Sill:36,orientation:0,tolerance:0.125,...a};
   need(Object.values(a).every(v=>Number.isFinite(v)&&Math.abs(v)<1e8),"Enter finite measurements within the supported range.");
   const positive=(...ks)=>ks.forEach(k=>need(a[k]>0,k+" must be greater than zero."));
   const nonnegative=(...ks)=>ks.forEach(k=>need(a[k]>=0,k+" cannot be negative."));
@@ -2006,21 +2025,30 @@ export function compute(slug,a){
   }
   case "wall-stud-calculator":{
     positive("length","spacing","height","studWidth");nonnegative("plates");
+    whole("spacingMode",0,1);
     need(a.height>a.plates,"Plate deduction leaves no cut length.");
-    xs=studCenters(a.length,a.spacing,a.studWidth);
+    const maximumOC=a.spacingMode===1;
+    xs=maximumOC?
+      maxOcStudCenters(a.length,a.spacing,a.studWidth):
+      studCenters(a.length,a.spacing,a.studWidth);
     rows=xs.map((x,i)=>({
       item:"Stud "+(i+1),position:q(x),cutLength:q(a.height-a.plates),
       grossHeight:q(a.height),bottomElevation:0,topElevation:q(a.height-a.plates),
       faceLeft:q(x-a.studWidth/2),faceRight:q(x+a.studWidth/2)
     }));
-    const finalBay=xs.at(-1)-xs.at(-2);
+    const bays=xs.slice(1).map((x,i)=>x-xs[i]);
+    const finalBay=bays.at(-1),actualMaximumOC=Math.max(...bays);
+    need(!maximumOC||actualMaximumOC<=a.spacing+1e-8,
+      "Calculated center spacing exceeds the entered maximum OC.");
     return result([
       M("Stud count",xs.length,"N"),M("Cut length",a.height-a.plates),
-      M("Plate deduction",a.plates),M("Final bay size",finalBay)
+      M("Plate deduction",a.plates),M("Final bay size",finalBay),
+      ...(maximumOC?[M("Actual maximum OC",actualMaximumOC)]:[])
     ],rows.map(r=>({...P(r.position,r.item),topHeight:r.cutLength,cutLength:r.cutLength})),
     a.length,rows,"wall-studs",{
       studRows:rows,wallHeight:a.height,studWidth:a.studWidth,
-      finalBayExceedsNominal:finalBay>a.spacing+1e-8
+      wallStudLayoutMode:a.spacingMode,actualMaximumOC,
+      finalBayExceedsNominal:!maximumOC&&finalBay>a.spacing+1e-8
     });
   }
   case "shelf-spacing-calculator":{
