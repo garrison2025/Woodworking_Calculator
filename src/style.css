@@ -185,6 +185,8 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .legal-page>a{display:inline-block;margin-bottom:50px;font-size:13px;color:var(--green);font-weight:700}
 .legal-page .eyebrow{display:block}.legal-page h1{margin:15px 0 24px}
 .legal-page p{font-size:16px;line-height:1.95;margin-top:21px}
+.legal-page p a{color:var(--green);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.legal-page p a:hover{color:var(--green-hover)}
 @media(min-width:1440px){.workspace{grid-template-columns:330px minmax(0,1fr) 310px}}
 @media(max-width:1220px){
   .topbar-inner{gap:20px}.topbar nav{gap:16px}.topbar nav a:nth-child(3),.topbar nav a:nth-child(5){display:none}
