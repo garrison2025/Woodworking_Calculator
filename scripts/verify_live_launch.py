@@ -187,6 +187,7 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
                   'Wood<span>Layout</span>' in body and
                   p.title.endswith(" | WoodLayout"),
                   path + ": deployed WoodLayout navigation logo/brand differs from source")
+        approved = path in index_routes
         check(bool(p.meta.get("description", "").strip()), path + ": missing meta description")
         check(len(p.title.strip()) <= 60,
               path + ": document title exceeds the 60-character editorial budget")
@@ -202,7 +203,6 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
             check(False, path + ": duplicate title with " + seen_titles[p.title])
         else:
             seen_titles[p.title] = path
-        approved = path in index_routes
         robots = "index,follow" if approved else "noindex,nofollow,noarchive"
         check(p.meta.get("robots") == robots, path + ": incorrect robots meta")
         xrobots = headers.get("x-robots-tag", "").lower()
