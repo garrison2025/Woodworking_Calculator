@@ -117,6 +117,7 @@ def fake_site(mode, broken=None, source_sync=False):
             form += ('<button id="dock-toggle"></button>'
                      '<div id="workbench-shortcuts"></div>'
                      '<div id="diagram-inspector"></div>'
+                     '<button id="diagram-start-row" hidden>Inspect measured parts</button>'
                      '<strong id="diagram-selection"></strong>'
                      '<button id="diagram-find-row"></button>'
                      '<p id="geometry-link-status"></p>'
