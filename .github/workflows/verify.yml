@@ -33,6 +33,8 @@ jobs:
         run: python3 tests/validate_static.py
       - name: Verify 42-page WoodLayout logo, favicon and brand metadata
         run: python3 tests/validate_brand.py
+      - name: Validate distinct category content, share art and SEO payload budget
+        run: python3 tests/validate_category_seo.py
       - name: Validate final 31-route task intents and 22 historical keyword cautions
         run: python3 tests/validate_keyword_closure.py
       - name: Check all 152 historical keyword research decisions against reviewed sources
