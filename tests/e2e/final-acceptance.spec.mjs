@@ -115,6 +115,8 @@ test("maximum OC mode keeps the wall drawing and downloaded cut schedule aligned
     expect(stationPositions[i]-stationPositions[i-1]).toBeLessThanOrEqual(16+1e-8);
   }
   await expect(page.locator("#cut-table tbody tr")).toHaveCount(12);
+  await expect(page.locator('#print-input-table tr[data-print-field="spacingMode"] td'))
+    .toContainText("Maximum OC");
   const downloadEvent=page.waitForEvent("download");
   await page.locator("#download-csv").click();
   const downloaded=await downloadEvent;
