@@ -1,0 +1,162 @@
+{
+  "framing": {
+    "title": "Wall Framing & Stud Layout Calculators",
+    "description": "Choose between straight wall studs, sloped rake studs, walls with openings and diagonal layout checks. Free measured framing geometry, not engineered span design.",
+    "lead": "Different wall layouts need different measurements. Select a straight stud count for an unbroken wall, a rake-wall cut schedule for a single sloped top, or an openings layout when doors and windows interrupt the wall.",
+    "choices": [
+      {
+        "slug": "wall-stud-calculator",
+        "label": "Count studs along a straight, level wall",
+        "why": "Use wall length, on-center spacing and plate deductions without pretending to calculate door or window framing."
+      },
+      {
+        "slug": "stud-calculator",
+        "label": "Get individual cuts under a sloping top plate",
+        "why": "Use the measured wall run and rise per 12 to distinguish centerline heights from cuts at each stud face."
+      },
+      {
+        "slug": "framing-calculator",
+        "label": "Lay out door and window openings",
+        "why": "Model measured opening members and optional lumber purchasing estimates, not structural beam sizing."
+      },
+      {
+        "slug": "square-layout-calculator",
+        "label": "Check a rectangle with two diagonals",
+        "why": "Compare measured diagonals against the Pythagorean reference before marking the assembly."
+      }
+    ],
+    "example_title": "Example: slope is not stud spacing",
+    "example": "A 144 in horizontal rake-wall run at a 6:12 rise gains 72 in in height from the left reference to the right. That slope describes the top line; 16 in on-center spacing separately determines the intermediate stud stations. You still need the actual plate deduction and stud face width for finished cuts.",
+    "limit": "These calculators do not select permitted stud spacing, engineered headers, shear resistance, wind loads, wood grades or building-code approval."
+  },
+  "decks": {
+    "title": "Deck Board, Railing & Fence Layout Calculators",
+    "description": "Plan decking face widths and gaps, deck quantities, baluster gaps, fence posts and fence pickets. Geometric references only; no structural span approval.",
+    "lead": "Decking rows, railing openings and fence bays are not interchangeable tasks. Enter actual board face dimensions for decking, clear opening measurements for balusters, or the measured first-to-last post centers for fence layout.",
+    "choices": [
+      {
+        "slug": "deck-board-calculator",
+        "label": "Check deck-board rows and final rip width",
+        "why": "Account for physical board face width and clear gaps rather than simply dividing deck area by a stock label."
+      },
+      {
+        "slug": "deck-material-calculator",
+        "label": "Estimate boards, joints and fasteners",
+        "why": "Use the actual deck outline and user-entered joist reference spacing; no engineered joist span is inferred."
+      },
+      {
+        "slug": "baluster-spacing-calculator",
+        "label": "Calculate equal clear railing gaps",
+        "why": "Distinguish opening width, spindle face width and end gaps before applying any local safety rule."
+      },
+      {
+        "slug": "fence-picket-calculator",
+        "label": "Place faces and stepped-top pickets",
+        "why": "Return picket face locations from measured opening width and chosen boundaries."
+      }
+    ],
+    "example_title": "Example: board coverage includes the gaps",
+    "example": "Twenty 5.5 in board faces occupy 110 in of width. Nineteen internal gaps of 0.125 in add 2.375 in before you account for boundary edges or a final ripped board. The deck-board worksheet handles these separate quantities; an area-only estimate does not.",
+    "limit": "Neither deck nor fence estimates certify joist spans, footing sizes, wind load, guardrail opening compliance or material strength."
+  },
+  "roof": {
+    "title": "Roof Pitch, Rafter & Stair Geometry Calculators",
+    "description": "Find roof pitch, rafter references, gable and hip geometry, sheathing quantities, stair rise/run and stringer notch references. Not structural designs.",
+    "lead": "Roof pitch conversion, rafter cut geometry and sheet estimating answer different questions. Stair riser counts and stringer notch positions are also separate from strength and code clearance checks. Choose the tool that matches the dimension you can measure.",
+    "choices": [
+      {
+        "slug": "roof-pitch-calculator",
+        "label": "Convert rise-per-12 to degrees",
+        "why": "Translate a measured slope into pitch, angle and percentage without claiming rafter purchase length."
+      },
+      {
+        "slug": "rafter-calculator",
+        "label": "Measure a common rafter and birdsmouth references",
+        "why": "Include ridge reference and eave geometry while keeping cuts separate from structural approval."
+      },
+      {
+        "slug": "stair-calculator",
+        "label": "Calculate risers and treads",
+        "why": "Inspect how total rise and selected maximum riser height affect count and horizontal travel."
+      },
+      {
+        "slug": "stair-stringer-calculator",
+        "label": "Review nominal stringer step coordinates",
+        "why": "Read notch vertices and remaining throat geometry without treating the SVG as a 1:1 saw template."
+      }
+    ],
+    "example_title": "Example: a 6:12 roof is a slope ratio",
+    "example": "A 6:12 pitch means 6 in of vertical rise for each 12 in of horizontal run. The slope angle is arctan(6/12), approximately 26.565°. The pitch alone does not determine a rafter's cut length: ridge position, eave overhang and other measured references matter.",
+    "limit": "No page here certifies allowable roof span, roof loading, stair headroom, guardrail rules, stair stringer bearing or permit compliance."
+  },
+  "interior": {
+    "title": "Crown Molding, Wainscoting & Shelf Layout Calculators",
+    "description": "Compare compound crown-molding cut references, equal wainscot panel layouts and shelf/pin positions with clear geometry and local exports.",
+    "lead": "Interior finishing requires different reference faces. Crown molding uses corner and spring angles; panel layout works from opening width, face size and gaps; shelf spacing works from measured cabinet interior and actual shelf thickness.",
+    "choices": [
+      {
+        "slug": "crown-molding-calculator",
+        "label": "Compare molding corner and spring angles",
+        "why": "Review illustrated compound angle references for your selected orientation, then verify with scrap stock."
+      },
+      {
+        "slug": "wainscoting-calculator",
+        "label": "Equalize panels and end margins",
+        "why": "Get concrete panel face edges and gap locations rather than treating all wall width as panel material."
+      },
+      {
+        "slug": "shelf-spacing-calculator",
+        "label": "Lay out shelf faces and optional pin centers",
+        "why": "Check shelf thickness, clear openings and measured support-hole offsets on both side panels."
+      }
+    ],
+    "example_title": "Example: shelf thickness changes clearance",
+    "example": "For a 32 in interior height with three 0.75 in shelves, the shelves use 2.25 in of vertical space. A layout allowing four equal open gaps would divide the remaining 29.75 in into 7.4375 in gaps, before any separate top or bottom reserves. Confirm which boundaries your actual cabinet uses.",
+    "limit": "Confirm actual molding orientation, hardware hole locations, shelf deflection and mounting strength; geometry is not a substitute for a test fit."
+  },
+  "wood": {
+    "title": "Woodworking Cutting, Spacing & Stave Calculators",
+    "description": "Explore segmented bowl rings, controlled kerf-bend reference layouts, equal center spacing, drilling coordinates and tapered polygon stave geometry.",
+    "lead": "This group covers specialty layouts where exact station coordinates matter more than a single material-count number. It separates center marks, hole edges, cut lines and face dimensions so that one reference is not mistaken for another.",
+    "choices": [
+      {
+        "slug": "equal-spacing-calculator",
+        "label": "Place equally spaced marks or faces",
+        "why": "Use true center offsets and physical part widths instead of confusing center-to-center spacing with free clearance."
+      },
+      {
+        "slug": "hole-spacing-calculator",
+        "label": "Plan exact drilling-row centers",
+        "why": "Keep the board reference edge, hole diameter and end/side margins explicit."
+      },
+      {
+        "slug": "segmented-bowl-calculator",
+        "label": "Estimate ring segment geometry",
+        "why": "Compare segment count, taper and ring diameters with typed saw-angle and stock references."
+      },
+      {
+        "slug": "stave-calculator",
+        "label": "Layout straight-taper polygon staves",
+        "why": "Calculate top/bottom chords and side-face references without claiming curved barrel cooperage."
+      }
+    ],
+    "example_title": "Example: marks between endpoints",
+    "example": "Placing three interior centers evenly between the 0 in and 10 in reference endpoints divides the length into four intervals of 2.5 in. Centers are at 2.5, 5 and 7.5 in; if the parts have nonzero width, their clear gaps will be smaller than the center intervals.",
+    "limit": "Account for real kerf, drill runout, grain direction, workholding and stock tolerances. No output is an approved machining setup or calibrated drilling jig."
+  },
+  "materials": {
+    "title": "Board Foot & Lumber Price Calculator",
+    "description": "Convert measured lumber thickness, width and length to board feet or MBF and apply your own supplier quote. No live lumber price feed.",
+    "lead": "The Materials group currently contains one focused utility: board-foot quantities and supplier-rate estimates for measured lumber. It does not quote live lumber prices or infer species, grade or the dimensions hidden behind nominal labels.",
+    "choices": [
+      {
+        "slug": "lumber-price-calculator",
+        "label": "Calculate BF, MBF and user-entered costs",
+        "why": "Work from the entered dimensions and supplier price per BF or per 1,000 BF (MBF); do not interpret this as an all-purpose price-per-1,000-items calculator."
+      }
+    ],
+    "example_title": "Example: board feet and MBF, with units shown",
+    "example": "A board measured as 2 in thick × 6 in wide × 96 in long is (2 × 6 × 96) ÷ 144 = 8 board feet (BF). That is 0.008 MBF, because one MBF means 1,000 BF. At an illustrative quote of $4 per BF, material cost for that single piece is $32 before tax, waste and other charges.",
+    "limit": "Enter actual purchase dimensions and the price from your own supplier. The site has no market-price feed, freight quote, grading certificate, yield guarantee or verified cut list."
+  }
+}

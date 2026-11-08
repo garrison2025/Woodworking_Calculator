@@ -211,7 +211,11 @@ def audit(base: str, mode: str, pages_origin: str | None = None,
             check(isinstance(schema, dict) and schema.get("url") == origin + path,
                   path + ": JSON-LD URL not canonical")
             check(isinstance(schema, dict) and schema.get("@type") ==
-                  ("WebApplication" if path in TOOL_PATHS else "WebSite"),
+                  ("WebApplication" if path in TOOL_PATHS else
+                   "CollectionPage" if path in CATEGORIES else
+                   "WebSite" if path == "/" else
+                   "AboutPage" if path == "/about/" else
+                   "ContactPage" if path == "/contact/" else "WebPage"),
                   path + ": JSON-LD type does not match page")
         if path in TOOL_PATHS:
             check(p.calculator_forms == 1, path + ": missing or duplicate live calculator form")

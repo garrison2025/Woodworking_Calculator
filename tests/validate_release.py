@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline release-mode SEO/GEO contract test. NEVER deploys example domain."""
+import html
 import html.parser
 import json
 import os
@@ -16,6 +17,8 @@ hold=[x for x in manifest["tools"] if x["priority"]=="P2"]
 # SEO release. Historical V3 P2 planning priority has no separate index gate.
 intents={x["slug"]:x for x in json.loads(
     (root/"src"/"tool-intents.json").read_text(encoding="utf8"))["tools"]}
+guides=json.loads((root/"src"/"category-guides.json").read_text(encoding="utf8"))
+category_by_path={"/"+slug+"/":key for key,(_,slug) in manifest["categories"].items()}
 errors=[]
 
 class PageHead(html.parser.HTMLParser):
@@ -78,11 +81,43 @@ for p in pages:
     elif eligible:
         j=c.schema[0]
         tool=next((t for t in published if t["slug"]==path.strip("/")),None)
-        target="WebApplication" if tool else "WebSite"
+        target=("WebApplication" if tool else "CollectionPage" if path in category_urls
+                else "WebSite" if path=="/" else "AboutPage" if path=="/about/"
+                else "ContactPage" if path=="/contact/" else "WebPage")
         if j.get("@context")!="https://schema.org" or j.get("@type")!=target:
             errors.append(path+": incorrect JSON-LD type")
         if j.get("url")!=base+path:
             errors.append(path+": schema URL not same as canonical")
+        if path in category_urls or tool:
+            crumbs=j.get("breadcrumb", {})
+            elements=crumbs.get("itemListElement",[]) if isinstance(crumbs,dict) else []
+            expected_crumbs=3 if tool else 2
+            if crumbs.get("@type")!="BreadcrumbList" or len(elements)!=expected_crumbs:
+                errors.append(path+": missing or incorrect task breadcrumb schema")
+            else:
+                for i,crumb in enumerate(elements):
+                    if crumb.get("position")!=i+1 or not str(crumb.get("item","")).startswith(base):
+                        errors.append(path+": breadcrumb item/position mismatch")
+        if path in category_urls:
+            guide=guides[category_by_path[path]]
+            if c.title!=guide["title"]+" | WoodLayout":
+                errors.append(path+": category title differs from task guide")
+            body=p.read_text(encoding="utf8")
+            for text in (guide["lead"],guide["example"],guide["limit"],guide["example_title"]):
+                if html.escape(text, quote=True) not in body:
+                    errors.append(path+": unique category content not rendered")
+            for choice in guide["choices"]:
+                if 'href="/'+choice["slug"]+'/"' not in body:
+                    errors.append(path+": missing curated same-category link "+choice["slug"])
+            list_data=j.get("mainEntity", {})
+            rows=list_data.get("itemListElement",[]) if isinstance(list_data,dict) else []
+            category_count=sum(t["category"]==category_by_path[path] for t in published)
+            if list_data.get("@type")!="ItemList" or list_data.get("numberOfItems")!=category_count or len(rows)!=category_count:
+                errors.append(path+": category ItemList does not match actual links")
+        if path=="/" and (j.get("name")!="WoodLayout" or
+                        j.get("@id")!=base+"/#website" or
+                        "Free woodworking calculators" not in p.read_text(encoding="utf8")):
+            errors.append(path+": missing named WebSite or descriptive primary H1")
         if tool:
             if j.get("isAccessibleForFree") is not True:
                 errors.append(path+": tool not marked as free application")
@@ -94,6 +129,10 @@ for p in pages:
         errors.append(path+": missing explanatory description/social text")
     if not c.meta.get("og:title"):
         errors.append(path+": missing social title")
+    if c.meta.get("og:url")!=base+path or c.meta.get("og:image")!=base+"/social-card.png":
+        errors.append(path+": missing canonical Open Graph URL or PNG image")
+    if c.meta.get("og:image:width")!="1200" or c.meta.get("og:image:height")!="630":
+        errors.append(path+": incorrect OG raster dimensions")
     if "pages.dev" in p.read_text(encoding="utf8"):
         errors.append(path+": preview host leaked into release HTML")
 if actual_urls!=all_preview_routes:
@@ -101,6 +140,11 @@ if actual_urls!=all_preview_routes:
                   " missing="+repr(sorted(all_preview_routes-actual_urls)))
 for held in hold:
     if (dist/held["slug"]).exists():errors.append("P2 published without review: "+held["slug"])
+social=dist/"social-card.png"
+if not social.exists() or social.read_bytes()[:8]!=bytes.fromhex("89504e470d0a1a0a"):
+    errors.append("Missing or invalid branded social PNG")
+elif len(social.read_bytes())>200_000:
+    errors.append("Branded PNG share image exceeds lightweight budget")
 site=dist/"sitemap.xml"
 if not site.exists():errors.append("No release sitemap")
 else:

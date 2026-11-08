@@ -181,6 +181,32 @@ tbody tr:nth-child(2n){background:#fafbf8}
 .muted-box h3{margin-top:12px}.muted-box p{font-size:12px;line-height:1.8;margin-top:9px}
 .category-header{padding-top:42px;padding-bottom:100px}
 .category-header h1{margin-top:15px}.category-header p{margin-top:15px;max-width:730px;margin-bottom:36px}
+.category-header .category-lede{font-size:clamp(15px,1.4vw,18px);line-height:1.8;max-width:780px;margin-bottom:32px;color:#3a5849}
+.category-guide{margin:65px 0 0;border-top:1px solid var(--line);padding-top:40px}
+.category-guide-heading{max-width:800px;margin-bottom:24px}
+.category-guide-heading h2{font-size:clamp(24px,2.8vw,34px);letter-spacing:-.03em;margin:10px 0}
+.category-guide-heading p,.category-guide-notes p{margin:9px 0 0;line-height:1.75;color:#52665a;font-size:14px;max-width:none}
+.category-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.category-choice{display:flex;flex-direction:column;gap:9px;padding:19px 22px;border:1px solid var(--line);background:#fffefd;border-radius:12px;min-width:0;transition:transform .18s,border-color .18s,box-shadow .18s}
+.category-choice:hover{transform:translateY(-2px);border-color:#a9c3b1;box-shadow:0 10px 22px rgba(23,55,36,.055)}
+.category-choice strong{color:#214636;font-size:16px;line-height:1.4}
+.category-choice span{font-size:13px;line-height:1.7;color:#536559}
+.category-choice small{font-size:11px;line-height:1.4;color:var(--green);font-weight:750;overflow-wrap:anywhere;margin-top:auto}
+.category-choice:focus-visible{outline:3px solid #955b23;outline-offset:3px}
+.category-guide-notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:16px}
+.category-example,.category-limit{padding:23px 24px;border-radius:12px;border:1px solid var(--line);background:#edf4eb;min-width:0}
+.category-limit{background:#f9f5ed;border-color:#e5d9c3}
+.category-guide-notes h2{font-size:20px;margin:10px 0 8px}
+.about-method{border-top:1px solid var(--line);margin-top:40px;padding-top:16px}
+.about-method h2{font-size:21px;margin:25px 0 8px}
+@media(max-width:700px){
+ .category-header{padding-top:28px;padding-bottom:65px}
+ .category-choice-grid,.category-guide-notes{grid-template-columns:1fr}
+ .category-choice{padding:18px}
+ .category-example,.category-limit{padding:20px}
+ .category-guide{margin-top:42px;padding-top:30px}
+}
+@media(prefers-reduced-motion:reduce){.category-choice{transition:none}.category-choice:hover{transform:none}}
 .legal-page{max-width:840px;min-height:65vh;padding-top:65px;padding-bottom:90px}
 .legal-page>a{display:inline-block;margin-bottom:50px;font-size:13px;color:var(--green);font-weight:700}
 .legal-page .eyebrow{display:block}.legal-page h1{margin:15px 0 24px}

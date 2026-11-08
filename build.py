@@ -14,6 +14,13 @@ DEST = ROOT / "dist"
 REGISTRY = json.loads((ROOT / "src" / "tools.json").read_text(encoding="utf-8"))
 TOOLS = [t for t in REGISTRY["tools"] if t["priority"] in {"P0", "P1"}]
 CATS = REGISTRY["categories"]
+CATEGORY_GUIDES = json.loads((ROOT / "src" / "category-guides.json").read_text(encoding="utf-8"))
+assert set(CATEGORY_GUIDES) == set(CATS), "One unique category guide required for every category"
+for key, guide in CATEGORY_GUIDES.items():
+    assert all(guide.get(k) for k in ("title", "description", "lead", "choices", "example_title", "example", "limit")), key
+    choices = [x["slug"] for x in guide["choices"]]
+    assert len(choices) == len(set(choices)), "Duplicate category task links"
+    assert all(any(t["slug"] == slug and t["category"] == key for t in TOOLS) for slug in choices), "Guide must link to real same-category tools"
 # Explicit search-task boundaries and contextual next-tool choices: do NOT
 # choose related links by arbitrary manifest position or include held P2 URLs.
 INTENT_FILE = json.loads((ROOT / "src" / "tool-intents.json").read_text(encoding="utf-8"))
@@ -92,11 +99,41 @@ def page(title, description, body, path="/", type_="website"):
     robots = "index,follow" if eligible else "noindex,nofollow,noarchive"
     schema = ""
     if eligible:
-        item = {"@context":"https://schema.org","@type":"WebApplication" if type_ == "tool" else "WebSite","name":title if type_ == "tool" else "WoodLayout","description":desc,"url":canon}
+        types = {"tool": "WebApplication", "category": "CollectionPage",
+                 "info": "WebPage", "about": "AboutPage", "contact": "ContactPage"}
+        kind = "WebSite" if path == "/" else types.get(type_, "WebPage")
+        item = {"@context": "https://schema.org", "@type": kind,
+                "name": "WoodLayout" if path == "/" else title,
+                "description": desc, "url": canon}
+        if path == "/":
+            item["@id"] = canon + "#website"
+            item["alternateName"] = "WoodLayout Woodworking Calculators"
         if type_ == "tool":
             item["applicationCategory"] = "UtilitiesApplication"
             item["operatingSystem"] = "Any"
             item["isAccessibleForFree"] = True
+        if type_ == "category":
+            subset = [t for t in TOOLS if "/" + CATS[t["category"]][1] + "/" == path]
+            item["mainEntity"] = {
+                "@type": "ItemList", "numberOfItems": len(subset),
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1,
+                     "name": t["title"], "url": SITE_URL + "/" + t["slug"] + "/"}
+                    for i, t in enumerate(subset)
+                ],
+            }
+        if type_ in ("tool", "category"):
+            crumbs = [{"@type": "ListItem", "position": 1,
+                       "name": "All woodworking calculators", "item": SITE_URL + "/"}]
+            if type_ == "tool":
+                slug = path.strip("/")
+                selected = next(t for t in TOOLS if t["slug"] == slug)
+                category_name, category_slug = CATS[selected["category"]]
+                crumbs.append({"@type": "ListItem", "position": 2,
+                               "name": category_name, "item": SITE_URL + "/" + category_slug + "/"})
+            crumbs.append({"@type": "ListItem", "position": len(crumbs) + 1,
+                           "name": title, "item": canon})
+            item["breadcrumb"] = {"@type": "BreadcrumbList", "itemListElement": crumbs}
         schema = '<script type="application/ld+json">' + json.dumps(item, ensure_ascii=False).replace("<","\\u003c") + '</script>'
     nav = '<a class="brand" href="/" aria-label="WoodLayout home"><span class="brand-icon"><img src="/logo-mark.svg" alt="" width="44" height="44"></span><span class="brand-wordmark"><strong>Wood<span>Layout</span></strong><small>WOODWORKING CALCULATORS</small></span></a>'
     links = [('Tools','/#tools'),('Framing','/framing/'),('Decks','/decks-and-railings/'),('Roofs & stairs','/roof-and-stairs/'),('Woodworking','/woodworking/')]
@@ -117,7 +154,12 @@ def page(title, description, body, path="/", type_="website"):
             f'<meta name="color-scheme" content="light"><meta name="robots" content="{robots}">'
             f'<title>{esc(title)} | WoodLayout</title><meta name="description" content="{esc(desc)}">{canonical}'
             f'<link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#203b34"><meta name="application-name" content="WoodLayout"><link rel="stylesheet" href="/assets/style.css">'
-            f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">{schema}'
+            f'<meta property="og:type" content="website"><meta property="og:site_name" content="WoodLayout"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}">'
+            + (f'<meta property="og:url" content="{esc(canon)}">' if eligible else "")
+            + (f'<meta property="og:image" content="{esc(SITE_URL)}/social-card.png">'
+               '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
+               '<meta property="og:image:alt" content="WoodLayout woodworking geometry calculators illustration">'
+               '<meta name="twitter:card" content="summary_large_image">' if eligible else "") + schema +
             f'</head><body data-tool="{esc(path.strip("/")) if type_ == "tool" else ""}">'
             f'<a href="#main" class="skip">Skip to main content</a><header class="topbar"><div class="topbar-inner">{nav}<nav aria-label="Primary navigation">{navlinks}</nav>{mobile_menu}<a class="nav-cta" href="/#tools">Explore calculators <span aria-hidden="true">↗</span></a></div></header>'
             f'<main id="main">{body}</main>{footer}{script}</body></html>')
@@ -179,7 +221,7 @@ def home():
     featured = sorted(TOOLS, key=lambda t:(t["priority"] != "P0", -t["volume"]))[:6]
     category_count = len({tool["category"] for tool in TOOLS})
     body = ('<section class="hero wrap"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> PRECISION FOR THE WORKSHOP</span>'
-            '<h1>Good work begins<br>with <em>better measurements.</em></h1>'
+            '<h1>Free woodworking calculators<br><em>for better measurements.</em></h1>'
             '<p>Woodworking calculators for practical layouts, cut lengths, spacing and material takeoffs. Enter dimensions, inspect an annotated drawing, then export your work.</p>'
             f'<div class="hero-actions"><a class="btn primary" href="/#tools">Explore {len(TOOLS)} free tools <span aria-hidden="true">↗</span></a>'
             '<a class="btn subtle" href="/stud-calculator/">Try the stud calculator</a></div>'
@@ -646,12 +688,37 @@ def tool_page(t):
     return page(intent["seoTitle"],description,body,"/"+t["slug"]+"/","tool")
 
 def cat_page(key, name, slug):
-    subset=[t for t in TOOLS if t["category"]==key]
-    body=(f'<section class="wrap category-header"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">All tools</a><span>/</span>{esc(name)}</nav>'
-          f'<span class="eyebrow">WORKSHOP DIRECTORY / {len(subset):02d} TOOLS</span><h1>{esc(name)}</h1>'
-          '<p>Choose a dedicated measurement tool. Every calculator has explicit inputs, a geometric result, a printable diagram and its own calculation explanation.</p>'
-          '<div class="tool-grid">'+''.join(tool_card(t) for t in subset)+'</div></section>')
-    return page(f"{name} Calculators",f"Free practical {name.lower()} calculators with SVG dimension drawings and downloadable measurement lists.",body,"/"+slug+"/")
+    subset = [t for t in TOOLS if t["category"] == key]
+    guide = CATEGORY_GUIDES[key]
+    lookup = {t["slug"]: t for t in subset}
+    choices = ''.join(
+        '<a class="category-choice" href="/' + esc(choice["slug"]) + '/">'
+        '<strong>' + esc(choice["label"]) + '</strong>'
+        '<span>' + esc(choice["why"]) + '</span>'
+        '<small>' + esc(lookup[choice["slug"]]["title"]) + ' ↗</small></a>'
+        for choice in guide["choices"]
+    )
+    body = (
+        f'<section class="wrap category-header"><nav class="breadcrumbs" aria-label="Breadcrumb">'
+        f'<a href="/">All tools</a><span>/</span>{esc(name)}</nav>'
+        f'<span class="eyebrow">WORKSHOP DIRECTORY / {len(subset):02d} TOOLS</span>'
+        f'<h1>{esc(guide["title"])}</h1>'
+        f'<p class="category-lede">{esc(guide["lead"])}</p>'
+        '<div class="tool-grid">' + ''.join(tool_card(t) for t in subset) + '</div>'
+        '<section class="category-guide" aria-label="Choose and check your measurement task">'
+        '<div class="category-guide-heading"><span class="eyebrow">MATCH THE MEASUREMENT</span>'
+        '<h2>Choose the right calculator for the job</h2>'
+        '<p>These tools answer different geometry questions. Start with what you can actually measure.</p></div>'
+        '<div class="category-choice-grid">' + choices + '</div>'
+        '<div class="category-guide-notes">'
+        '<section class="category-example"><span class="eyebrow">CHECK THE MATH</span>'
+        '<h2>' + esc(guide["example_title"]) + '</h2><p>' + esc(guide["example"]) + '</p></section>'
+        '<section class="category-limit"><span class="eyebrow">SCOPE &amp; SAFETY</span>'
+        '<h2>What these tools do not certify</h2><p>' + esc(guide["limit"]) + '</p>'
+        '<p>Calculations are browser-based references. Verify physical measurements and local requirements before working on material.</p>'
+        '</section></div></section></section>'
+    )
+    return page(guide["title"],guide["description"],body,"/"+slug+"/","category")
 
 def info_page(title, paragraphs, url):
     if url == "/contact/":
@@ -670,9 +737,20 @@ def info_page(title, paragraphs, url):
                 '<p>This site does not collect or store messages through a web form. '
                 'Sending email uses your email provider and the receiving mailbox provider.</p>'
                 '</article>')
-        return page(title,"Email contact@woodlayout.com for WoodLayout calculator questions, corrections and feedback.",body,url)
-    body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WOODLAYOUT</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)+'</article>'
-    return page(title,paragraphs[0],body,url)
+        return page(title,"Email contact@woodlayout.com for WoodLayout calculator questions, corrections and feedback.",body,url,"contact")
+    body='<article class="wrap legal-page"><a href="/">← Back to calculators</a><span class="eyebrow">WOODLAYOUT</span><h1>'+esc(title)+'</h1>'+''.join('<p>'+esc(p)+'</p>' for p in paragraphs)
+    if url == "/about/":
+        body += ('<section class="about-method" aria-label="How WoodLayout is built and checked">'
+                 '<h2>How WoodLayout calculates and checks dimensions</h2>'
+                 '<p>Each calculator has task-specific inputs, an explicit geometry rule and a local JavaScript calculation engine. Drawings and numeric schedules are intended to describe the same modeled dimensions; examples disclose assumptions and scope limits.</p>'
+                 '<h2>What has and has not been tested</h2>'
+                 '<p>Automated unit, browser, document-output and deployment checks cover selected inputs, exports and responsive layouts. Actual lumber cuts, real printer dimensions, material strength and compliance with local building rules have not been independently field certified.</p>'
+                 '<h2>Corrections and reproducible reports</h2>'
+                 '<p>To report a discrepancy, provide the calculator URL, selected units, exact entered dimensions and expected comparison. Send it to <a href="mailto:contact@woodlayout.com">contact@woodlayout.com</a> or use the public <a href="https://github.com/garrison2025/Woodworking_Calculator/issues">GitHub issue tracker</a> without posting private information.</p>'
+                 '<p>This independent tool collection is free to use in a browser; there is no account requirement or live lumber pricing service.</p></section>')
+    body += '</article>'
+    content_type = "about" if url == "/about/" else "info"
+    return page(title,paragraphs[0],body,url,content_type)
 
 def build():
     if DEST.exists(): shutil.rmtree(DEST)
@@ -714,6 +792,8 @@ def build():
     shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"logo-mark.svg")
     shutil.copyfile(ROOT/"src"/"logo-mark.svg", DEST/"favicon.svg")
     shutil.copyfile(ROOT/"src"/"logo-lockup.svg", DEST/"logo-lockup.svg")
+    from scripts.social_card import generate as generate_social_card
+    generate_social_card(DEST/"social-card.png")
     (DEST/"404.html").write_text(page("Page not found","This tool URL is not available.","<section class='wrap legal-page'><h1>That tool isn't here.</h1><p>Try the complete calculator directory.</p><a class='btn primary' href='/#tools'>Find a tool ↗</a></section>","/404/"))
     # Cloudflare Pages static response headers. 404.html must never be a
     # canonical search result; the page() gate above separately keeps its

@@ -7,7 +7,7 @@ const active=registry.tools.filter(t=>t.priority==="P0"||t.priority==="P1");
 test("homepage links to every active tool without publishing P2",async({page})=>{
   const response=await page.goto("/");
   expect(response.status()).toBe(200);
-  await expect(page.getByRole("heading",{name:/Good work begins/i})).toBeVisible();
+  await expect(page.getByRole("heading",{level:1,name:/Free woodworking calculators/i})).toBeVisible();
   for(const t of active)expect(await page.locator('a[href="/'+t.slug+'/"]').count()).toBeGreaterThan(0);
   for(const t of registry.tools.filter(t=>t.priority==="P2"))
     expect(await page.locator('a[href="/'+t.slug+'/"]').count()).toBe(0);

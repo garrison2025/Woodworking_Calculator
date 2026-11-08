@@ -87,7 +87,10 @@ def fake_site(mode, broken=None, source_sync=False):
                      if indexed else "")
         schema = ('<script type="application/ld+json">' + json.dumps({
             "url": DOMAIN + path,
-            "@type": "WebApplication" if path in launch.TOOL_PATHS else "WebSite"
+            "@type": ("WebApplication" if path in launch.TOOL_PATHS else
+                      "CollectionPage" if path in launch.CATEGORIES else
+                      "WebSite" if path=="/" else "AboutPage" if path=="/about/" else
+                      "ContactPage" if path=="/contact/" else "WebPage")
         }) + "</script>" if indexed else "")
         robot = "index,follow" if indexed else "noindex,nofollow,noarchive"
         form = '<form id="calculator-form"></form>' if path in launch.TOOL_PATHS else ""
