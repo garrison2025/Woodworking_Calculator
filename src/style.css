@@ -97,6 +97,7 @@ p{color:var(--body)}
 .breadcrumbs a{color:var(--green);font-weight:650}
 .tool-heading h1{margin-top:12px;font-size:clamp(2rem,3vw,3rem);max-width:980px}
 .tool-lede{font-size:16px;max-width:860px;margin-top:12px}
+.tool-heading .tool-formula{max-width:950px;margin-top:16px!important;font-size:13px;line-height:1.7}
 .tool-hints{display:flex;gap:22px;margin-top:19px;font-size:11px;color:#677b6b;font-weight:650;flex-wrap:wrap}
 .workspace{display:grid;grid-template-columns:minmax(270px,310px) minmax(0,1fr) minmax(255px,285px);align-items:start;gap:13px;padding-bottom:45px}
 .pane{border:1px solid var(--line);border-radius:13px;background:var(--surface);min-width:0;overflow:hidden;box-shadow:0 6px 25px rgba(30,40,30,.015)}
@@ -617,6 +618,7 @@ tbody tr:nth-child(2n){background:#fafbf8}
  .tool-heading h1{font-size:clamp(1.65rem,7.7vw,1.95rem);overflow-wrap:anywhere}
  .breadcrumbs{gap:6px;margin-bottom:13px;overflow-wrap:anywhere}
  .tool-lede{font-size:14px;line-height:1.6}
+ .tool-heading .tool-formula{padding:13px 14px;font-size:12px;line-height:1.65}
  .tool-hints{gap:7px 11px;overflow-wrap:anywhere}
  .workspace{gap:9px}
  .pane-head{padding:13px 12px;min-height:66px}
