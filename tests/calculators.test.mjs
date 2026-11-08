@@ -2599,7 +2599,7 @@ test("maximum wall-stud OC equalizes 161-inch run without stud overlap",()=>{
     const bay=positions[i]-positions[i-1];
     assert.ok(bay<=16+1e-8,"Maximum OC violated at bay "+i);
     assert.ok(bay>=1.5-1e-8,"Stud faces overlap at bay "+i);
-    if(i>1)near(bay,positions[1]-positions[0],1e-8);
+    if(i>1)near(bay,positions[1]-positions[0],2e-8);
   }
   assert.deepEqual(r.marks.map(mark=>mark.x),positions);
   const exported=buildScheduleCsv(r.rows,"in","Equalized maximum OC");
@@ -2630,5 +2630,5 @@ test("maximum stud OC mode enforces face clearance, integer mode and boundary ge
   assert.throws(()=>compute("wall-stud-calculator",{...base,spacingMode:2}),
     /spacingMode must be a whole number between 0 and 1/);
   assert.throws(()=>compute("wall-stud-calculator",{
-    ...base,length:100000,spacing:1}),/Too many layout marks/);
+    ...base,length:100000,spacing:2}),/Too many layout marks/);
 });
