@@ -15,6 +15,7 @@ spec.loader.exec_module(launch)
 
 DOMAIN = "https://custom-woodwork.com"
 PAGES = "https://woodworking-calculator.pages.dev"
+WWW = DOMAIN.replace("https://", "https://www.", 1)
 
 
 def fake_site(mode, broken=None, source_sync=False):
@@ -24,7 +25,7 @@ def fake_site(mode, broken=None, source_sync=False):
     def get(url):
         u = urlsplit(url)
         path = u.path
-        if mode == "production" and u.hostname in ("woodworking-calculator.pages.dev", "www.woodlayout.com"):
+        if mode == "production" and u.hostname in (urlsplit(PAGES).hostname, urlsplit(WWW).hostname):
             if "alias" in broken and u.hostname.endswith(".pages.dev"):
                 return 200, "Old public HTML", {}
             query = "?" + u.query if u.query else ""
@@ -200,7 +201,7 @@ class LiveAuditTests(unittest.TestCase):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
                               get=fake_site("production", broken={"www_query"}))
         self.assertEqual(len(result["failures"]), 1)
-        self.assertIn("https://www.woodlayout.com/stud-calculator/?audit=", result["failures"][0])
+        self.assertIn(WWW + "/stud-calculator/?audit=", result["failures"][0])
 
     def test_pages_dev_must_redirect_after_custom_domain_launch(self):
         result = launch.audit(DOMAIN, "production", pages_origin=PAGES,
