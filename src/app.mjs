@@ -1490,8 +1490,18 @@ if(slug){
     renderReadablePrintSchedule();
     renderSpecialtyPrintTables();
   };
-  window.addEventListener("beforeprint",()=>setPrintFullSchedule(true));
-  window.addEventListener("afterprint",()=>setPrintFullSchedule(false));
+  let closedProofBeforePrint=[];
+  window.addEventListener("beforeprint",()=>{
+    setPrintFullSchedule(true);
+    const disclosures=[...document.querySelectorAll(".advanced-results-disclosure")];
+    closedProofBeforePrint=disclosures.filter(el=>!el.open);
+    disclosures.forEach(el=>{el.open=true;});
+  });
+  window.addEventListener("afterprint",()=>{
+    setPrintFullSchedule(false);
+    closedProofBeforePrint.forEach(el=>{el.open=false;});
+    closedProofBeforePrint=[];
+  });
   // Framing summary and stock-by-stock schedule reuse exactly the engine's
   // stockPlan/materialSummary. Fraction rounding remains UI-only.
   const takeoffLength=v=>fmt(v,"L")+(unit==="in"?" (≈ "+frac(v)+")":"");
@@ -2267,6 +2277,9 @@ if(slug){
     zoomPlus.disabled=percent>=250;
   };
   function render(){
+    // Flush a queued event frame when another action calls render directly.
+    // This prevents stale geometry after a quick reset/unit change.
+    if(inputFrame){cancelAnimationFrame(inputFrame);inputFrame=0;}
     geometrySelected=0;
     geometryInspector.hidden=true;
     refreshConditionalFields();
@@ -2303,8 +2316,9 @@ if(slug){
       if(printFullSchedule)renderSpecialtyPrintTables();
       diagram.innerHTML=drawing(latest);applyDiagramZoom();
       const geometryMap=geometrySelector();
-      const matches=geometryMap?
-        Array.from({length:latest.rows.length},(_,i)=>geometryPart(i+1)).every(Boolean):false;
+      const matches=geometryMap && latest.rows.length>0 ?
+        diagram.querySelectorAll(geometryMap[0]).length===latest.rows.length &&
+        Boolean(geometryPart(1)) && Boolean(geometryPart(latest.rows.length)) : false;
       geometryStatus.textContent=matches && latest.rows.length?
         "Interactive drawing: select a schedule row or illustrated part to highlight its exact match. Arrow buttons inspect adjacent rows.":
         "Schematic reference: not every geometry element corresponds to a numbered schedule row. Inspect the numeric measurements before use.";
