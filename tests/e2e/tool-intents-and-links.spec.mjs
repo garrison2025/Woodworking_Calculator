@@ -80,6 +80,7 @@ test("On mobile the task-fit guidance remains legible, while print contains geom
   await page.setViewportSize({width:375,height:800});
   await page.goto("/segmented-bowl-calculator/");
   await expect(page.locator(".intent-fit")).toBeVisible();
+  await expect(page.locator(".tool-heading .tool-formula")).toBeVisible();
   const fit=await page.locator(".intent-fit").boundingBox();
   expect(fit).toBeTruthy();
   expect(fit.width).toBeLessThanOrEqual(376);
@@ -87,9 +88,9 @@ test("On mobile the task-fit guidance remains legible, while print contains geom
   await page.emulateMedia({media:"print"});
   await expect(page.locator(".intent-fit")).toBeHidden();
   await expect(page.locator(".intent-query-copy")).toBeHidden();
-  // The established compact worksheet deliberately prints the safety
-  // assumptions but hides the long on-screen method (including formula).
-  await expect(page.locator(".proof .formula")).toBeHidden();
+  // The task-specific formula is surfaced near the page heading for screen
+  // readers and answer extraction, but remains out of the compact print sheet.
+  await expect(page.locator(".tool-heading .tool-formula")).toBeHidden();
   await expect(page.locator("#print-assumptions")).toBeVisible();
   await page.emulateMedia({media:"screen"});
 });

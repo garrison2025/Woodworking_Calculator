@@ -104,16 +104,38 @@ def page(title, description, body, path="/", type_="website"):
         types = {"tool": "WebApplication", "category": "CollectionPage",
                  "info": "WebPage", "about": "AboutPage", "contact": "ContactPage"}
         kind = "WebSite" if path == "/" else types.get(type_, "WebPage")
+        organization = {
+            "@type": "Organization",
+            "@id": SITE_URL + "#organization",
+            "name": "WoodLayout",
+            "url": SITE_URL,
+            "email": "contact@woodlayout.com",
+        }
         item = {"@context": "https://schema.org", "@type": kind,
                 "name": "WoodLayout" if path == "/" else title,
-                "description": desc, "url": canon}
+                "description": desc, "url": canon, "inLanguage": "en"}
         if path == "/":
             item["@id"] = canon + "#website"
             item["alternateName"] = "WoodLayout Woodworking Calculators"
+        else:
+            item["@id"] = canon + ("#webapplication" if type_ == "tool" else "#webpage")
+            item["isPartOf"] = {"@id": SITE_URL + "/#website"}
+        item["publisher"] = organization
         if type_ == "tool":
+            selected = next(t for t in TOOLS if "/" + t["slug"] + "/" == path)
             item["applicationCategory"] = "UtilitiesApplication"
+            item["applicationSubCategory"] = CATS[selected["category"]][0]
             item["operatingSystem"] = "Any"
             item["isAccessibleForFree"] = True
+            item["browserRequirements"] = "Requires a modern browser with JavaScript enabled"
+            item["featureList"] = [
+                "Interactive browser-based geometry calculations",
+                "Proportional SVG measurement diagrams",
+                "CSV measurement and cut schedules",
+                "Browser print and PDF worksheet export",
+                "Inch, foot, millimeter, centimeter and meter inputs",
+                "Local calculation without an account or paid API",
+            ]
         if type_ == "category":
             subset = [t for t in TOOLS if "/" + CATS[t["category"]][1] + "/" == path]
             item["mainEntity"] = {
@@ -178,6 +200,67 @@ def write(url, content):
     target = DEST / url.strip("/") / "index.html" if url != "/" else DEST / "index.html"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
+
+
+def build_llms_txt(base):
+    """Generate a compact, source-derived AI navigation index for the English site."""
+    lines = [
+        "# WoodLayout",
+        "",
+        "> Free browser-based woodworking geometry and layout calculators for measured dimensions, cut schedules and material estimates.",
+        "",
+        f"Canonical website: {base}/",
+        "Language: English",
+        "",
+        "## What this site provides",
+        "",
+        "WoodLayout contains 31 task-specific calculators across six woodworking categories. Calculations run in the visitor's browser. Tool pages expose their intended task, excluded tasks, calculation rule, reproducible example, independent measurement check and safety limits in the HTML.",
+        "",
+        "The calculators provide dimensional references and estimates. They are not structural engineering, building-code approval, safe-cutting instructions or certified 1:1 templates.",
+        "",
+        "## How to use the content",
+        "",
+        "- Use each calculator page's stated measurement task and input datums; do not substitute center-to-center, face-to-face, clear-opening and outside dimensions.",
+        "- Read the formula and worked example on the specific calculator page before interpreting its output.",
+        "- Treat proportional SVG drawings as diagrams. Verify actual stock, kerf, printer scale, material condition and site dimensions independently.",
+        "- Supplier prices are user-entered; the site does not supply live lumber prices or foreign-exchange conversion.",
+        "- Calculations are local to the browser. Optional measurement sharing encodes numeric inputs in the URL fragment; shared links disclose those inputs to recipients.",
+        "",
+        "## Calculator categories",
+        "",
+    ]
+    for key, (name, slug) in CATS.items():
+        subset = [t for t in TOOLS if t["category"] == key]
+        if not subset:
+            continue
+        guide = CATEGORY_GUIDES[key]
+        lines.extend([
+            f"### [{name}]({base}/{slug}/)",
+            "",
+            guide["lead"],
+            "",
+        ])
+        for tool in subset:
+            intent = INTENTS[tool["slug"]]
+            lines.append(
+                f"- [{tool['title']}]({base}/{tool['slug']}/): {tool['desc']} "
+                f"Use for: {intent['useFor']} Not for: {intent['notFor']} "
+                f"Calculation rule: {tool['formula']}"
+            )
+        lines.append("")
+    lines.extend([
+        "## Site methodology and limitations",
+        "",
+        f"- [About and measurement methodology]({base}/about/): measurement conventions, software checks, public source and correction process.",
+        f"- [Terms and safety]({base}/terms/): dimensional-reference limitations and physical verification requirements.",
+        f"- [Privacy]({base}/privacy/): local calculation, browser storage, optional share links and hosting logs.",
+        f"- [Contact]({base}/contact/): contact@woodlayout.com.",
+        f"- [Public source repository](https://github.com/garrison2025/Woodworking_Calculator): implementation and automated regression tests.",
+        "",
+        "The linked calculator HTML pages are the source of truth for current inputs, formulas, examples and output behavior. This file is a navigation summary, not a separate specification and not a promise of inclusion or citation by any search or AI service.",
+        "",
+    ])
+    return "\n".join(lines)
 
 # Purposeful line icons distinguish real tool families. No remote icon/font fetch.
 TOOL_FAMILY_ICONS = {
@@ -348,6 +431,7 @@ def tool_page(t):
           f'<p><strong>Typical task</strong> {esc(intent["useFor"])}</p>'
           f'<p><strong>Not covered</strong> {esc(intent["notFor"])}</p>'
           '</div>'
+          f'<p class="formula tool-formula" id="geometry-rule"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
           '<div class="tool-hints"><span>↗ Live calculation</span><span>◈ Scaled schematic</span><span>⇩ Local export</span></div></div>')
     quote_currency_id=("framing-currency" if t["slug"]=="framing-calculator"
                        else "lumber-currency" if t["slug"]=="lumber-price-calculator"
@@ -677,8 +761,8 @@ def tool_page(t):
            '<button type="button" id="schedule-go" class="schedule-pager-button">Go</button>'
            '<button type="button" id="schedule-next" class="schedule-pager-button">Next →</button></nav></div>'
            +framing_takeoff+deck_takeoff+stringer_section+roof_reuse_section+shelf_pin_panel+
-           '<div class="content-block proof"><span class="eyebrow">CALCULATION METHOD</span><h2>How this calculator works</h2>'
-           f'<p>{esc(t["desc"])}</p>'+task_note+f'<p class="formula"><strong>Geometry rule</strong> {esc(t["formula"])}</p>'
+           '<div class="content-block proof" id="calculation-method"><span class="eyebrow">REPRODUCIBLE METHOD</span><h2>Worked example and independent verification</h2>'
+           f'<p>{esc(t["desc"])}</p>'+task_note+
            f'<h3>Reproducible example</h3><p>{esc(t["example"])}</p>'
             +guidance+
             f'<section class="field-verification" aria-label="Independent measurement review"><h3>How to independently verify your result</h3><p>{esc(FIELD_CHECKS[t["slug"]])}</p><p class="field-caution">Use actual measured reference faces and the numeric CSV. This is a review prompt, not a completed field inspection or structural approval.</p></section>'
@@ -748,12 +832,20 @@ def info_page(title, paragraphs, url):
     if url == "/about/":
         body += ('<section class="about-method" aria-label="How WoodLayout is built and checked">'
                  '<h2>How WoodLayout calculates and checks dimensions</h2>'
-                 '<p>Each calculator has task-specific inputs, an explicit geometry rule and a local JavaScript calculation engine. Drawings and numeric schedules are intended to describe the same modeled dimensions; examples disclose assumptions and scope limits.</p>'
+                 '<p>Each calculator has a task-specific measurement model, an explicit geometry rule, a local JavaScript calculation engine and a page-level explanation of what the result does and does not represent. The same modeled dimensions feed the numeric schedule and proportional drawing. Each tool page also publishes a reproducible worked example and a separate measurement check.</p>'
+                 '<h2>Measurement conventions</h2>'
+                 '<ul><li>Choose the reference that matches the task: clear opening, outside dimension, center-to-center distance, face edge, or a named datum. These are not interchangeable.</li>'
+                 '<li>Available length units are inches, feet, millimeters, centimeters and meters. In inch mode, common fractional-inch entries such as 5 1/2 and 3/4 are accepted; other unit modes use decimal entries.</li>'
+                 '<li>Fraction display precision can be selected for inch results. CSV exports preserve numeric values and label their units; do not treat rounded display fractions as more precise than the entered measurements.</li>'
+                 '<li>Supplier prices are entered by the visitor. WoodLayout does not provide live lumber prices or currency conversion.</li></ul>'
+                 '<h2>How to interpret drawings, schedules and estimates</h2>'
+                 '<p>SVG diagrams are proportional geometry references, not 1:1 cutting or drilling templates. Print worksheets include physical calibration bars; measure them on paper before relying on printed scale. Material estimates depend on the dimensions, stock lengths, kerf and allowances entered by the visitor. A mathematical fit does not prove a safe saw path, stock quality or installation method.</p>'
                  '<h2>What has and has not been tested</h2>'
-                 '<p>Automated unit, browser, document-output and deployment checks cover selected inputs, exports and responsive layouts. Actual lumber cuts, real printer dimensions, material strength and compliance with local building rules have not been independently field certified.</p>'
-                 '<h2>Corrections and reproducible reports</h2>'
-                 '<p>To report a discrepancy, provide the calculator URL, selected units, exact entered dimensions and expected comparison. Send it to <a href="mailto:contact@woodlayout.com">contact@woodlayout.com</a> or use the public <a href="https://github.com/garrison2025/Woodworking_Calculator/issues">GitHub issue tracker</a> without posting private information.</p>'
-                 '<p>This independent tool collection is free to use in a browser; there is no account requirement or live lumber pricing service.</p></section>')
+                 '<p>Automated unit, browser, document-output and deployment checks cover selected inputs, exports and responsive layouts. Worked examples are reproducible software fixtures, not real-shop test cuts. Actual lumber cuts, real printer dimensions, material strength and compliance with local building rules have not been independently field certified.</p>'
+                 '<h2>Public implementation and corrections</h2>'
+                 '<p>The <a href="https://github.com/garrison2025/Woodworking_Calculator">public source repository</a> contains the calculation engines and automated regression tests. To report a discrepancy, provide the calculator URL, selected units, exact entered dimensions and expected comparison. Send it to <a href="mailto:contact@woodlayout.com">contact@woodlayout.com</a> or use the public <a href="https://github.com/garrison2025/Woodworking_Calculator/issues">GitHub issue tracker</a> without posting private information.</p>'
+                 '<p>This independent tool collection is free to use in a browser; calculations run locally, there is no account requirement, and no live lumber pricing service.</p>'
+                 + ('<p>For machine-readable navigation, see the optional <a href="/llms.txt">WoodLayout site guide</a>. It summarizes the site and links to the detailed calculator pages; it does not guarantee search ranking, indexing or AI citations.</p>' if INDEXABLE else '') + '</section>')
     body += '</article>'
     content_type = "about" if url == "/about/" else "info"
     meta_descriptions = {
@@ -824,12 +916,27 @@ def build():
         # Pages aliases WITHOUT suppressing approved custom-domain URLs.
         headers += "\nhttps://woodworking-calculator.pages.dev/*\n" + nonindex
         headers += "\nhttps://:version.woodworking-calculator.pages.dev/*\n" + nonindex
+    headers += "\n/llms.txt\n  Content-Type: text/plain; charset=utf-8\n"
     (DEST/"_headers").write_text(headers, encoding="utf-8")
     if INDEXABLE:
         urls=["/"]+[f"/{t['slug']}/" for t in TOOLS]+sorted(ACTIVE_CATEGORIES)+list(pages)
         xml='<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(SITE_URL+url)+'</loc></url>' for url in urls)+'</urlset>'
         (DEST/"sitemap.xml").write_text(xml,encoding="utf-8")
-        (DEST/"robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: "+SITE_URL+"/sitemap.xml\n")
+        robots = [
+            "# Public search and user-requested retrieval crawlers",
+            "User-agent: OAI-SearchBot", "Allow: /", "",
+            "User-agent: ChatGPT-User", "Allow: /", "",
+            "User-agent: Claude-SearchBot", "Allow: /", "",
+            "User-agent: Claude-User", "Allow: /", "",
+            "User-agent: PerplexityBot", "Allow: /", "",
+            "User-agent: Perplexity-User", "Allow: /", "",
+            "User-agent: Googlebot", "Allow: /", "",
+            "User-agent: Bingbot", "Allow: /", "",
+            "User-agent: *", "Allow: /", "",
+            "Sitemap: " + SITE_URL + "/sitemap.xml",
+        ]
+        (DEST/"robots.txt").write_text("\n".join(robots) + "\n",encoding="utf-8")
+        (DEST/"llms.txt").write_text(build_llms_txt(SITE_URL),encoding="utf-8")
     else:
         (DEST/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
     print(f"Built {len(TOOLS)} calculator pages; indexable={INDEXABLE}; production SEO scope={len(TOOLS)} tools / {len(ACTIVE_CATEGORIES)} categories; output={DEST}")
