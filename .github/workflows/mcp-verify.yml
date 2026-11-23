@@ -1,0 +1,30 @@
+name: Verify WoodLayout MCP (no deployment)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "mcp/**"
+      - ".github/workflows/mcp-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mcp-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install MCP-only dependencies
+        working-directory: mcp
+        run: npm install --no-audit --no-fund
+      - name: Check syntax and reuse production calculator tests
+        working-directory: mcp
+        run: npm run check
+      - name: Bundle the independent Worker without publishing
+        working-directory: mcp
+        run: npx wrangler deploy --dry-run --outdir /tmp/woodlayout-mcp-dry-run
